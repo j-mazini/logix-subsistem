@@ -469,6 +469,23 @@
   font-size: 0.875rem;
   color: var(--primary-blue, #0d6efd);
 }
+.sp-provider-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+.sp-provider-card-link {
+  font-size: 0.875rem;
+  color: var(--primary-blue, #0d6efd);
+  text-decoration: none;
+}
+.sp-provider-card-link:hover {
+  text-decoration: underline;
+}
+.sp-provider-card-link--portal {
+  font-weight: 500;
+}
 
 @media (max-width: 991px) {
   .sp-profile-cards {

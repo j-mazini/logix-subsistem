@@ -1,0 +1,96 @@
+/**
+ * Access Select – escolha entre área DHL e Portal Service Provider
+ */
+.access-select-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  background: linear-gradient(160deg, #f8fafc 0%, #e2e8f0 100%);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.access-select-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.access-select-header h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-primary, #0f172a);
+  margin-bottom: 0.5rem;
+}
+
+.access-select-header p {
+  font-size: 1rem;
+  color: var(--text-secondary, #64748b);
+}
+
+.access-select-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  max-width: 720px;
+  width: 100%;
+}
+
+.access-select-card {
+  display: block;
+  padding: 2rem;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.06);
+  border: 1px solid var(--border-color, #e9ecef);
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.access-select-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px -8px rgb(0 0 0 / 0.12);
+  border-color: var(--primary-blue, #0d6efd);
+}
+
+.access-select-card:focus {
+  outline: 2px solid var(--primary-blue, #0d6efd);
+  outline-offset: 2px;
+}
+
+.access-select-card-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.access-select-card--dhl .access-select-card-icon {
+  background: #ffcc00;
+  color: #d40511;
+}
+
+.access-select-card--sp .access-select-card-icon,
+.access-select-card-icon--sp {
+  background: #0d6efd;
+  color: #fff;
+}
+
+.access-select-card h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary, #0f172a);
+  margin-bottom: 0.5rem;
+}
+
+.access-select-card p {
+  font-size: 0.9rem;
+  color: var(--text-secondary, #64748b);
+  margin: 0;
+}

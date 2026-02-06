@@ -9,6 +9,13 @@ Todas as definições, esquemas e recursos do subsistema DHL ficam **apenas** ne
 ```
 DHL-Subsystem/
 ├── README.md                 # Este ficheiro
+├── sp-portal/                # Portal do Service Provider (hierarquia abaixo do admin)
+│   ├── dashboard.html        # Dashboard do SP (só as suas métricas; sem Create Alert)
+│   ├── profile.html          # Editar perfil da empresa
+│   ├── drivers.html          # Listar e criar drivers
+│   ├── vehicles.html         # Listar e criar veículos
+│   ├── contracts.html        # Contratos (apenas os do SP, read-only)
+│   └── sop-feed.html         # SOP Feed (apenas leitura; sem criar posts)
 └── pages-schema/             # Esquema de rotas e páginas
     ├── index.ts              # Exportações do esquema
     ├── types.ts              # Tipos partilhados
@@ -20,6 +27,19 @@ DHL-Subsystem/
             └── shipments/
                 └── page.schema.json
 ```
+
+### Hierarquia e permissões
+
+- **Vista administrativa (DHL)** – Dashboard, Service Providers, Vendors, Vehicles, Contract Management, SOP Feed. Pode criar avisos, posts e ver métricas de todos os SPs.
+- **Portal Service Provider** (`sp-portal/`) – Vista direcionada aos Service Providers, uma abaixo na hierarquia:
+  - **Pode:** ver apenas as suas métricas, editar o perfil da empresa, criar drivers, criar veículos, ver os seus contratos (read-only), ver o SOP Feed (read-only).
+  - **Não pode:** criar avisos, criar posts no SOP, nem ver métricas de outros Service Providers.
+
+**Seleção de área:** a página **access-select.html** permite escolher qual pasta aceder:
+- **DHL Administration** → dashboard e vistas administrativas (avisos, posts, métricas globais).
+- **BA Express Portal** → leva à mesma **tela de login** (`sp-portal/login.html`), com partículas, animação do card e overlay “Welcome, BA Express”; após login redireciona para o portal BA (`sp-portal/dashboard.html?sp=BA Express`). Entra apenas uma empresa (BA Express).
+
+Em todas as sidebars (DHL e portal) existe o item **Select access**, que abre de novo `access-select.html` para trocar entre as duas áreas.
 
 ## Uso
 

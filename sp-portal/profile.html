@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Profile – Service Provider Portal</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../vendor-admin-view.css" />
+  <link rel="stylesheet" href="../sidebar-beam.css" />
+  <link rel="stylesheet" href="../service-provider-profile.css" />
+  <link rel="stylesheet" href="sp-portal.css" />
+</head>
+<body class="has-beam-sidebar sp-portal">
+  <div class="sidebar-wrapper" id="sidebarWrapper">
+    <div class="sidebar-gap" id="sidebarGap" aria-hidden="true"></div>
+    <div class="beam-overlay" id="beamOverlay" aria-hidden="true"></div>
+    <nav class="beam-sidebar" id="beamSidebar" data-state="closed" role="navigation" aria-label="Service Provider menu">
+      <button type="button" class="beam-trigger" id="beamTrigger" aria-label="Open menu" aria-expanded="false">
+        <i class="bi bi-list beam-icon-menu"></i>
+        <i class="bi bi-x-lg beam-icon-close"></i>
+      </button>
+      <div class="beam-rail" aria-hidden="true"></div>
+      <div class="beam-plates">
+        <a href="dashboard.html" class="beam-plate">
+          <i class="bi bi-house-door-fill beam-plate-icon"></i>
+          <span>Home</span>
+        </a>
+        <a href="profile.html" class="beam-plate active">
+          <i class="bi bi-building beam-plate-icon"></i>
+          <span>My Profile</span>
+        </a>
+        <a href="drivers.html" class="beam-plate">
+          <i class="bi bi-people-fill beam-plate-icon"></i>
+          <span>Drivers</span>
+        </a>
+        <a href="vehicles.html" class="beam-plate">
+          <i class="bi bi-truck beam-plate-icon"></i>
+          <span>Vehicles</span>
+        </a>
+        <a href="contracts.html" class="beam-plate">
+          <i class="bi bi-file-earmark-text beam-plate-icon"></i>
+          <span>Contracts</span>
+        </a>
+        <a href="sop-feed.html" class="beam-plate">
+          <i class="bi bi-journal-bookmark-fill beam-plate-icon"></i>
+          <span>SOP Feed</span>
+        </a>
+        <a href="../access-select.html" class="beam-plate beam-plate--switch">
+          <i class="bi bi-arrow-left-right beam-plate-icon"></i>
+          <span>Select access</span>
+        </a>
+      </div>
+    </nav>
+
+    <div class="sidebar-inset" id="sidebarInset">
+      <div class="liquid-glass-page-bg" aria-hidden="true"></div>
+      <div class="page-container">
+        <div class="page-inner">
+          <main class="vendor-admin-main">
+            <div class="admin-header d-flex flex-wrap align-items-center gap-2">
+              <h1 class="admin-header-title">Edit company profile</h1>
+              <div class="admin-header-user-pill d-flex align-items-center" id="spHeaderPill">
+                <img id="spHeaderAvatar" src="" alt="" class="admin-header-user-avatar admin-header-user-avatar--img" style="display:none;" />
+                <span class="admin-header-user-name" id="spHeaderName">—</span>
+              </div>
+            </div>
+
+            <div id="spNotFound" class="alert alert-warning hidden">
+              <strong>Service Provider not set.</strong> Open the portal with <code>?sp=YourCompany</code>.
+            </div>
+
+            <form id="profileForm" class="sp-portal-profile-form hidden">
+              <div class="card mb-3">
+                <div class="card-header"><i class="bi bi-info-circle"></i> Company info</div>
+                <div class="card-body">
+                  <div class="mb-3">
+                    <label for="profileName" class="form-label">Company name</label>
+                    <input type="text" id="profileName" class="form-control" readonly />
+                  </div>
+                  <div class="mb-3">
+                    <label for="profileOwner" class="form-label">Director / Owner</label>
+                    <input type="text" id="profileOwner" class="form-control" />
+                  </div>
+                  <div class="mb-3">
+                    <label for="profileDescription" class="form-label">Description</label>
+                    <textarea id="profileDescription" class="form-control" rows="3"></textarea>
+                  </div>
+                  <div class="row g-2">
+                    <div class="col-md-6">
+                      <label for="profileEmail" class="form-label">Email</label>
+                      <input type="email" id="profileEmail" class="form-control" />
+                    </div>
+                    <div class="col-md-6">
+                      <label for="profilePhone" class="form-label">Phone</label>
+                      <input type="text" id="profilePhone" class="form-control" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card mb-3">
+                <div class="card-header"><i class="bi bi-building"></i> Depot managers</div>
+                <div class="card-body" id="depotManagersContainer">
+                  <!-- filled by JS -->
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check-lg"></i> Save changes
+              </button>
+            </form>
+          </main>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="profileToast" class="alert-toast position-fixed bottom-0 end-0 m-3 shadow" role="status" hidden>
+    <i class="bi bi-check-circle-fill"></i>
+    <span id="profileToastText"></span>
+  </div>
+
+  <script src="../dhl-mock-data.js"></script>
+  <script>
+    (function () {
+      'use strict';
+      var SP_STORAGE_KEY = 'dhl_sp_portal_current_sp';
+
+      function getCurrentSp() {
+        var params = new URLSearchParams(window.location.search);
+        var sp = (params.get('sp') || '').trim();
+        if (sp) {
+          try { sessionStorage.setItem(SP_STORAGE_KEY, sp); } catch (e) {}
+          return sp;
+        }
+        try { return sessionStorage.getItem(SP_STORAGE_KEY) || ''; } catch (e) { return ''; }
+      }
+
+      function appendSpToLinks() {
+        var sp = getCurrentSp();
+        if (!sp) return;
+        document.querySelectorAll('.beam-plate[href]').forEach(function (a) {
+          var href = a.getAttribute('href');
+          if (href && href.indexOf('?') === -1) a.setAttribute('href', href + '?sp=' + encodeURIComponent(sp));
+        });
+      }
+
+      function getSpMeta(spName) {
+        var data = window.DHL_MOCK_DATA;
+        if (!data || !data.serviceProviders) return null;
+        for (var i = 0; i < data.serviceProviders.length; i++) {
+          if (data.serviceProviders[i].name === spName) return data.serviceProviders[i];
+        }
+        return { name: spName, owner: '', description: '', email: '', phone: '', depotManagers: {} };
+      }
+
+      function escapeAttr(s) {
+        if (s == null) return '';
+        return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      }
+
+      var spName = getCurrentSp();
+      if (!spName) {
+        document.getElementById('spNotFound').classList.remove('hidden');
+        document.getElementById('profileForm').classList.add('hidden');
+      } else {
+        document.getElementById('spHeaderName').textContent = spName;
+        var logoMap = { 'BA Express': 'ba-express-logo.png', 'Premier Logistics Ltd': 'premier-logistics-logo.png', 'Swift Haul Solutions': 'swift-haul-logo.png', 'Metro Freight Partners': 'metro-freight-logo.png', 'Atlas Transport Services': 'atlas-transport-logo.png' };
+        var avatar = document.getElementById('spHeaderAvatar');
+        if (avatar && logoMap[spName]) { avatar.src = '../assets/' + logoMap[spName]; avatar.alt = spName; avatar.style.display = 'block'; }
+        appendSpToLinks();
+        var meta = getSpMeta(spName);
+        if (meta) {
+          document.getElementById('profileForm').classList.remove('hidden');
+          document.getElementById('profileName').value = meta.name || '';
+          document.getElementById('profileOwner').value = meta.owner || '';
+          document.getElementById('profileDescription').value = meta.description || '';
+          document.getElementById('profileEmail').value = meta.email || '';
+          document.getElementById('profilePhone').value = meta.phone || '';
+
+          var depots = [];
+          var dm = meta.depotManagers || {};
+          Object.keys(dm).forEach(function (d) { depots.push(d); });
+          depots.sort();
+          var container = document.getElementById('depotManagersContainer');
+          container.innerHTML = depots.length === 0
+            ? '<p class="text-muted mb-0">No depot managers configured.</p>'
+            : depots.map(function (d) {
+                var m = dm[d];
+                var name = (m && m.name) ? m.name : '';
+                var email = (m && m.email) ? m.email : '';
+                var phone = (m && m.phone) ? m.phone : '';
+                return (
+                  '<div class="depot-manager-row border rounded p-2 mb-2">' +
+                  '<label class="form-label small text-muted">' + escapeAttr(d) + '</label>' +
+                  '<div class="row g-2">' +
+                  '<div class="col-12"><input type="text" class="form-control form-control-sm" data-depot="' + escapeAttr(d) + '" data-field="name" placeholder="Manager name" value="' + escapeAttr(name) + '" /></div>' +
+                  '<div class="col-md-6"><input type="email" class="form-control form-control-sm" data-depot="' + escapeAttr(d) + '" data-field="email" placeholder="Email" value="' + escapeAttr(email) + '" /></div>' +
+                  '<div class="col-md-6"><input type="text" class="form-control form-control-sm" data-depot="' + escapeAttr(d) + '" data-field="phone" placeholder="Phone" value="' + escapeAttr(phone) + '" /></div>' +
+                  '</div></div>'
+                );
+              }).join('');
+        }
+      }
+
+      document.getElementById('profileForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var toast = document.getElementById('profileToast');
+        var toastText = document.getElementById('profileToastText');
+        if (toast && toastText) {
+          toastText.textContent = 'Profile saved successfully.';
+          toast.removeAttribute('hidden');
+          setTimeout(function () { toast.setAttribute('hidden', ''); }, 3000);
+        }
+      });
+
+      function initBeamSidebar() {
+        var beam = document.getElementById('beamSidebar');
+        var trigger = document.getElementById('beamTrigger');
+        var overlay = document.getElementById('beamOverlay');
+        if (!beam || !trigger) return;
+        function toggleBeam() {
+          var isOpen = beam.getAttribute('data-state') === 'open';
+          beam.setAttribute('data-state', isOpen ? 'closed' : 'open');
+          trigger.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+          if (overlay) overlay.classList.toggle('visible', !isOpen);
+        }
+        trigger.addEventListener('click', toggleBeam);
+        if (overlay) overlay.addEventListener('click', function () { beam.setAttribute('data-state', 'closed'); trigger.setAttribute('aria-expanded', 'false'); overlay.classList.remove('visible'); });
+      }
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initBeamSidebar);
+      else initBeamSidebar();
+    })();
+  </script>
+</body>
+</html>

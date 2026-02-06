@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard – Service Provider Portal</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../vendor-admin-view.css" />
+  <link rel="stylesheet" href="../sidebar-beam.css" />
+  <link rel="stylesheet" href="../dashboard.css" />
+  <link rel="stylesheet" href="sp-portal.css" />
+</head>
+<body class="has-beam-sidebar sp-portal">
+  <div class="sidebar-wrapper" id="sidebarWrapper">
+    <div class="sidebar-gap" id="sidebarGap" aria-hidden="true"></div>
+    <div class="beam-overlay" id="beamOverlay" aria-hidden="true"></div>
+    <nav class="beam-sidebar" id="beamSidebar" data-state="closed" role="navigation" aria-label="Service Provider menu">
+      <button type="button" class="beam-trigger" id="beamTrigger" aria-label="Open menu" aria-expanded="false">
+        <i class="bi bi-list beam-icon-menu"></i>
+        <i class="bi bi-x-lg beam-icon-close"></i>
+      </button>
+      <div class="beam-rail" aria-hidden="true"></div>
+      <div class="beam-plates">
+        <a href="dashboard.html" class="beam-plate active">
+          <i class="bi bi-house-door-fill beam-plate-icon"></i>
+          <span>Home</span>
+        </a>
+        <a href="profile.html" class="beam-plate">
+          <i class="bi bi-building beam-plate-icon"></i>
+          <span>My Profile</span>
+        </a>
+        <a href="drivers.html" class="beam-plate">
+          <i class="bi bi-people-fill beam-plate-icon"></i>
+          <span>Drivers</span>
+        </a>
+        <a href="vehicles.html" class="beam-plate">
+          <i class="bi bi-truck beam-plate-icon"></i>
+          <span>Vehicles</span>
+        </a>
+        <a href="contracts.html" class="beam-plate">
+          <i class="bi bi-file-earmark-text beam-plate-icon"></i>
+          <span>Contracts</span>
+        </a>
+        <a href="sop-feed.html" class="beam-plate">
+          <i class="bi bi-journal-bookmark-fill beam-plate-icon"></i>
+          <span>SOP Feed</span>
+        </a>
+        <a href="../access-select.html" class="beam-plate beam-plate--switch">
+          <i class="bi bi-arrow-left-right beam-plate-icon"></i>
+          <span>Select access</span>
+        </a>
+      </div>
+    </nav>
+
+    <div class="sidebar-inset" id="sidebarInset">
+      <div class="liquid-glass-page-bg" aria-hidden="true"></div>
+      <div class="page-container">
+        <div class="page-inner">
+          <main class="vendor-admin-main dashboard-main">
+            <header class="dashboard-header">
+              <div class="dashboard-header-top">
+                <div class="dashboard-welcome">
+                  <h1 class="dashboard-title">Dashboard</h1>
+                  <p class="dashboard-welcome-msg" id="welcomeMsg">Your operations summary.</p>
+                </div>
+                <div class="admin-header-user-pill d-flex align-items-center" id="spHeaderPill" title="">
+                  <img id="spHeaderAvatar" src="" alt="" class="admin-header-user-avatar admin-header-user-avatar--img" style="display:none;" />
+                  <span class="admin-header-user-name" id="spHeaderName">—</span>
+                </div>
+              </div>
+              <div class="dashboard-tabs-wrap" id="spDashboardFiltersWrap">
+                <div class="dashboard-tab-filters d-flex flex-wrap align-items-center gap-2">
+                  <span class="dashboard-filter-loop-label">Depot:</span>
+                  <select id="spFilterDepot" class="form-select form-select-sm dashboard-filter-select" aria-label="Filter by depot">
+                    <option value="">All depots</option>
+                  </select>
+                  <div class="dashboard-filter-loop-wrap hidden" id="spLoopFilterWrap" aria-hidden="true">
+                    <span class="dashboard-filter-loop-label">Loop:</span>
+                    <select id="spFilterLoop" class="form-select form-select-sm dashboard-filter-select" aria-label="Filter by loop">
+                      <option value="">All loops</option>
+                    </select>
+                  </div>
+                  <div class="dashboard-filter-loop-wrap hidden" id="spRouteFilterWrap" aria-hidden="true">
+                    <span class="dashboard-filter-loop-label">Route:</span>
+                    <select id="spFilterRoute" class="form-select form-select-sm dashboard-filter-select" aria-label="Filter by route">
+                      <option value="">All routes</option>
+                    </select>
+                  </div>
+                  <button type="button" class="btn btn-outline-secondary btn-sm" id="spFilterClear">Clear</button>
+                </div>
+              </div>
+            </header>
+
+            <section class="dashboard-section dashboard-block" aria-labelledby="kpis-heading">
+              <div class="dashboard-block-header">
+                <h2 id="kpis-heading" class="dashboard-block-title">
+                  <i class="bi bi-graph-up-arrow"></i>
+                  <span>KPIs</span>
+                </h2>
+                <p class="dashboard-block-desc">Your key performance indicators</p>
+              </div>
+              <div class="dashboard-block-content">
+                <div class="dashboard-kpi-grid" id="kpiGrid" data-loading="true">
+                  <div class="dashboard-kpi-card" data-animate="1">
+                    <div class="dashboard-kpi-icon-wrap kpi-spr" aria-hidden="true"><i class="bi bi-graph-up-arrow"></i></div>
+                    <div class="dashboard-kpi-content">
+                      <span class="dashboard-kpi-value-wrap">
+                        <span class="dashboard-kpi-loading-spinner" aria-hidden="true"></span>
+                        <span class="dashboard-kpi-value" id="kpiSpr">0</span>
+                      </span>
+                      <span class="dashboard-kpi-label">SPR</span>
+                    </div>
+                  </div>
+                  <div class="dashboard-kpi-card" data-animate="2">
+                    <div class="dashboard-kpi-icon-wrap kpi-tw" aria-hidden="true"><i class="bi bi-clock-history"></i></div>
+                    <div class="dashboard-kpi-content">
+                      <span class="dashboard-kpi-value-wrap">
+                        <span class="dashboard-kpi-loading-spinner" aria-hidden="true"></span>
+                        <span class="dashboard-kpi-value" id="kpiTw">0</span>
+                      </span>
+                      <span class="dashboard-kpi-label">Time Window (TW)</span>
+                    </div>
+                  </div>
+                  <div class="dashboard-kpi-card" data-animate="3">
+                    <div class="dashboard-kpi-icon-wrap kpi-spohr" aria-hidden="true"><i class="bi bi-speedometer2"></i></div>
+                    <div class="dashboard-kpi-content">
+                      <span class="dashboard-kpi-value-wrap">
+                        <span class="dashboard-kpi-loading-spinner" aria-hidden="true"></span>
+                        <span class="dashboard-kpi-value" id="kpiSpohr">0</span>
+                      </span>
+                      <span class="dashboard-kpi-label">SPOH-R</span>
+                    </div>
+                  </div>
+                  <div class="dashboard-kpi-card" data-animate="4">
+                    <div class="dashboard-kpi-icon-wrap kpi-routes" aria-hidden="true"><i class="bi bi-signpost-2-fill"></i></div>
+                    <div class="dashboard-kpi-content">
+                      <span class="dashboard-kpi-value-wrap">
+                        <span class="dashboard-kpi-loading-spinner" aria-hidden="true"></span>
+                        <span class="dashboard-kpi-value" id="kpiTotalRoutes">0</span>
+                      </span>
+                      <span class="dashboard-kpi-label">TOTAL ROUTES</span>
+                    </div>
+                  </div>
+                  <div class="dashboard-kpi-card" data-animate="5">
+                    <div class="dashboard-kpi-icon-wrap kpi-stops" aria-hidden="true"><i class="bi bi-geo-alt-fill"></i></div>
+                    <div class="dashboard-kpi-content">
+                      <span class="dashboard-kpi-value-wrap">
+                        <span class="dashboard-kpi-loading-spinner" aria-hidden="true"></span>
+                        <span class="dashboard-kpi-value" id="kpiTotalStops">0</span>
+                      </span>
+                      <span class="dashboard-kpi-label">TOTAL STOPS</span>
+                    </div>
+                  </div>
+                  <div class="dashboard-kpi-card" data-animate="6">
+                    <div class="dashboard-kpi-icon-wrap kpi-vendors" aria-hidden="true"><i class="bi bi-people-fill"></i></div>
+                    <div class="dashboard-kpi-content">
+                      <span class="dashboard-kpi-value-wrap">
+                        <span class="dashboard-kpi-loading-spinner" aria-hidden="true"></span>
+                        <span class="dashboard-kpi-value" id="kpiVendors">0</span>
+                      </span>
+                      <span class="dashboard-kpi-label">ACTIVE VENDORS</span>
+                    </div>
+                  </div>
+                  <div class="dashboard-kpi-card" data-animate="7">
+                    <div class="dashboard-kpi-icon-wrap kpi-loops" aria-hidden="true"><i class="bi bi-arrow-repeat"></i></div>
+                    <div class="dashboard-kpi-content">
+                      <span class="dashboard-kpi-value-wrap">
+                        <span class="dashboard-kpi-loading-spinner" aria-hidden="true"></span>
+                        <span class="dashboard-kpi-value" id="kpiLoops">0</span>
+                      </span>
+                      <span class="dashboard-kpi-label">ACTIVE LOOPS</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="dashboard-section dashboard-block" aria-labelledby="compliance-heading">
+              <div class="dashboard-block-header">
+                <h2 id="compliance-heading" class="dashboard-block-title">
+                  <i class="bi bi-shield-check"></i>
+                  <span>Compliance</span>
+                </h2>
+                <p class="dashboard-block-desc">Training courses by status (your drivers)</p>
+              </div>
+              <div class="dashboard-block-content">
+                <div class="dashboard-compliance-grid" id="complianceGrid">
+                  <div class="dashboard-compliance-card" data-course="cargo">
+                    <div class="dashboard-compliance-card-header"><i class="bi bi-box-seam"></i><h3>Cargo Training</h3></div>
+                    <div class="dashboard-compliance-body">
+                      <div class="compliance-group expiring"><h4><i class="bi bi-exclamation-triangle"></i> Expiring</h4><ul class="compliance-vendor-list" id="complianceCargoExpiring"></ul></div>
+                      <div class="compliance-group expired"><h4><i class="bi bi-x-circle"></i> Expired</h4><ul class="compliance-vendor-list" id="complianceCargoExpired"></ul></div>
+                    </div>
+                  </div>
+                  <div class="dashboard-compliance-card" data-course="dangerous">
+                    <div class="dashboard-compliance-card-header"><i class="bi bi-exclamation-octagon"></i><h3>Dangerous Goods</h3></div>
+                    <div class="dashboard-compliance-body">
+                      <div class="compliance-group expiring"><h4><i class="bi bi-exclamation-triangle"></i> Expiring</h4><ul class="compliance-vendor-list" id="complianceDangerousExpiring"></ul></div>
+                      <div class="compliance-group expired"><h4><i class="bi bi-x-circle"></i> Expired</h4><ul class="compliance-vendor-list" id="complianceDangerousExpired"></ul></div>
+                    </div>
+                  </div>
+                  <div class="dashboard-compliance-card" data-course="manual">
+                    <div class="dashboard-compliance-card-header"><i class="bi bi-hand-index"></i><h3>Manual Handling</h3></div>
+                    <div class="dashboard-compliance-body">
+                      <div class="compliance-group expiring"><h4><i class="bi bi-exclamation-triangle"></i> Expiring</h4><ul class="compliance-vendor-list" id="complianceManualExpiring"></ul></div>
+                      <div class="compliance-group expired"><h4><i class="bi bi-x-circle"></i> Expired</h4><ul class="compliance-vendor-list" id="complianceManualExpired"></ul></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="dashboard-section dashboard-block" aria-labelledby="drivers-docs-heading">
+              <div class="dashboard-block-header">
+                <h2 id="drivers-docs-heading" class="dashboard-block-title">
+                  <i class="bi bi-file-earmark-medical"></i>
+                  <span>Drivers with expiring or expired documents</span>
+                </h2>
+                <p class="dashboard-block-desc">DVLA, Licence, Passport and Visa</p>
+              </div>
+              <div class="dashboard-block-content">
+                <div class="dashboard-vehicles-table-wrap table-responsive">
+                  <table class="table table-hover align-middle dashboard-vehicles-table">
+                    <thead>
+                      <tr>
+                        <th>Driver</th>
+                        <th>Depot</th>
+                        <th>Document</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody id="driversDocsBody"></tbody>
+                  </table>
+                </div>
+                <div id="driversDocsEmptyState" class="dashboard-empty-state hidden">
+                  <i class="bi bi-check-circle"></i>
+                  <p>No drivers with expiring or expired documents.</p>
+                </div>
+              </div>
+            </section>
+
+            <section class="dashboard-section dashboard-vehicles" aria-labelledby="vehicles-heading">
+              <h2 id="vehicles-heading" class="dashboard-section-title">Vehicles requiring attention</h2>
+              <div class="dashboard-vehicles-table-wrap table-responsive">
+                <table class="table table-hover align-middle dashboard-vehicles-table">
+                  <thead>
+                    <tr>
+                      <th>VRN</th>
+                      <th>Brand</th>
+                      <th>Model</th>
+                      <th>Registration Date</th>
+                      <th>Depot</th>
+                      <th>Reason</th>
+                    </tr>
+                  </thead>
+                  <tbody id="vehiclesAttentionBody"></tbody>
+                </table>
+              </div>
+              <div id="vehiclesEmptyState" class="dashboard-empty-state hidden">
+                <i class="bi bi-check-circle"></i>
+                <p>No vehicles requiring attention.</p>
+              </div>
+            </section>
+          </main>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="spNotFound" class="alert alert-warning mx-3 my-3 hidden" role="alert">
+    <strong>Service Provider not set.</strong> Open this portal from the main app with <code>?sp=YourCompany</code> or <a href="../service-providers.html">choose a Service Provider</a>.
+  </div>
+
+  <script src="../dhl-mock-data.js"></script>
+  <script>
+    (function () {
+      'use strict';
+      var SP_STORAGE_KEY = 'dhl_sp_portal_current_sp';
+
+      function getCurrentSp() {
+        var params = new URLSearchParams(window.location.search);
+        var sp = (params.get('sp') || '').trim();
+        if (sp) {
+          try { sessionStorage.setItem(SP_STORAGE_KEY, sp); } catch (e) {}
+          return sp;
+        }
+        try { return sessionStorage.getItem(SP_STORAGE_KEY) || ''; } catch (e) { return ''; }
+      }
+
+      function appendSpToLinks() {
+        var sp = getCurrentSp();
+        if (!sp) return;
+        document.querySelectorAll('.beam-plate[href]').forEach(function (a) {
+          var href = a.getAttribute('href');
+          if (href && href.indexOf('?') === -1) a.setAttribute('href', href + '?sp=' + encodeURIComponent(sp));
+        });
+      }
+
+      var data = window.DHL_MOCK_DATA || {};
+      var vendors = (data.vendors) ? data.vendors : [];
+      var vehicles = (data.vehicles) ? data.vehicles : [];
+      var contracts = (data.contracts) ? data.contracts : [];
+      var spName = getCurrentSp();
+
+      var filterState = { depot: '', loop: '', route: '' };
+
+      function getDepotsForSp() {
+        var out = [], seen = {};
+        contracts.forEach(function (c) {
+          if (c.serviceProvider !== spName) return;
+          (c.depots || []).forEach(function (d) {
+            if (d.name && !seen[d.name]) { seen[d.name] = true; out.push(d.name); }
+          });
+        });
+        return out.sort();
+      }
+
+      function getLoopsForSp(depotName) {
+        var out = [], seen = {};
+        contracts.forEach(function (c) {
+          if (c.serviceProvider !== spName) return;
+          (c.depots || []).forEach(function (d) {
+            if (d.name !== depotName || !d.loops) return;
+            d.loops.forEach(function (l) {
+              if (l.name && !seen[l.name]) { seen[l.name] = true; out.push(l.name); }
+            });
+          });
+        });
+        return out.sort();
+      }
+
+      function getRoutesForSp(depotName, loopName) {
+        var out = [];
+        contracts.forEach(function (c) {
+          if (c.serviceProvider !== spName) return;
+          (c.depots || []).forEach(function (d) {
+            if (d.name !== depotName || !d.loops) return;
+            d.loops.forEach(function (l) {
+              if (l.name !== loopName || !l.routes) return;
+              l.routes.forEach(function (r) {
+                if (r.name) out.push(r.name);
+              });
+            });
+          });
+        });
+        return out;
+      }
+
+      function updateFilterSelects() {
+        var depotSel = document.getElementById('spFilterDepot');
+        var loopWrap = document.getElementById('spLoopFilterWrap');
+        var loopSel = document.getElementById('spFilterLoop');
+        var routeWrap = document.getElementById('spRouteFilterWrap');
+        var routeSel = document.getElementById('spFilterRoute');
+        if (!depotSel) return;
+        var depots = getDepotsForSp();
+        var currentDepot = filterState.depot;
+        depotSel.innerHTML = '<option value="">All depots</option>' + depots.map(function (d) {
+          return '<option value="' + d + '"' + (d === currentDepot ? ' selected' : '') + '>' + d + '</option>';
+        }).join('');
+        if (loopWrap && loopSel) {
+          if (currentDepot) {
+            loopWrap.classList.remove('hidden');
+            loopWrap.setAttribute('aria-hidden', 'false');
+            var loops = getLoopsForSp(currentDepot);
+            var currentLoop = filterState.loop;
+            if (loops.indexOf(currentLoop) === -1) currentLoop = '';
+            loopSel.innerHTML = '<option value="">All loops</option>' + loops.map(function (l) {
+              return '<option value="' + l + '"' + (l === currentLoop ? ' selected' : '') + '>' + l + '</option>';
+            }).join('');
+            if (routeWrap && routeSel) {
+              if (filterState.loop) {
+                routeWrap.classList.remove('hidden');
+                routeWrap.setAttribute('aria-hidden', 'false');
+                var routes = getRoutesForSp(currentDepot, filterState.loop);
+                var currentRoute = filterState.route;
+                if (routes.indexOf(currentRoute) === -1) currentRoute = '';
+                routeSel.innerHTML = '<option value="">All routes</option>' + routes.map(function (r) {
+                  return '<option value="' + r + '"' + (r === currentRoute ? ' selected' : '') + '>' + r + '</option>';
+                }).join('');
+              } else {
+                routeWrap.classList.add('hidden');
+                routeWrap.setAttribute('aria-hidden', 'true');
+                filterState.route = '';
+              }
+            }
+          } else {
+            loopWrap.classList.add('hidden');
+            loopWrap.setAttribute('aria-hidden', 'true');
+            if (routeWrap) { routeWrap.classList.add('hidden'); routeWrap.setAttribute('aria-hidden', 'true'); }
+            filterState.loop = '';
+            filterState.route = '';
+          }
+        }
+      }
+
+      if (!spName) {
+        document.getElementById('spNotFound').classList.remove('hidden');
+        document.querySelector('.sidebar-inset').style.display = 'none';
+        var fw = document.getElementById('spDashboardFiltersWrap');
+        if (fw) fw.style.display = 'none';
+      } else {
+        document.getElementById('welcomeMsg').textContent = 'Welcome, ' + spName + '. Here is your operations summary.';
+        document.getElementById('spHeaderName').textContent = spName;
+        document.getElementById('spHeaderPill').setAttribute('title', spName);
+        var logoMap = { 'BA Express': 'ba-express-logo.png', 'Premier Logistics Ltd': 'premier-logistics-logo.png', 'Swift Haul Solutions': 'swift-haul-logo.png', 'Metro Freight Partners': 'metro-freight-logo.png', 'Atlas Transport Services': 'atlas-transport-logo.png' };
+        var avatar = document.getElementById('spHeaderAvatar');
+        if (avatar && logoMap[spName]) { avatar.src = '../assets/' + logoMap[spName]; avatar.alt = spName; avatar.style.display = 'block'; }
+        appendSpToLinks();
+      }
+
+      function filterVendors() {
+        var list = vendors.filter(function (v) { return v.serviceProvider === spName && v.status === 'Active'; });
+        if (filterState.depot) list = list.filter(function (v) { return v.depot === filterState.depot; });
+        return list;
+      }
+      function filterVehicles() {
+        var list = vehicles.filter(function (v) { return v.serviceProvider === spName; });
+        if (filterState.depot) list = list.filter(function (v) { return v.depot === filterState.depot; });
+        return list;
+      }
+      function aggregateContracts() {
+        var totalLoops = 0, totalRoutes = 0, totalStops = 0, totalDeliveries = 0, sumDel = 0, countDel = 0;
+        contracts.forEach(function (c) {
+          if (c.serviceProvider !== spName) return;
+          (c.depots || []).forEach(function (d) {
+            if (filterState.depot && d.name !== filterState.depot) return;
+            (d.loops || []).forEach(function (l) {
+              if (filterState.loop && l.name !== filterState.loop) return;
+              totalLoops++;
+              (l.routes || []).forEach(function (r) {
+                if (filterState.route && r.name !== filterState.route) return;
+                totalRoutes++;
+                if (r.postcodes && Array.isArray(r.postcodes)) totalStops += r.postcodes.length;
+                totalDeliveries += Math.floor(Number(r.deliveries) || (r.postcodes && r.postcodes.length) || 0);
+                if (r.targetDel != null) { sumDel += r.targetDel; countDel++; }
+              });
+            });
+          });
+        });
+        return { loops: totalLoops, routes: totalRoutes, totalStops: totalStops, totalDeliveries: totalDeliveries };
+      }
+
+      function getValidityStatus(dateStr, monthsValidity) {
+        if (!dateStr) return 'expired';
+        var d = new Date(dateStr);
+        if (isNaN(d.getTime())) return 'expired';
+        var exp = new Date(d);
+        exp.setMonth(exp.getMonth() + monthsValidity);
+        var now = new Date();
+        var warn = new Date(now);
+        warn.setMonth(warn.getMonth() + 3);
+        if (exp < now) return 'expired';
+        if (exp < warn) return 'expiring';
+        return 'ok';
+      }
+      function getDirectExpiryStatus(dateStr) {
+        if (!dateStr) return 'ok';
+        var d = new Date(dateStr);
+        if (isNaN(d.getTime())) return 'ok';
+        var now = new Date();
+        var warn = new Date(now);
+        warn.setMonth(warn.getMonth() + 3);
+        if (d < now) return 'expired';
+        if (d < warn) return 'expiring';
+        return 'ok';
+      }
+      function formatDate(dateStr) {
+        if (!dateStr) return '—';
+        var parts = String(dateStr).split('-');
+        if (parts.length >= 3) return parts[2] + '/' + parts[1] + '/' + parts[0];
+        return dateStr;
+      }
+      function escapeHtml(s) {
+        if (s == null) return '';
+        var d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+      }
+
+      function hasNoTechnicalInfo(v) {
+        var fields = ['wrappedVehicle', 'slamLock', 'camera', 'gps', 'bulkhead', 'doors270'];
+        return fields.every(function (f) { return !v[f]; });
+      }
+      function getVehicleAgeYears(dateStr) {
+        if (!dateStr) return 0;
+        var d = new Date(dateStr);
+        if (isNaN(d.getTime())) return 0;
+        return (new Date() - d) / (365.25 * 24 * 60 * 60 * 1000);
+      }
+
+      function updateKPIs() {
+        if (!spName) return;
+        var filteredVendors = filterVendors();
+        var agg = aggregateContracts();
+        var summary = (data.dashboardSummary) || { timeWindow: 98.5, spohR: 12.4 };
+        var twVal = summary.timeWindow != null ? Math.round(summary.timeWindow * 10) / 10 : 0;
+        var spohrVal = summary.spohR != null ? Math.round(summary.spohR * 10) / 10 : 0;
+
+        var kpiSpr = document.getElementById('kpiSpr');
+        var kpiTw = document.getElementById('kpiTw');
+        var kpiSpohr = document.getElementById('kpiSpohr');
+        var kpiTotalRoutes = document.getElementById('kpiTotalRoutes');
+        var kpiTotalStops = document.getElementById('kpiTotalStops');
+        var kpiVendors = document.getElementById('kpiVendors');
+        var kpiLoops = document.getElementById('kpiLoops');
+        if (kpiSpr) kpiSpr.textContent = agg.totalDeliveries || 0;
+        if (kpiTw) kpiTw.textContent = twVal + '%';
+        if (kpiSpohr) kpiSpohr.textContent = spohrVal;
+        if (kpiTotalRoutes) kpiTotalRoutes.textContent = agg.routes || 0;
+        if (kpiTotalStops) kpiTotalStops.textContent = agg.totalStops || 0;
+        if (kpiVendors) kpiVendors.textContent = filteredVendors.length;
+        if (kpiLoops) kpiLoops.textContent = agg.loops || 0;
+
+        var grid = document.getElementById('kpiGrid');
+        if (grid) grid.setAttribute('data-loading', 'false');
+      }
+
+      function updateCompliance() {
+        if (!spName) return;
+        var filtered = filterVendors();
+        var courses = [
+          { key: 'cargo', dateKey: 'cargoTrainingDate', expId: 'complianceCargoExpiring', expId2: 'complianceCargoExpired' },
+          { key: 'dangerous', dateKey: 'dangerousGoodsTrainingDate', expId: 'complianceDangerousExpiring', expId2: 'complianceDangerousExpired' },
+          { key: 'manual', dateKey: 'manualHandlingTrainingDate', expId: 'complianceManualExpiring', expId2: 'complianceManualExpired' }
+        ];
+        courses.forEach(function (c) {
+          var expiring = [], expired = [];
+          filtered.forEach(function (v) {
+            var st = getValidityStatus(v[c.dateKey], 24);
+            var name = (v.firstName || '') + ' ' + (v.lastName || '');
+            if (st === 'expiring') expiring.push(name);
+            if (st === 'expired') expired.push(name);
+          });
+          var elExp = document.getElementById(c.expId);
+          var elExp2 = document.getElementById(c.expId2);
+          if (elExp) elExp.innerHTML = expiring.length ? expiring.map(function (x) { return '<li>' + escapeHtml(x) + '</li>'; }).join('') : '<li class="none">None</li>';
+          if (elExp2) elExp2.innerHTML = expired.length ? expired.map(function (x) { return '<li>' + escapeHtml(x) + '</li>'; }).join('') : '<li class="none">None</li>';
+        });
+      }
+
+      function updateDriversDocs() {
+        if (!spName) return;
+        var filtered = filterVendors();
+        var rows = [];
+        filtered.forEach(function (v) {
+          var name = (v.firstName || '') + ' ' + (v.lastName || '');
+          var st = getValidityStatus(v.dvlaCheckDate, 6);
+          if (st === 'expiring' || st === 'expired') rows.push({ vendor: v, name: name, document: 'DVLA Check', date: v.dvlaCheckDate, status: st });
+          ['licenceExpiringDate', 'passportExpiringDate', 'visaValidity'].forEach(function (key) {
+            if (!v[key]) return;
+            var labels = { licenceExpiringDate: 'Licence', passportExpiringDate: 'Passport', visaValidity: 'Visa' };
+            var st = getDirectExpiryStatus(v[key]);
+            if (st === 'expiring' || st === 'expired') rows.push({ vendor: v, name: name, document: labels[key], date: v[key], status: st });
+          });
+        });
+        var tbody = document.getElementById('driversDocsBody');
+        var emptyEl = document.getElementById('driversDocsEmptyState');
+        if (!tbody) return;
+        if (rows.length === 0) {
+          tbody.innerHTML = '';
+          if (emptyEl) emptyEl.classList.remove('hidden');
+          return;
+        }
+        if (emptyEl) emptyEl.classList.add('hidden');
+        tbody.innerHTML = rows.map(function (r) {
+          var statusClass = r.status === 'expired' ? 'dashboard-status-expired' : 'dashboard-status-expiring';
+          return '<tr><td><strong>' + escapeHtml(r.name) + '</strong></td><td>' + escapeHtml(r.vendor.depot || '—') + '</td><td>' + escapeHtml(r.document) + '</td><td>' + formatDate(r.date) + '</td><td><span class="dashboard-reason-badge ' + statusClass + '">' + (r.status === 'expired' ? 'Expired' : 'Expiring') + '</span></td></tr>';
+        }).join('');
+      }
+
+      function updateVehicles() {
+        if (!spName) return;
+        var filtered = filterVehicles();
+        var attention = filtered.filter(function (v) {
+          var age = getVehicleAgeYears(v.registrationDate);
+          var noTech = hasNoTechnicalInfo(v);
+          return age >= 6 || noTech;
+        });
+        var tbody = document.getElementById('vehiclesAttentionBody');
+        var emptyEl = document.getElementById('vehiclesEmptyState');
+        if (!tbody) return;
+        if (attention.length === 0) {
+          tbody.innerHTML = '';
+          if (emptyEl) emptyEl.classList.remove('hidden');
+          return;
+        }
+        if (emptyEl) emptyEl.classList.add('hidden');
+        tbody.innerHTML = attention.map(function (v) {
+          var age = getVehicleAgeYears(v.registrationDate);
+          var noTech = hasNoTechnicalInfo(v);
+          var reason = [];
+          if (age >= 6) reason.push('6+ years');
+          if (noTech) reason.push('No Technical Info');
+          return '<tr><td><strong>' + escapeHtml(v.vrn || '—') + '</strong></td><td>' + escapeHtml(v.brand || '—') + '</td><td>' + escapeHtml(v.model || '—') + '</td><td>' + formatDate(v.registrationDate) + '</td><td>' + escapeHtml(v.depot || '—') + '</td><td><span class="dashboard-reason-badge">' + escapeHtml(reason.join(' • ')) + '</span></td></tr>';
+        }).join('');
+      }
+
+      function initBeamSidebar() {
+        var beam = document.getElementById('beamSidebar');
+        var trigger = document.getElementById('beamTrigger');
+        var overlay = document.getElementById('beamOverlay');
+        if (!beam || !trigger) return;
+        function toggleBeam() {
+          var isOpen = beam.getAttribute('data-state') === 'open';
+          beam.setAttribute('data-state', isOpen ? 'closed' : 'open');
+          trigger.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+          if (overlay) overlay.classList.toggle('visible', !isOpen);
+        }
+        trigger.addEventListener('click', toggleBeam);
+        if (overlay) overlay.addEventListener('click', function () { beam.setAttribute('data-state', 'closed'); trigger.setAttribute('aria-expanded', 'false'); overlay.classList.remove('visible'); });
+      }
+
+      function render() {
+        var depotEl = document.getElementById('spFilterDepot');
+        var loopEl = document.getElementById('spFilterLoop');
+        var routeEl = document.getElementById('spFilterRoute');
+        filterState.depot = depotEl ? depotEl.value : '';
+        filterState.loop = loopEl ? loopEl.value : '';
+        filterState.route = routeEl ? routeEl.value : '';
+        updateKPIs();
+        updateCompliance();
+        updateDriversDocs();
+        updateVehicles();
+      }
+
+      if (spName) {
+        updateFilterSelects();
+        render();
+        var depotSel = document.getElementById('spFilterDepot');
+        var loopSel = document.getElementById('spFilterLoop');
+        var routeSel = document.getElementById('spFilterRoute');
+        var clearBtn = document.getElementById('spFilterClear');
+        if (depotSel) depotSel.addEventListener('change', function () { filterState.depot = this.value; filterState.loop = ''; filterState.route = ''; updateFilterSelects(); render(); });
+        if (loopSel) loopSel.addEventListener('change', function () { filterState.loop = this.value; filterState.route = ''; updateFilterSelects(); render(); });
+        if (routeSel) routeSel.addEventListener('change', function () { filterState.route = this.value; render(); });
+        if (clearBtn) clearBtn.addEventListener('click', function () { filterState.depot = ''; filterState.loop = ''; filterState.route = ''; updateFilterSelects(); render(); });
+      }
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initBeamSidebar);
+      else initBeamSidebar();
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+/**
+ * Vehicles Admin View – ajustes específicos
+ * Carrega depois de vendor-admin-view.css. Estilos base partilhados em vendor-admin-view.css.
+ */
+
+.vehicles-admin-main .admin-header-title {
+  color: #0f172a;
+}

@@ -1,0 +1,210 @@
+/**
+ * Service Provider Portal – estilos específicos
+ * Logo na pill, botão Add driver (e Add vehicle) com posicionamento e animação
+ */
+
+/* ========== User pill com logo ========== */
+.sp-portal .admin-header-user-pill .admin-header-user-avatar {
+  width: 2rem;
+  height: 2rem;
+  object-fit: contain;
+}
+
+.sp-portal .admin-header-user-pill .admin-header-user-avatar--img {
+  border-radius: 6px;
+}
+
+/* ========== Botão Add driver / Add vehicle ========== */
+.sp-portal .admin-header {
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+}
+
+.sp-portal .admin-header-title {
+  margin: 0;
+}
+
+.sp-portal .sp-portal-action-wrap {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.sp-portal-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.25s ease,
+              background 0.2s ease;
+  box-shadow: 0 2px 8px rgba(13, 110, 253, 0.25);
+}
+
+.sp-portal-add-btn:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(13, 110, 253, 0.35);
+}
+
+.sp-portal-add-btn:active {
+  transform: translateY(0) scale(0.98);
+  transition-duration: 0.1s;
+}
+
+.sp-portal-add-btn i {
+  font-size: 1.1rem;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.sp-portal-add-btn:hover i {
+  transform: scale(1.15);
+}
+
+/* Animação de entrada ao carregar a página */
+.sp-portal-add-btn {
+  animation: sp-portal-add-btn-enter 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+}
+
+@keyframes sp-portal-add-btn-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 575px) {
+  .sp-portal .admin-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .sp-portal .sp-portal-action-wrap {
+    margin-left: 0;
+    order: 2;
+  }
+
+  .sp-portal .admin-header-user-pill {
+    order: 3;
+    margin-left: 0;
+    justify-content: center;
+  }
+}
+
+/* ========== Vendors page (Vendor-style) ========== */
+.sp-vendor-main .sp-vendor-header {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.98) 100%);
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+.sp-vendor-header-inner {
+  background: transparent;
+}
+
+.sp-vendor-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.sp-vendor-subtitle {
+  font-size: 0.875rem;
+}
+
+.sp-vendor-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+}
+
+.sp-vendor-metric {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0.5rem 0.75rem;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  min-width: 4.5rem;
+}
+
+.sp-vendor-metric-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.sp-vendor-metric-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #64748b;
+  margin-top: 0.15rem;
+}
+
+.sp-vendor-filters .min-w-200 {
+  min-width: 200px;
+}
+
+.sp-vendor-table-wrap .sp-vendor-th {
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: #475569;
+  white-space: nowrap;
+  padding: 0.75rem 1rem;
+}
+
+.sp-vendor-th-sort {
+  cursor: pointer;
+  user-select: none;
+}
+
+.sp-vendor-th-sort:hover {
+  color: #0f172a;
+}
+
+.sp-vendor-badge {
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sp-vendor-badge:hover {
+  transform: scale(1.05);
+}
+
+/* Expired status (red) for training/documents */
+.status-badge-expired,
+.sp-portal .status-badge-expiring[data-expired="true"] {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+  color: #fff !important;
+}
+
+/* VRN plate (Vehicles page – badge style like Next.js VrnPlate) */
+.sp-vrn-plate {
+  display: inline-block;
+  padding: 0.25em 0.6em;
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-family: ui-monospace, monospace;
+  letter-spacing: 0.05em;
+  background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+  color: #fff;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+.sp-vendor-table-wrap .sp-vrn-plate {
+  font-size: 0.8rem;
+}

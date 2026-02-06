@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contracts – Service Provider Portal</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../vendor-admin-view.css" />
+  <link rel="stylesheet" href="../contract-management.css" />
+  <link rel="stylesheet" href="../sidebar-beam.css" />
+  <link rel="stylesheet" href="sp-portal.css" />
+</head>
+<body class="has-beam-sidebar sp-portal">
+  <div class="sidebar-wrapper" id="sidebarWrapper">
+    <div class="sidebar-gap" id="sidebarGap" aria-hidden="true"></div>
+    <div class="beam-overlay" id="beamOverlay" aria-hidden="true"></div>
+    <nav class="beam-sidebar" id="beamSidebar" data-state="closed" role="navigation" aria-label="Service Provider menu">
+      <button type="button" class="beam-trigger" id="beamTrigger" aria-label="Open menu" aria-expanded="false">
+        <i class="bi bi-list beam-icon-menu"></i>
+        <i class="bi bi-x-lg beam-icon-close"></i>
+      </button>
+      <div class="beam-rail" aria-hidden="true"></div>
+      <div class="beam-plates">
+        <a href="dashboard.html" class="beam-plate"><i class="bi bi-house-door-fill beam-plate-icon"></i><span>Home</span></a>
+        <a href="profile.html" class="beam-plate"><i class="bi bi-building beam-plate-icon"></i><span>My Profile</span></a>
+        <a href="drivers.html" class="beam-plate"><i class="bi bi-people-fill beam-plate-icon"></i><span>Drivers</span></a>
+        <a href="vehicles.html" class="beam-plate"><i class="bi bi-truck beam-plate-icon"></i><span>Vehicles</span></a>
+        <a href="contracts.html" class="beam-plate active"><i class="bi bi-file-earmark-text beam-plate-icon"></i><span>Contracts</span></a>
+        <a href="sop-feed.html" class="beam-plate"><i class="bi bi-journal-bookmark-fill beam-plate-icon"></i><span>SOP Feed</span></a>
+        <a href="../access-select.html" class="beam-plate beam-plate--switch"><i class="bi bi-arrow-left-right beam-plate-icon"></i><span>Select access</span></a>
+      </div>
+    </nav>
+
+    <div class="sidebar-inset" id="sidebarInset">
+      <div class="liquid-glass-page-bg" aria-hidden="true"></div>
+      <div class="page-container">
+        <div class="page-inner">
+          <main class="vendor-admin-main contract-management-main">
+            <div class="admin-header d-flex flex-wrap align-items-center gap-2">
+              <h1 class="admin-header-title">Your contracts</h1>
+              <div class="admin-header-user-pill d-flex align-items-center ms-auto">
+                <img id="spHeaderAvatar" src="" alt="" class="admin-header-user-avatar admin-header-user-avatar--img" style="display:none;" />
+                <span class="admin-header-user-name" id="spHeaderName">—</span>
+              </div>
+            </div>
+            <p class="text-muted">Depots, loops and routes for your company (read-only).</p>
+
+            <div id="spNotFound" class="alert alert-warning hidden">Service Provider not set. Open with <code>?sp=YourCompany</code>.</div>
+
+            <div id="contractTree" class="contract-tree"></div>
+            <div id="emptyState" class="empty-state alert alert-light hidden">No contracts found.</div>
+          </main>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../dhl-mock-data.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    (function () {
+      'use strict';
+      var SP_STORAGE_KEY = 'dhl_sp_portal_current_sp';
+      function getCurrentSp() {
+        var params = new URLSearchParams(window.location.search);
+        var sp = (params.get('sp') || '').trim();
+        if (sp) { try { sessionStorage.setItem(SP_STORAGE_KEY, sp); } catch (e) {} return sp; }
+        try { return sessionStorage.getItem(SP_STORAGE_KEY) || ''; } catch (e) { return ''; }
+      }
+      function appendSpToLinks() {
+        var sp = getCurrentSp();
+        if (!sp) return;
+        document.querySelectorAll('.beam-plate[href]').forEach(function (a) {
+          var href = a.getAttribute('href');
+          if (href && href.indexOf('?') === -1) a.setAttribute('href', href + '?sp=' + encodeURIComponent(sp));
+        });
+      }
+
+      function postcodesToSubpostcodes(postcodes) {
+        if (!postcodes || !postcodes.length) return [];
+        var seen = {}, out = [];
+        for (var i = 0; i < postcodes.length; i++) {
+          var pc = String(postcodes[i]).trim();
+          if (pc.length <= 2) continue;
+          var sub = pc.slice(0, -2).trim();
+          if (sub && !seen[sub]) { seen[sub] = true; out.push(sub); }
+        }
+        return out.sort();
+      }
+      function escapeHtml(s) {
+        if (s == null) return '';
+        var d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+      }
+
+      var contractData = (window.DHL_MOCK_DATA && window.DHL_MOCK_DATA.contracts) ? window.DHL_MOCK_DATA.contracts : [];
+      var spName = getCurrentSp();
+
+      function getFilteredData() {
+        if (!spName) return [];
+        for (var i = 0; i < contractData.length; i++) {
+          if (contractData[i].serviceProvider === spName) {
+            var prov = contractData[i];
+            var depots = [];
+            for (var d = 0; d < (prov.depots || []).length; d++) {
+              var dep = prov.depots[d];
+              var loops = [];
+              for (var L = 0; L < (dep.loops || []).length; L++) {
+                var loop = dep.loops[L];
+                var routes = (loop.routes || []).map(function (r) {
+                  return { name: r.name, type: r.type || 'Child', targetDel: r.targetDel != null ? r.targetDel : 0, targetPu: r.targetPu != null ? r.targetPu : 0, driver: r.driver || '', postcodes: r.postcodes || [] };
+                });
+                loops.push({ name: loop.name, routes: routes });
+              }
+              depots.push({ name: dep.name, loops: loops });
+            }
+            return [{ serviceProvider: prov.serviceProvider, depots: depots }];
+          }
+        }
+        return [];
+      }
+
+      var idGen = 0;
+      function nextId(prefix) { return 'cm-' + (prefix || '') + '-' + (idGen++); }
+
+      function renderTree() {
+        var container = document.getElementById('contractTree');
+        var emptyState = document.getElementById('emptyState');
+        if (!spName) {
+          document.getElementById('spNotFound').classList.remove('hidden');
+          return;
+        }
+        document.getElementById('spNotFound').classList.add('hidden');
+        document.getElementById('spHeaderName').textContent = spName;
+        var logoMap = { 'BA Express': 'ba-express-logo.png', 'Premier Logistics Ltd': 'premier-logistics-logo.png', 'Swift Haul Solutions': 'swift-haul-logo.png', 'Metro Freight Partners': 'metro-freight-logo.png', 'Atlas Transport Services': 'atlas-transport-logo.png' };
+        var avatar = document.getElementById('spHeaderAvatar');
+        if (avatar && logoMap[spName]) { avatar.src = '../assets/' + logoMap[spName]; avatar.alt = spName; avatar.style.display = 'block'; }
+        appendSpToLinks();
+
+        var filtered = getFilteredData();
+        if (filtered.length === 0) {
+          container.innerHTML = '';
+          emptyState.classList.remove('hidden');
+          return;
+        }
+        emptyState.classList.add('hidden');
+        idGen = 0;
+        var html = '';
+        for (var i = 0; i < filtered.length; i++) {
+          var prov = filtered[i];
+          var spId = nextId('sp');
+          html += '<div class="accordion mb-3" id="acc-sp-' + i + '">';
+          html += '<div class="accordion-item">';
+          html += '<h2 class="accordion-header">';
+          html += '<button class="accordion-button py-3" type="button" data-bs-toggle="collapse" data-bs-target="#' + spId + '" aria-expanded="true">';
+          html += '<i class="bi bi-building me-2 text-primary"></i> <span class="fw-semibold">' + escapeHtml(prov.serviceProvider) + '</span>';
+          html += '</button></h2>';
+          html += '<div id="' + spId + '" class="accordion-collapse collapse show" data-bs-parent="#acc-sp-' + i + '">';
+          html += '<div class="accordion-body pt-2 contract-block-inner">';
+
+          for (var d = 0; d < prov.depots.length; d++) {
+            var dep = prov.depots[d];
+            var depId = nextId('dep');
+            html += '<div class="accordion accordion-flush mb-2" id="acc-' + depId + '">';
+            html += '<div class="accordion-item">';
+            html += '<h3 class="accordion-header">';
+            html += '<button class="accordion-button collapsed py-2" type="button" data-bs-toggle="collapse" data-bs-target="#' + depId + '"><i class="bi bi-geo-alt me-2 text-secondary"></i> ' + escapeHtml(dep.name) + '</button></h3>';
+            html += '<div id="' + depId + '" class="accordion-collapse collapse" data-bs-parent="#acc-' + depId + '">';
+            html += '<div class="accordion-body contract-block-inner">';
+
+            for (var L = 0; L < dep.loops.length; L++) {
+              var loop = dep.loops[L];
+              var loopId = nextId('loop');
+              html += '<div class="accordion accordion-flush mb-2">';
+              html += '<div class="accordion-item">';
+              html += '<h3 class="accordion-header">';
+              html += '<button class="accordion-button collapsed py-2" type="button" data-bs-toggle="collapse" data-bs-target="#' + loopId + '"><i class="bi bi-arrow-repeat me-2 text-secondary"></i> ' + escapeHtml(loop.name) + '</button></h3>';
+              html += '<div id="' + loopId + '" class="accordion-collapse collapse">';
+              html += '<div class="accordion-body contract-block-inner">';
+              html += '<div class="contract-rates-box"><p><strong class="text-dark">Child Rates:</strong> <span class="text-muted">Band 1–4</span></p><p><strong class="text-dark">Flex Rates:</strong> <span class="text-muted">Band 1–4</span></p></div>';
+
+              for (var r = 0; r < loop.routes.length; r++) {
+                var route = loop.routes[r];
+                var routeId = nextId('route');
+                var subpostcodes = postcodesToSubpostcodes(route.postcodes);
+                var targetDel = route.targetDel != null ? route.targetDel : 0;
+                var targetPu = route.targetPu != null ? route.targetPu : 0;
+                var typeClass = (route.type || 'Child') === 'Flex' ? 'contract-route-type-flex' : 'contract-route-type-child';
+                html += '<div class="accordion accordion-flush mb-2">';
+                html += '<div class="accordion-item">';
+                html += '<h3 class="accordion-header">';
+                html += '<button class="accordion-button collapsed py-2" type="button" data-bs-toggle="collapse" data-bs-target="#' + routeId + '"><i class="bi bi-signpost-2 me-2 text-secondary"></i> ' + escapeHtml(route.name) + '</button></h3>';
+                html += '<div id="' + routeId + '" class="accordion-collapse collapse"><div class="accordion-body">';
+                html += '<div class="contract-route-meta">';
+                html += '<span>Type: <strong><span class="' + typeClass + '">' + (route.type || 'Child') + '</span></strong></span>';
+                if (route.driver) html += '<span>Driver: <strong>' + escapeHtml(route.driver) + '</strong></span>';
+                html += '<span>Target Del: <strong>' + targetDel + '</strong></span><span>Target PU: <strong>' + targetPu + '</strong></span>';
+                html += '</div><p class="small text-muted mb-2"><span class="contract-badge contract-badge-sub">Subpostcode</span></p>';
+                html += '<div class="contract-subpostcodes">';
+                for (var s = 0; s < subpostcodes.length; s++) html += '<span class="contract-subpostcode">' + escapeHtml(subpostcodes[s]) + '</span>';
+                html += '</div></div></div></div></div>';
+              }
+              html += '</div></div></div></div>';
+            }
+            html += '</div></div></div></div>';
+          }
+          html += '</div></div></div></div>';
+        }
+        container.innerHTML = html;
+      }
+
+      renderTree();
+
+      function initBeamSidebar() {
+        var beam = document.getElementById('beamSidebar');
+        var trigger = document.getElementById('beamTrigger');
+        var overlay = document.getElementById('beamOverlay');
+        if (!beam || !trigger) return;
+        function toggleBeam() {
+          var isOpen = beam.getAttribute('data-state') === 'open';
+          beam.setAttribute('data-state', isOpen ? 'closed' : 'open');
+          trigger.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+          if (overlay) overlay.classList.toggle('visible', !isOpen);
+        }
+        trigger.addEventListener('click', toggleBeam);
+        if (overlay) overlay.addEventListener('click', function () { beam.setAttribute('data-state', 'closed'); trigger.setAttribute('aria-expanded', 'false'); overlay.classList.remove('visible'); });
+      }
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initBeamSidebar);
+      else initBeamSidebar();
+    })();
+  </script>
+</body>
+</html>
