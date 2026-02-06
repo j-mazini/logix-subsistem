@@ -1,0 +1,437 @@
+/**
+ * Contract Management – Estilização refinada
+ */
+
+/* ========== Layout específico – reduzir espaço em branco ========== */
+.vendor-admin-main.contract-management-main {
+  max-width: 100%;
+}
+
+.page-inner:has(.contract-management-main) {
+  padding: 0.75rem 1rem;
+}
+
+@media (min-width: 768px) {
+  .page-inner:has(.contract-management-main) {
+    padding: 0.9rem 1.25rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .page-inner:has(.contract-management-main) {
+    padding: 1rem 1.5rem;
+  }
+}
+
+.contract-management-main .admin-header {
+  margin-bottom: 0.75rem;
+  padding: 0.75rem 1rem;
+}
+
+.contract-management-main .contract-filters {
+  margin-bottom: 0.75rem;
+}
+
+.contract-management-main .admin-filters-row {
+  gap: 0.5rem;
+}
+
+/* ========== Depot Manager panel (visível ao selecionar um depot) ========== */
+.depot-manager-panel {
+  margin-bottom: 1rem;
+  padding: 1rem 1.25rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  animation: contractFadeIn 0.3s ease both;
+}
+
+.depot-manager-panel.hidden {
+  display: none !important;
+}
+
+.depot-manager-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 0.75rem 0;
+  display: flex;
+  align-items: center;
+}
+
+.depot-manager-title i {
+  color: #6366f1;
+}
+
+.depot-manager-content {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.depot-manager-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+  min-width: 200px;
+  max-width: 280px;
+}
+
+.depot-manager-card-header {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #475569;
+  background: #f1f5f9;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.depot-manager-card-body {
+  padding: 0.75rem;
+  font-size: 0.875rem;
+}
+
+.depot-manager-card-body a {
+  color: #6366f1;
+  text-decoration: none;
+}
+
+.depot-manager-card-body a:hover {
+  text-decoration: underline;
+}
+
+/* ========== Section header ========== */
+.contract-section-header {
+  margin-bottom: 0.75rem;
+}
+
+.contract-section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 0.15rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.contract-section-title i {
+  color: #6366f1;
+}
+
+.contract-section-desc {
+  font-size: 0.8125rem;
+  color: #64748b;
+  margin: 0;
+}
+
+/* ========== Animações ========== */
+@keyframes contractFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes contractSlideIn {
+  from { opacity: 0; transform: translateX(-4px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* ========== Árvore de contratos ========== */
+.contract-tree {
+  animation: contractFadeIn 0.4s ease both;
+}
+
+.contract-tree > .accordion {
+  margin-bottom: 0.75rem;
+}
+
+.contract-tree > .accordion > .accordion-item {
+  animation: contractFadeIn 0.35s ease both;
+  border: none;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  background: #fff;
+  transition: box-shadow 0.25s ease, transform 0.2s ease;
+}
+
+.contract-tree > .accordion > .accordion-item:nth-child(1) { animation-delay: 0.03s; }
+.contract-tree > .accordion > .accordion-item:nth-child(2) { animation-delay: 0.08s; }
+.contract-tree > .accordion > .accordion-item:nth-child(3) { animation-delay: 0.13s; }
+.contract-tree > .accordion > .accordion-item:nth-child(4) { animation-delay: 0.18s; }
+.contract-tree > .accordion > .accordion-item:nth-child(n+5) { animation-delay: 0.23s; }
+
+.contract-tree > .accordion > .accordion-item:hover {
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
+}
+
+/* Nível 1: Service Provider */
+.contract-tree > .accordion > .accordion-item .accordion-button {
+  font-weight: 600;
+  font-size: 1rem;
+  padding: 0.7rem 1rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border: none;
+  color: #1e293b;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.contract-tree > .accordion > .accordion-item .accordion-button:hover {
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+}
+
+.contract-tree > .accordion > .accordion-item .accordion-button:not(.collapsed) {
+  background: linear-gradient(135deg, #fff 0%, #f8fafc 100%);
+  color: #0f172a;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
+}
+
+.contract-tree > .accordion > .accordion-item .accordion-button::after {
+  flex-shrink: 0;
+  opacity: 0.6;
+  transition: transform 0.25s ease;
+}
+
+.contract-tree > .accordion > .accordion-item .accordion-button .bi-building {
+  color: #6366f1;
+  font-size: 1.1rem;
+}
+
+/* Nível 2: Depot */
+.contract-tree .accordion-flush .accordion-item {
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  border-radius: 8px;
+  margin-bottom: 0.35rem;
+  overflow: hidden;
+  background: #fff;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.contract-tree .accordion-flush .accordion-item:hover {
+  border-color: rgba(99, 102, 241, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.contract-tree .accordion-flush .accordion-button {
+  font-weight: 500;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+  background: #fff;
+  color: #334155;
+  transition: background 0.2s ease;
+}
+
+.contract-tree .accordion-flush .accordion-button:hover {
+  background: rgba(99, 102, 241, 0.04);
+}
+
+.contract-tree .accordion-flush .accordion-button:not(.collapsed) {
+  background: #fafbfc;
+  color: #1e293b;
+}
+
+.contract-tree .accordion-flush .accordion-button .bi-geo-alt,
+.contract-tree .accordion-flush .accordion-button .bi-arrow-repeat,
+.contract-tree .accordion-flush .accordion-button .bi-signpost-2 {
+  color: #64748b;
+  font-size: 0.95rem;
+}
+
+/* Nível 3: Loop */
+.contract-tree .accordion-flush .accordion-flush .accordion-item {
+  border-radius: 6px;
+  margin-bottom: 0.3rem;
+}
+
+.contract-tree .accordion-flush .accordion-flush .accordion-button {
+  padding: 0.45rem 0.65rem;
+  font-size: 0.875rem;
+}
+
+/* Accordion body e hierarquia visual */
+.contract-block-inner {
+  border-left: 3px solid rgba(99, 102, 241, 0.2);
+  padding-left: 1rem;
+  margin-left: 0.2rem;
+  background: #fafbfd;
+  border-top: 1px solid rgba(0, 0, 0, 0.03);
+}
+
+.contract-tree .accordion-body {
+  padding: 0.6rem 0.9rem;
+  animation: contractFadeIn 0.25s ease both;
+}
+
+.contract-tree .accordion .accordion-item .accordion-collapse .accordion-body {
+  padding-left: 1.25rem;
+}
+
+/* Rates box */
+.contract-rates-box {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  padding: 0.6rem 0.9rem;
+  margin-bottom: 0.6rem;
+  animation: contractSlideIn 0.3s ease both;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.contract-rates-box:hover {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  border-color: rgba(99, 102, 241, 0.12);
+}
+
+.contract-rates-box p {
+  margin: 0 0 0.25rem 0;
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.contract-rates-box p:last-child {
+  margin-bottom: 0;
+}
+
+.contract-rates-box strong {
+  color: #334155;
+}
+
+.contract-rates-box .text-muted {
+  color: #64748b !important;
+}
+
+/* Route meta */
+.contract-route-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.25rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.75rem;
+}
+
+.contract-route-meta span {
+  color: #64748b;
+}
+
+.contract-route-meta strong {
+  color: #1e293b;
+  font-weight: 600;
+}
+
+/* Tipo de route */
+.contract-route-type-child {
+  display: inline-block;
+  background: rgba(239, 68, 68, 0.12);
+  color: #b91c1c;
+  padding: 0.25em 0.55em;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.contract-route-type-flex {
+  display: inline-block;
+  background: rgba(124, 58, 237, 0.12);
+  color: #6d28d9;
+  padding: 0.25em 0.55em;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* Badges */
+.contract-badge {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.35em 0.65em;
+  border-radius: 6px;
+}
+
+.contract-badge-sub {
+  background: rgba(100, 116, 139, 0.1);
+  color: #475569;
+}
+
+/* Subpostcodes */
+.contract-subpostcodes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.contract-subpostcode {
+  font-size: 0.75rem;
+  padding: 0.3em 0.6em;
+  background: #fff;
+  color: #475569;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  font-weight: 500;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.contract-subpostcode:hover {
+  border-color: rgba(99, 102, 241, 0.35);
+  box-shadow: 0 2px 10px rgba(99, 102, 241, 0.1);
+  transform: translateY(-1px);
+}
+
+/* Empty / loading states */
+.contract-management-main .empty-state {
+  padding: 1.5rem 1rem;
+  text-align: center;
+  background: #fff;
+  border-radius: 10px;
+  border: 1px dashed rgba(0, 0, 0, 0.08);
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.contract-management-main .loading-spinner {
+  vertical-align: middle;
+  margin-right: 0.5rem;
+}
+
+/* Accordion focus refinements */
+.contract-tree .accordion-button:focus {
+  box-shadow: none;
+  border-color: transparent;
+}
+
+.contract-tree .accordion-button:focus-visible {
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3);
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contract-tree,
+  .contract-tree > .accordion > .accordion-item,
+  .contract-rates-box,
+  .contract-tree .accordion-body {
+    animation: none;
+  }
+}
+
+@media (max-width: 576px) {
+  .contract-block-inner {
+    padding-left: 1rem;
+    margin-left: 0;
+  }
+
+  .contract-subpostcode {
+    font-size: 0.75rem;
+    padding: 0.35em 0.6em;
+  }
+
+  .contract-route-meta {
+    gap: 0.75rem 1rem;
+  }
+}

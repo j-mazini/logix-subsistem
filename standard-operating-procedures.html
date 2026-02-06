@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Standard Operating Procedures – DHL Subsystem</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="vendor-admin-view.css" />
+  <link rel="stylesheet" href="sidebar-beam.css" />
+  <link rel="stylesheet" href="sop-feed.css" />
+</head>
+<body class="has-beam-sidebar">
+  <div class="sidebar-wrapper" id="sidebarWrapper">
+    <div class="sidebar-gap" id="sidebarGap" aria-hidden="true"></div>
+    <aside class="sidebar-container" id="sidebarContainer" aria-hidden="true"></aside>
+    <div class="floating-sidebar-toggle" id="floatingSidebarToggle" aria-hidden="true"></div>
+
+    <div class="beam-overlay" id="beamOverlay" aria-hidden="true"></div>
+    <nav class="beam-sidebar" id="beamSidebar" data-state="closed" role="navigation" aria-label="Main menu">
+      <button type="button" class="beam-trigger" id="beamTrigger" aria-label="Open menu" aria-expanded="false">
+        <i class="bi bi-list beam-icon-menu"></i>
+        <i class="bi bi-x-lg beam-icon-close"></i>
+      </button>
+      <div class="beam-rail" aria-hidden="true"></div>
+      <div class="beam-plates">
+        <a href="dashboard.html" class="beam-plate">
+          <i class="bi bi-house-door-fill beam-plate-icon"></i>
+          <span>Home</span>
+        </a>
+        <a href="service-providers.html" class="beam-plate">
+          <i class="bi bi-person-badge beam-plate-icon"></i>
+          <span>Service Providers</span>
+        </a>
+        <a href="vendor-admin-view.html" class="beam-plate">
+          <i class="bi bi-building beam-plate-icon"></i>
+          <span>Vendors</span>
+        </a>
+        <a href="vehicles-admin-view.html" class="beam-plate">
+          <i class="bi bi-truck beam-plate-icon"></i>
+          <span>Vehicles</span>
+        </a>
+        <a href="contract-management-admin-view.html" class="beam-plate">
+          <i class="bi bi-file-earmark-text beam-plate-icon"></i>
+          <span>Contract Management</span>
+        </a>
+        <a href="standard-operating-procedures.html" class="beam-plate active">
+          <i class="bi bi-journal-bookmark-fill beam-plate-icon"></i>
+          <span>SOP Feed</span>
+        </a>
+      </div>
+    </nav>
+
+    <div class="sidebar-inset" id="sidebarInset">
+      <div class="liquid-glass-page-bg" aria-hidden="true"></div>
+      <div class="page-container">
+        <div class="page-inner">
+          <main class="sop-main">
+            <div class="admin-header sop-header">
+              <div class="sop-header-top">
+                <h1 class="admin-header-title">Standard Operating Procedures</h1>
+                <div class="admin-header-user-pill d-flex align-items-center" title="DHL Uk">
+                  <img src="assets/dhl-uk-logo.png" alt="DHL Uk" class="admin-header-user-avatar admin-header-user-avatar--img" />
+                  <span class="admin-header-user-name">DHL Uk</span>
+                </div>
+              </div>
+              <div class="admin-header-search sop-header-search">
+                <input type="search" id="sopSearch" class="form-control" placeholder="Search tutorials, posts, keywords..." autocomplete="off" />
+              </div>
+            </div>
+
+            <div class="sop-create-post">
+              <div class="sop-create-post-inner">
+                <div class="sop-create-post-top">
+                  <div class="sop-create-post-avatar">
+                    <img src="assets/dhl-uk-logo.png" alt="DHL" width="40" height="40" />
+                  </div>
+                  <div class="sop-create-post-input-wrap">
+                    <input type="text" id="sopCreateTitle" class="sop-create-post-title-input" placeholder="Title (optional)" />
+                    <input type="text" id="sopCreateInput" class="sop-create-post-input" placeholder="What would you like to share? Tutorial, update, announcement..." />
+                  </div>
+                </div>
+                <div class="sop-create-post-type-row">
+                  <span class="sop-create-post-type-label">Type:</span>
+                  <select id="sopCreateType" class="sop-create-post-type-select" aria-label="Post type">
+                    <option value="tutorial">Tutorial</option>
+                    <option value="update">Update</option>
+                    <option value="info">Info</option>
+                  </select>
+                </div>
+                <div class="sop-create-post-actions">
+                  <input type="file" id="sopPhotoInput" accept="image/*" class="sop-file-input" aria-hidden="true" />
+                  <input type="file" id="sopVideoInput" accept="video/*" class="sop-file-input" aria-hidden="true" />
+                  <input type="file" id="sopDocInput" accept=".pdf,.doc,.docx" class="sop-file-input" aria-hidden="true" />
+                  <input type="text" id="sopYoutubeUrl" class="sop-youtube-url-input" placeholder="Paste YouTube link..." aria-label="YouTube video URL" style="display:none;" />
+                  <button type="button" class="sop-create-action-btn" id="sopYoutubeBtn" title="YouTube video">
+                    <i class="bi bi-youtube"></i>
+                    <span>YouTube</span>
+                  </button>
+                  <button type="button" class="sop-create-action-btn" id="sopPhotoBtn" title="Photo">
+                    <i class="bi bi-image"></i>
+                    <span>Photo</span>
+                  </button>
+                  <button type="button" class="sop-create-action-btn" id="sopVideoBtn" title="Video">
+                    <i class="bi bi-camera-video"></i>
+                    <span>Video</span>
+                  </button>
+                  <button type="button" class="sop-create-action-btn" id="sopDocBtn" title="Document">
+                    <i class="bi bi-file-earmark-plus"></i>
+                    <span>Document</span>
+                  </button>
+                  <button type="button" class="sop-create-action-btn sop-post-btn" id="sopPostBtn" disabled>
+                    <i class="bi bi-send-fill"></i>
+                    <span>Post</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="sop-feed" id="sopFeed">
+              <!-- Posts preview rendered by JS -->
+            </div>
+          </main>
+
+          <!-- Modal overlay: post em destaque ao clicar -->
+          <div class="sop-post-detail" id="sopPostDetail" aria-hidden="true">
+            <div class="sop-post-detail-backdrop" id="sopPostDetailBackdrop"></div>
+            <div class="sop-post-detail-inner" id="sopPostDetailContent">
+              <p class="sop-post-detail-placeholder" id="sopPostDetailPlaceholder">Click a post to open it</p>
+            </div>
+            <button type="button" class="sop-post-detail-close" id="sopPostDetailClose" aria-label="Close" style="display:none;">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      /** Extrai o ID do vídeo de uma URL do YouTube (watch ou youtu.be). */
+      function parseYoutubeVideoId(url) {
+        if (!url || typeof url !== 'string') return null;
+        var u = url.trim();
+        var m = u.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+        return m ? m[1] : null;
+      }
+
+      var MOCK_POSTS = [
+        {
+          id: 0,
+          author: 'DHL Uk',
+          authorAvatar: 'assets/dhl-uk-logo.png',
+          timeAgo: '1 hour ago',
+          type: 'tutorial',
+          title: 'DHL Training Video',
+          content: 'Watch the DHL training video directly on the platform. Stay up to date with procedures and best practices.',
+          video: 'assets/videos/dhl-training-1.mp4',
+          image: null,
+          likes: 15,
+          comments: 3,
+          liked: false,
+          commentList: [
+            { author: 'James T.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Really clear video, thanks for sharing. The section on PPE was especially helpful.', timeAgo: '50 min ago' },
+            { author: 'Sarah M.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Do we have a PDF version of the checklist mentioned at the end?', timeAgo: '35 min ago' },
+            { author: 'Mike R.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Watched it with the team this morning. Everyone found it useful.', timeAgo: '20 min ago' }
+          ]
+        },
+        {
+          id: 6,
+          author: 'DHL Uk',
+          authorAvatar: 'assets/dhl-uk-logo.png',
+          timeAgo: '45 min ago',
+          type: 'tutorial',
+          title: 'DHL Training – Procedures and Best Practices',
+          content: 'DHL training video. Watch on the platform to review operational procedures and delivery best practices.',
+          video: 'assets/videos/dhl-training-2.mp4',
+          image: null,
+          likes: 8,
+          comments: 2,
+          liked: false,
+          commentList: [
+            { author: 'Lisa K.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Great refresher on delivery best practices. The examples were spot on.', timeAgo: '30 min ago' },
+            { author: 'Depot Team', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Can this be shared with new joiners as part of onboarding?', timeAgo: '15 min ago' }
+          ]
+        },
+        {
+          id: 1,
+          author: 'DHL Uk',
+          authorAvatar: 'assets/dhl-uk-logo.png',
+          timeAgo: '2 hours ago',
+          type: 'tutorial',
+          title: 'Safe Loading Procedures – Step by Step',
+          content: 'Updated tutorial for safe loading and unloading of parcels. All drivers must review before next shift. Key points: always secure cargo with straps, check weight distribution, and use PPE when handling heavy items.',
+          image: 'assets/sop-dhl-truck-london.png',
+          likes: 24,
+          comments: 8,
+          liked: false,
+          commentList: [
+            { author: 'Tom W.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Love the photo. Is the strap configuration in the guide the same for all vehicle types?', timeAgo: '1 hour ago' },
+            { author: 'Rachel P.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Straps and PPE – we’ve had a few near misses. This reminder is timely.', timeAgo: '55 min ago' },
+            { author: 'Chris N.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Reviewed with my route partner. Weight distribution point is key.', timeAgo: '40 min ago' },
+            { author: 'Emma L.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Can we get laminated cards for the cab with the main steps?', timeAgo: '25 min ago' },
+            { author: 'David F.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Clear and practical. Shared with the depot.', timeAgo: '10 min ago' },
+            { author: 'Anna B.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Good to have it in one place. Thanks.', timeAgo: '5 min ago' },
+            { author: 'Paul S.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Any update on when the new straps will be in stock?', timeAgo: '2 min ago' },
+            { author: 'Kate H.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Will use this in the next safety briefing.', timeAgo: '1 min ago' }
+          ]
+        },
+        {
+          id: 2,
+          author: 'DHL Uk',
+          authorAvatar: 'assets/dhl-uk-logo.png',
+          timeAgo: '1 day ago',
+          type: 'update',
+          title: 'New Depot Hours – MSE & LCY',
+          content: 'Effective from next Monday, MSE and LCY depots will operate extended hours during peak season. Morning shift: 05:00–14:00. Afternoon shift: 12:00–21:00.',
+          image: null,
+          likes: 42,
+          comments: 12,
+          liked: false,
+          commentList: [
+            { author: 'John D.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Will break times stay the same with the extended hours?', timeAgo: '22 hours ago' },
+            { author: 'Maria G.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Good to know in advance. I’ll plan my week around this.', timeAgo: '20 hours ago' },
+            { author: 'Steve O.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'LCY team is ready. Thanks for the heads up.', timeAgo: '18 hours ago' },
+            { author: 'Nina V.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Is this for all roles or only drivers?', timeAgo: '15 hours ago' },
+            { author: 'Mark J.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Noted. Will share with MSE.', timeAgo: '12 hours ago' },
+            { author: 'Claire R.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Peak season prep done. Cheers.', timeAgo: '10 hours ago' },
+            { author: 'Ian M.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Afternoon shift suits me better. How do we sign up?', timeAgo: '8 hours ago' },
+            { author: 'Sophie T.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Clear update. Thanks.', timeAgo: '6 hours ago' },
+            { author: 'Lee C.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Will warehouse be on the same hours?', timeAgo: '4 hours ago' },
+            { author: 'Helen W.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Understood. Monday we start.', timeAgo: '2 hours ago' },
+            { author: 'Dan K.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'MSE confirmed. All good.', timeAgo: '1 hour ago' },
+            { author: 'Jenny A.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Thanks for the update.', timeAgo: '30 min ago' }
+          ]
+        },
+        {
+          id: 3,
+          author: 'DHL Uk',
+          authorAvatar: 'assets/dhl-uk-logo.png',
+          timeAgo: '3 days ago',
+          type: 'info',
+          title: 'Time Window (TW) Compliance Reminder',
+          content: 'Please ensure all deliveries are completed within the agreed time windows. Late deliveries impact our SPR and customer satisfaction. Check your route plan before leaving the depot.',
+          image: null,
+          likes: 67,
+          comments: 5,
+          liked: true,
+          commentList: [
+            { author: 'Rob F.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'What counts as a late delivery – 5 min or 15 min outside the window?', timeAgo: '2 days ago' },
+            { author: 'Olivia S.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'We’re focusing on TW this week. Good reminder.', timeAgo: '2 days ago' },
+            { author: 'Greg P.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Route plan check before leaving has made a real difference for me.', timeAgo: '1 day ago' },
+            { author: 'Fiona L.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'SPR is improving. Let’s keep it up.', timeAgo: '20 hours ago' },
+            { author: 'Alex B.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Understood. Will double-check my schedule.', timeAgo: '12 hours ago' }
+          ]
+        },
+        {
+          id: 4,
+          author: 'DHL Uk',
+          authorAvatar: 'assets/dhl-uk-logo.png',
+          timeAgo: '5 days ago',
+          type: 'tutorial',
+          title: 'Dangerous Goods Handling – Quick Reference',
+          content: 'Reminder: Always check the DG label before handling. Use the correct PPE. Never mix incompatible substances. Report any spill or damage immediately to the depot manager.',
+          image: null,
+          likes: 89,
+          comments: 23,
+          liked: false,
+          commentList: [
+            { author: 'Pete H.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'DG refresher is always welcome. Clear and to the point.', timeAgo: '4 days ago' },
+            { author: 'Zoe C.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Who do we call first for a spill – depot manager or safety?', timeAgo: '4 days ago' },
+            { author: 'Tony M.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'PPE checklist would be useful. Can we get one?', timeAgo: '3 days ago' },
+            { author: 'Ruth D.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Shared with the team. Good reminder before peak.', timeAgo: '3 days ago' },
+            { author: 'Kevin T.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Incompatible substances – is there a poster we can put in the warehouse?', timeAgo: '2 days ago' },
+            { author: 'Laura W.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Reviewed. Thanks for keeping this visible.', timeAgo: '2 days ago' },
+            { author: 'Simon G.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'DG label check is now part of our daily routine.', timeAgo: '1 day ago' },
+            { author: 'Maya N.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Useful. Will use in the next briefing.', timeAgo: '1 day ago' },
+            { author: 'Phil R.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Report procedure is clear. Good to have it in writing.', timeAgo: '20 hours ago' },
+            { author: 'Eva K.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Any changes to the PPE list this year?', timeAgo: '18 hours ago' },
+            { author: 'Neil J.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Straightforward and easy to follow. Cheers.', timeAgo: '15 hours ago' },
+            { author: 'Tina O.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Depot manager contact list is up to date?', timeAgo: '12 hours ago' },
+            { author: 'Vince S.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Good reference. Saved for quick access.', timeAgo: '10 hours ago' },
+            { author: 'Wendy P.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Shared. Team found it helpful.', timeAgo: '8 hours ago' },
+            { author: 'Oscar L.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Clear. No mixing – got it.', timeAgo: '6 hours ago' },
+            { author: 'Yvonne B.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Will re-read before handling DG again.', timeAgo: '4 hours ago' },
+            { author: 'Quinn A.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Thanks. Important reminder.', timeAgo: '2 hours ago' },
+            { author: 'Uma R.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'PPE always. No shortcuts.', timeAgo: '1 hour ago' },
+            { author: 'Xavier M.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Briefing done. All clear.', timeAgo: '45 min ago' },
+            { author: 'Ivan F.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Useful quick reference. Saved.', timeAgo: '30 min ago' },
+            { author: 'Noah C.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Label check every time. Noted.', timeAgo: '15 min ago' },
+            { author: 'Grace T.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Good to have this pinned. Thanks.', timeAgo: '5 min ago' }
+          ]
+        },
+        {
+          id: 5,
+          author: 'DHL Uk',
+          authorAvatar: 'assets/dhl-uk-logo.png',
+          timeAgo: '1 week ago',
+          type: 'tutorial',
+          title: 'Package Scanning & Verification',
+          content: 'Use the wrist-mounted scanner to verify each package before loading. Point the finger scanner at the barcode and confirm the scan on the device screen. This ensures accurate tracking and reduces delivery errors.',
+          image: 'assets/sop-dhl-innovation-center.png',
+          likes: 56,
+          comments: 14,
+          liked: false,
+          commentList: [
+            { author: 'Adam V.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Innovation Centre looks great. Is training on the new scanners done there?', timeAgo: '6 days ago' },
+            { author: 'Beth N.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Wrist-mounted scanner has made loading so much faster. Great tip.', timeAgo: '5 days ago' },
+            { author: 'Carlos D.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Do we get the finger scanner as well or only wrist-mounted?', timeAgo: '5 days ago' },
+            { author: 'Diana L.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Confirming the scan on screen has reduced my misloads. Good reminder.', timeAgo: '4 days ago' },
+            { author: 'Eddie R.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Clear instructions. Shared with the route.', timeAgo: '4 days ago' },
+            { author: 'Gina M.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'How often do we need to calibrate the scanners?', timeAgo: '3 days ago' },
+            { author: 'Harry S.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Useful. Accuracy has improved since we started double-checking.', timeAgo: '3 days ago' },
+            { author: 'Ivy P.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Good to have it in one place. Thanks.', timeAgo: '2 days ago' },
+            { author: 'Jake W.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Barcode not reading – who do we contact for replacement?', timeAgo: '2 days ago' },
+            { author: 'Lily K.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Simple and effective. Team is following it.', timeAgo: '1 day ago' },
+            { author: 'Owen B.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Reduced errors on my route. This works.', timeAgo: '1 day ago' },
+            { author: 'Paula J.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'New joiners found this really helpful.', timeAgo: '18 hours ago' },
+            { author: 'Ryan G.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Device screen confirmation is the key step. Good call.', timeAgo: '12 hours ago' },
+            { author: 'Sandra H.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Will use in the next equipment training. Thanks.', timeAgo: '6 hours ago' }
+          ]
+        }
+      ];
+
+      function escapeHtml(s) {
+        if (s == null) return '';
+        var d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+      }
+
+      function renderPost(p) {
+        var typeLabel = p.type === 'tutorial' ? 'Tutorial' : p.type === 'update' ? 'Update' : 'Info';
+        var likeClass = p.liked ? 'sop-action-btn sop-action-btn--active' : 'sop-action-btn';
+        var mediaHtml = '';
+        if (p.youtubeVideoId) {
+          var vid = escapeHtml(p.youtubeVideoId);
+          var watchUrl = 'https://www.youtube.com/watch?v=' + vid;
+          var thumbUrl = 'https://img.youtube.com/vi/' + vid + '/hqdefault.jpg';
+          mediaHtml = '<a href="' + watchUrl + '" target="_blank" rel="noopener noreferrer" class="sop-post-media sop-post-media--youtube sop-youtube-link" title="Watch on YouTube">' +
+            '<span class="sop-youtube-thumb" style="background-image:url(\'' + thumbUrl + '\')"></span>' +
+            '<span class="sop-youtube-play"><i class="bi bi-play-circle-fill"></i></span>' +
+            '<span class="sop-youtube-label">Watch on YouTube</span>' +
+            '</a>';
+        } else if (p.video) {
+          mediaHtml = '<div class="sop-post-media sop-post-media--video"><video controls preload="metadata"><source src="' + escapeHtml(p.video) + '" type="video/mp4">Your browser does not support the video tag.</video></div>';
+        } else if (p.image) {
+          mediaHtml = '<div class="sop-post-media sop-post-media--image"><img src="' + escapeHtml(p.image) + '" alt="" /></div>';
+        }
+        return (
+          '<article class="sop-post" data-id="' + p.id + '">' +
+            '<div class="sop-post-header">' +
+              '<div class="sop-post-avatar">' +
+                '<img src="' + escapeHtml(p.authorAvatar) + '" alt="" width="40" height="40" />' +
+              '</div>' +
+              '<div class="sop-post-meta">' +
+                '<strong class="sop-post-author">' + escapeHtml(p.author) + '</strong>' +
+                '<span class="sop-post-badge sop-post-badge--' + p.type + '">' + escapeHtml(typeLabel) + '</span>' +
+                '<span class="sop-post-time">' + escapeHtml(p.timeAgo) + '</span>' +
+              '</div>' +
+            '</div>' +
+            '<div class="sop-post-body">' +
+              (p.title ? '<h3 class="sop-post-title">' + escapeHtml(p.title) + '</h3>' : '') +
+              '<p class="sop-post-content">' + escapeHtml(p.content) + '</p>' +
+              mediaHtml +
+            '</div>' +
+            '<div class="sop-post-actions">' +
+              '<button type="button" class="' + likeClass + '" data-action="like" data-id="' + p.id + '">' +
+                '<i class="bi bi-' + (p.liked ? 'heart-fill' : 'heart') + '"></i>' +
+                '<span>' + (p.liked ? 'Liked' : 'Like') + '</span>' +
+                (p.likes > 0 ? '<span class="sop-action-count">' + p.likes + '</span>' : '') +
+              '</button>' +
+              '<button type="button" class="sop-action-btn" data-action="comment" data-id="' + p.id + '">' +
+                '<i class="bi bi-chat"></i>' +
+                '<span>Comment</span>' +
+              '</button>' +
+            '</div>' +
+          '</article>'
+        );
+      }
+
+      function getPostHtml(p, isDetail) {
+        var typeLabel = p.type === 'tutorial' ? 'Tutorial' : p.type === 'update' ? 'Update' : 'Info';
+        var likeClass = p.liked ? 'sop-action-btn sop-action-btn--active' : 'sop-action-btn';
+        var mediaHtml = '';
+        if (p.youtubeVideoId) {
+          var vid = escapeHtml(p.youtubeVideoId);
+          var watchUrl = 'https://www.youtube.com/watch?v=' + vid;
+          var thumbUrl = 'https://img.youtube.com/vi/' + vid + '/hqdefault.jpg';
+          mediaHtml = '<a href="' + watchUrl + '" target="_blank" rel="noopener noreferrer" class="sop-post-media sop-post-media--youtube sop-youtube-link" title="Watch on YouTube">' +
+            '<span class="sop-youtube-thumb" style="background-image:url(\'' + thumbUrl + '\')"></span>' +
+            '<span class="sop-youtube-play"><i class="bi bi-play-circle-fill"></i></span>' +
+            '<span class="sop-youtube-label">Watch on YouTube</span>' +
+            '</a>';
+        } else if (p.video) {
+          mediaHtml = '<div class="sop-post-media sop-post-media--video"><video controls preload="metadata"><source src="' + escapeHtml(p.video) + '" type="video/mp4">Your browser does not support the video tag.</video></div>';
+        } else if (p.image) {
+          mediaHtml = '<div class="sop-post-media sop-post-media--image"><img src="' + escapeHtml(p.image) + '" alt="" /></div>';
+        }
+        return '<div class="sop-post-header">' +
+          '<div class="sop-post-avatar"><img src="' + escapeHtml(p.authorAvatar) + '" alt="" width="40" height="40" /></div>' +
+          '<div class="sop-post-meta">' +
+            '<strong class="sop-post-author">' + escapeHtml(p.author) + '</strong>' +
+            '<span class="sop-post-badge sop-post-badge--' + p.type + '">' + escapeHtml(typeLabel) + '</span>' +
+            '<span class="sop-post-time">' + escapeHtml(p.timeAgo) + '</span>' +
+          '</div></div>' +
+          '<div class="sop-post-body">' +
+            (p.title ? '<h3 class="sop-post-title">' + escapeHtml(p.title) + '</h3>' : '') +
+            '<p class="sop-post-content">' + escapeHtml(p.content) + '</p>' + mediaHtml +
+          '</div>' +
+          '<div class="sop-post-actions">' +
+            '<button type="button" class="' + likeClass + '" data-action="like" data-id="' + p.id + '">' +
+              '<i class="bi bi-' + (p.liked ? 'heart-fill' : 'heart') + '"></i><span>' + (p.liked ? 'Liked' : 'Like') + '</span>' +
+              (p.likes > 0 ? '<span class="sop-action-count">' + p.likes + '</span>' : '') +
+            '</button>' +
+            '<button type="button" class="sop-action-btn" data-action="comment" data-id="' + p.id + '">' +
+              '<i class="bi bi-chat"></i><span>Comment</span>' +
+            '</button>' +
+          '</div>' +
+          getCommentsHtml(p);
+      }
+
+      function getCommentsHtml(p) {
+        var list = p.commentList || [];
+        var items = list.map(function (c) {
+          return '<div class="sop-comment">' +
+            '<div class="sop-comment-avatar"><img src="' + escapeHtml(c.authorAvatar || 'assets/dhl-uk-logo.png') + '" alt="" width="32" height="32" /></div>' +
+            '<div class="sop-comment-body">' +
+              '<strong class="sop-comment-author">' + escapeHtml(c.author || 'DHL Uk') + '</strong> ' +
+              '<span class="sop-comment-time">' + escapeHtml(c.timeAgo || '') + '</span>' +
+              '<p class="sop-comment-text">' + escapeHtml(c.text) + '</p>' +
+            '</div>' +
+          '</div>';
+        }).join('');
+        return '<div class="sop-comments">' +
+          '<h4 class="sop-comments-title">Comments</h4>' +
+          '<div class="sop-comments-list">' + items + '</div>' +
+          '<form class="sop-comments-form" data-post-id="' + p.id + '">' +
+            '<div class="sop-comments-input-wrap">' +
+              '<img src="assets/dhl-uk-logo.png" alt="" class="sop-comment-input-avatar" width="32" height="32" />' +
+              '<input type="text" class="sop-comments-input" placeholder="Write a comment..." maxlength="500" />' +
+            '</div>' +
+            '<button type="submit" class="sop-comments-submit">Comment</button>' +
+          '</form>' +
+        '</div>';
+      }
+
+      /** Preview reduzido para o feed (sem mídia completa, texto truncado). */
+      function getPostPreviewHtml(p) {
+        var typeLabel = p.type === 'tutorial' ? 'Tutorial' : p.type === 'update' ? 'Update' : 'Info';
+        var contentPreview = (p.content || '').length > 90 ? (p.content.substring(0, 90) + '…') : (p.content || '');
+        var thumbHtml = '';
+        if (p.youtubeVideoId) {
+          var thumbUrl = 'https://img.youtube.com/vi/' + escapeHtml(p.youtubeVideoId) + '/hqdefault.jpg';
+          thumbHtml = '<span class="sop-post-preview-thumb sop-post-preview-thumb--video" style="background-image:url(\'' + thumbUrl + '\')"><i class="bi bi-play-fill"></i></span>';
+        } else if (p.video) {
+          thumbHtml = '<span class="sop-post-preview-thumb sop-post-preview-thumb--video"><i class="bi bi-play-fill"></i></span>';
+        } else if (p.image) {
+          thumbHtml = '<span class="sop-post-preview-thumb sop-post-preview-thumb--image" style="background-image:url(\'' + escapeHtml(p.image) + '\')"></span>';
+        }
+        return '<div class="sop-post-header">' +
+          '<div class="sop-post-avatar"><img src="' + escapeHtml(p.authorAvatar) + '" alt="" width="40" height="40" /></div>' +
+          '<div class="sop-post-meta">' +
+            '<strong class="sop-post-author">' + escapeHtml(p.author) + '</strong>' +
+            '<span class="sop-post-badge sop-post-badge--' + p.type + '">' + escapeHtml(typeLabel) + '</span>' +
+            '<span class="sop-post-time">' + escapeHtml(p.timeAgo) + '</span>' +
+          '</div></div>' +
+          '<div class="sop-post-body">' +
+            (p.title ? '<h3 class="sop-post-title">' + escapeHtml(p.title) + '</h3>' : '') +
+            '<p class="sop-post-content sop-post-content--preview">' + escapeHtml(contentPreview) + '</p>' +
+            (thumbHtml ? '<div class="sop-post-preview-media">' + thumbHtml + '</div>' : '') +
+          '</div>' +
+          '<span class="sop-post-preview-cta">View post</span>';
+      }
+
+      function render() {
+        var feed = document.getElementById('sopFeed');
+        if (!feed) return;
+        feed.innerHTML = MOCK_POSTS.map(function (p) {
+          return '<article class="sop-post sop-post--preview" data-id="' + p.id + '" role="button" tabindex="0">' + getPostPreviewHtml(p) + '</article>';
+        }).join('');
+      }
+
+      var openPostId = null;
+
+      function openPost(id) {
+        openPostId = id;
+        var post = MOCK_POSTS.find(function (p) { return p.id === id; });
+        if (!post) return;
+        var detail = document.getElementById('sopPostDetail');
+        var content = document.getElementById('sopPostDetailContent');
+        var placeholder = document.getElementById('sopPostDetailPlaceholder');
+        var closeBtn = document.getElementById('sopPostDetailClose');
+        if (detail && content) {
+          if (placeholder) placeholder.style.display = 'none';
+          if (closeBtn) closeBtn.style.display = 'flex';
+          content.innerHTML = '<article class="sop-post sop-post--detail" data-id="' + post.id + '">' + getPostHtml(post) + '</article>';
+          detail.classList.add('sop-post-detail--open');
+          detail.setAttribute('aria-hidden', 'false');
+        }
+      }
+
+      function closePost() {
+        openPostId = null;
+        var detail = document.getElementById('sopPostDetail');
+        var content = document.getElementById('sopPostDetailContent');
+        var placeholder = document.getElementById('sopPostDetailPlaceholder');
+        var closeBtn = document.getElementById('sopPostDetailClose');
+        if (detail) {
+          detail.classList.remove('sop-post-detail--open');
+          detail.setAttribute('aria-hidden', 'true');
+          if (placeholder) placeholder.style.display = '';
+          if (closeBtn) closeBtn.style.display = 'none';
+          if (content) content.innerHTML = '<p class="sop-post-detail-placeholder" id="sopPostDetailPlaceholder">Click a post to open it</p>';
+        }
+      }
+
+      function initBeamSidebar() {
+        var beam = document.getElementById('beamSidebar');
+        var trigger = document.getElementById('beamTrigger');
+        var overlay = document.getElementById('beamOverlay');
+        if (!beam || !trigger) return;
+        function toggleBeam() {
+          var isOpen = beam.getAttribute('data-state') === 'open';
+          beam.setAttribute('data-state', isOpen ? 'closed' : 'open');
+          trigger.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+          if (overlay) overlay.classList.toggle('visible', !isOpen);
+        }
+        trigger.addEventListener('click', toggleBeam);
+        if (overlay) overlay.addEventListener('click', function () {
+          beam.setAttribute('data-state', 'closed');
+          trigger.setAttribute('aria-expanded', 'false');
+          overlay.classList.remove('visible');
+        });
+      }
+
+      var pendingMedia = { image: null, video: null, doc: null, youtubeVideoId: null };
+
+      /**
+       * Cria um novo post e adiciona ao feed.
+       * @param {Object} data - { title, content, type, image, video, youtubeVideoId, doc }
+       * @returns {Object} O post criado
+       */
+      function createNewPost(data) {
+        var id = Date.now();
+        var type = (data.type === 'update' || data.type === 'info') ? data.type : 'tutorial';
+        var title = (data.title && data.title.trim()) ? data.title.trim() : null;
+        if (!title && data.youtubeVideoId) title = 'YouTube video';
+        var content = (data.content && data.content.trim()) ? data.content.trim() : getDefaultContent(data);
+        var newPost = {
+          id: id,
+          author: 'DHL Uk',
+          authorAvatar: 'assets/dhl-uk-logo.png',
+          timeAgo: 'Just now',
+          type: type,
+          title: title,
+          content: content,
+          image: data.image || null,
+          video: data.video || null,
+          youtubeVideoId: data.youtubeVideoId || undefined,
+          likes: 0,
+          comments: 0,
+          liked: false,
+          commentList: []
+        };
+        MOCK_POSTS.unshift(newPost);
+        return newPost;
+      }
+
+      function getDefaultContent(data) {
+        if (data.youtubeVideoId) return 'Video shared on the platform.';
+        if (data.video) return 'Shared a video.';
+        if (data.image) return 'Shared a photo.';
+        if (data.doc) return 'Shared a document.';
+        return 'New post.';
+      }
+
+      function resetCreatePostForm() {
+        var input = document.getElementById('sopCreateInput');
+        var titleInput = document.getElementById('sopCreateTitle');
+        var typeSelect = document.getElementById('sopCreateType');
+        var photoInput = document.getElementById('sopPhotoInput');
+        var videoInput = document.getElementById('sopVideoInput');
+        var docInput = document.getElementById('sopDocInput');
+        var youtubeUrlInput = document.getElementById('sopYoutubeUrl');
+        if (input) input.value = '';
+        if (titleInput) titleInput.value = '';
+        if (typeSelect) typeSelect.value = 'tutorial';
+        if (photoInput) photoInput.value = '';
+        if (videoInput) videoInput.value = '';
+        if (docInput) docInput.value = '';
+        if (youtubeUrlInput) {
+          youtubeUrlInput.value = '';
+          youtubeUrlInput.style.display = 'none';
+        }
+        pendingMedia.image = null;
+        pendingMedia.video = null;
+        pendingMedia.doc = null;
+        pendingMedia.youtubeVideoId = null;
+      }
+
+      function initCreatePost() {
+        var input = document.getElementById('sopCreateInput');
+        var titleInput = document.getElementById('sopCreateTitle');
+        var typeSelect = document.getElementById('sopCreateType');
+        var postBtn = document.getElementById('sopPostBtn');
+        var photoInput = document.getElementById('sopPhotoInput');
+        var videoInput = document.getElementById('sopVideoInput');
+        var docInput = document.getElementById('sopDocInput');
+        var youtubeUrlInput = document.getElementById('sopYoutubeUrl');
+        var photoBtn = document.getElementById('sopPhotoBtn');
+        var videoBtn = document.getElementById('sopVideoBtn');
+        var docBtn = document.getElementById('sopDocBtn');
+        var youtubeBtn = document.getElementById('sopYoutubeBtn');
+
+        function canPost() {
+          var hasText = input && (input.value || '').trim().length > 0;
+          var hasMedia = pendingMedia.image || pendingMedia.video || pendingMedia.doc || pendingMedia.youtubeVideoId;
+          return hasText || hasMedia;
+        }
+
+        function syncYoutubeFromInput() {
+          var url = youtubeUrlInput && youtubeUrlInput.value ? youtubeUrlInput.value.trim() : '';
+          pendingMedia.youtubeVideoId = parseYoutubeVideoId(url) || null;
+          updatePostBtn();
+        }
+
+        function updatePostBtn() {
+          if (postBtn) postBtn.disabled = !canPost();
+        }
+
+        if (input && postBtn) {
+          input.addEventListener('input', updatePostBtn);
+          if (titleInput) titleInput.addEventListener('input', updatePostBtn);
+        }
+        postBtn.addEventListener('click', function () {
+          if (!canPost()) return;
+          var title = titleInput ? (titleInput.value || '').trim() : '';
+          var content = (input.value || '').trim();
+          var type = typeSelect ? typeSelect.value : 'tutorial';
+          var newPost = createNewPost({
+            title: title || null,
+            content: content,
+            type: type,
+            image: pendingMedia.image,
+            video: pendingMedia.video,
+            youtubeVideoId: pendingMedia.youtubeVideoId || undefined,
+            doc: pendingMedia.doc || undefined
+          });
+          resetCreatePostForm();
+          updatePostBtn();
+          if (postBtn) postBtn.disabled = true;
+          render();
+          openPost(newPost.id);
+        });
+
+        if (photoBtn && photoInput) {
+          photoBtn.addEventListener('click', function () { photoInput.click(); });
+          photoInput.addEventListener('change', function () {
+            var f = this.files && this.files[0];
+            if (f && f.type.indexOf('image') === 0) {
+              pendingMedia.image = URL.createObjectURL(f);
+              pendingMedia.video = null;
+              updatePostBtn();
+            }
+          });
+        }
+        if (videoBtn && videoInput) {
+          videoBtn.addEventListener('click', function () { videoInput.click(); });
+          videoInput.addEventListener('change', function () {
+            var f = this.files && this.files[0];
+            if (f && f.type.indexOf('video') === 0) {
+              pendingMedia.video = URL.createObjectURL(f);
+              pendingMedia.image = null;
+              updatePostBtn();
+            }
+          });
+        }
+        if (docBtn && docInput) {
+          docBtn.addEventListener('click', function () { docInput.click(); });
+          docInput.addEventListener('change', function () {
+            var f = this.files && this.files[0];
+            if (f) {
+              pendingMedia.doc = f.name;
+              updatePostBtn();
+            }
+          });
+        }
+
+        if (youtubeBtn && youtubeUrlInput) {
+          youtubeBtn.addEventListener('click', function () {
+            var isVisible = youtubeUrlInput.style.display !== 'none';
+            youtubeUrlInput.style.display = isVisible ? 'none' : 'inline-block';
+            if (!isVisible) youtubeUrlInput.focus();
+            else {
+              youtubeUrlInput.value = '';
+              pendingMedia.youtubeVideoId = null;
+              updatePostBtn();
+            }
+          });
+          youtubeUrlInput.addEventListener('input', syncYoutubeFromInput);
+          youtubeUrlInput.addEventListener('paste', function () { setTimeout(syncYoutubeFromInput, 10); });
+        }
+      }
+
+      function initFeedClicks() {
+        var feed = document.getElementById('sopFeed');
+        if (!feed) return;
+        feed.addEventListener('click', function (e) {
+          var card = e.target.closest('.sop-post--preview');
+          if (!card) return;
+          var id = parseInt(card.getAttribute('data-id'), 10);
+          if (!isNaN(id)) openPost(id);
+        });
+      }
+
+      function initDetailClose() {
+        var closeBtn = document.getElementById('sopPostDetailClose');
+        var backdrop = document.getElementById('sopPostDetailBackdrop');
+        if (closeBtn) closeBtn.addEventListener('click', closePost);
+        if (backdrop) backdrop.addEventListener('click', closePost);
+        document.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape') closePost();
+        });
+      }
+
+      function initLikeButtons() {
+        document.body.addEventListener('click', function (e) {
+          var btn = e.target.closest('[data-action="like"]');
+          if (!btn) return;
+          var id = parseInt(btn.getAttribute('data-id'), 10);
+          var post = MOCK_POSTS.find(function (p) { return p.id === id; });
+          if (!post) return;
+          e.preventDefault();
+          e.stopPropagation();
+          post.liked = !post.liked;
+          post.likes += post.liked ? 1 : -1;
+          render();
+          if (openPostId === id) {
+            var content = document.getElementById('sopPostDetailContent');
+            if (content) content.innerHTML = '<article class="sop-post sop-post--detail" data-id="' + post.id + '">' + getPostHtml(post) + '</article>';
+          }
+        });
+      }
+
+      function initCommentForm() {
+        document.body.addEventListener('submit', function (e) {
+          var form = e.target.closest('.sop-comments-form');
+          if (!form) return;
+          e.preventDefault();
+          var postId = parseInt(form.getAttribute('data-post-id'), 10);
+          var input = form.querySelector('.sop-comments-input');
+          if (!input || isNaN(postId)) return;
+          var text = (input.value || '').trim();
+          if (!text) return;
+          var post = MOCK_POSTS.find(function (p) { return p.id === postId; });
+          if (!post) return;
+          post.commentList = post.commentList || [];
+          post.commentList.push({
+            author: 'DHL Uk',
+            authorAvatar: 'assets/dhl-uk-logo.png',
+            text: text,
+            timeAgo: 'Just now'
+          });
+          post.comments = (post.comments || 0) + 1;
+          input.value = '';
+          if (openPostId === postId) {
+            var content = document.getElementById('sopPostDetailContent');
+            if (content) content.innerHTML = '<article class="sop-post sop-post--detail" data-id="' + post.id + '">' + getPostHtml(post) + '</article>';
+          }
+          render();
+        });
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function () {
+          render();
+          initBeamSidebar();
+          initCreatePost();
+          initFeedClicks();
+          initDetailClose();
+          initLikeButtons();
+          initCommentForm();
+        });
+      } else {
+        render();
+        initBeamSidebar();
+        initCreatePost();
+        initFeedClicks();
+        initDetailClose();
+        initLikeButtons();
+        initCommentForm();
+      }
+    })();
+  </script>
+</body>
+</html>

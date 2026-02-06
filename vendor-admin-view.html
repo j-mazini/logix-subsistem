@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vendors – Administrative View</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="vendor-admin-view.css" />
+  <link rel="stylesheet" href="sidebar-beam.css" />
+</head>
+<body class="has-beam-sidebar">
+  <div class="sidebar-wrapper" id="sidebarWrapper">
+    <div class="sidebar-gap" id="sidebarGap" aria-hidden="true"></div>
+    <aside class="sidebar-container" id="sidebarContainer" aria-hidden="true"></aside>
+    <div class="floating-sidebar-toggle" id="floatingSidebarToggle" aria-hidden="true"></div>
+
+    <div class="beam-overlay" id="beamOverlay" aria-hidden="true"></div>
+    <nav class="beam-sidebar" id="beamSidebar" data-state="closed" role="navigation" aria-label="Main menu">
+      <button type="button" class="beam-trigger" id="beamTrigger" aria-label="Open menu" aria-expanded="false">
+        <i class="bi bi-list beam-icon-menu"></i>
+        <i class="bi bi-x-lg beam-icon-close"></i>
+      </button>
+      <div class="beam-rail" aria-hidden="true"></div>
+      <div class="beam-plates">
+        <a href="dashboard.html" class="beam-plate">
+          <i class="bi bi-house-door-fill beam-plate-icon"></i>
+          <span>Home</span>
+        </a>
+        <a href="service-providers.html" class="beam-plate">
+          <i class="bi bi-person-badge beam-plate-icon"></i>
+          <span>Service Providers</span>
+        </a>
+        <a href="vendor-admin-view.html" class="beam-plate active">
+          <i class="bi bi-building beam-plate-icon"></i>
+          <span>Vendors</span>
+        </a>
+        <a href="vehicles-admin-view.html" class="beam-plate">
+          <i class="bi bi-truck beam-plate-icon"></i>
+          <span>Vehicles</span>
+        </a>
+        <a href="contract-management-admin-view.html" class="beam-plate">
+          <i class="bi bi-file-earmark-text beam-plate-icon"></i>
+          <span>Contract Management</span>
+        </a>
+        <a href="standard-operating-procedures.html" class="beam-plate">
+          <i class="bi bi-journal-bookmark-fill beam-plate-icon"></i>
+          <span>SOP Feed</span>
+        </a>
+      </div>
+    </nav>
+
+    <div class="sidebar-inset" id="sidebarInset">
+      <div class="liquid-glass-page-bg" aria-hidden="true"></div>
+      <div class="page-container">
+        <div class="page-inner">
+          <main class="vendor-admin-main">
+        <!-- Header com título, pesquisa e user pill -->
+        <div class="admin-header d-flex flex-wrap align-items-center gap-2">
+          <h1 class="admin-header-title">Compliance</h1>
+          <div class="admin-header-search flex-grow-1">
+            <input
+              type="search"
+              id="searchInput"
+              class="form-control"
+              placeholder="Name, Service provider, DHL Training Number, Start date..."
+              autocomplete="off"
+            />
+          </div>
+          <div class="admin-header-user-pill d-flex align-items-center" title="DHL Uk">
+            <img src="assets/dhl-uk-logo.png" alt="DHL Uk" class="admin-header-user-avatar admin-header-user-avatar--img" />
+            <span class="admin-header-user-name">DHL Uk</span>
+          </div>
+        </div>
+
+        <!-- Filtros -->
+        <div class="admin-filters" id="adminFilters">
+          <div class="admin-filters-row row g-2 align-items-end flex-wrap">
+            <div class="col-auto">
+              <label class="admin-filter-label form-label" for="filterServiceProvider">Service provider</label>
+              <select id="filterServiceProvider" class="admin-filter-select form-select form-select-sm" aria-label="Filter by service provider">
+                <option value="">All</option>
+              </select>
+            </div>
+            <div class="col-auto">
+              <label class="admin-filter-label form-label" for="filterDocumentStatus">Document Status</label>
+              <select id="filterDocumentStatus" class="admin-filter-select form-select form-select-sm" aria-label="Filter by document status">
+                <option value="">All</option>
+                <option value="verified">Verified</option>
+                <option value="warning">Warning</option>
+                <option value="pending">Pending</option>
+              </select>
+            </div>
+            <div class="col-auto">
+              <button type="button" class="admin-filter-clear btn btn-outline-secondary btn-sm" id="filterClearBtn" title="Clear filters and search">Clear filters</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabela -->
+        <div class="table-wrap table-responsive">
+          <table class="table table-hover align-middle">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th class="text-center">Service provider</th>
+                <th class="text-center">DHL Training Number</th>
+                <th class="text-center">Start Date</th>
+                <th class="text-center">Cargo Training Date</th>
+                <th class="text-center">Dangerous Goods Training Date</th>
+                <th class="text-center">Manual Handling Training Date</th>
+                <th class="text-center">Document Status</th>
+              </tr>
+            </thead>
+            <tbody id="vendorsTableBody">
+              <!-- Preenchido por JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <div id="emptyState" class="empty-state alert alert-light hidden" role="status">
+          Nenhum vendor ativo encontrado.
+        </div>
+        <div id="loadingState" class="empty-state alert alert-light hidden" role="status">
+          <span class="loading-spinner inline-block align-middle"></span>
+          <span> Loading vendors...</span>
+        </div>
+      </main>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal detalhes do driver (ao clicar no nome) -->
+  <div id="driverModalBackdrop" class="modal-backdrop hidden" aria-hidden="true"></div>
+  <div id="driverModalWrap" class="modal-dialog-wrap hidden" role="dialog" aria-modal="true" aria-labelledby="driverModalTitle">
+    <div class="driver-modal" id="driverModalDialog">
+      <div class="driver-modal-header">
+        <div class="driver-modal-header-content">
+          <span class="driver-modal-badge">Driver</span>
+          <h2 id="driverModalTitle" class="driver-modal-title">—</h2>
+        </div>
+        <button type="button" class="driver-modal-close" id="driverModalClose" aria-label="Fechar">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      <div class="driver-modal-body" id="driverModalBody">
+        <!-- Conteúdo gerado por JS: Personal, Training Matrix, Trainings, Documents -->
+      </div>
+    </div>
+  </div>
+
+  </div>
+
+  <script src="dhl-mock-data.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      // ---------- Sidebar e redimensionamento ----------
+      var SIDEBAR_STORAGE_KEY = 'dhl_subsystem_sidebar_state';
+
+      function getSidebarOpen() {
+        try {
+          var stored = localStorage.getItem(SIDEBAR_STORAGE_KEY);
+          return stored !== 'false';
+        } catch (e) {
+          return true;
+        }
+      }
+
+      function setSidebarOpen(open) {
+        try {
+          localStorage.setItem(SIDEBAR_STORAGE_KEY, open ? 'true' : 'false');
+        } catch (e) {}
+      }
+
+      function getSidebarState() {
+        return getSidebarOpen() ? 'expanded' : 'collapsed';
+      }
+
+      function applySidebarState(state) {
+        var wrapper = document.getElementById('sidebarWrapper');
+        var gap = document.getElementById('sidebarGap');
+        if (!wrapper || !gap) return;
+        wrapper.setAttribute('data-sidebar-state', state);
+        gap.setAttribute('data-sidebar-state', state);
+        setSidebarOpen(state === 'expanded');
+        window.dispatchEvent(new Event('resize'));
+        window.dispatchEvent(new CustomEvent('sidebar-resize', { detail: { state: state } }));
+      }
+
+      function initBeamSidebar() {
+        var beam = document.getElementById('beamSidebar');
+        var trigger = document.getElementById('beamTrigger');
+        var overlay = document.getElementById('beamOverlay');
+        if (!beam || !trigger) return;
+        function openBeam() { beam.setAttribute('data-state', 'open'); trigger.setAttribute('aria-expanded', 'true'); if (overlay) overlay.classList.add('visible'); }
+        function closeBeam() { beam.setAttribute('data-state', 'closed'); trigger.setAttribute('aria-expanded', 'false'); if (overlay) overlay.classList.remove('visible'); }
+        trigger.addEventListener('click', function () { var isOpen = beam.getAttribute('data-state') === 'open'; if (isOpen) closeBeam(); else openBeam(); });
+        if (overlay) overlay.addEventListener('click', closeBeam);
+      }
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initBeamSidebar);
+      else initBeamSidebar();
+      document.addEventListener('keydown', function (e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+          e.preventDefault();
+          var beam = document.getElementById('beamSidebar');
+          if (beam) {
+            var isOpen = beam.getAttribute('data-state') === 'open';
+            beam.setAttribute('data-state', isOpen ? 'closed' : 'open');
+            document.getElementById('beamTrigger').setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+            var ov = document.getElementById('beamOverlay');
+            if (ov) ov.classList.toggle('visible', !isOpen);
+          }
+        }
+      });
+
+      var vendorTypeMap = { '1': 'Driver', '2': 'Subcontractor' };
+      var costModelMap = { '1': 'Per Stop', '2': 'Day Rate' };
+      var sampleVendors = (window.DHL_MOCK_DATA && window.DHL_MOCK_DATA.vendors) ? window.DHL_MOCK_DATA.vendors : [];
+
+      function formatDateOnly(dateStr) {
+        if (!dateStr) return '—';
+        var d = new Date(dateStr);
+        if (isNaN(d.getTime())) return dateStr;
+        var y = d.getFullYear();
+        var m = String(d.getMonth() + 1).padStart(2, '0');
+        var day = String(d.getDate()).padStart(2, '0');
+        return y + '-' + m + '-' + day;
+      }
+
+      function formatDateForDisplay(dateStr) {
+        if (!dateStr) return '—';
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+          var parts = dateStr.split('-');
+          return parts[2] + '/' + parts[1] + '/' + parts[0];
+        }
+        var d = new Date(dateStr);
+        if (isNaN(d.getTime())) return dateStr;
+        var day = String(d.getDate()).padStart(2, '0');
+        var m = String(d.getMonth() + 1).padStart(2, '0');
+        var y = d.getFullYear();
+        return day + '/' + m + '/' + y;
+      }
+
+      function getStatus(vendor) {
+        if (vendor.status) return vendor.status;
+        var today = new Date();
+        if (!vendor.finishDate || new Date(vendor.finishDate) > today) return 'Active';
+        return 'Inactive';
+      }
+
+      function isPending(vendor) {
+        return !vendor.criminalRecordDate || !vendor.dvlaCheckDate;
+      }
+
+      function getStatusBadgeClass(status) {
+        var s = (status || '').toLowerCase();
+        if (s === 'active') return 'status-badge status-badge-active';
+        if (s === 'inactive') return 'status-badge status-badge-inactive';
+        if (s === 'pending') return 'status-badge status-badge-pending';
+        return 'status-badge status-badge-default';
+      }
+
+      function getTrainingBadge(vendor) {
+        var complete = vendor.cargoTraining && vendor.dangerousGoodsTraining && vendor.manualHandlingTraining;
+        var cls = complete ? 'status-badge status-badge-active' : 'status-badge status-badge-incomplete';
+        var text = complete ? 'Complete' : 'Incomplete';
+        return '<span class="' + cls + '">' + text + '</span>';
+      }
+
+      /**
+       * Documentos com validade: treinamentos (24m), DVLA (6m).
+       * Retorna o primeiro documento em aviso/vencido (para mostrar badge Warning), ou null.
+       */
+      function getDocumentWarningHighlight(vendor) {
+        var checks = [
+          { key: 'cargoTraining', dateStr: vendor.cargoTrainingDate, months: 24 },
+          { key: 'dangerousGoodsTraining', dateStr: vendor.dangerousGoodsTrainingDate, months: 24 },
+          { key: 'manualHandlingTraining', dateStr: vendor.manualHandlingTrainingDate, months: 24 },
+          { key: 'dvla', dateStr: vendor.dvlaCheckDate, months: 6 }
+        ];
+        for (var i = 0; i < checks.length; i++) {
+          var c = getValidityClass(checks[i].dateStr, checks[i].months);
+          if (c === 'validity-expired' || c === 'validity-warning') return checks[i].key;
+        }
+        return null;
+      }
+
+      /**
+       * Retorna o ID para destaque no modal apenas quando o aviso é na documentação (ex.: DVLA).
+       * O redirecionamento pelo status só é válido para a secção Documentação, não para Trainings.
+       */
+      function getDocumentWarningHighlightForRedirect(vendor) {
+        var c = getValidityClass(vendor.dvlaCheckDate, 6);
+        if (c === 'validity-expired' || c === 'validity-warning') return 'dvla';
+        return null;
+      }
+
+      function getDocumentsBadge(vendor) {
+        var hasWarning = getDocumentWarningHighlight(vendor);
+        var highlightId = hasWarning ? getDocumentWarningHighlightForRedirect(vendor) : null;
+        if (hasWarning) {
+          var vendorEnc = encodeURIComponent(JSON.stringify(vendor));
+          return '<span class="document-status-badge-wrap" data-vendor="' + escapeAttr(vendorEnc) + '" data-highlight-id="' + escapeAttr(highlightId) + '">' +
+            '<span class="status-badge status-badge-warning document-status-clickable" role="button" tabindex="0" title="Clique para abrir e destacar o documento">Warning</span></span>';
+        }
+        var verified = vendor.criminalRecordDate && vendor.dvlaCheckDate;
+        var cls = verified ? 'status-badge status-badge-verified' : 'status-badge status-badge-pending';
+        var text = verified ? 'Verified' : 'Pending';
+        return '<span class="' + cls + '">' + text + '</span>';
+      }
+
+      function escapeAttr(s) {
+        if (s == null) return '';
+        var div = document.createElement('div');
+        div.textContent = s;
+        return div.innerHTML.replace(/"/g, '&quot;');
+      }
+
+      /**
+       * Retorna classe de validade: validity-expired (vermelho), validity-warning (amarelo) ou '' (ok).
+       * @param {string} dateStr - Data inicial (yyyy-mm-dd ou ISO)
+       * @param {number} validityMonths - Validade em meses (24 = 2 anos treinos, 6 = DVLA)
+       */
+      function getValidityClass(dateStr, validityMonths) {
+        if (!dateStr) return '';
+        var start = new Date(dateStr);
+        if (isNaN(start.getTime())) return '';
+        var expiry = new Date(start);
+        expiry.setMonth(expiry.getMonth() + validityMonths);
+        var today = new Date();
+        today.setHours(0, 0, 0, 0);
+        var inThreeMonths = new Date(today);
+        inThreeMonths.setMonth(inThreeMonths.getMonth() + 3);
+        expiry.setHours(0, 0, 0, 0);
+        if (expiry < today) return 'validity-expired';
+        if (expiry <= inThreeMonths) return 'validity-warning';
+        return '';
+      }
+
+      function wrapWithValidity(dateDisplay, dateStr, validityMonths) {
+        var cls = getValidityClass(dateStr, validityMonths);
+        var spanClass = cls ? ' class="' + cls + '"' : '';
+        return '<span' + spanClass + '>' + escapeHtml(dateDisplay || '—') + '</span>';
+      }
+
+      // Sistema apresenta apenas vendors ativos
+      function onlyActiveVendors(list) {
+        return list.filter(function (v) {
+          var status = getStatus(v);
+          return status === 'Active';
+        });
+      }
+
+      /** Retorna 'verified' | 'warning' | 'pending' para filtro por Document Status */
+      function getDocumentStatusValue(vendor) {
+        if (getDocumentWarningHighlight(vendor)) return 'warning';
+        if (vendor.criminalRecordDate && vendor.dvlaCheckDate) return 'verified';
+        return 'pending';
+      }
+
+      var state = {
+        vendors: sampleVendors,
+        filter: { search: '', serviceProvider: '', documentStatus: '' },
+        isLoading: false
+      };
+
+      function applyFilters() {
+        var list = onlyActiveVendors(state.vendors);
+        var search = (state.filter.search || '').toLowerCase().trim();
+        var serviceProvider = (state.filter.serviceProvider || '').trim();
+        var documentStatus = (state.filter.documentStatus || '').trim();
+
+        return list.filter(function (v) {
+          if (search) {
+            var name = (v.firstName + ' ' + v.lastName).toLowerCase();
+            var provider = (v.serviceProvider || '').toLowerCase();
+            var dhlNum = (v.dhlTrainingNumber || '').toLowerCase();
+            var startFormatted = v.startDate ? formatDateForDisplay(v.startDate).toLowerCase() : '';
+            var startRaw = (v.startDate || '').toLowerCase();
+            var match = name.indexOf(search) !== -1 ||
+              provider.indexOf(search) !== -1 ||
+              dhlNum.indexOf(search) !== -1 ||
+              startFormatted.indexOf(search) !== -1 ||
+              startRaw.indexOf(search) !== -1;
+            if (!match) return false;
+          }
+          if (serviceProvider && (v.serviceProvider || '') !== serviceProvider) return false;
+          if (documentStatus && getDocumentStatusValue(v) !== documentStatus) return false;
+          return true;
+        });
+      }
+
+      function fillServiceProviderFilter() {
+        var list = onlyActiveVendors(state.vendors);
+        var seen = {};
+        var providers = [];
+        list.forEach(function (v) {
+          var p = v.serviceProvider || '';
+          if (p && !seen[p]) { seen[p] = true; providers.push(p); }
+        });
+        providers.sort();
+        var sel = document.getElementById('filterServiceProvider');
+        var current = state.filter.serviceProvider;
+        sel.innerHTML = '<option value=""' + (current === '' ? ' selected' : '') + '>All</option>' + providers.map(function (p) {
+          return '<option value="' + escapeAttr(p) + '"' + (p === current ? ' selected' : '') + '>' + escapeHtml(p) + '</option>';
+        }).join('');
+      }
+
+      function renderTable(filtered) {
+        var tbody = document.getElementById('vendorsTableBody');
+        var emptyState = document.getElementById('emptyState');
+        var loadingState = document.getElementById('loadingState');
+
+        loadingState.classList.add('hidden');
+        if (state.isLoading) {
+          tbody.innerHTML = '<tr><td colspan="8" class="text-center" style="padding:1rem; color:#6c757d;"><span class="loading-spinner inline-block align-middle"></span> Loading vendors...</td></tr>';
+          emptyState.classList.add('hidden');
+          return;
+        }
+
+        if (filtered.length === 0) {
+          tbody.innerHTML = '';
+          emptyState.classList.remove('hidden');
+          return;
+        }
+
+        emptyState.classList.add('hidden');
+        var html = filtered.map(function (vendor, index) {
+          var startStr = formatDateForDisplay(vendor.startDate);
+          var cargoDate = formatDateForDisplay(vendor.cargoTrainingDate);
+          var dgDate = formatDateForDisplay(vendor.dangerousGoodsTrainingDate);
+          var mhDate = formatDateForDisplay(vendor.manualHandlingTrainingDate);
+          var cargoCell = wrapWithValidity(cargoDate, vendor.cargoTrainingDate, 24);
+          var dgCell = wrapWithValidity(dgDate, vendor.dangerousGoodsTrainingDate, 24);
+          var mhCell = wrapWithValidity(mhDate, vendor.manualHandlingTrainingDate, 24);
+          var documentsBadge = getDocumentsBadge(vendor);
+          var rowClass = index % 2 === 0 ? '' : ' style="background:#f8f9fa;"';
+          var vendorJson = encodeURIComponent(JSON.stringify(vendor));
+
+          return (
+            '<tr class="vendor-row-clickable" data-vendor="' + vendorJson + '" data-vendor-id="' + vendor.id + '" role="button" tabindex="0" title="Ver detalhes do driver"' + rowClass + '>' +
+              '<td class="name-cell"><strong>' + escapeHtml(vendor.firstName + ' ' + vendor.lastName) + '</strong><small>' + escapeHtml(vendor.email || 'N/A') + '</small></td>' +
+              '<td class="text-center">' + escapeHtml(vendor.serviceProvider || '—') + '</td>' +
+              '<td class="text-center">' + escapeHtml(vendor.dhlTrainingNumber || '—') + '</td>' +
+              '<td class="text-center">' + escapeHtml(startStr) + '</td>' +
+              '<td class="text-center">' + cargoCell + '</td>' +
+              '<td class="text-center">' + dgCell + '</td>' +
+              '<td class="text-center">' + mhCell + '</td>' +
+              '<td class="text-center">' + documentsBadge + '</td>' +
+            '</tr>'
+          );
+        }).join('');
+        tbody.innerHTML = html;
+
+        tbody.querySelectorAll('.vendor-row-clickable').forEach(function (row) {
+          function openDriver(highlightId) {
+            var vendorJson = row.getAttribute('data-vendor');
+            if (!vendorJson) return;
+            try {
+              openDriverModal(JSON.parse(decodeURIComponent(vendorJson)), highlightId || null);
+            } catch (e) {}
+          }
+          row.addEventListener('click', function (e) {
+            if (e.target.closest('.document-status-badge-wrap')) return;
+            openDriver();
+          });
+          row.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              openDriver();
+            }
+          });
+        });
+
+        tbody.querySelectorAll('.document-status-clickable').forEach(function (el) {
+          function openModalWithHighlight(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var wrap = el.closest('.document-status-badge-wrap');
+            if (!wrap) return;
+            var vendorJson = wrap.getAttribute('data-vendor');
+            var highlightId = wrap.getAttribute('data-highlight-id');
+            if (!vendorJson) return;
+            try {
+              var vendor = JSON.parse(decodeURIComponent(vendorJson));
+              openDriverModal(vendor, highlightId || null);
+            } catch (err) {}
+          }
+          el.addEventListener('click', openModalWithHighlight);
+          el.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+              openModalWithHighlight(e);
+            }
+          });
+        });
+      }
+
+      function escapeHtml(s) {
+        if (s == null) return '';
+        var div = document.createElement('div');
+        div.textContent = s;
+        return div.innerHTML;
+      }
+
+      function openDriverModal(vendor, highlightDocumentId) {
+        var titleEl = document.getElementById('driverModalTitle');
+        var bodyEl = document.getElementById('driverModalBody');
+
+        titleEl.textContent = vendor.firstName + ' ' + vendor.lastName;
+
+        var trainingMatrixValue = vendor.depot || '—';
+        var depotValue = vendor.depot || '—';
+        var trainings = [
+          { documentId: 'cargoTraining', name: 'Cargo Training', date: vendor.cargoTrainingDate ? formatDateForDisplay(vendor.cargoTrainingDate) : '—', dateStr: vendor.cargoTrainingDate, validityMonths: 24 },
+          { documentId: 'dangerousGoodsTraining', name: 'Dangerous Goods Training', date: vendor.dangerousGoodsTrainingDate ? formatDateForDisplay(vendor.dangerousGoodsTrainingDate) : '—', dateStr: vendor.dangerousGoodsTrainingDate, validityMonths: 24 },
+          { documentId: 'manualHandlingTraining', name: 'Manual Handling Training', date: vendor.manualHandlingTrainingDate ? formatDateForDisplay(vendor.manualHandlingTrainingDate) : '—', dateStr: vendor.manualHandlingTrainingDate, validityMonths: 24 }
+        ];
+
+        var personalRows = [
+          { label: 'Name', value: (vendor.firstName + ' ' + vendor.lastName).trim() || '—' },
+          { label: 'Service provider', value: vendor.serviceProvider || '—' },
+          { label: 'Email', value: vendor.email || '—' },
+          { label: 'Phone', value: vendor.phone || '—' },
+          { label: 'Date of birth', value: vendor.dob ? formatDateForDisplay(vendor.dob) : '—' }
+        ];
+
+        var dvlaDateDisplay = vendor.dvlaCheckDate ? formatDateForDisplay(vendor.dvlaCheckDate) : '—';
+        var dvlaValidityClass = getValidityClass(vendor.dvlaCheckDate, 6);
+
+        var documentRows = [
+          { documentId: 'dhlTrainingNumber', label: 'DHL Training Number', value: vendor.dhlTrainingNumber || '—' },
+          { documentId: 'dbsDate', label: 'DBS Date', value: vendor.criminalRecordDate ? formatDateForDisplay(vendor.criminalRecordDate) : '—' },
+          { documentId: 'dbsNumber', label: 'DBS Number', value: vendor.dbsNumber || '—' },
+          { documentId: 'dvla', label: 'DVLA', value: dvlaDateDisplay, valueClass: dvlaValidityClass },
+          { documentId: 'visaValidity', label: 'Visa validity', value: vendor.visaValidity ? formatDateForDisplay(vendor.visaValidity) : '—' },
+          { documentId: 'driverLicenceExpiring', label: 'Driver Licence Expiring', value: vendor.licenceExpiringDate ? formatDateForDisplay(vendor.licenceExpiringDate) : '—' },
+          { documentId: 'passportExpiring', label: 'Passport Expiring', value: vendor.passportExpiringDate ? formatDateForDisplay(vendor.passportExpiringDate) : '—' }
+        ];
+
+        var html =
+          '<div class="driver-modal-grid">' +
+            '<section class="driver-modal-section">' +
+              '<h3 class="driver-modal-section-title">Personal</h3>' +
+              personalRows.map(function (r) {
+                return '<div class="driver-modal-row"><span class="driver-modal-label">' + escapeHtml(r.label) + '</span><span class="driver-modal-value">' + escapeHtml(r.value) + '</span></div>';
+              }).join('') +
+            '</section>' +
+            '<section class="driver-modal-section driver-modal-section-matrix">' +
+              '<h3 class="driver-modal-section-title">Depot</h3>' +
+              '<div class="driver-modal-matrix-value">' + escapeHtml(depotValue) + '</div>' +
+            '</section>' +
+            '<section class="driver-modal-section driver-modal-section-matrix">' +
+              '<h3 class="driver-modal-section-title">Training Matrix</h3>' +
+              '<div class="driver-modal-matrix-value">' + escapeHtml(trainingMatrixValue) + '</div>' +
+            '</section>' +
+            '<section class="driver-modal-section">' +
+              '<h3 class="driver-modal-section-title">Trainings</h3>' +
+              trainings.map(function (t) {
+                var dateCls = getValidityClass(t.dateStr, t.validityMonths);
+                var dateSpanClass = dateCls ? ' driver-modal-training-date ' + dateCls : ' driver-modal-training-date';
+                var docId = t.documentId ? ' data-document-id="' + escapeAttr(t.documentId) + '"' : '';
+                return '<div class="driver-modal-training-row"' + docId + '>' +
+                  '<span class="driver-modal-training-name">' + escapeHtml(t.name) + '</span>' +
+                  '<span class="' + dateSpanClass.trim() + '">' + escapeHtml(t.date) + '</span>' +
+                '</div>';
+              }).join('') +
+            '</section>' +
+            '<section class="driver-modal-section driver-modal-section-full">' +
+              '<h3 class="driver-modal-section-title">Documents</h3>' +
+              documentRows.map(function (r) {
+                var valueCls = r.valueClass ? ' driver-modal-value ' + r.valueClass : ' driver-modal-value';
+                var docId = r.documentId ? ' data-document-id="' + escapeAttr(r.documentId) + '"' : '';
+                return '<div class="driver-modal-row"' + docId + '><span class="driver-modal-label">' + escapeHtml(r.label) + '</span><span class="' + valueCls.trim() + '">' + escapeHtml(r.value) + '</span></div>';
+              }).join('') +
+            '</section>' +
+          '</div>';
+
+        bodyEl.innerHTML = html;
+
+        if (highlightDocumentId) {
+          var target = bodyEl.querySelector('[data-document-id="' + highlightDocumentId + '"]');
+          if (target) {
+            target.classList.add('document-highlight');
+            target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            setTimeout(function () { target.classList.remove('document-highlight'); }, 2500);
+          }
+        }
+
+        document.getElementById('driverModalBackdrop').classList.remove('hidden');
+        document.getElementById('driverModalWrap').classList.remove('hidden');
+      }
+
+      function closeDriverModal() {
+        document.getElementById('driverModalBackdrop').classList.add('hidden');
+        document.getElementById('driverModalWrap').classList.add('hidden');
+      }
+
+      function run() {
+        fillServiceProviderFilter();
+        var filtered = applyFilters();
+        renderTable(filtered);
+      }
+
+      document.getElementById('searchInput').addEventListener('input', function () {
+        state.filter.search = this.value;
+        run();
+      });
+
+      document.getElementById('filterServiceProvider').addEventListener('change', function () {
+        state.filter.serviceProvider = this.value;
+        run();
+      });
+
+      document.getElementById('filterDocumentStatus').addEventListener('change', function () {
+        state.filter.documentStatus = this.value;
+        run();
+      });
+
+      document.getElementById('filterClearBtn').addEventListener('click', function () {
+        state.filter.search = '';
+        state.filter.serviceProvider = '';
+        state.filter.documentStatus = '';
+        document.getElementById('searchInput').value = '';
+        document.getElementById('filterServiceProvider').value = '';
+        document.getElementById('filterDocumentStatus').value = '';
+        run();
+      });
+
+      document.getElementById('driverModalClose').addEventListener('click', closeDriverModal);
+      document.getElementById('driverModalBackdrop').addEventListener('click', closeDriverModal);
+      document.getElementById('driverModalWrap').addEventListener('click', function (e) {
+        if (e.target === document.getElementById('driverModalWrap')) closeDriverModal();
+      });
+      document.getElementById('driverModalDialog').addEventListener('click', function (e) { e.stopPropagation(); });
+
+      run();
+    })();
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "path": "dhl/shipments",
+  "title": "DHL Envios",
+  "description": "Gestão de envios DHL",
+  "segment": "private",
+  "requiresAuth": true,
+  "navId": "dhl-shipments",
+  "navOrder": 101
+}

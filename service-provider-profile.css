@@ -1,0 +1,594 @@
+/**
+ * Service Provider Profile – Estilo rede social
+ */
+
+/* Reduzir padding da página no profile */
+.page-inner:has(.sp-profile-article) {
+  padding: 0.75rem 1rem;
+}
+
+@media (min-width: 768px) {
+  .page-inner:has(.sp-profile-article) {
+    padding: 0.9rem 1.25rem;
+  }
+}
+
+.sp-profile-main {
+  padding-bottom: 1.5rem;
+}
+
+.sp-profile-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--primary-blue, #0d6efd);
+  text-decoration: none;
+  margin-bottom: 0.75rem;
+}
+.sp-profile-back-link:hover {
+  color: #0a58ca;
+  text-decoration: underline;
+}
+
+.sp-profile-not-found {
+  text-align: center;
+  padding: 4rem 2rem;
+}
+.sp-profile-not-found i {
+  font-size: 4rem;
+  color: var(--text-light, #8491a1);
+  margin-bottom: 1rem;
+  display: block;
+}
+.sp-profile-not-found h2 {
+  font-size: 1.25rem;
+  color: var(--text-primary, #0f172a);
+  margin-bottom: 1.5rem;
+}
+
+/* Header tipo rede social */
+.sp-profile-header {
+  position: relative;
+  margin-bottom: 2.5rem;
+}
+
+.sp-profile-cover {
+  height: 180px;
+  background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+  border-radius: 14px 14px 0 0;
+}
+
+.sp-profile-avatar-wrap {
+  position: absolute;
+  left: 1.25rem;
+  bottom: -2.5rem;
+}
+
+.sp-profile-avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: #3498db;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 700;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  border: 4px solid #fff;
+  overflow: hidden;
+}
+.sp-profile-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sp-profile-avatar--logo {
+  background: #fff;
+}
+
+.sp-profile-avatar--logo .sp-profile-avatar-img {
+  object-fit: contain;
+  padding: 0;
+}
+
+/* Body */
+.sp-profile-body {
+  padding: 0 1.25rem 1.5rem;
+  max-width: 100%;
+}
+
+.sp-profile-info {
+  margin-bottom: 1.25rem;
+}
+
+.sp-profile-name {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary, #0f172a);
+  margin: 0 0 0.35rem 0;
+}
+
+.sp-profile-stats {
+  display: flex;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.sp-profile-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary, #64748b);
+}
+.sp-profile-stat i {
+  color: var(--primary-blue, #0d6efd);
+}
+.sp-profile-stat strong {
+  color: var(--text-primary, #0f172a);
+}
+
+/* Sections – espaçamento entre blocos */
+.sp-profile-body > .sp-profile-about {
+  margin-top: 1.5rem;
+}
+.sp-profile-body > .sp-profile-depots,
+.sp-profile-body > .sp-profile-metrics,
+.sp-profile-body > .sp-profile-sections {
+  margin-top: 2.5rem;
+}
+
+.sp-profile-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.sp-profile-sections .sp-profile-section {
+  margin-top: 0;
+}
+
+.sp-profile-section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary, #0f172a);
+  margin: 0 0 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.sp-profile-section-title i {
+  color: var(--primary-blue, #0d6efd);
+}
+
+/* Cards maiores para preencher espaço */
+.sp-profile-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  grid-auto-rows: minmax(100px, 1fr);
+}
+
+.sp-profile-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+  padding: 1.25rem 1.25rem;
+  min-height: 100px;
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid var(--border-color, #e9ecef);
+  text-decoration: none;
+  color: inherit;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.sp-profile-card:hover {
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.1);
+  transform: translateY(-3px);
+}
+
+.sp-profile-card-icon {
+  width: 56px;
+  height: 56px;
+  min-width: 56px;
+  min-height: 56px;
+  border-radius: 14px;
+  background: rgba(13, 110, 253, 0.12);
+  color: var(--primary-blue, #0d6efd);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.sp-profile-card-avatar {
+  flex-shrink: 0;
+}
+.sp-profile-card-avatar img {
+  width: 56px;
+  height: 56px;
+  min-width: 56px;
+  min-height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.sp-profile-card-body {
+  flex: 1;
+  min-width: 0;
+}
+.sp-profile-card-body strong {
+  display: block;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--text-primary, #0f172a);
+  margin-bottom: 0.2rem;
+}
+.sp-profile-card-body span {
+  display: block;
+  font-size: 0.9375rem;
+  color: var(--text-secondary, #64748b);
+  margin-bottom: 0.2rem;
+}
+.sp-profile-card-body small {
+  font-size: 0.8125rem;
+  color: var(--text-light, #8491a1);
+}
+
+.sp-profile-empty {
+  color: var(--text-light, #8491a1);
+  font-size: 1rem;
+  margin: 0;
+  padding: 1.5rem;
+  grid-column: 1 / -1;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 12px;
+}
+
+/* About section */
+.sp-profile-about-card {
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid var(--border-color, #e9ecef);
+  padding: 1.25rem 1.5rem;
+}
+
+.sp-profile-owner {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+}
+.sp-profile-owner-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-light, #8491a1);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.sp-profile-description {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--text-secondary, #64748b);
+  line-height: 1.5;
+}
+
+/* Depot & Loop filter – compact pill-style selectors */
+.sp-profile-filters {
+  margin-bottom: 1rem;
+}
+
+.sp-profile-filter-row {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.5rem;
+  background: rgba(241, 245, 249, 0.6);
+  border-radius: 0.75rem;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.sp-profile-filter-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.sp-profile-filter-select {
+  min-width: 0;
+  width: auto;
+  max-width: 120px;
+  padding: 0.3rem 1.75rem 0.3rem 0.6rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  background: #fff;
+  color: #1e293b;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+}
+
+.sp-profile-filter-select:hover {
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+.sp-profile-filter-select:focus {
+  outline: none;
+  border-color: rgba(99, 102, 241, 0.5);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+}
+
+.sp-profile-filter-loop-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding-left: 0.5rem;
+  border-left: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.sp-profile-filter-loop-wrap.hidden {
+  display: none !important;
+}
+
+/* Depots section */
+.sp-profile-depots-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.sp-profile-depot-card {
+  background: #fff;
+  border: 1px solid var(--border-color, #e9ecef);
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  min-height: 120px;
+}
+
+.sp-profile-depot-name {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary, #0f172a);
+  margin-bottom: 0.35rem;
+}
+.sp-profile-depot-name i {
+  color: var(--primary-blue, #0d6efd);
+}
+.sp-profile-depot-manager {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #64748b);
+}
+.sp-profile-depot-manager strong {
+  font-weight: 500;
+  color: var(--text-primary, #0f172a);
+}
+
+.sp-profile-depot-contact {
+  margin-top: 0.5rem;
+  font-size: 0.8125rem;
+}
+
+/* Company and depot contact links */
+.sp-profile-company-contact {
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.sp-profile-contact-link {
+  color: var(--primary-blue, #0d6efd);
+  text-decoration: none;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}
+
+.sp-profile-contact-link:hover {
+  text-decoration: underline;
+}
+
+.sp-profile-contact-link i {
+  font-size: 0.85em;
+  margin-right: 0.15em;
+}
+
+/* KPIs use dashboard.css (dashboard-kpi-grid, dashboard-kpi-card, etc.) – styled like homepage */
+
+/* Service Providers grid – 3 items per line */
+.sp-providers-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+.sp-provider-card {
+  display: block;
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--border-color, #e9ecef);
+  text-decoration: none;
+  color: inherit;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.sp-provider-card:hover {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  transform: translateY(-4px);
+}
+
+.sp-provider-card-cover {
+  height: 100px;
+}
+
+.sp-provider-card-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  margin: -32px 1rem 0 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  font-weight: 700;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  border: 3px solid #fff;
+  overflow: hidden;
+}
+
+.sp-provider-card-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 0;
+}
+
+.sp-provider-card-body {
+  padding: 1rem 1rem 1.25rem;
+}
+.sp-provider-card-body strong {
+  display: block;
+  font-size: 1rem;
+  color: var(--text-primary, #0f172a);
+  margin-bottom: 0.25rem;
+}
+.sp-provider-card-body span {
+  font-size: 0.875rem;
+  color: var(--primary-blue, #0d6efd);
+}
+
+@media (max-width: 991px) {
+  .sp-profile-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .sp-providers-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .sp-profile-depots-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 576px) {
+  .sp-profile-avatar {
+    width: 80px;
+    height: 80px;
+    font-size: 1.75rem;
+  }
+  .sp-profile-avatar-wrap {
+    bottom: -2rem;
+  }
+  .sp-profile-cover {
+    height: 140px;
+  }
+  .sp-profile-cards {
+    grid-template-columns: 1fr;
+  }
+  .sp-providers-grid {
+    grid-template-columns: 1fr;
+  }
+  .sp-profile-card {
+    padding: 1rem;
+  }
+  .sp-profile-card-icon,
+  .sp-profile-card-avatar img {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    min-height: 48px;
+    font-size: 1.25rem;
+  }
+  .dashboard-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Logo viewer modal */
+.logo-viewer-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.logo-viewer-modal[hidden] {
+  display: none;
+}
+
+.logo-viewer-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  cursor: pointer;
+}
+
+.logo-viewer-content {
+  position: relative;
+  background: #fff;
+  border-radius: 12px;
+  padding: 2rem;
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.logo-viewer-content img {
+  max-width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
+}
+
+.logo-viewer-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  background: transparent;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: #666;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.logo-viewer-close:hover {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.sp-profile-avatar--logo,
+.sp-provider-card-avatar--logo {
+  cursor: pointer;
+}
+
+.sp-profile-avatar--logo:hover,
+.sp-provider-card-avatar--logo:hover {
+  opacity: 0.95;
+}

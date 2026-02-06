@@ -1,0 +1,9 @@
+{
+  "path": "dhl/dashboard",
+  "title": "DHL Dashboard",
+  "description": "Visão geral das operações DHL",
+  "segment": "private",
+  "requiresAuth": true,
+  "navId": "dhl-dashboard",
+  "navOrder": 100
+}
