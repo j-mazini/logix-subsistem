@@ -70,200 +70,327 @@
                   <span class="admin-header-user-name" id="spHeaderName">—</span>
                 </div>
               </div>
-              <div class="dashboard-tabs-wrap" id="spDashboardFiltersWrap">
-                <div class="dashboard-tab-filters d-flex flex-wrap align-items-center gap-2">
-                  <span class="dashboard-filter-loop-label">Depot:</span>
-                  <select id="spFilterDepot" class="form-select form-select-sm dashboard-filter-select" aria-label="Filter by depot">
-                    <option value="">All depots</option>
-                  </select>
-                  <div class="dashboard-filter-loop-wrap hidden" id="spLoopFilterWrap" aria-hidden="true">
-                    <span class="dashboard-filter-loop-label">Loop:</span>
-                    <select id="spFilterLoop" class="form-select form-select-sm dashboard-filter-select" aria-label="Filter by loop">
-                      <option value="">All loops</option>
-                    </select>
-                  </div>
-                  <div class="dashboard-filter-loop-wrap hidden" id="spRouteFilterWrap" aria-hidden="true">
-                    <span class="dashboard-filter-loop-label">Route:</span>
-                    <select id="spFilterRoute" class="form-select form-select-sm dashboard-filter-select" aria-label="Filter by route">
-                      <option value="">All routes</option>
-                    </select>
-                  </div>
-                  <button type="button" class="btn btn-outline-secondary btn-sm" id="spFilterClear">Clear</button>
-                </div>
-              </div>
             </header>
 
-            <section class="dashboard-section dashboard-block" aria-labelledby="kpis-heading">
-              <div class="dashboard-block-header">
-                <h2 id="kpis-heading" class="dashboard-block-title">
-                  <i class="bi bi-graph-up-arrow"></i>
-                  <span>KPIs</span>
-                </h2>
-                <p class="dashboard-block-desc">Your key performance indicators</p>
+            <!-- Daily operations – one notification at a time, auto-rotate; click opens modal with all -->
+            <section class="sp-daily-ops-block" id="spDailyOpsBlock" aria-label="Daily operations">
+              <div class="sp-daily-ops-header">
+                <h2 class="sp-daily-ops-title"><i class="bi bi-bell-fill"></i> Daily operations</h2>
+                <p class="sp-daily-ops-subtitle">Notifications about routes, deliveries, delays and issues · <span class="sp-daily-ops-click-hint">Click to view all</span></p>
               </div>
-              <div class="dashboard-block-content">
-                <div class="dashboard-kpi-grid" id="kpiGrid" data-loading="true">
-                  <div class="dashboard-kpi-card" data-animate="1">
-                    <div class="dashboard-kpi-icon-wrap kpi-spr" aria-hidden="true"><i class="bi bi-graph-up-arrow"></i></div>
-                    <div class="dashboard-kpi-content">
-                      <span class="dashboard-kpi-value-wrap">
-                        <span class="dashboard-kpi-loading-spinner" aria-hidden="true"></span>
-                        <span class="dashboard-kpi-value" id="kpiSpr">0</span>
-                      </span>
-                      <span class="dashboard-kpi-label">SPR</span>
+              <div class="sp-daily-ops-feed sp-daily-ops-feed--slide" id="dailyOpsFeed">
+                <div class="sp-daily-ops-carousel">
+                  <button type="button" class="sp-daily-ops-nav sp-daily-ops-prev" id="dailyOpsPrev" aria-label="Previous notification"><i class="bi bi-chevron-left"></i></button>
+                  <div class="sp-daily-ops-slide-wrap" id="dailyOpsSlideWrap" role="button" tabindex="0" aria-label="Current notification; click to view all">
+                    <div class="sp-daily-ops-slide" id="dailyOpsSlide"></div>
+                  </div>
+                  <button type="button" class="sp-daily-ops-nav sp-daily-ops-next" id="dailyOpsNext" aria-label="Next notification"><i class="bi bi-chevron-right"></i></button>
+                </div>
+                <div class="sp-daily-ops-dots" id="dailyOpsDots" role="tablist" aria-label="Navigate notifications"></div>
+                <div id="dailyOpsEmpty" class="sp-daily-ops-empty hidden">
+                  <i class="bi bi-inbox"></i>
+                  <p>No notifications at the moment.</p>
+                </div>
+              </div>
+            </section>
+
+            <!-- Modal: all notifications -->
+            <div class="sp-daily-ops-modal hidden" id="dailyOpsModal" role="dialog" aria-modal="true" aria-labelledby="dailyOpsModalTitle">
+              <div class="sp-daily-ops-modal-backdrop" id="dailyOpsModalBackdrop"></div>
+              <div class="sp-daily-ops-modal-dialog">
+                <div class="sp-daily-ops-modal-content">
+                  <div class="sp-daily-ops-modal-header">
+                    <h2 id="dailyOpsModalTitle" class="sp-daily-ops-modal-title"><i class="bi bi-bell-fill"></i> All notifications</h2>
+                    <button type="button" class="sp-daily-ops-modal-close" id="dailyOpsModalClose" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+                  </div>
+                  <div class="sp-daily-ops-modal-body">
+                    <div class="sp-daily-ops-list" id="dailyOpsModalList" role="list"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Main dashboard with folder tabs (Disco | Last Day Operation | SPMS) -->
+            <section class="sp-dashboard-folders-block" id="spDashboardFoldersBlock" aria-label="Main dashboard">
+              <div class="sp-folder-tabs" role="tablist">
+                <button type="button" class="sp-folder-tab active" role="tab" aria-selected="true" data-folder="disco" id="folderDisco">
+                  <i class="bi bi-file-earmark-text"></i>
+                  <span>Disco</span>
+                </button>
+                <button type="button" class="sp-folder-tab" role="tab" aria-selected="false" data-folder="lastday" id="folderLastDay">
+                  <i class="bi bi-calendar-day"></i>
+                  <span>Last Day Operation</span>
+                </button>
+                <button type="button" class="sp-folder-tab" role="tab" aria-selected="false" data-folder="spms" id="folderSpms">
+                  <i class="bi bi-speedometer2"></i>
+                  <span>SPMS</span>
+                </button>
+              </div>
+              <div class="sp-folder-content">
+                <div id="folder-panel-disco" class="sp-folder-panel" role="tabpanel" aria-labelledby="folderDisco">
+                  <div class="sp-folder-panel-inner sp-folder-panel-inner--scroll">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                      <div>
+                        <h2 class="dashboard-block-title mb-1"><i class="bi bi-file-earmark-pdf"></i> Daily Disco</h2>
+                        <p class="dashboard-block-desc mb-0 small">Day's deliveries (Morning, Meeting). <a href="../assets/disco.pdf" target="_blank" rel="noopener">Open original PDF</a></p>
+                      </div>
+                      <div class="disco-filters d-flex align-items-center gap-2">
+                        <label for="discoFilterDepot" class="form-label mb-0 small text-muted">Depot</label>
+                        <select id="discoFilterDepot" class="form-select form-select-sm disco-filter-depot" aria-label="Filter by depot">
+                          <option value="">All</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div id="discoIslandsWrap" class="sp-disco-islands row g-4">
+                      <div class="col-12 col-md-6">
+                        <div class="sp-disco-island sp-disco-island--am">
+                          <div class="sp-disco-island-header">
+                            <i class="bi bi-sun"></i>
+                            <div>
+                              <h3 class="sp-disco-island-title">AM Run</h3>
+                              <p class="sp-disco-island-subtitle">Morning operations</p>
+                            </div>
+                            <span class="sp-disco-island-badge" id="discoAmCount">0</span>
+                          </div>
+                          <div class="sp-disco-island-body">
+                            <ul class="sp-disco-list" id="discoAmList" aria-label="Morning – deliveries"></ul>
+                            <p class="sp-disco-empty hidden" id="discoAmEmpty">No operations</p>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-12 col-md-6">
+                        <div class="sp-disco-island sp-disco-island--pm">
+                          <div class="sp-disco-island-header">
+                            <i class="bi bi-moon"></i>
+                            <div>
+                              <h3 class="sp-disco-island-title">PM Run</h3>
+                              <p class="sp-disco-island-subtitle">Meeting / delivery</p>
+                            </div>
+                            <span class="sp-disco-island-badge" id="discoPmCount">0</span>
+                          </div>
+                          <div class="sp-disco-island-body">
+                            <ul class="sp-disco-list" id="discoPmList" aria-label="Meeting – deliveries"></ul>
+                            <p class="sp-disco-empty hidden" id="discoPmEmpty">No operations</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div id="discoErrorState" class="sp-disco-error hidden" role="alert">
+                      <i class="bi bi-exclamation-circle"></i>
+                      <p class="mb-0">Disco data not available. <a href="../assets/disco.pdf" target="_blank" rel="noopener">Open PDF</a>.</p>
                     </div>
                   </div>
-                  <div class="dashboard-kpi-card" data-animate="2">
-                    <div class="dashboard-kpi-icon-wrap kpi-tw" aria-hidden="true"><i class="bi bi-clock-history"></i></div>
-                    <div class="dashboard-kpi-content">
-                      <span class="dashboard-kpi-value-wrap">
-                        <span class="dashboard-kpi-loading-spinner" aria-hidden="true"></span>
-                        <span class="dashboard-kpi-value" id="kpiTw">0</span>
-                      </span>
-                      <span class="dashboard-kpi-label">Time Window (TW)</span>
+                </div>
+                <div id="folder-panel-lastday" class="sp-folder-panel hidden" role="tabpanel" aria-labelledby="folderLastDay" aria-hidden="true">
+                  <div class="sp-folder-panel-inner sp-folder-panel-inner--scroll">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                      <h2 class="dashboard-block-title mb-0"><i class="bi bi-calendar-day"></i> Last day</h2>
+                      <div class="last-day-filters d-flex align-items-center gap-2">
+                        <label for="lastDayFilterLoop" class="form-label mb-0 small text-muted">Loop</label>
+                        <select id="lastDayFilterLoop" class="form-select form-select-sm last-day-filter-loop-select" aria-label="Filter by loop">
+                          <option value="">All</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="row g-4">
+                      <div class="col-12 col-lg-8">
+                        <div class="last-day-table-wrap table-responsive">
+                          <table class="table table-hover align-middle last-day-routes-table">
+                            <thead>
+                              <tr>
+                                <th>Route</th>
+                                <th>SPR</th>
+                                <th>SPOR-H</th>
+                                <th>Time Window</th>
+                                <th>% Target</th>
+                              </tr>
+                            </thead>
+                            <tbody id="lastDayRoutesBody"></tbody>
+                          </table>
+                        </div>
+                      </div>
+                      <div class="col-12 col-lg-4">
+                        <h3 class="last-day-goals-title"><i class="bi bi-bullseye"></i> Achievement goal – Time Window</h3>
+                        <div class="last-day-goals-wrap" id="lastDayGoalsWrap"></div>
+                      </div>
                     </div>
                   </div>
-                  <div class="dashboard-kpi-card" data-animate="3">
-                    <div class="dashboard-kpi-icon-wrap kpi-spohr" aria-hidden="true"><i class="bi bi-speedometer2"></i></div>
-                    <div class="dashboard-kpi-content">
-                      <span class="dashboard-kpi-value-wrap">
-                        <span class="dashboard-kpi-loading-spinner" aria-hidden="true"></span>
-                        <span class="dashboard-kpi-value" id="kpiSpohr">0</span>
-                      </span>
-                      <span class="dashboard-kpi-label">SPOH-R</span>
+                </div>
+                <div id="folder-panel-spms" class="sp-folder-panel hidden" role="tabpanel" aria-labelledby="folderSpms" aria-hidden="true">
+                  <div class="sp-folder-panel-inner sp-folder-panel-inner--scroll">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                      <h2 class="dashboard-block-title mb-0"><i class="bi bi-speedometer2"></i> SPMS</h2>
+                      <div class="spms-filters d-flex align-items-center gap-2">
+                        <label for="spmsFilterLoop" class="form-label mb-0 small text-muted">Aggregation route</label>
+                        <select id="spmsFilterLoop" class="form-select form-select-sm" aria-label="Filter by aggregation route (loop)">
+                          <option value="">All</option>
+                        </select>
+                      </div>
                     </div>
-                  </div>
-                  <div class="dashboard-kpi-card" data-animate="4">
-                    <div class="dashboard-kpi-icon-wrap kpi-routes" aria-hidden="true"><i class="bi bi-signpost-2-fill"></i></div>
-                    <div class="dashboard-kpi-content">
-                      <span class="dashboard-kpi-value-wrap">
-                        <span class="dashboard-kpi-loading-spinner" aria-hidden="true"></span>
-                        <span class="dashboard-kpi-value" id="kpiTotalRoutes">0</span>
-                      </span>
-                      <span class="dashboard-kpi-label">TOTAL ROUTES</span>
-                    </div>
-                  </div>
-                  <div class="dashboard-kpi-card" data-animate="5">
-                    <div class="dashboard-kpi-icon-wrap kpi-stops" aria-hidden="true"><i class="bi bi-geo-alt-fill"></i></div>
-                    <div class="dashboard-kpi-content">
-                      <span class="dashboard-kpi-value-wrap">
-                        <span class="dashboard-kpi-loading-spinner" aria-hidden="true"></span>
-                        <span class="dashboard-kpi-value" id="kpiTotalStops">0</span>
-                      </span>
-                      <span class="dashboard-kpi-label">TOTAL STOPS</span>
-                    </div>
-                  </div>
-                  <div class="dashboard-kpi-card" data-animate="6">
-                    <div class="dashboard-kpi-icon-wrap kpi-vendors" aria-hidden="true"><i class="bi bi-people-fill"></i></div>
-                    <div class="dashboard-kpi-content">
-                      <span class="dashboard-kpi-value-wrap">
-                        <span class="dashboard-kpi-loading-spinner" aria-hidden="true"></span>
-                        <span class="dashboard-kpi-value" id="kpiVendors">0</span>
-                      </span>
-                      <span class="dashboard-kpi-label">ACTIVE VENDORS</span>
-                    </div>
-                  </div>
-                  <div class="dashboard-kpi-card" data-animate="7">
-                    <div class="dashboard-kpi-icon-wrap kpi-loops" aria-hidden="true"><i class="bi bi-arrow-repeat"></i></div>
-                    <div class="dashboard-kpi-content">
-                      <span class="dashboard-kpi-value-wrap">
-                        <span class="dashboard-kpi-loading-spinner" aria-hidden="true"></span>
-                        <span class="dashboard-kpi-value" id="kpiLoops">0</span>
-                      </span>
-                      <span class="dashboard-kpi-label">ACTIVE LOOPS</span>
+                    <h3 class="spms-overview-title mb-3" id="spmsOverviewTitle">Overview for aggregation route</h3>
+                    <div class="spms-table-wrap table-responsive">
+                      <table class="table table-hover align-middle spms-overview-table">
+                        <thead>
+                          <tr>
+                            <th>Date</th>
+                            <th>Route</th>
+                            <th>Cycle</th>
+                            <th>Service item</th>
+                            <th>HN</th>
+                            <th>Deliverys</th>
+                            <th>PU</th>
+                            <th>Total</th>
+                            <th>Comment</th>
+                          </tr>
+                        </thead>
+                        <tbody id="spmsOverviewBody"></tbody>
+                        <tfoot id="spmsOverviewFoot" class="spms-overview-tfoot">
+                          <tr><td colspan="4"><strong>Total</strong></td><td id="spmsTotalHn">0</td><td id="spmsTotalOk">0</td><td id="spmsTotalPu">0</td><td id="spmsTotalAll">0</td><td></td></tr>
+                        </tfoot>
+                      </table>
                     </div>
                   </div>
                 </div>
               </div>
             </section>
 
-            <section class="dashboard-section dashboard-block" aria-labelledby="compliance-heading">
-              <div class="dashboard-block-header">
-                <h2 id="compliance-heading" class="dashboard-block-title">
-                  <i class="bi bi-shield-check"></i>
-                  <span>Compliance</span>
-                </h2>
-                <p class="dashboard-block-desc">Training courses by status (your drivers)</p>
+            <!-- Block 2: KPIs / Compliance / Vehicles carousel + open full dashboard button -->
+            <section class="sp-dashboard-carousel-block" aria-label="Summary KPIs, Compliance and Vehicles">
+              <div class="sp-carousel-header">
+                <h2 class="sp-carousel-title"><i class="bi bi-grid-3x3-gap"></i> Summary</h2>
+                <div class="sp-carousel-nav">
+                  <button type="button" class="sp-carousel-btn" id="carouselPrev" aria-label="Previous"><i class="bi bi-chevron-left"></i></button>
+                  <span class="sp-carousel-dots" id="carouselDots"></span>
+                  <button type="button" class="sp-carousel-btn" id="carouselNext" aria-label="Next"><i class="bi bi-chevron-right"></i></button>
+                  <button type="button" class="btn btn-primary btn-sm sp-open-full-dashboard" id="openFullDashboardBtn" title="Open full dashboard">
+                    <i class="bi bi-fullscreen"></i> Open full dashboard
+                  </button>
+                </div>
               </div>
-              <div class="dashboard-block-content">
-                <div class="dashboard-compliance-grid" id="complianceGrid">
-                  <div class="dashboard-compliance-card" data-course="cargo">
-                    <div class="dashboard-compliance-card-header"><i class="bi bi-box-seam"></i><h3>Cargo Training</h3></div>
-                    <div class="dashboard-compliance-body">
-                      <div class="compliance-group expiring"><h4><i class="bi bi-exclamation-triangle"></i> Expiring</h4><ul class="compliance-vendor-list" id="complianceCargoExpiring"></ul></div>
-                      <div class="compliance-group expired"><h4><i class="bi bi-x-circle"></i> Expired</h4><ul class="compliance-vendor-list" id="complianceCargoExpired"></ul></div>
+              <div class="sp-carousel-viewport">
+                <div class="sp-carousel-track" id="carouselTrack">
+                  <div class="sp-carousel-slide" data-slide="0">
+                    <div class="sp-carousel-slide-inner" id="carouselSlideKpis">
+                      <div class="dashboard-kpi-grid dashboard-kpi-grid--compact" id="kpiGrid" data-loading="true">
+                        <div class="dashboard-kpi-card" data-animate="1"><div class="dashboard-kpi-icon-wrap kpi-spr"><i class="bi bi-graph-up-arrow"></i></div><div class="dashboard-kpi-content"><span class="dashboard-kpi-value-wrap"><span class="dashboard-kpi-loading-spinner" aria-hidden="true"></span><span class="dashboard-kpi-value" id="kpiSpr">0</span></span><span class="dashboard-kpi-label">SPR</span></div></div>
+                        <div class="dashboard-kpi-card" data-animate="2"><div class="dashboard-kpi-icon-wrap kpi-tw"><i class="bi bi-clock-history"></i></div><div class="dashboard-kpi-content"><span class="dashboard-kpi-value-wrap"><span class="dashboard-kpi-loading-spinner" aria-hidden="true"></span><span class="dashboard-kpi-value" id="kpiTw">0</span></span><span class="dashboard-kpi-label">Time Window</span></div></div>
+                        <div class="dashboard-kpi-card" data-animate="3"><div class="dashboard-kpi-icon-wrap kpi-spohr"><i class="bi bi-speedometer2"></i></div><div class="dashboard-kpi-content"><span class="dashboard-kpi-value-wrap"><span class="dashboard-kpi-loading-spinner" aria-hidden="true"></span><span class="dashboard-kpi-value" id="kpiSpohr">0</span></span><span class="dashboard-kpi-label">SPOH-R</span></div></div>
+                        <div class="dashboard-kpi-card" data-animate="4"><div class="dashboard-kpi-icon-wrap kpi-routes"><i class="bi bi-signpost-2-fill"></i></div><div class="dashboard-kpi-content"><span class="dashboard-kpi-value-wrap"><span class="dashboard-kpi-loading-spinner" aria-hidden="true"></span><span class="dashboard-kpi-value" id="kpiTotalRoutes">0</span></span><span class="dashboard-kpi-label">ROUTES</span></div></div>
+                        <div class="dashboard-kpi-card" data-animate="5"><div class="dashboard-kpi-icon-wrap kpi-stops"><i class="bi bi-geo-alt-fill"></i></div><div class="dashboard-kpi-content"><span class="dashboard-kpi-value-wrap"><span class="dashboard-kpi-loading-spinner" aria-hidden="true"></span><span class="dashboard-kpi-value" id="kpiTotalStops">0</span></span><span class="dashboard-kpi-label">STOPS</span></div></div>
+                        <div class="dashboard-kpi-card" data-animate="6"><div class="dashboard-kpi-icon-wrap kpi-vendors"><i class="bi bi-people-fill"></i></div><div class="dashboard-kpi-content"><span class="dashboard-kpi-value-wrap"><span class="dashboard-kpi-loading-spinner" aria-hidden="true"></span><span class="dashboard-kpi-value" id="kpiVendors">0</span></span><span class="dashboard-kpi-label">VENDORS</span></div></div>
+                        <div class="dashboard-kpi-card" data-animate="7"><div class="dashboard-kpi-icon-wrap kpi-loops"><i class="bi bi-arrow-repeat"></i></div><div class="dashboard-kpi-content"><span class="dashboard-kpi-value-wrap"><span class="dashboard-kpi-loading-spinner" aria-hidden="true"></span><span class="dashboard-kpi-value" id="kpiLoops">0</span></span><span class="dashboard-kpi-label">LOOPS</span></div></div>
+                      </div>
                     </div>
                   </div>
-                  <div class="dashboard-compliance-card" data-course="dangerous">
-                    <div class="dashboard-compliance-card-header"><i class="bi bi-exclamation-octagon"></i><h3>Dangerous Goods</h3></div>
-                    <div class="dashboard-compliance-body">
-                      <div class="compliance-group expiring"><h4><i class="bi bi-exclamation-triangle"></i> Expiring</h4><ul class="compliance-vendor-list" id="complianceDangerousExpiring"></ul></div>
-                      <div class="compliance-group expired"><h4><i class="bi bi-x-circle"></i> Expired</h4><ul class="compliance-vendor-list" id="complianceDangerousExpired"></ul></div>
+                  <div class="sp-carousel-slide" data-slide="1">
+                    <div class="sp-carousel-slide-inner" id="carouselSlideCompliance">
+                      <div class="dashboard-compliance-grid dashboard-compliance-grid--compact" id="complianceGrid">
+                        <div class="dashboard-compliance-card" data-course="cargo"><div class="dashboard-compliance-card-header"><i class="bi bi-box-seam"></i><h3>Cargo</h3></div><div class="dashboard-compliance-body"><div class="compliance-group expiring"><h4><i class="bi bi-exclamation-triangle"></i> Expiring</h4><ul class="compliance-vendor-list" id="complianceCargoExpiring"></ul></div><div class="compliance-group expired"><h4><i class="bi bi-x-circle"></i> Expired</h4><ul class="compliance-vendor-list" id="complianceCargoExpired"></ul></div></div></div>
+                        <div class="dashboard-compliance-card" data-course="dangerous"><div class="dashboard-compliance-card-header"><i class="bi bi-exclamation-octagon"></i><h3>Dangerous Goods</h3></div><div class="dashboard-compliance-body"><div class="compliance-group expiring"><h4><i class="bi bi-exclamation-triangle"></i> Expiring</h4><ul class="compliance-vendor-list" id="complianceDangerousExpiring"></ul></div><div class="compliance-group expired"><h4><i class="bi bi-x-circle"></i> Expired</h4><ul class="compliance-vendor-list" id="complianceDangerousExpired"></ul></div></div></div>
+                        <div class="dashboard-compliance-card" data-course="manual"><div class="dashboard-compliance-card-header"><i class="bi bi-hand-index"></i><h3>Manual Handling</h3></div><div class="dashboard-compliance-body"><div class="compliance-group expiring"><h4><i class="bi bi-exclamation-triangle"></i> Expiring</h4><ul class="compliance-vendor-list" id="complianceManualExpiring"></ul></div><div class="compliance-group expired"><h4><i class="bi bi-x-circle"></i> Expired</h4><ul class="compliance-vendor-list" id="complianceManualExpired"></ul></div></div></div>
+                      </div>
                     </div>
                   </div>
-                  <div class="dashboard-compliance-card" data-course="manual">
-                    <div class="dashboard-compliance-card-header"><i class="bi bi-hand-index"></i><h3>Manual Handling</h3></div>
-                    <div class="dashboard-compliance-body">
-                      <div class="compliance-group expiring"><h4><i class="bi bi-exclamation-triangle"></i> Expiring</h4><ul class="compliance-vendor-list" id="complianceManualExpiring"></ul></div>
-                      <div class="compliance-group expired"><h4><i class="bi bi-x-circle"></i> Expired</h4><ul class="compliance-vendor-list" id="complianceManualExpired"></ul></div>
+                  <div class="sp-carousel-slide" data-slide="2">
+                    <div class="sp-carousel-slide-inner" id="carouselSlideVehicles">
+                      <div class="dashboard-vehicles-table-wrap table-responsive">
+                        <table class="table table-hover align-middle dashboard-vehicles-table table-sm">
+                          <thead>
+                            <tr>
+                              <th>VRN</th>
+                              <th>Brand</th>
+                              <th>Depot</th>
+                              <th>Reason</th>
+                            </tr>
+                          </thead>
+                          <tbody id="vehiclesAttentionBody"></tbody>
+                        </table>
+                      </div>
+                      <div id="vehiclesEmptyState" class="dashboard-empty-state hidden">
+                        <i class="bi bi-check-circle"></i>
+                        <p>No vehicles requiring attention.</p>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </section>
 
-            <section class="dashboard-section dashboard-block" aria-labelledby="drivers-docs-heading">
-              <div class="dashboard-block-header">
-                <h2 id="drivers-docs-heading" class="dashboard-block-title">
-                  <i class="bi bi-file-earmark-medical"></i>
-                  <span>Drivers with expiring or expired documents</span>
-                </h2>
-                <p class="dashboard-block-desc">DVLA, Licence, Passport and Visa</p>
-              </div>
-              <div class="dashboard-block-content">
-                <div class="dashboard-vehicles-table-wrap table-responsive">
-                  <table class="table table-hover align-middle dashboard-vehicles-table">
-                    <thead>
-                      <tr>
-                        <th>Driver</th>
-                        <th>Depot</th>
-                        <th>Document</th>
-                        <th>Date</th>
-                        <th>Status</th>
-                      </tr>
-                    </thead>
-                    <tbody id="driversDocsBody"></tbody>
-                  </table>
+            <!-- Modal: full dashboard (KPIs, Compliance, Drivers, Vehicles) -->
+            <div class="sp-full-dashboard-modal hidden" id="fullDashboardModal" role="dialog" aria-modal="true" aria-labelledby="fullDashboardModalTitle">
+              <div class="sp-full-dashboard-modal-backdrop" id="fullDashboardModalBackdrop"></div>
+              <div class="sp-full-dashboard-modal-dialog">
+                <div class="sp-full-dashboard-modal-content">
+                  <div class="sp-full-dashboard-modal-header">
+                    <h2 id="fullDashboardModalTitle" class="sp-full-dashboard-modal-title">Full dashboard</h2>
+                    <div class="sp-full-dashboard-modal-category-dots" id="modalCategoryDots" aria-label="Category"></div>
+                    <button type="button" class="sp-full-dashboard-modal-close" id="closeFullDashboardBtn" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+                  </div>
+                  <div class="sp-full-dashboard-modal-body">
+                    <div class="sp-full-dashboard-modal-track" id="modalTrack">
+                    <section class="sp-full-dashboard-modal-slide" data-modal-slide="0" aria-labelledby="modal-kpis-heading">
+                      <h3 id="modal-kpis-heading" class="dashboard-block-title"><i class="bi bi-graph-up-arrow"></i> KPIs</h3>
+                      <div class="dashboard-kpi-grid" id="modalKpiGrid" data-loading="true">
+                        <div class="dashboard-kpi-card"><div class="dashboard-kpi-icon-wrap kpi-spr"><i class="bi bi-graph-up-arrow"></i></div><div class="dashboard-kpi-content"><span class="dashboard-kpi-value-wrap"><span class="dashboard-kpi-value" id="modalKpiSpr">0</span></span><span class="dashboard-kpi-label">SPR</span></div></div>
+                        <div class="dashboard-kpi-card"><div class="dashboard-kpi-icon-wrap kpi-tw"><i class="bi bi-clock-history"></i></div><div class="dashboard-kpi-content"><span class="dashboard-kpi-value-wrap"><span class="dashboard-kpi-value" id="modalKpiTw">0</span></span><span class="dashboard-kpi-label">Time Window</span></div></div>
+                        <div class="dashboard-kpi-card"><div class="dashboard-kpi-icon-wrap kpi-spohr"><i class="bi bi-speedometer2"></i></div><div class="dashboard-kpi-content"><span class="dashboard-kpi-value-wrap"><span class="dashboard-kpi-value" id="modalKpiSpohr">0</span></span><span class="dashboard-kpi-label">SPOH-R</span></div></div>
+                        <div class="dashboard-kpi-card"><div class="dashboard-kpi-icon-wrap kpi-routes"><i class="bi bi-signpost-2-fill"></i></div><div class="dashboard-kpi-content"><span class="dashboard-kpi-value-wrap"><span class="dashboard-kpi-value" id="modalKpiTotalRoutes">0</span></span><span class="dashboard-kpi-label">TOTAL ROUTES</span></div></div>
+                        <div class="dashboard-kpi-card"><div class="dashboard-kpi-icon-wrap kpi-stops"><i class="bi bi-geo-alt-fill"></i></div><div class="dashboard-kpi-content"><span class="dashboard-kpi-value-wrap"><span class="dashboard-kpi-value" id="modalKpiTotalStops">0</span></span><span class="dashboard-kpi-label">TOTAL STOPS</span></div></div>
+                        <div class="dashboard-kpi-card"><div class="dashboard-kpi-icon-wrap kpi-vendors"><i class="bi bi-people-fill"></i></div><div class="dashboard-kpi-content"><span class="dashboard-kpi-value-wrap"><span class="dashboard-kpi-value" id="modalKpiVendors">0</span></span><span class="dashboard-kpi-label">ACTIVE VENDORS</span></div></div>
+                        <div class="dashboard-kpi-card"><div class="dashboard-kpi-icon-wrap kpi-loops"><i class="bi bi-arrow-repeat"></i></div><div class="dashboard-kpi-content"><span class="dashboard-kpi-value-wrap"><span class="dashboard-kpi-value" id="modalKpiLoops">0</span></span><span class="dashboard-kpi-label">ACTIVE LOOPS</span></div></div>
+                      </div>
+                    </section>
+                    <section class="sp-full-dashboard-modal-slide" data-modal-slide="1" aria-labelledby="modal-compliance-heading">
+                      <h3 id="modal-compliance-heading" class="dashboard-block-title"><i class="bi bi-shield-check"></i> Compliance</h3>
+                      <div class="dashboard-compliance-grid" id="modalComplianceGrid">
+                        <div class="dashboard-compliance-card" data-course="cargo"><div class="dashboard-compliance-card-header"><i class="bi bi-box-seam"></i><h3>Cargo Training</h3></div><div class="dashboard-compliance-body"><div class="compliance-group expiring"><h4><i class="bi bi-exclamation-triangle"></i> Expiring</h4><ul class="compliance-vendor-list" id="modalComplianceCargoExpiring"></ul></div><div class="compliance-group expired"><h4><i class="bi bi-x-circle"></i> Expired</h4><ul class="compliance-vendor-list" id="modalComplianceCargoExpired"></ul></div></div></div>
+                        <div class="dashboard-compliance-card" data-course="dangerous"><div class="dashboard-compliance-card-header"><i class="bi bi-exclamation-octagon"></i><h3>Dangerous Goods</h3></div><div class="dashboard-compliance-body"><div class="compliance-group expiring"><h4><i class="bi bi-exclamation-triangle"></i> Expiring</h4><ul class="compliance-vendor-list" id="modalComplianceDangerousExpiring"></ul></div><div class="compliance-group expired"><h4><i class="bi bi-x-circle"></i> Expired</h4><ul class="compliance-vendor-list" id="modalComplianceDangerousExpired"></ul></div></div></div>
+                        <div class="dashboard-compliance-card" data-course="manual"><div class="dashboard-compliance-card-header"><i class="bi bi-hand-index"></i><h3>Manual Handling</h3></div><div class="dashboard-compliance-body"><div class="compliance-group expiring"><h4><i class="bi bi-exclamation-triangle"></i> Expiring</h4><ul class="compliance-vendor-list" id="modalComplianceManualExpiring"></ul></div><div class="compliance-group expired"><h4><i class="bi bi-x-circle"></i> Expired</h4><ul class="compliance-vendor-list" id="modalComplianceManualExpired"></ul></div></div></div>
+                      </div>
+                    </section>
+                    <section class="sp-full-dashboard-modal-slide" data-modal-slide="2" aria-labelledby="modal-drivers-heading">
+                      <h3 id="modal-drivers-heading" class="dashboard-block-title"><i class="bi bi-file-earmark-medical"></i> Drivers with expiring or expired documents</h3>
+                      <div class="table-responsive">
+                        <table class="table table-hover align-middle dashboard-vehicles-table">
+                          <thead>
+                            <tr>
+                              <th>Driver</th>
+                              <th>Depot</th>
+                              <th>Document</th>
+                              <th>Date</th>
+                              <th>Status</th>
+                            </tr>
+                          </thead>
+                          <tbody id="modalDriversDocsBody"></tbody>
+                        </table>
+                      </div>
+                      <div id="modalDriversDocsEmpty" class="dashboard-empty-state hidden">No drivers with expiring or expired documents.</div>
+                    </section>
+                    <section class="sp-full-dashboard-modal-slide" data-modal-slide="3" aria-labelledby="modal-vehicles-heading">
+                      <h3 id="modal-vehicles-heading" class="dashboard-block-title">Vehicles requiring attention</h3>
+                      <div class="table-responsive">
+                        <table class="table table-hover align-middle dashboard-vehicles-table">
+                          <thead>
+                            <tr>
+                              <th>VRN</th>
+                              <th>Brand</th>
+                              <th>Model</th>
+                              <th>Registration Date</th>
+                              <th>Depot</th>
+                              <th>Reason</th>
+                            </tr>
+                          </thead>
+                          <tbody id="modalVehiclesBody"></tbody>
+                        </table>
+                      </div>
+                      <div id="modalVehiclesEmpty" class="dashboard-empty-state hidden">No vehicles requiring attention.</div>
+                    </section>
+                    </div>
+                  </div>
                 </div>
-                <div id="driversDocsEmptyState" class="dashboard-empty-state hidden">
-                  <i class="bi bi-check-circle"></i>
-                  <p>No drivers with expiring or expired documents.</p>
-                </div>
               </div>
-            </section>
+            </div>
 
-            <section class="dashboard-section dashboard-vehicles" aria-labelledby="vehicles-heading">
-              <h2 id="vehicles-heading" class="dashboard-section-title">Vehicles requiring attention</h2>
-              <div class="dashboard-vehicles-table-wrap table-responsive">
-                <table class="table table-hover align-middle dashboard-vehicles-table">
-                  <thead>
-                    <tr>
-                      <th>VRN</th>
-                      <th>Brand</th>
-                      <th>Model</th>
-                      <th>Registration Date</th>
-                      <th>Depot</th>
-                      <th>Reason</th>
-                    </tr>
-                  </thead>
-                  <tbody id="vehiclesAttentionBody"></tbody>
-                </table>
-              </div>
-              <div id="vehiclesEmptyState" class="dashboard-empty-state hidden">
-                <i class="bi bi-check-circle"></i>
-                <p>No vehicles requiring attention.</p>
-              </div>
-            </section>
           </main>
         </div>
       </div>
@@ -275,6 +402,13 @@
   </div>
 
   <script src="../dhl-mock-data.js"></script>
+  <script>
+    /* Disco (Route Data) – copied into page */
+    window.DISCO_DATA = {
+      am: ['LL4A', 'LL4B', 'LL4X'],
+      pm: []
+    };
+  </script>
   <script>
     (function () {
       'use strict';
@@ -400,7 +534,7 @@
       if (!spName) {
         document.getElementById('spNotFound').classList.remove('hidden');
         document.querySelector('.sidebar-inset').style.display = 'none';
-        var fw = document.getElementById('spDashboardFiltersWrap');
+        var fw = document.getElementById('spDashboardFoldersBlock');
         if (fw) fw.style.display = 'none';
       } else {
         document.getElementById('welcomeMsg').textContent = 'Welcome, ' + spName + '. Here is your operations summary.';
@@ -500,23 +634,19 @@
         var twVal = summary.timeWindow != null ? Math.round(summary.timeWindow * 10) / 10 : 0;
         var spohrVal = summary.spohR != null ? Math.round(summary.spohR * 10) / 10 : 0;
 
-        var kpiSpr = document.getElementById('kpiSpr');
-        var kpiTw = document.getElementById('kpiTw');
-        var kpiSpohr = document.getElementById('kpiSpohr');
-        var kpiTotalRoutes = document.getElementById('kpiTotalRoutes');
-        var kpiTotalStops = document.getElementById('kpiTotalStops');
-        var kpiVendors = document.getElementById('kpiVendors');
-        var kpiLoops = document.getElementById('kpiLoops');
-        if (kpiSpr) kpiSpr.textContent = agg.totalDeliveries || 0;
-        if (kpiTw) kpiTw.textContent = twVal + '%';
-        if (kpiSpohr) kpiSpohr.textContent = spohrVal;
-        if (kpiTotalRoutes) kpiTotalRoutes.textContent = agg.routes || 0;
-        if (kpiTotalStops) kpiTotalStops.textContent = agg.totalStops || 0;
-        if (kpiVendors) kpiVendors.textContent = filteredVendors.length;
-        if (kpiLoops) kpiLoops.textContent = agg.loops || 0;
-
+        var vals = { spr: agg.totalDeliveries || 0, tw: twVal + '%', spohr: spohrVal, routes: agg.routes || 0, stops: agg.totalStops || 0, vendors: filteredVendors.length, loops: agg.loops || 0 };
+        ['kpiSpr', 'kpiTw', 'kpiSpohr', 'kpiTotalRoutes', 'kpiTotalStops', 'kpiVendors', 'kpiLoops'].forEach(function (id, i) {
+          var el = document.getElementById(id);
+          if (el) el.textContent = vals[['spr', 'tw', 'spohr', 'routes', 'stops', 'vendors', 'loops'][i]];
+        });
+        ['modalKpiSpr', 'modalKpiTw', 'modalKpiSpohr', 'modalKpiTotalRoutes', 'modalKpiTotalStops', 'modalKpiVendors', 'modalKpiLoops'].forEach(function (id, i) {
+          var el = document.getElementById(id);
+          if (el) el.textContent = vals[['spr', 'tw', 'spohr', 'routes', 'stops', 'vendors', 'loops'][i]];
+        });
         var grid = document.getElementById('kpiGrid');
         if (grid) grid.setAttribute('data-loading', 'false');
+        var modalGrid = document.getElementById('modalKpiGrid');
+        if (modalGrid) modalGrid.setAttribute('data-loading', 'false');
       }
 
       function updateCompliance() {
@@ -535,10 +665,16 @@
             if (st === 'expiring') expiring.push(name);
             if (st === 'expired') expired.push(name);
           });
+          var htmlExp = expiring.length ? expiring.map(function (x) { return '<li>' + escapeHtml(x) + '</li>'; }).join('') : '<li class="none">None</li>';
+          var htmlExp2 = expired.length ? expired.map(function (x) { return '<li>' + escapeHtml(x) + '</li>'; }).join('') : '<li class="none">None</li>';
           var elExp = document.getElementById(c.expId);
           var elExp2 = document.getElementById(c.expId2);
-          if (elExp) elExp.innerHTML = expiring.length ? expiring.map(function (x) { return '<li>' + escapeHtml(x) + '</li>'; }).join('') : '<li class="none">None</li>';
-          if (elExp2) elExp2.innerHTML = expired.length ? expired.map(function (x) { return '<li>' + escapeHtml(x) + '</li>'; }).join('') : '<li class="none">None</li>';
+          if (elExp) elExp.innerHTML = htmlExp;
+          if (elExp2) elExp2.innerHTML = htmlExp2;
+          var modalExp = document.getElementById('modal' + c.expId.charAt(0).toUpperCase() + c.expId.slice(1));
+          var modalExp2 = document.getElementById('modal' + c.expId2.charAt(0).toUpperCase() + c.expId2.slice(1));
+          if (modalExp) modalExp.innerHTML = htmlExp;
+          if (modalExp2) modalExp2.innerHTML = htmlExp2;
         });
       }
 
@@ -557,19 +693,20 @@
             if (st === 'expiring' || st === 'expired') rows.push({ vendor: v, name: name, document: labels[key], date: v[key], status: st });
           });
         });
-        var tbody = document.getElementById('driversDocsBody');
-        var emptyEl = document.getElementById('driversDocsEmptyState');
+        var tbody = document.getElementById('modalDriversDocsBody');
+        var emptyEl = document.getElementById('modalDriversDocsEmpty');
         if (!tbody) return;
+        var rowHtml = rows.map(function (r) {
+          var statusClass = r.status === 'expired' ? 'dashboard-status-expired' : 'dashboard-status-expiring';
+          return '<tr><td><strong>' + escapeHtml(r.name) + '</strong></td><td>' + escapeHtml(r.vendor.depot || '—') + '</td><td>' + escapeHtml(r.document) + '</td><td>' + formatDate(r.date) + '</td><td><span class="dashboard-reason-badge ' + statusClass + '">' + (r.status === 'expired' ? 'Expired' : 'Expiring') + '</span></td></tr>';
+        }).join('');
         if (rows.length === 0) {
           tbody.innerHTML = '';
           if (emptyEl) emptyEl.classList.remove('hidden');
           return;
         }
         if (emptyEl) emptyEl.classList.add('hidden');
-        tbody.innerHTML = rows.map(function (r) {
-          var statusClass = r.status === 'expired' ? 'dashboard-status-expired' : 'dashboard-status-expiring';
-          return '<tr><td><strong>' + escapeHtml(r.name) + '</strong></td><td>' + escapeHtml(r.vendor.depot || '—') + '</td><td>' + escapeHtml(r.document) + '</td><td>' + formatDate(r.date) + '</td><td><span class="dashboard-reason-badge ' + statusClass + '">' + (r.status === 'expired' ? 'Expired' : 'Expiring') + '</span></td></tr>';
-        }).join('');
+        tbody.innerHTML = rowHtml;
       }
 
       function updateVehicles() {
@@ -580,16 +717,15 @@
           var noTech = hasNoTechnicalInfo(v);
           return age >= 6 || noTech;
         });
-        var tbody = document.getElementById('vehiclesAttentionBody');
-        var emptyEl = document.getElementById('vehiclesEmptyState');
-        if (!tbody) return;
-        if (attention.length === 0) {
-          tbody.innerHTML = '';
-          if (emptyEl) emptyEl.classList.remove('hidden');
-          return;
-        }
-        if (emptyEl) emptyEl.classList.add('hidden');
-        tbody.innerHTML = attention.map(function (v) {
+        var rowHtmlShort = attention.map(function (v) {
+          var age = getVehicleAgeYears(v.registrationDate);
+          var noTech = hasNoTechnicalInfo(v);
+          var reason = [];
+          if (age >= 6) reason.push('6+ years');
+          if (noTech) reason.push('No Technical Info');
+          return '<tr><td><strong>' + escapeHtml(v.vrn || '—') + '</strong></td><td>' + escapeHtml(v.brand || '—') + '</td><td>' + escapeHtml(v.depot || '—') + '</td><td><span class="dashboard-reason-badge">' + escapeHtml(reason.join(' • ')) + '</span></td></tr>';
+        }).join('');
+        var rowHtmlFull = attention.map(function (v) {
           var age = getVehicleAgeYears(v.registrationDate);
           var noTech = hasNoTechnicalInfo(v);
           var reason = [];
@@ -597,6 +733,18 @@
           if (noTech) reason.push('No Technical Info');
           return '<tr><td><strong>' + escapeHtml(v.vrn || '—') + '</strong></td><td>' + escapeHtml(v.brand || '—') + '</td><td>' + escapeHtml(v.model || '—') + '</td><td>' + formatDate(v.registrationDate) + '</td><td>' + escapeHtml(v.depot || '—') + '</td><td><span class="dashboard-reason-badge">' + escapeHtml(reason.join(' • ')) + '</span></td></tr>';
         }).join('');
+        var tbody = document.getElementById('vehiclesAttentionBody');
+        var emptyEl = document.getElementById('vehiclesEmptyState');
+        if (tbody) {
+          if (attention.length === 0) { tbody.innerHTML = ''; } else { tbody.innerHTML = rowHtmlShort; }
+        }
+        if (emptyEl) emptyEl.classList.toggle('hidden', attention.length > 0);
+        var modalBody = document.getElementById('modalVehiclesBody');
+        var modalEmpty = document.getElementById('modalVehiclesEmpty');
+        if (modalBody) {
+          if (attention.length === 0) { modalBody.innerHTML = ''; } else { modalBody.innerHTML = rowHtmlFull; }
+        }
+        if (modalEmpty) modalEmpty.classList.toggle('hidden', attention.length > 0);
       }
 
       function initBeamSidebar() {
@@ -614,6 +762,455 @@
         if (overlay) overlay.addEventListener('click', function () { beam.setAttribute('data-state', 'closed'); trigger.setAttribute('aria-expanded', 'false'); overlay.classList.remove('visible'); });
       }
 
+      function switchFolderTab(folderId) {
+        var panels = { disco: 'folder-panel-disco', lastday: 'folder-panel-lastday', spms: 'folder-panel-spms' };
+        var tabs = { disco: 'folderDisco', lastday: 'folderLastDay', spms: 'folderSpms' };
+        Object.keys(panels).forEach(function (id) {
+          var panel = document.getElementById(panels[id]);
+          var tab = document.getElementById(tabs[id]);
+          var isActive = id === folderId;
+          if (panel) { panel.classList.toggle('hidden', !isActive); panel.setAttribute('aria-hidden', isActive ? 'false' : 'true'); }
+          if (tab) { tab.classList.toggle('active', isActive); tab.setAttribute('aria-selected', isActive ? 'true' : 'false'); }
+        });
+      }
+
+      var carouselIndex = 0;
+      var carouselTotal = 3;
+      function updateCarousel() {
+        var track = document.getElementById('carouselTrack');
+        if (track) track.style.transform = 'translateX(-' + (carouselIndex * 100) + '%)';
+        var dots = document.getElementById('carouselDots');
+        if (dots) dots.innerHTML = [0, 1, 2].map(function (i) { return '<button type="button" class="sp-carousel-dot' + (i === carouselIndex ? ' active' : '') + '" data-index="' + i + '" aria-label="Slide ' + (i + 1) + '"></button>'; }).join('');
+      }
+      function initCarousel() {
+        var prev = document.getElementById('carouselPrev');
+        var next = document.getElementById('carouselNext');
+        var dotsWrap = document.getElementById('carouselDots');
+        if (prev) prev.addEventListener('click', function () { carouselIndex = (carouselIndex - 1 + carouselTotal) % carouselTotal; updateCarousel(); });
+        if (next) next.addEventListener('click', function () { carouselIndex = (carouselIndex + 1) % carouselTotal; updateCarousel(); });
+        if (dotsWrap) dotsWrap.addEventListener('click', function (e) {
+          var btn = e.target.closest('.sp-carousel-dot');
+          if (btn && btn.dataset.index != null) { carouselIndex = parseInt(btn.dataset.index, 10); updateCarousel(); }
+        });
+        updateCarousel();
+      }
+
+      var modalCarouselIndex = 0;
+      var modalCarouselInterval = null;
+      var MODAL_SLIDES = 4;
+      var MODAL_AUTO_INTERVAL_MS = 4500;
+
+      function updateModalCarousel() {
+        var track = document.getElementById('modalTrack');
+        if (track) track.style.transform = 'translateX(-' + (modalCarouselIndex * 100) + '%)';
+        var dotsWrap = document.getElementById('modalCategoryDots');
+        if (dotsWrap) {
+          var labels = ['KPIs', 'Compliance', 'Drivers', 'Vehicles'];
+          dotsWrap.innerHTML = labels.map(function (label, i) {
+            return '<button type="button" class="sp-modal-category-dot' + (i === modalCarouselIndex ? ' active' : '') + '" data-index="' + i + '" title="' + label + '">' + label + '</button>';
+          }).join('');
+        }
+      }
+
+      function startModalAutoCarousel() {
+        stopModalAutoCarousel();
+        modalCarouselInterval = setInterval(function () {
+          modalCarouselIndex = (modalCarouselIndex + 1) % MODAL_SLIDES;
+          updateModalCarousel();
+        }, MODAL_AUTO_INTERVAL_MS);
+      }
+
+      function stopModalAutoCarousel() {
+        if (modalCarouselInterval) { clearInterval(modalCarouselInterval); modalCarouselInterval = null; }
+      }
+
+      function openFullDashboardModal() {
+        var modal = document.getElementById('fullDashboardModal');
+        if (!modal) return;
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        modalCarouselIndex = 0;
+        updateModalCarousel();
+        requestAnimationFrame(function () { requestAnimationFrame(function () { modal.classList.add('sp-full-dashboard-modal--open'); }); });
+      }
+
+      function closeFullDashboardModal() {
+        var modal = document.getElementById('fullDashboardModal');
+        if (!modal) return;
+        modal.classList.remove('sp-full-dashboard-modal--open');
+        stopModalAutoCarousel();
+        setTimeout(function () {
+          modal.classList.add('hidden');
+          document.body.style.overflow = '';
+        }, 280);
+      }
+
+      function initFullDashboardModal() {
+        var openBtn = document.getElementById('openFullDashboardBtn');
+        var closeBtn = document.getElementById('closeFullDashboardBtn');
+        var backdrop = document.getElementById('fullDashboardModalBackdrop');
+        if (openBtn) openBtn.addEventListener('click', openFullDashboardModal);
+        if (closeBtn) closeBtn.addEventListener('click', closeFullDashboardModal);
+        if (backdrop) backdrop.addEventListener('click', closeFullDashboardModal);
+        var dotsEl = document.getElementById('modalCategoryDots');
+        if (dotsEl) dotsEl.addEventListener('click', function (e) {
+          var btn = e.target.closest('.sp-modal-category-dot');
+          if (btn && btn.dataset.index != null) {
+            modalCarouselIndex = parseInt(btn.dataset.index, 10);
+            updateModalCarousel();
+          }
+        });
+      }
+
+      function getTimeWindowColor(pct) {
+        if (pct > 90) return 'green';
+        if (pct >= 80) return 'yellow';
+        return 'red';
+      }
+
+      function updateLastDaySection() {
+        if (!spName) return;
+        var lastDayRoutes = (data.lastDayRoutes) ? data.lastDayRoutes : [];
+        var lastDayLoops = (data.lastDayLoops) ? data.lastDayLoops : [];
+        var routesFiltered = lastDayRoutes.filter(function (r) { return r.serviceProvider === spName; });
+        var loopsFiltered = lastDayLoops.filter(function (l) { return l.serviceProvider === spName; });
+
+        var loopFilterEl = document.getElementById('lastDayFilterLoop');
+        var selectedLoop = loopFilterEl ? loopFilterEl.value : '';
+        if (selectedLoop) {
+          routesFiltered = routesFiltered.filter(function (r) { return r.loop === selectedLoop; });
+          loopsFiltered = loopsFiltered.filter(function (l) { return l.loop === selectedLoop; });
+        }
+
+        if (loopFilterEl) {
+          var loopNames = [];
+          (data.lastDayLoops || []).filter(function (l) { return l.serviceProvider === spName; }).forEach(function (l) {
+            if (l.loop && loopNames.indexOf(l.loop) === -1) loopNames.push(l.loop);
+          });
+          loopNames.sort();
+          var currentVal = loopFilterEl.value;
+          loopFilterEl.innerHTML = '<option value="">All</option>' + loopNames.map(function (name) {
+            return '<option value="' + escapeHtml(name) + '"' + (name === currentVal ? ' selected' : '') + '>' + escapeHtml(name) + '</option>';
+          }).join('');
+          if (selectedLoop && loopNames.indexOf(selectedLoop) === -1) loopFilterEl.value = '';
+        }
+
+        var tbody = document.getElementById('lastDayRoutesBody');
+        if (tbody) {
+          var toTargetDecrescent = function (pctTarget) {
+            var num = parseFloat(String(pctTarget).replace('%', '').trim(), 10);
+            if (isNaN(num)) return '—';
+            var missing = 100 - num;
+            return (missing <= 0 ? '' : '-') + missing + '%';
+          };
+          tbody.innerHTML = routesFiltered.map(function (r) {
+            var targetDisplay = toTargetDecrescent(r.pctTarget);
+            return '<tr><td><strong>' + escapeHtml(r.route) + '</strong></td><td>' + escapeHtml(r.spr) + '</td><td>' + escapeHtml(r.sporh) + '</td><td>' + escapeHtml(r.timeWindow) + '</td><td>' + escapeHtml(targetDisplay) + '</td></tr>';
+          }).join('');
+        }
+
+        var circumInner = 2 * Math.PI * 35;
+        var circumOuter = 2 * Math.PI * 45;
+        var wrap = document.getElementById('lastDayGoalsWrap');
+        if (wrap) {
+          var pctNum = function (v) { var n = parseFloat(String(v).replace('%', '').trim(), 10); return isNaN(n) ? 0 : n; };
+          var toTotalPct = function (raw) {
+            var n = pctNum(raw);
+            if (n < 0) return Math.max(0, 100 + n);
+            return Math.min(100, n);
+          };
+          function getTargetPctForLoop(loopName) {
+            var routesInLoop = routesFiltered.filter(function (r) { return r.loop === loopName; });
+            if (!routesInLoop.length) return 100;
+            var sum = 0, count = 0;
+            routesInLoop.forEach(function (r) {
+              var val = toTotalPct(r.pctTarget);
+              if (val > 0) { sum += val; count += 1; }
+            });
+            return count ? Math.round(sum / count) : 100;
+          }
+          function renderOneCircle(twPct, targetPct, label, extraClass) {
+            var twColor = getTimeWindowColor(twPct);
+            var targetColor = getTimeWindowColor(targetPct);
+            var strokeDashOuter = (targetPct / 100) * circumOuter;
+            var strokeDashInner = (twPct / 100) * circumInner;
+            var cls = 'last-day-goal-circle last-day-circle--' + twColor + ' last-day-circle-target--' + targetColor + (extraClass ? ' ' + extraClass : '');
+            return '<div class="' + cls + '">' +
+              '<div class="last-day-circle-svg-wrap">' +
+              '<svg class="last-day-circle-svg" viewBox="0 0 100 100" aria-label="' + escapeHtml(label) + ' – Target ' + targetPct + '%, Time Window ' + twPct + '%">' +
+              '<circle class="last-day-circle-outer last-day-circle-target" cx="50" cy="50" r="45" stroke-dasharray="0 ' + circumOuter + '" stroke-dashoffset="0" transform="rotate(-90 50 50)" data-dash="' + strokeDashOuter + '" data-circum="' + circumOuter + '"/>' +
+              '<circle class="last-day-circle-inner last-day-circle-progress" cx="50" cy="50" r="35" stroke-dasharray="0 ' + circumInner + '" stroke-dashoffset="0" transform="rotate(-90 50 50)" data-dash="' + strokeDashInner + '" data-circum="' + circumInner + '"/>' +
+              '</svg>' +
+              '</div>' +
+              '<div class="last-day-circle-caption">' +
+              '<span class="last-day-circle-label">' + escapeHtml(label) + '</span>' +
+              '<span class="last-day-circle-meta">TW ' + twPct + '% · Target ' + targetPct + '%</span>' +
+              '</div>' +
+              '</div>';
+          }
+          var loopsForSp = lastDayLoops.filter(function (l) { return l.serviceProvider === spName; });
+          var routesForSp = lastDayRoutes.filter(function (r) { return r.serviceProvider === spName; });
+          var overallTw = 0, overallTwCount = 0;
+          loopsForSp.forEach(function (l) {
+            var p = toTotalPct(l.timeWindowPct);
+            overallTw += p;
+            overallTwCount += 1;
+          });
+          var overallTargetSum = 0, overallTargetCount = 0;
+          routesForSp.forEach(function (r) {
+            var p = toTotalPct(r.pctTarget);
+            if (p > 0) { overallTargetSum += p; overallTargetCount += 1; }
+          });
+          var overallTwPct = overallTwCount ? Math.round(overallTw / overallTwCount) : 100;
+          var overallTargetPct = overallTargetCount ? Math.round(overallTargetSum / overallTargetCount) : 100;
+          var overallCircleHtml = renderOneCircle(overallTwPct, overallTargetPct, 'Overall', 'last-day-goal-circle--overall');
+          var loopsCirclesHtml = loopsFiltered.map(function (l) {
+            var twPct = toTotalPct(l.timeWindowPct);
+            var targetPct = getTargetPctForLoop(l.loop);
+            return renderOneCircle(twPct, targetPct, l.loop, '');
+          }).join('');
+          wrap.innerHTML = overallCircleHtml + loopsCirclesHtml;
+          requestAnimationFrame(function () {
+            requestAnimationFrame(function () {
+              var outerCircles = wrap.querySelectorAll('.last-day-circle-outer');
+              outerCircles.forEach(function (el) {
+                var dash = parseFloat(el.getAttribute('data-dash'), 10);
+                var circum = parseFloat(el.getAttribute('data-circum'), 10);
+                if (!isNaN(dash) && !isNaN(circum)) el.setAttribute('stroke-dasharray', dash + ' ' + circum);
+              });
+              var innerCircles = wrap.querySelectorAll('.last-day-circle-inner');
+              innerCircles.forEach(function (el) {
+                var dash = parseFloat(el.getAttribute('data-dash'), 10);
+                var circum = parseFloat(el.getAttribute('data-circum'), 10);
+                if (!isNaN(dash) && !isNaN(circum)) el.setAttribute('stroke-dasharray', dash + ' ' + circum);
+              });
+            });
+          });
+        }
+      }
+
+      /** Parse SPMS service item string: extrai HN (Handover), OK (Deliveries), PU (Pickups). DD e PD são somados ao OK. */
+      function parseSpmsServiceItem(serviceItem) {
+        var s = String(serviceItem || '');
+        var hn = 0, ok = 0, pu = 0, dd = 0, pd = 0;
+        var hnMatch = s.match(/(\d+)\s*x\s*HN\s*-/i) || s.match(/(\d+)\s*xHN/i);
+        if (hnMatch) hn = parseInt(hnMatch[1], 10) || 0;
+        var okMatch = s.match(/(\d+)\s*x\s*OK\b/i) || s.match(/(\d+)\s*xOK/i);
+        if (okMatch) ok = parseInt(okMatch[1], 10) || 0;
+        var ddMatch = s.match(/(\d+)\s*x\s*DD\b/i) || s.match(/(\d+)\s*xDD/i);
+        if (ddMatch) dd = parseInt(ddMatch[1], 10) || 0;
+        var pdMatch = s.match(/(\d+)\s*x\s*PD\b/i) || s.match(/(\d+)\s*xPD/i);
+        if (pdMatch) pd = parseInt(pdMatch[1], 10) || 0;
+        var puMatch = s.match(/(\d+)\s*x\s*PU\b/i) || s.match(/(\d+)\s*xPU/i);
+        if (puMatch) pu = parseInt(puMatch[1], 10) || 0;
+        return { hn: hn, ok: ok + dd + pd, pu: pu };
+      }
+
+      /** Remove "NxDaily Service Charge LOOP" e "NxDaily Electric Charge" do texto do Service item. */
+      function formatSpmsServiceItemDisplay(serviceItem) {
+        var s = String(serviceItem || '');
+        s = s.replace(/\d*x\s*Daily\s+Service\s+Charge\s+LOOP/gi, '').replace(/\d*x\s*Daily\s+Electric\s+Charge/gi, '');
+        s = s.replace(/,\s*,/g, ',').replace(/^\s*,\s*|\s*,\s*$/g, '').trim();
+        return s || '—';
+      }
+
+      function updateSpmsSection() {
+        if (!spName) return;
+        var spmsOverview = (data.spmsOverview) ? data.spmsOverview : [];
+        var rowsForSp = spmsOverview.filter(function (r) { return r.serviceProvider === spName; });
+        var loopFilterEl = document.getElementById('spmsFilterLoop');
+        var loopNames = [];
+        rowsForSp.forEach(function (r) {
+          if (r.loop && loopNames.indexOf(r.loop) === -1) loopNames.push(r.loop);
+        });
+        loopNames.sort();
+        if (loopFilterEl) {
+          var currentVal = loopFilterEl.value;
+          loopFilterEl.innerHTML = '<option value="">All</option>' + loopNames.map(function (name) {
+            return '<option value="' + escapeHtml(name) + '"' + (name === currentVal ? ' selected' : '') + '>' + escapeHtml(name) + '</option>';
+          }).join('');
+          if (currentVal && loopNames.indexOf(currentVal) === -1) loopFilterEl.value = '';
+        }
+        var selectedLoop = loopFilterEl ? loopFilterEl.value : '';
+        var rows = selectedLoop ? rowsForSp.filter(function (r) { return r.loop === selectedLoop; }) : rowsForSp;
+        var titleEl = document.getElementById('spmsOverviewTitle');
+        if (titleEl) titleEl.textContent = selectedLoop ? 'Overview for aggregation route ' + selectedLoop : 'Overview for aggregation route';
+        var totalHn = 0, totalOk = 0, totalPu = 0;
+        var tbody = document.getElementById('spmsOverviewBody');
+        if (tbody) {
+          tbody.innerHTML = rows.map(function (r) {
+            var parsed = parseSpmsServiceItem(r.serviceItem);
+            totalHn += parsed.hn;
+            totalOk += parsed.ok;
+            totalPu += parsed.pu;
+            var rowTotal = parsed.hn + parsed.ok + parsed.pu;
+            var displayItem = formatSpmsServiceItemDisplay(r.serviceItem);
+            return '<tr><td>' + escapeHtml(r.date) + '</td><td><strong>' + escapeHtml(r.route) + '</strong></td><td>' + escapeHtml(r.cycle) + '</td><td>' + escapeHtml(displayItem) + '</td><td>' + parsed.hn + '</td><td>' + parsed.ok + '</td><td>' + parsed.pu + '</td><td><strong>' + rowTotal + '</strong></td><td>' + escapeHtml(r.comment || '') + '</td></tr>';
+          }).join('');
+        }
+        var totalAll = totalHn + totalOk + totalPu;
+        var footHn = document.getElementById('spmsTotalHn');
+        var footOk = document.getElementById('spmsTotalOk');
+        var footPu = document.getElementById('spmsTotalPu');
+        var footAll = document.getElementById('spmsTotalAll');
+        if (footHn) footHn.textContent = totalHn;
+        if (footOk) footOk.textContent = totalOk;
+        if (footPu) footPu.textContent = totalPu;
+        if (footAll) footAll.textContent = totalAll;
+      }
+
+      var dailyOpsFilteredList = [];
+      var dailyOpsIndex = 0;
+      var dailyOpsInterval = null;
+      var DAILY_OPS_AUTO_MS = 4500;
+
+      function getDailyOpsTimeText(n) {
+        var m = n.timeAgoMinutes || 0;
+        return m <= 60 ? m + ' min ago' : Math.floor(m / 60) + ' h ago';
+      }
+
+      function renderDailyOpsItem(n) {
+        var timeText = getDailyOpsTimeText(n);
+        return '<div class="sp-daily-ops-item sp-daily-ops-item--' + (n.severity || 'info') + '" role="listitem">' +
+          '<span class="sp-daily-ops-item-icon"><i class="bi bi-' + (n.icon || 'bell') + '"></i></span>' +
+          '<div class="sp-daily-ops-item-body">' +
+          '<p class="sp-daily-ops-item-msg">' + escapeHtml(n.message) + '</p>' +
+          '<span class="sp-daily-ops-item-time">' + escapeHtml(timeText) + '</span>' +
+          '</div></div>';
+      }
+
+      function renderDailyOpsSlide() {
+        var slideEl = document.getElementById('dailyOpsSlide');
+        var dotsEl = document.getElementById('dailyOpsDots');
+        if (!slideEl || !dailyOpsFilteredList.length) return;
+        var n = dailyOpsFilteredList[dailyOpsIndex];
+        slideEl.innerHTML = renderDailyOpsItem(n);
+        slideEl.classList.remove('hidden');
+        if (dotsEl) {
+          dotsEl.innerHTML = dailyOpsFilteredList.map(function (_, i) {
+            return '<button type="button" class="sp-daily-ops-dot' + (i === dailyOpsIndex ? ' active' : '') + '" data-index="' + i + '" role="tab" aria-selected="' + (i === dailyOpsIndex) + '" aria-label="Notification ' + (i + 1) + ' of ' + dailyOpsFilteredList.length + '"></button>';
+          }).join('');
+        }
+      }
+
+      function goToDailyOpsIndex(index) {
+        if (!dailyOpsFilteredList.length) return;
+        var newIndex = (index + dailyOpsFilteredList.length) % dailyOpsFilteredList.length;
+        var slideEl = document.getElementById('dailyOpsSlide');
+        if (!slideEl) return;
+        var direction = newIndex > dailyOpsIndex ? 1 : (newIndex < dailyOpsIndex ? -1 : 1);
+        if (slideEl.classList.contains('sp-daily-ops-slide--exit')) {
+          dailyOpsIndex = newIndex;
+          renderDailyOpsSlide();
+          startDailyOpsAutoAdvance();
+          return;
+        }
+        slideEl.classList.add('sp-daily-ops-slide--exit', direction === 1 ? 'sp-daily-ops-slide--exit-next' : 'sp-daily-ops-slide--exit-prev');
+        setTimeout(function () {
+          dailyOpsIndex = newIndex;
+          renderDailyOpsSlide();
+          slideEl.classList.remove('sp-daily-ops-slide--exit', 'sp-daily-ops-slide--exit-next', 'sp-daily-ops-slide--exit-prev');
+          slideEl.classList.add('sp-daily-ops-slide--enter', direction === 1 ? 'sp-daily-ops-slide--enter-from-right' : 'sp-daily-ops-slide--enter-from-left');
+          requestAnimationFrame(function () {
+            requestAnimationFrame(function () {
+              slideEl.classList.add('sp-daily-ops-slide--enter-active');
+            });
+          });
+          setTimeout(function () {
+            slideEl.classList.remove('sp-daily-ops-slide--enter', 'sp-daily-ops-slide--enter-from-right', 'sp-daily-ops-slide--enter-from-left', 'sp-daily-ops-slide--enter-active');
+          }, 260);
+          startDailyOpsAutoAdvance();
+        }, 200);
+      }
+
+      function startDailyOpsAutoAdvance() {
+        stopDailyOpsAutoAdvance();
+        if (dailyOpsFilteredList.length <= 1) return;
+        dailyOpsInterval = setInterval(function () {
+          goToDailyOpsIndex(dailyOpsIndex + 1);
+        }, DAILY_OPS_AUTO_MS);
+      }
+
+      function stopDailyOpsAutoAdvance() {
+        if (dailyOpsInterval) { clearInterval(dailyOpsInterval); dailyOpsInterval = null; }
+      }
+
+      function openDailyOpsModal() {
+        var modal = document.getElementById('dailyOpsModal');
+        var listEl = document.getElementById('dailyOpsModalList');
+        if (!modal || !listEl) return;
+        listEl.innerHTML = dailyOpsFilteredList.map(function (n) { return renderDailyOpsItem(n); }).join('');
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        requestAnimationFrame(function () { modal.classList.add('sp-daily-ops-modal--open'); });
+      }
+
+      function closeDailyOpsModal() {
+        var modal = document.getElementById('dailyOpsModal');
+        if (!modal) return;
+        modal.classList.remove('sp-daily-ops-modal--open');
+        setTimeout(function () {
+          modal.classList.add('hidden');
+          document.body.style.overflow = '';
+        }, 220);
+      }
+
+      function updateDailyOpsSection() {
+        var slideEl = document.getElementById('dailyOpsSlide');
+        var feedEl = document.getElementById('dailyOpsFeed');
+        var emptyEl = document.getElementById('dailyOpsEmpty');
+        if (!slideEl) return;
+        var notifications = (data.dailyOperationsNotifications) ? data.dailyOperationsNotifications : [];
+        dailyOpsFilteredList = spName ? notifications.filter(function (n) { return n.serviceProvider === spName; }) : [];
+        dailyOpsFilteredList.sort(function (a, b) { return (a.timeAgoMinutes || 0) - (b.timeAgoMinutes || 0); });
+        dailyOpsIndex = 0;
+        stopDailyOpsAutoAdvance();
+        if (dailyOpsFilteredList.length === 0) {
+          slideEl.innerHTML = '';
+          slideEl.classList.add('hidden');
+          if (feedEl) {
+            feedEl.classList.remove('sp-daily-ops-feed--clickable');
+            feedEl.classList.add('sp-daily-ops-feed--empty');
+          }
+          var dotsEl = document.getElementById('dailyOpsDots');
+          if (dotsEl) dotsEl.innerHTML = '';
+          if (emptyEl) emptyEl.classList.remove('hidden');
+          return;
+        }
+        if (emptyEl) emptyEl.classList.add('hidden');
+        if (feedEl) {
+          feedEl.classList.add('sp-daily-ops-feed--clickable');
+          feedEl.classList.remove('sp-daily-ops-feed--empty');
+        }
+        renderDailyOpsSlide();
+        startDailyOpsAutoAdvance();
+      }
+
+      function initDailyOpsModal() {
+        var slideWrapEl = document.getElementById('dailyOpsSlideWrap');
+        var prevBtn = document.getElementById('dailyOpsPrev');
+        var nextBtn = document.getElementById('dailyOpsNext');
+        var dotsEl = document.getElementById('dailyOpsDots');
+        var backdrop = document.getElementById('dailyOpsModalBackdrop');
+        var closeBtn = document.getElementById('dailyOpsModalClose');
+        if (slideWrapEl) {
+          slideWrapEl.addEventListener('click', function () {
+            if (dailyOpsFilteredList.length > 0) openDailyOpsModal();
+          });
+          slideWrapEl.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (dailyOpsFilteredList.length > 0) openDailyOpsModal(); }
+          });
+        }
+        if (prevBtn) prevBtn.addEventListener('click', function (e) { e.stopPropagation(); goToDailyOpsIndex(dailyOpsIndex - 1); });
+        if (nextBtn) nextBtn.addEventListener('click', function (e) { e.stopPropagation(); goToDailyOpsIndex(dailyOpsIndex + 1); });
+        if (dotsEl) dotsEl.addEventListener('click', function (e) {
+          var btn = e.target.closest('.sp-daily-ops-dot[data-index]');
+          if (btn && btn.dataset.index != null) { e.stopPropagation(); goToDailyOpsIndex(parseInt(btn.dataset.index, 10)); }
+        });
+        if (backdrop) backdrop.addEventListener('click', closeDailyOpsModal);
+        if (closeBtn) closeBtn.addEventListener('click', closeDailyOpsModal);
+      }
+
       function render() {
         var depotEl = document.getElementById('spFilterDepot');
         var loopEl = document.getElementById('spFilterLoop');
@@ -621,26 +1218,130 @@
         filterState.depot = depotEl ? depotEl.value : '';
         filterState.loop = loopEl ? loopEl.value : '';
         filterState.route = routeEl ? routeEl.value : '';
+        updateDailyOpsSection();
         updateKPIs();
+        updateLastDaySection();
+        updateSpmsSection();
         updateCompliance();
         updateDriversDocs();
         updateVehicles();
       }
 
       if (spName) {
-        updateFilterSelects();
         render();
-        var depotSel = document.getElementById('spFilterDepot');
-        var loopSel = document.getElementById('spFilterLoop');
-        var routeSel = document.getElementById('spFilterRoute');
-        var clearBtn = document.getElementById('spFilterClear');
-        if (depotSel) depotSel.addEventListener('change', function () { filterState.depot = this.value; filterState.loop = ''; filterState.route = ''; updateFilterSelects(); render(); });
-        if (loopSel) loopSel.addEventListener('change', function () { filterState.loop = this.value; filterState.route = ''; updateFilterSelects(); render(); });
-        if (routeSel) routeSel.addEventListener('change', function () { filterState.route = this.value; render(); });
-        if (clearBtn) clearBtn.addEventListener('click', function () { filterState.depot = ''; filterState.loop = ''; filterState.route = ''; updateFilterSelects(); render(); });
+        var tabDisco = document.getElementById('folderDisco');
+        var tabLastDay = document.getElementById('folderLastDay');
+        var tabSpms = document.getElementById('folderSpms');
+        if (tabDisco) tabDisco.addEventListener('click', function () { switchFolderTab('disco'); });
+        if (tabLastDay) tabLastDay.addEventListener('click', function () { switchFolderTab('lastday'); });
+        if (tabSpms) tabSpms.addEventListener('click', function () { switchFolderTab('spms'); });
+        var lastDayLoopFilter = document.getElementById('lastDayFilterLoop');
+        if (lastDayLoopFilter) lastDayLoopFilter.addEventListener('change', function () { updateLastDaySection(); });
+        var spmsLoopFilter = document.getElementById('spmsFilterLoop');
+        if (spmsLoopFilter) spmsLoopFilter.addEventListener('change', function () { updateSpmsSection(); });
+        initDailyOpsModal();
+        initCarousel();
+        initFullDashboardModal();
       }
       if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initBeamSidebar);
       else initBeamSidebar();
+
+      /* Disco: data by depot from SP contracts; depot filter */
+      function getDiscoByDepot() {
+        var byDepot = {};
+        contracts.forEach(function (c) {
+          if (c.serviceProvider !== spName) return;
+          (c.depots || []).forEach(function (d) {
+            if (!d.name) return;
+            if (!byDepot[d.name]) byDepot[d.name] = { am: [], pm: [] };
+            (d.loops || []).forEach(function (l, loopIdx) {
+              (l.routes || []).forEach(function (r, routeIdx) {
+                if (!r.name) return;
+                var arr = (loopIdx + routeIdx) % 2 === 0 ? byDepot[d.name].am : byDepot[d.name].pm;
+                if (arr.indexOf(r.name) === -1) arr.push(r.name);
+              });
+            });
+          });
+        });
+        Object.keys(byDepot).forEach(function (depot) {
+          byDepot[depot].am.sort();
+          byDepot[depot].pm.sort();
+        });
+        return byDepot;
+      }
+
+      function getDiscoDataForDepot(selectedDepot) {
+        var discoByDepot = getDiscoByDepot();
+        if (selectedDepot && discoByDepot[selectedDepot]) {
+          return discoByDepot[selectedDepot];
+        }
+        var fallback = window.DISCO_DATA || {};
+        if (!selectedDepot && Object.keys(discoByDepot).length > 0) {
+          var am = [], pm = [];
+          Object.keys(discoByDepot).forEach(function (depot) {
+            (discoByDepot[depot].am || []).forEach(function (r) { if (am.indexOf(r) === -1) am.push(r); });
+            (discoByDepot[depot].pm || []).forEach(function (r) { if (pm.indexOf(r) === -1) pm.push(r); });
+          });
+          am.sort();
+          pm.sort();
+          return { am: am, pm: pm };
+        }
+        return fallback;
+      }
+
+      function updateDiscoDepotSelect() {
+        var sel = document.getElementById('discoFilterDepot');
+        if (!sel) return;
+        var depots = getDepotsForSp();
+        var current = sel.value;
+        sel.innerHTML = '<option value="">All</option>' + depots.map(function (d) {
+          return '<option value="' + escapeHtml(d) + '"' + (d === current ? ' selected' : '') + '>' + escapeHtml(d) + '</option>';
+        }).join('');
+      }
+
+      function initDisco() {
+        var islandsWrap = document.getElementById('discoIslandsWrap');
+        var errorEl = document.getElementById('discoErrorState');
+        var amList = document.getElementById('discoAmList');
+        var pmList = document.getElementById('discoPmList');
+        var amEmpty = document.getElementById('discoAmEmpty');
+        var pmEmpty = document.getElementById('discoPmEmpty');
+        var amCount = document.getElementById('discoAmCount');
+        var pmCount = document.getElementById('discoPmCount');
+        var depotSel = document.getElementById('discoFilterDepot');
+        if (!islandsWrap) return;
+
+        var selectedDepot = depotSel ? depotSel.value : '';
+        var data = getDiscoDataForDepot(selectedDepot);
+        if (!data || (!data.am && !data.pm)) {
+          if (islandsWrap) islandsWrap.classList.add('hidden');
+          if (errorEl) errorEl.classList.remove('hidden');
+          return;
+        }
+        if (errorEl) errorEl.classList.add('hidden');
+        islandsWrap.classList.remove('hidden');
+
+        var amArr = (data.am || []).slice().sort();
+        var pmArr = (data.pm || []).slice().sort();
+
+        if (amList) {
+          amList.innerHTML = amArr.map(function (r) { return '<li><span class="sp-disco-route">' + escapeHtml(r) + '</span><span class="sp-disco-meta">D AM</span></li>'; }).join('');
+          if (amEmpty) amEmpty.classList.toggle('hidden', amArr.length > 0);
+        }
+        if (pmList) {
+          pmList.innerHTML = pmArr.map(function (r) { return '<li><span class="sp-disco-route">' + escapeHtml(r) + '</span><span class="sp-disco-meta">D PM</span></li>'; }).join('');
+          if (pmEmpty) pmEmpty.classList.toggle('hidden', pmArr.length > 0);
+        }
+        if (amCount) amCount.textContent = amArr.length;
+        if (pmCount) pmCount.textContent = pmArr.length;
+      }
+
+      if (spName) {
+        updateDiscoDepotSelect();
+        initDisco();
+        var discoDepotEl = document.getElementById('discoFilterDepot');
+        if (discoDepotEl) discoDepotEl.addEventListener('change', function () { initDisco(); });
+      }
     })();
   </script>
 </body>

@@ -13,11 +13,16 @@
   max-width: 100% !important;
   padding: 0.5rem 0.75rem;
   width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
 }
 
 .dashboard-main {
   padding-bottom: 1rem;
   min-height: calc(100vh - 2rem);
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 @media (min-width: 768px) {

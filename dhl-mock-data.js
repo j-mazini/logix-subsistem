@@ -182,6 +182,113 @@
     { id: 'atlas-transport', name: 'Atlas Transport Services', initials: 'AT', color: '#b91c1c', coverColor: '#7f1d1d', owner: 'Anthony Taylor', email: 'operations@atlastransport.co.uk', phone: '+44 20 2345 6789', description: 'Atlas Transport Services offers comprehensive logistics solutions with a focus on South London and East London depots. Quality and consistency drive our operations.', depotManagers: { LSE: { name: 'Michael Brown', email: 'michael.brown@atlastransport.co.uk', phone: '+44 7700 654101' }, LCY: { name: 'Henry White', email: 'henry.white@atlastransport.co.uk', phone: '+44 7700 654102' } } }
   ];
 
+  /* Last day performance: rotas com SPR, SPOR-H, Time Window, % Target; loops com Time Window % para achievement circles (verde >90%, amarelo 80–90%, vermelho <80%) */
+  var LAST_DAY_ROUTES = [];
+  var LAST_DAY_LOOPS = [];
+  var TW_SAMPLES = [92, 87, 78, 94, 82, 91];
+  var twIndex = 0;
+  MOCK_CONTRACTS.forEach(function (c) {
+    var sp = c.serviceProvider;
+    (c.depots || []).forEach(function (d) {
+      (d.loops || []).forEach(function (l) {
+        var loopName = l.name || d.name;
+        if (!LAST_DAY_LOOPS.some(function (x) { return x.loop === loopName && x.serviceProvider === sp; })) {
+          var twPct = TW_SAMPLES[twIndex % TW_SAMPLES.length];
+          twIndex += 1;
+          LAST_DAY_LOOPS.push({ loop: loopName, serviceProvider: sp, timeWindowPct: twPct });
+        }
+        (l.routes || []).forEach(function (r) {
+          LAST_DAY_ROUTES.push({
+            route: r.name,
+            loop: loopName,
+            serviceProvider: sp,
+            spr: (90 + Math.floor(Math.random() * 10)).toFixed(1),
+            sporh: (10 + (Math.random() * 5)).toFixed(2),
+            timeWindow: (82 + Math.floor(Math.random() * 18)).toFixed(1) + '%',
+            pctTarget: (88 + Math.floor(Math.random() * 12)).toFixed(0) + '%'
+          });
+        });
+      });
+    });
+  });
+
+  /* SPMS Overview: Service item só HN (Handover), OK (Deliveries), PU (Pickups) – sem Daily Service/Electric Charge */
+  function randomServiceItem() {
+    var parts = [];
+    var hn = Math.floor(Math.random() * 5);
+    if (hn > 0) parts.push(hn + 'xHN - TRFD TO SP');
+    var ok = Math.floor(30 + Math.random() * 40);
+    parts.push(ok + 'xOK');
+    var pu = Math.floor(5 + Math.random() * 25);
+    parts.push(pu + 'xPU');
+    return parts.join(', ');
+  }
+  var SPMS_OVERVIEW = [];
+  var SPMS_DATES = ['06.02.2026', '05.02.2026', '04.02.2026', '06.02.2026', '06.02.2026', '06.02.2026'];
+  MOCK_CONTRACTS.forEach(function (c) {
+    var sp = c.serviceProvider;
+    (c.depots || []).forEach(function (d) {
+      (d.loops || []).forEach(function (l) {
+        var loopName = l.name || d.name;
+        var routeNames = (l.routes || []).map(function (r) { return r.name; });
+        if (routeNames.length === 0) routeNames = ['MD7C', 'MD7A', 'MD7B', 'MD7E', 'MD7X', 'MD7D'];
+        routeNames.forEach(function (routeName, idx) {
+          SPMS_OVERVIEW.push({
+            date: SPMS_DATES[idx % SPMS_DATES.length],
+            route: routeName,
+            cycle: 'D',
+            serviceItem: randomServiceItem(),
+            comment: '',
+            loop: loopName,
+            serviceProvider: sp
+          });
+        });
+      });
+    });
+  });
+
+  /* Daily operations notifications: routes, deliveries, delays, issues (per SP) */
+  var DAILY_OPS_TEMPLATES = [
+    { type: 'delay', severity: 'warning', icon: 'clock-history', msg: 'Delivery delay on route {{route}} – estimated {{mins}} min.', route: true },
+    { type: 'delivery_done', severity: 'success', icon: 'check-circle', msg: 'Delivery completed – route {{route}}, {{stops}} stops.', route: true },
+    { type: 'problem', severity: 'danger', icon: 'exclamation-triangle', msg: 'Issue reported on route {{route}}: {{detail}}.', route: true },
+    { type: 'route_change', severity: 'info', icon: 'signpost-2', msg: 'Change to route {{route}} – new time window.', route: true },
+    { type: 'vehicle_issue', severity: 'warning', icon: 'truck', msg: 'Vehicle on route {{route}} under review.', route: true },
+    { type: 'driver_alert', severity: 'info', icon: 'person', msg: 'Driver on route {{route}} – status update.', route: true }
+  ];
+  var DAILY_OPERATIONS_NOTIFICATIONS = [];
+  MOCK_CONTRACTS.forEach(function (c) {
+    var sp = c.serviceProvider;
+    var routes = [];
+    (c.depots || []).forEach(function (d) {
+      (d.loops || []).forEach(function (l) {
+        (l.routes || []).forEach(function (r) {
+          if (r.name) routes.push(r.name);
+        });
+      });
+    });
+    routes = routes.slice(0, 12);
+    DAILY_OPS_TEMPLATES.forEach(function (t, i) {
+      var route = routes[i % routes.length] || 'R-' + (i + 1);
+      var timeAgo = [5, 12, 25, 38, 55, 90, 120][i % 7];
+      var msg = t.msg
+        .replace('{{route}}', route)
+        .replace('{{mins}}', String(15 + (i % 4) * 10))
+        .replace('{{stops}}', String(8 + (i % 5)))
+        .replace('{{detail}}', 'customer not found');
+      DAILY_OPERATIONS_NOTIFICATIONS.push({
+        id: 'op-' + sp + '-' + i,
+        serviceProvider: sp,
+        type: t.type,
+        severity: t.severity,
+        icon: t.icon,
+        message: msg,
+        route: route,
+        timeAgoMinutes: timeAgo
+      });
+    });
+  });
+
   global.DHL_MOCK_DATA = {
     vendors: MOCK_VENDORS,
     vehicles: MOCK_VEHICLES,
@@ -193,6 +300,10 @@
       timeWindow: 98.5,
       spohR: 12.4,
       totalRequests: 2847
-    }
+    },
+    lastDayRoutes: LAST_DAY_ROUTES,
+    lastDayLoops: LAST_DAY_LOOPS,
+    spmsOverview: SPMS_OVERVIEW,
+    dailyOperationsNotifications: DAILY_OPERATIONS_NOTIFICATIONS
   };
 })(typeof window !== 'undefined' ? window : this);

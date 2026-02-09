@@ -554,6 +554,8 @@ body {
   position: relative;
   z-index: 0;
   min-height: 100vh;
+  min-width: 0;
+  max-width: 100%;
   animation: fadeIn 0.4s var(--ease-out-expo) both;
 }
 
