@@ -320,6 +320,20 @@
   font-weight: 600;
 }
 
+/* Cadastro de target por rota (parâmetro para comparação e % de aproveitamento) */
+.contract-route-target-edit {
+  padding: 0.6rem 0;
+  border-top: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+}
+.contract-route-target-edit .form-label {
+  color: #475569;
+  font-weight: 500;
+}
+.contract-route-target-input {
+  max-width: 8rem;
+}
+
 /* Tipo de route */
 .contract-route-type-child {
   display: inline-block;

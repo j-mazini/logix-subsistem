@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="../sidebar-beam.css" />
   <link rel="stylesheet" href="../dashboard.css" />
   <link rel="stylesheet" href="sp-portal.css" />
+  <link rel="stylesheet" href="../liquid-glass.css" />
 </head>
 <body class="has-beam-sidebar sp-portal">
   <div class="sidebar-wrapper" id="sidebarWrapper">
@@ -117,6 +118,10 @@
                   <i class="bi bi-file-earmark-text"></i>
                   <span>Disco</span>
                 </button>
+                <button type="button" class="sp-folder-tab" role="tab" aria-selected="false" data-folder="upload" id="folderUpload">
+                  <i class="bi bi-cloud-upload"></i>
+                  <span>Upload Data</span>
+                </button>
                 <button type="button" class="sp-folder-tab" role="tab" aria-selected="false" data-folder="lastday" id="folderLastDay">
                   <i class="bi bi-calendar-day"></i>
                   <span>Last Day Operation</span>
@@ -181,38 +186,87 @@
                     </div>
                   </div>
                 </div>
-                <div id="folder-panel-lastday" class="sp-folder-panel hidden" role="tabpanel" aria-labelledby="folderLastDay" aria-hidden="true">
-                  <div class="sp-folder-panel-inner sp-folder-panel-inner--scroll">
-                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
-                      <h2 class="dashboard-block-title mb-0"><i class="bi bi-calendar-day"></i> Last day</h2>
-                      <div class="last-day-filters d-flex align-items-center gap-2">
-                        <label for="lastDayFilterLoop" class="form-label mb-0 small text-muted">Loop</label>
-                        <select id="lastDayFilterLoop" class="form-select form-select-sm last-day-filter-loop-select" aria-label="Filter by loop">
-                          <option value="">All</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div class="row g-4">
-                      <div class="col-12 col-lg-8">
-                        <div class="last-day-table-wrap table-responsive">
-                          <table class="table table-hover align-middle last-day-routes-table">
-                            <thead>
-                              <tr>
-                                <th>Route</th>
-                                <th>SPR</th>
-                                <th>SPOR-H</th>
-                                <th>Time Window</th>
-                                <th>% Target</th>
-                              </tr>
-                            </thead>
-                            <tbody id="lastDayRoutesBody"></tbody>
-                          </table>
+                <div id="folder-panel-upload" class="sp-folder-panel hidden" role="tabpanel" aria-labelledby="folderUpload" aria-hidden="true">
+                  <div class="sp-folder-panel-inner sp-folder-panel-inner--scroll opms-panel">
+                    <h2 class="opms-title"><i class="bi bi-cloud-upload"></i> Upload Data</h2>
+                    <p class="opms-subtitle text-muted">Carregue os ficheiros de produção (OPMS) e/ou Time Window por data. Depois use a aba <strong>Last Day Operation</strong> para ver métricas e performance por data e rota.</p>
+                    <section class="opms-upload-card" aria-labelledby="opms-upload-heading">
+                      <h3 id="opms-upload-heading" class="opms-card-title"><i class="bi bi-upload"></i> Upload</h3>
+                      <div class="opms-upload-grid">
+                        <div class="opms-field">
+                          <label for="lastDayStoreDate" class="opms-label">Store for date</label>
+                          <input type="date" id="lastDayStoreDate" class="form-control opms-input" aria-describedby="opms-store-date-hint" />
+                          <span id="opms-store-date-hint" class="opms-hint">Data will be associated to this date</span>
+                        </div>
+                        <div class="opms-field opms-field-upload">
+                          <label class="opms-label">Production data</label>
+                          <p class="opms-hint mb-1">Excel OPMS: sheet com colunas PUD Svc Area (Depot), PUD Rte (Route), Courier id (Driver), Act Ckpt Code. Só contam códigos: BA, CA, CM, FP, HN, NR, OK, PU, RD.</p>
+                          <div class="opms-upload-row">
+                            <input type="file" id="lastDayExcelUpload" class="d-none" accept=".xlsx,.xlsm" aria-label="Production Excel" />
+                            <button type="button" class="opms-upload-btn opms-upload-btn-excel" id="lastDayExcelTrigger" aria-label="Choose production Excel file">
+                              <i class="bi bi-file-earmark-excel"></i>
+                              <span>Choose Excel</span>
+                            </button>
+                            <span id="lastDayExcelFileName" class="opms-filename" aria-live="polite"></span>
+                          </div>
+                        </div>
+                        <div class="opms-field opms-field-upload">
+                          <label class="opms-label">Time Window</label>
+                          <p class="opms-hint mb-1">Excel com colunas <strong>Route</strong> e <strong>% TW Adh DL</strong>. O valor é filtrado por rota e mostrado no círculo de goal.</p>
+                          <div class="opms-upload-row">
+                            <input type="file" id="lastDayTwUpload" class="d-none" accept=".xlsx,.xlsm,.png,.jpg,.jpeg,.webp" aria-label="Time Window file or image" />
+                            <button type="button" class="opms-upload-btn opms-upload-btn-tw" id="lastDayTwTrigger" aria-label="Choose Time Window Excel or image">
+                              <i class="bi bi-image-alt"></i>
+                              <span>Excel or image</span>
+                            </button>
+                            <span id="lastDayTwFileName" class="opms-filename" aria-live="polite"></span>
+                          </div>
+                        </div>
+                        <div class="opms-field opms-field-action">
+                          <label class="opms-label">&nbsp;</label>
+                          <button type="button" class="btn btn-primary opms-process-btn" id="lastDayProcessBtn" disabled>
+                            <i class="bi bi-gear-fill opms-process-btn-icon"></i>
+                            <span class="opms-process-btn-text">Process</span>
+                            <span class="opms-process-btn-spinner hidden" aria-hidden="true"><i class="bi bi-arrow-repeat spin"></i></span>
+                          </button>
                         </div>
                       </div>
-                      <div class="col-12 col-lg-4">
-                        <h3 class="last-day-goals-title"><i class="bi bi-bullseye"></i> Achievement goal – Time Window</h3>
-                        <div class="last-day-goals-wrap" id="lastDayGoalsWrap"></div>
+                      <div id="opmsProcessSuccess" class="opms-process-success hidden" role="status" aria-live="polite">
+                        <i class="bi bi-check-circle-fill"></i>
+                        <div>
+                          <strong>Dados processados com sucesso.</strong>
+                          <span class="opms-process-success-date"></span> Pode ver os resultados na aba <strong>Last Day Operation</strong>.
+                        </div>
                       </div>
+                    </section>
+                  </div>
+                </div>
+                <div id="folder-panel-lastday" class="sp-folder-panel hidden" role="tabpanel" aria-labelledby="folderLastDay" aria-hidden="true">
+                  <div class="sp-folder-panel-inner sp-folder-panel-inner--scroll opms-panel">
+                    <header class="opms-lastday-header opms-lastday-header-with-nav">
+                      <h2 class="opms-title mb-2"><i class="bi bi-calendar-day"></i> Last Day Operations</h2>
+                      <div class="opms-lastday-date-block" role="group" aria-label="Navegar por data">
+                        <button type="button" class="opms-date-edge-btn" id="lastDayDatePrev" aria-label="Data anterior" title="Data anterior"><i class="bi bi-chevron-left"></i></button>
+                        <button type="button" class="opms-date-center" id="lastDayDatePicker" aria-label="Selecionar data" aria-haspopup="listbox" aria-expanded="false">
+                          <span id="lastDayViewingDate" class="opms-viewing-date" aria-live="polite"></span>
+                          <i class="bi bi-calendar3 opms-date-picker-icon"></i>
+                        </button>
+                        <div id="lastDayDateDropdown" class="opms-date-dropdown hidden" role="listbox" aria-label="Datas disponíveis"></div>
+                        <button type="button" class="opms-date-edge-btn" id="lastDayDateNext" aria-label="Data seguinte" title="Data seguinte"><i class="bi bi-chevron-right"></i></button>
+                      </div>
+                      <p class="opms-subtitle text-muted mb-0 mt-1">Ver métricas e performance por data e rota. Use a aba <strong>Upload Data</strong> para carregar ficheiros.</p>
+                    </header>
+
+                    <div class="opms-lastday-layout">
+                      <aside class="opms-lastday-left">
+                        <div id="lastDayTreeWrap" class="opms-tree-wrap">
+                          <ul id="lastDayTree" class="opms-tree" role="tree" aria-label="All, Loops e Rotas"></ul>
+                        </div>
+                      </aside>
+                      <section class="opms-lastday-right" id="opmsPerformanceSection" aria-labelledby="opms-performance-heading">
+                        <h3 id="opms-performance-heading" class="opms-card-title"><i class="bi bi-graph-up"></i> Performance</h3>
+                        <div class="last-day-goals-wrap" id="lastDayGoalsWrap"></div>
+                      </section>
                     </div>
                   </div>
                 </div>
@@ -401,6 +455,8 @@
     <strong>Service Provider not set.</strong> Open this portal from the main app with <code>?sp=YourCompany</code> or <a href="../service-providers.html">choose a Service Provider</a>.
   </div>
 
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js"></script>
   <script src="../dhl-mock-data.js"></script>
   <script>
     /* Disco (Route Data) – copied into page */
@@ -438,6 +494,38 @@
       var vehicles = (data.vehicles) ? data.vehicles : [];
       var contracts = (data.contracts) ? data.contracts : [];
       var spName = getCurrentSp();
+      var ROUTE_TARGETS_STORAGE_KEY = 'dhl_contract_route_targets';
+      var OPMS_UPLOADED_STORAGE_KEY = 'dhl_opms_uploaded_data';
+
+      function loadOpmsStoredData() {
+        try {
+          var raw = localStorage.getItem(OPMS_UPLOADED_STORAGE_KEY);
+          if (!raw) return {};
+          var all = JSON.parse(raw);
+          return (all[spName] && typeof all[spName] === 'object') ? all[spName] : {};
+        } catch (e) { return {}; }
+      }
+
+      function saveOpmsStoredData() {
+        try {
+          var raw = localStorage.getItem(OPMS_UPLOADED_STORAGE_KEY);
+          var all = raw ? JSON.parse(raw) : {};
+          all[spName] = opmsDataByDate;
+          localStorage.setItem(OPMS_UPLOADED_STORAGE_KEY, JSON.stringify(all));
+        } catch (e) { console.warn('OPMS save failed', e); }
+      }
+
+      function getStoredTarget(spNameVal, depotName, routeName) {
+        try {
+          var raw = localStorage.getItem(ROUTE_TARGETS_STORAGE_KEY);
+          if (!raw) return null;
+          var data = JSON.parse(raw);
+          var sp = data[spNameVal];
+          if (!sp) return null;
+          var key = (depotName || '') + '|' + (routeName || '');
+          return sp[key] != null ? Number(sp[key]) : null;
+        } catch (e) { return null; }
+      }
 
       var filterState = { depot: '', loop: '', route: '' };
 
@@ -481,6 +569,177 @@
           });
         });
         return out;
+      }
+
+      /** Returns the loop delivery rate (band rate) for a given depot and route for current SP, or 0 if not found. */
+      function getLoopDeliveryRateForDepotRoute(depotName, routeName) {
+        var rate = 0;
+        contracts.forEach(function (c) {
+          if (c.serviceProvider !== spName) return;
+          (c.depots || []).forEach(function (d) {
+            if (d.name !== depotName || !d.loops) return;
+            d.loops.forEach(function (l) {
+              if (!l.routes) return;
+              for (var i = 0; i < l.routes.length; i++) {
+                if (String(l.routes[i].name) === String(routeName)) {
+                  rate = typeof l.deliveryRate === 'number' ? l.deliveryRate : 0;
+                  return;
+                }
+              }
+            });
+          });
+        });
+        return rate;
+      }
+
+      /** Returns the loop name for a given depot and route for current SP, or '' if not found. */
+      function getLoopNameForDepotRoute(depotName, routeName) {
+        var loopName = '';
+        contracts.forEach(function (c) {
+          if (c.serviceProvider !== spName) return;
+          (c.depots || []).forEach(function (d) {
+            if (d.name !== depotName || !d.loops) return;
+            d.loops.forEach(function (l) {
+              if (!l.routes) return;
+              for (var i = 0; i < l.routes.length; i++) {
+                if (String(l.routes[i].name) === String(routeName)) {
+                  loopName = l.name || '';
+                  return;
+                }
+              }
+            });
+          });
+        });
+        return loopName;
+      }
+
+      /** Income digressivo: Band 1 com um valor, Band 2 = (entregas no intervalo Band 2) × preço Band 2, etc. Retorna total em GBP. */
+      function calculateDigressiveIncome(deliveries, loopName) {
+        var bands = (window.DHL_MOCK_DATA && window.DHL_MOCK_DATA.digressiveBands) ? window.DHL_MOCK_DATA.digressiveBands[loopName] : null;
+        if (!bands || !bands.length) return 0;
+        var d = Math.max(0, Math.floor(deliveries));
+        var total = 0;
+        for (var i = 0; i < bands.length && d > 0; i++) {
+          var b = bands[i];
+          var min = b.min;
+          var max = b.max == null ? 1e9 : b.max;
+          var inBand = Math.min(d, max - min + 1);
+          total += inBand * (b.price || 0);
+          d -= inBand;
+        }
+        return total;
+      }
+
+      /** Returns target (meta de entregas) for a given depot and route for current SP. Usa o valor cadastrado no Contract Management (localStorage) se existir; senão o do contrato. */
+      function getTargetDelForDepotRoute(depotName, routeName) {
+        var stored = getStoredTarget(spName, depotName, routeName);
+        if (stored != null && !isNaN(stored)) return stored;
+        var target = 0;
+        contracts.forEach(function (c) {
+          if (c.serviceProvider !== spName) return;
+          (c.depots || []).forEach(function (d) {
+            if (d.name !== depotName || !d.loops) return;
+            d.loops.forEach(function (l) {
+              if (!l.routes) return;
+              for (var i = 0; i < l.routes.length; i++) {
+                if (String(l.routes[i].name) === String(routeName)) {
+                  target = typeof l.routes[i].targetDel === 'number' ? l.routes[i].targetDel : 0;
+                  return;
+                }
+              }
+            });
+          });
+        });
+        return target;
+      }
+
+      /** Set de nomes de rotas cadastradas no sistema (contracts) para o SP atual. */
+      function getRegisteredRouteNamesSet() {
+        var set = {};
+        contracts.forEach(function (c) {
+          if (c.serviceProvider !== spName) return;
+          (c.depots || []).forEach(function (d) {
+            (d.loops || []).forEach(function (l) {
+              (l.routes || []).forEach(function (r) {
+                if (r.name) set[r.name] = true;
+              });
+            });
+          });
+        });
+        return set;
+      }
+
+      /** Lista de pares depot+loop para o SP atual (para dropdown Select Loop). */
+      function getLoopsWithDepotsForSp() {
+        var out = [];
+        var seen = {};
+        contracts.forEach(function (c) {
+          if (c.serviceProvider !== spName) return;
+          (c.depots || []).forEach(function (d) {
+            (d.loops || []).forEach(function (l) {
+              var key = (d.name || '') + '|' + (l.name || '');
+              if (l.name && !seen[key]) { seen[key] = true; out.push({ depot: d.name, loop: l.name }); }
+            });
+          });
+        });
+        return out.sort(function (a, b) { return (a.depot + a.loop).localeCompare(b.depot + b.loop); });
+      }
+
+      /** Lista de rotas cadastradas com depot, loop, targetDel (do cadastro ou contrato), targetPu, deliveryRate (para comparação e % aproveitamento). */
+      function getRegisteredRoutesWithDetails() {
+        var list = [];
+        contracts.forEach(function (c) {
+          if (c.serviceProvider !== spName) return;
+          (c.depots || []).forEach(function (d) {
+            (d.loops || []).forEach(function (l) {
+              var rate = typeof l.deliveryRate === 'number' ? l.deliveryRate : 0;
+              (l.routes || []).forEach(function (r) {
+                if (!r.name) return;
+                var storedTarget = getStoredTarget(spName, d.name, r.name);
+                var targetDel = storedTarget != null && !isNaN(storedTarget) ? storedTarget : (typeof r.targetDel === 'number' ? r.targetDel : 0);
+                list.push({
+                  depot: d.name,
+                  loop: l.name,
+                  route: r.name,
+                  targetDel: targetDel,
+                  targetPu: typeof r.targetPu === 'number' ? r.targetPu : 0,
+                  deliveryRate: rate
+                });
+              });
+            });
+          });
+        });
+        return list;
+      }
+
+      /** Gera SVG de círculo de progresso. Suporta OVERLAPS: quando valor > maxForOneLap, a primeira volta usa progressColor; a segunda volta (overlap) é desenhada em glow branco.
+       * opts: radius, strokeWidth, trackColor, progressColor, large, maxForOneLap (default 100; para AFD use 6). */
+      function opmsProgressCircleSvg(pct, opts) {
+        opts = opts || {};
+        var r = opts.radius != null ? opts.radius : 42;
+        var strokeWidth = opts.strokeWidth != null ? opts.strokeWidth : 8;
+        if (opts.large) { r = 58; strokeWidth = 10; }
+        var trackColor = opts.trackColor || '#e2e8f0';
+        var progressColor = opts.progressColor || '#22c55e';
+        var maxForOneLap = opts.maxForOneLap != null ? opts.maxForOneLap : 100;
+        var size = (r + strokeWidth) * 2;
+        var cx = size / 2;
+        var cy = size / 2;
+        var circum = 2 * Math.PI * r;
+        var pctNum = typeof pct === 'number' && !isNaN(pct) ? pct : 0;
+        var firstLapPct = pctNum >= maxForOneLap ? 100 : Math.max(0, (pctNum / maxForOneLap) * 100);
+        var overlapPct = pctNum > maxForOneLap ? Math.min(100, ((pctNum - maxForOneLap) / maxForOneLap) * 100) : 0;
+        var firstDash = circum * firstLapPct / 100;
+        var overlapDash = overlapPct > 0 ? circum * overlapPct / 100 : 0;
+        var rot = 'rotate(-90 ' + cx + ' ' + cy + ')';
+        var track = '<circle class="opms-progress-track" cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="' + trackColor + '" stroke-width="' + strokeWidth + '"/>';
+        var fill = '<circle class="opms-progress-fill" cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="' + progressColor + '" stroke-width="' + strokeWidth + '" stroke-dasharray="0 ' + circum + '" style="--opms-dash:' + firstDash + ';--opms-circum:' + circum + '" transform="' + rot + '"/>';
+        var overlap = overlapDash > 0
+          ? '<circle class="opms-progress-overlap" cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="rgba(255,255,255,0.95)" stroke-width="' + strokeWidth + '" stroke-dasharray="0 ' + circum + '" style="--opms-dash:' + overlapDash + ';--opms-circum:' + circum + '" transform="' + rot + '"/>'
+          : '';
+        return '<svg class="opms-progress-svg' + (overlapDash > 0 ? ' opms-progress-has-overlap' : '') + '" viewBox="0 0 ' + size + ' ' + size + '" width="' + size + '" height="' + size + '" aria-hidden="true">' +
+          track + fill + overlap +
+          '</svg>';
       }
 
       function updateFilterSelects() {
@@ -763,8 +1022,8 @@
       }
 
       function switchFolderTab(folderId) {
-        var panels = { disco: 'folder-panel-disco', lastday: 'folder-panel-lastday', spms: 'folder-panel-spms' };
-        var tabs = { disco: 'folderDisco', lastday: 'folderLastDay', spms: 'folderSpms' };
+        var panels = { disco: 'folder-panel-disco', upload: 'folder-panel-upload', lastday: 'folder-panel-lastday', spms: 'folder-panel-spms' };
+        var tabs = { disco: 'folderDisco', upload: 'folderUpload', lastday: 'folderLastDay', spms: 'folderSpms' };
         Object.keys(panels).forEach(function (id) {
           var panel = document.getElementById(panels[id]);
           var tab = document.getElementById(tabs[id]);
@@ -868,125 +1127,776 @@
         return 'red';
       }
 
+      /** OPMS (Last Day): AFD = soma de TODOS os códigos da coluna Act Ckpt Code, exceto: OK, PU, HN, DEPAR, ARRVD. Sem outros cálculos. */
+      var OPMS_AFD_EXCLUDED = ['OK', 'PU', 'HN', 'DEPAR', 'ARRVD'];
+      var OPMS_DELIVERIES_CODES = ['PU', 'HN', 'OK'];
+      var opmsDataByDate = loadOpmsStoredData();
+
+      function parseOpmsFromWorkbook(wb) {
+        if (!wb || !wb.SheetNames || !wb.Sheets || typeof XLSX === 'undefined' || !XLSX.utils) return null;
+        var data = null;
+        var headerRowIdx = 0;
+        for (var s = 0; s < wb.SheetNames.length; s++) {
+          var sh = wb.Sheets[wb.SheetNames[s]];
+          if (!sh) continue;
+          var rows = XLSX.utils.sheet_to_json(sh, { header: 1, defval: '' });
+          if (!rows || rows.length < 2) continue;
+          for (var hr = 0; hr < Math.min(5, rows.length); hr++) {
+            var row = rows[hr];
+            if (!row) continue;
+            for (var c = 0; c < row.length; c++) {
+              if (String(row[c] || '').trim() === 'Act Ckpt Code') {
+                data = rows;
+                headerRowIdx = hr;
+                break;
+              }
+            }
+            if (data) break;
+          }
+          if (data) break;
+        }
+        if (!data) return null;
+        var header = data[headerRowIdx];
+        var idxDepot = header.indexOf('PUD Svc Area');
+        var idxRoute = header.indexOf('PUD Rte');
+        var idxCourier = header.indexOf('Courier id');
+        var idxCkpt = header.indexOf('Act Ckpt Code');
+        if (idxCkpt === -1) return null;
+        if (idxDepot === -1) { for (var i = 0; i < header.length; i++) { if ((header[i] || '').indexOf('PUD Svc') !== -1) { idxDepot = i; break; } } }
+        if (idxRoute === -1) { for (var i = 0; i < header.length; i++) { if ((header[i] || '').indexOf('PUD Rte') !== -1) { idxRoute = i; break; } } }
+        if (idxCourier === -1) { for (var i = 0; i < header.length; i++) { if ((header[i] || '').toLowerCase().indexOf('courier') !== -1) { idxCourier = i; break; } } }
+        var counts = {};
+        var byRoute = {};
+        for (var r = headerRowIdx + 1; r < data.length; r++) {
+          var row = data[r];
+          var ckpt = (row[idxCkpt] != null ? String(row[idxCkpt]).trim().toUpperCase() : '');
+          if (!ckpt) continue;
+          counts[ckpt] = (counts[ckpt] || 0) + 1;
+          var depot = idxDepot >= 0 && row[idxDepot] != null ? String(row[idxDepot]).trim() : '';
+          var route = idxRoute >= 0 && row[idxRoute] != null ? String(row[idxRoute]).trim() : '';
+          var key = depot + '|' + route;
+          if (!byRoute[key]) {
+            byRoute[key] = { depot: depot, route: route, counts: {} };
+          }
+          byRoute[key].counts[ckpt] = (byRoute[key].counts[ckpt] || 0) + 1;
+        }
+        /** Procura em todas as folhas colunas Income/Revenue e Route/PUD Rte para preencher incomeByRouteFromExcel. */
+        var incomeByRouteFromExcel = {};
+        for (var s2 = 0; s2 < wb.SheetNames.length; s2++) {
+          var sh2 = wb.Sheets[wb.SheetNames[s2]];
+          if (!sh2) continue;
+          var rows2;
+          try {
+            rows2 = XLSX.utils.sheet_to_json(sh2, { header: 1, defval: '', raw: true });
+          } catch (e) { continue; }
+          if (!rows2 || rows2.length < 2) continue;
+          var colRoute2 = -1, colIncome2 = -1, headerRowIdx2 = 0;
+          for (var hr2 = 0; hr2 < Math.min(8, rows2.length); hr2++) {
+            var header2 = rows2[hr2];
+            if (!header2) continue;
+            colRoute2 = -1; colIncome2 = -1;
+            for (var c2 = 0; c2 < (header2.length || 0); c2++) {
+              var h2 = String(header2[c2] != null ? header2[c2] : '').replace(/\s+/g, ' ').trim().toLowerCase();
+              if (h2 === 'route' || h2 === 'pud rte' || h2.indexOf('route') === 0) colRoute2 = c2;
+              if (h2 === 'income' || h2 === 'revenue' || h2.indexOf('income') !== -1 || h2.indexOf('revenue') !== -1) colIncome2 = c2;
+            }
+            if (colRoute2 !== -1 && colIncome2 !== -1) { headerRowIdx2 = hr2; break; }
+          }
+          if (colRoute2 === -1 || colIncome2 === -1) continue;
+          for (var r2 = headerRowIdx2 + 1; r2 < rows2.length; r2++) {
+            var row2 = rows2[r2];
+            if (!row2) continue;
+            var routeName = String(row2[colRoute2] != null ? row2[colRoute2] : '').replace(/\s+/g, ' ').trim();
+            var incVal = row2[colIncome2];
+            var num = null;
+            if (typeof incVal === 'number' && !isNaN(incVal)) num = incVal;
+            else if (incVal != null && incVal !== '') num = parseFloat(String(incVal).replace(',', '.').replace(/\s/g, ''));
+            if (routeName && num != null && !isNaN(num)) incomeByRouteFromExcel[routeName] = (incomeByRouteFromExcel[routeName] || 0) + num;
+          }
+          if (Object.keys(incomeByRouteFromExcel).length > 0) break;
+        }
+        return { counts: counts, byRoute: byRoute, incomeByRouteFromExcel: incomeByRouteFromExcel };
+      }
+
+      /** Extrai valor de célula: SheetJS pode devolver objeto { v: valor } ou o valor direto. */
+      function cellValue(cell) {
+        if (cell == null) return null;
+        if (typeof cell === 'object' && 'v' in cell) return cell.v;
+        return cell;
+      }
+      /** Time Window: parse Excel com colunas Route e "% TW Adh DL". Devolve { routeName: valorExato } — valor exato da célula, sem qualquer cálculo. */
+      function parseTwFromWorkbook(wb) {
+        if (!wb || !wb.SheetNames || !wb.Sheets || typeof XLSX === 'undefined' || !XLSX.utils) return null;
+        var twByRoute = {};
+        var colRoute = -1;
+        var colTwAdhDl = -1;
+        var headerRowIdx = 0;
+        var data = null;
+        function norm(s) {
+          var v = cellValue(s);
+          return String(v != null ? v : '').replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim();
+        }
+        function isRouteHeader(h) {
+          var n = norm(h).toLowerCase().replace(/^%\s*/, '');
+          return n === 'route' || n === 'pud rte' || n.indexOf('route') === 0 || n.indexOf('pud rte') !== -1;
+        }
+        function isTwAdhDlHeader(h) {
+          var n = norm(h).toLowerCase().replace(/\s+/g, ' ');
+          var n2 = n.replace(/^%\s*/, '');
+          return n.indexOf('tw adh dl') !== -1 || n2.indexOf('tw adh dl') !== -1 ||
+            n.indexOf('tw adherence dl') !== -1 || (n.indexOf('adh') !== -1 && n.indexOf('dl') !== -1 && (n.indexOf('tw') !== -1 || n.indexOf('time') !== -1));
+        }
+        for (var s = 0; s < wb.SheetNames.length; s++) {
+          var sh = wb.Sheets[wb.SheetNames[s]];
+          if (!sh) continue;
+          var rows;
+          try {
+            rows = XLSX.utils.sheet_to_json(sh, { header: 1, defval: '', raw: true });
+          } catch (err) {
+            continue;
+          }
+          if (!rows || !rows.length) continue;
+          for (var hr = 0; hr < Math.min(10, rows.length); hr++) {
+            var header = rows[hr];
+            if (!header) continue;
+            var len = Array.isArray(header) ? header.length : (header && typeof header.length === 'number' ? header.length : 0);
+            colRoute = -1;
+            colTwAdhDl = -1;
+            for (var c = 0; c < len; c++) {
+              var h = norm(header[c]);
+              if (isRouteHeader(h)) colRoute = c;
+              if (isTwAdhDlHeader(h)) colTwAdhDl = c;
+            }
+            if (colRoute !== -1 && colTwAdhDl !== -1) {
+              data = rows;
+              headerRowIdx = hr;
+              break;
+            }
+          }
+          if (data) break;
+        }
+        if (!data || colRoute === -1 || colTwAdhDl === -1) return twByRoute;
+        function twRouteKey(name) {
+          return String(name || '').replace(/\s+/g, ' ').trim();
+        }
+        for (var r = headerRowIdx + 1; r < data.length; r++) {
+          var row = data[r];
+          if (!row) continue;
+          var route = norm(row[colRoute]);
+          var val = cellValue(row[colTwAdhDl]);
+          if (!route) continue;
+          var num = null;
+          if (typeof val === 'number' && !isNaN(val)) num = val;
+          else if (val != null && val !== '') num = parseFloat(String(val).replace(',', '.').replace(/\s/g, ''));
+          if (num != null && !isNaN(num)) {
+            var key = twRouteKey(route);
+            twByRoute[key] = num;
+            if (key !== route) twByRoute[route] = num;
+          }
+        }
+        return twByRoute;
+      }
+      /** Lookup TW por rota: tenta chave exata e chave normalizada (trim, espaços colapsados). */
+      function getTwForRoute(twByRoute, routeName) {
+        if (!twByRoute || routeName == null) return null;
+        var r = String(routeName).replace(/\s+/g, ' ').trim();
+        if (twByRoute[r] != null) return twByRoute[r];
+        for (var k in twByRoute) {
+          if (String(k).replace(/\s+/g, ' ').trim() === r) return twByRoute[k];
+        }
+        return null;
+      }
+
+      /** AFD = soma de todos os códigos da coluna Act Ckpt Code exceto OK, PU, HN, DEPAR, ARRVD. Deliveries = PU + HN + OK (apenas para comparação interna). */
+      function getOpmsDeliveriesAndAfd(counts) {
+        var deliveries = 0, afd = 0;
+        OPMS_DELIVERIES_CODES.forEach(function (c) { deliveries += counts[c] || 0; });
+        var excluded = {};
+        OPMS_AFD_EXCLUDED.forEach(function (c) { excluded[c] = true; });
+        Object.keys(counts || {}).forEach(function (c) {
+          if (!excluded[c]) afd += (counts[c] || 0);
+        });
+        return { deliveries: deliveries, afd: afd };
+      }
+
+      var lastDayState = {
+        dates: [],
+        dateIndex: 0,
+        selected: 'all',
+        expanded: { all: true }
+      };
+
+      function getLastDayDates() {
+        return Object.keys(opmsDataByDate).filter(function (d) {
+          var day = opmsDataByDate[d];
+          return (day.counts || day.byRoute || (day.twByRoute && Object.keys(day.twByRoute).length));
+        }).sort().reverse();
+      }
+
+      function getCurrentViewDate() {
+        if (lastDayState.dates.length === 0) return '';
+        var i = Math.max(0, Math.min(lastDayState.dateIndex, lastDayState.dates.length - 1));
+        return lastDayState.dates[i] || '';
+      }
+
       function updateLastDaySection() {
         if (!spName) return;
-        var lastDayRoutes = (data.lastDayRoutes) ? data.lastDayRoutes : [];
-        var lastDayLoops = (data.lastDayLoops) ? data.lastDayLoops : [];
-        var routesFiltered = lastDayRoutes.filter(function (r) { return r.serviceProvider === spName; });
-        var loopsFiltered = lastDayLoops.filter(function (l) { return l.serviceProvider === spName; });
-
-        var loopFilterEl = document.getElementById('lastDayFilterLoop');
-        var selectedLoop = loopFilterEl ? loopFilterEl.value : '';
-        if (selectedLoop) {
-          routesFiltered = routesFiltered.filter(function (r) { return r.loop === selectedLoop; });
-          loopsFiltered = loopsFiltered.filter(function (l) { return l.loop === selectedLoop; });
+        lastDayState.dates = getLastDayDates();
+        if (lastDayState.dateIndex >= lastDayState.dates.length) lastDayState.dateIndex = Math.max(0, lastDayState.dates.length - 1);
+        var selDate = getCurrentViewDate();
+        var viewingDateEl = document.getElementById('lastDayViewingDate');
+        var datePrevBtn = document.getElementById('lastDayDatePrev');
+        var dateNextBtn = document.getElementById('lastDayDateNext');
+        if (viewingDateEl) viewingDateEl.textContent = selDate || '—';
+        if (datePrevBtn) {
+          datePrevBtn.disabled = lastDayState.dates.length === 0 || lastDayState.dateIndex <= 0;
+          datePrevBtn.setAttribute('aria-disabled', datePrevBtn.disabled ? 'true' : 'false');
         }
-
-        if (loopFilterEl) {
-          var loopNames = [];
-          (data.lastDayLoops || []).filter(function (l) { return l.serviceProvider === spName; }).forEach(function (l) {
-            if (l.loop && loopNames.indexOf(l.loop) === -1) loopNames.push(l.loop);
+        if (dateNextBtn) {
+          dateNextBtn.disabled = lastDayState.dates.length === 0 || lastDayState.dateIndex >= lastDayState.dates.length - 1;
+          dateNextBtn.setAttribute('aria-disabled', dateNextBtn.disabled ? 'true' : 'false');
+        }
+        var treeEl = document.getElementById('lastDayTree');
+        var details = getRegisteredRoutesWithDetails();
+        var loopsWithDepots = getLoopsWithDepotsForSp();
+        var depotNames = [];
+        var seenDepot = {};
+        loopsWithDepots.forEach(function (x) {
+          if (!seenDepot[x.depot]) { seenDepot[x.depot] = true; depotNames.push(x.depot); }
+        });
+        depotNames.sort();
+        if (treeEl) {
+          treeEl.innerHTML = '';
+          var allLi = document.createElement('li');
+          allLi.setAttribute('role', 'treeitem');
+          allLi.setAttribute('aria-expanded', lastDayState.expanded.all ? 'true' : 'false');
+          allLi.setAttribute('data-id', 'all');
+          allLi.className = 'opms-tree-item opms-tree-item-all' + (lastDayState.selected === 'all' ? ' selected' : '');
+          var allLabel = document.createElement('span');
+          allLabel.className = 'opms-tree-label';
+          allLabel.innerHTML = (lastDayState.expanded.all ? '<i class="bi bi-chevron-down opms-tree-icon"></i>' : '<i class="bi bi-chevron-right opms-tree-icon"></i>') + '<span>All</span>';
+          allLi.appendChild(allLabel);
+          allLi.addEventListener('click', function (e) {
+            e.stopPropagation();
+            lastDayState.expanded.all = !lastDayState.expanded.all;
+            lastDayState.selected = 'all';
+            updateLastDaySection();
           });
-          loopNames.sort();
-          var currentVal = loopFilterEl.value;
-          loopFilterEl.innerHTML = '<option value="">All</option>' + loopNames.map(function (name) {
-            return '<option value="' + escapeHtml(name) + '"' + (name === currentVal ? ' selected' : '') + '>' + escapeHtml(name) + '</option>';
-          }).join('');
-          if (selectedLoop && loopNames.indexOf(selectedLoop) === -1) loopFilterEl.value = '';
+          treeEl.appendChild(allLi);
+          if (lastDayState.expanded.all && depotNames.length) {
+            var depotsUl = document.createElement('ul');
+            depotsUl.setAttribute('role', 'group');
+            depotsUl.className = 'opms-tree-children';
+            depotNames.forEach(function (depotName) {
+              var depotExpanded = !!lastDayState.expanded[depotName];
+              var depotLoops = loopsWithDepots.filter(function (x) { return x.depot === depotName; });
+              var depotLi = document.createElement('li');
+              depotLi.setAttribute('role', 'treeitem');
+              depotLi.setAttribute('aria-expanded', depotExpanded ? 'true' : 'false');
+              depotLi.setAttribute('data-id', depotName);
+              depotLi.className = 'opms-tree-item opms-tree-item-depot' + (lastDayState.selected === depotName ? ' selected' : '');
+              var depotLabel = document.createElement('span');
+              depotLabel.className = 'opms-tree-label';
+              depotLabel.innerHTML = (depotExpanded ? '<i class="bi bi-chevron-down opms-tree-icon"></i>' : '<i class="bi bi-chevron-right opms-tree-icon"></i>') + '<span>' + escapeHtml(depotName) + '</span>';
+              depotLi.appendChild(depotLabel);
+              depotLi.addEventListener('click', function (e) {
+                e.stopPropagation();
+                lastDayState.expanded[depotName] = !lastDayState.expanded[depotName];
+                lastDayState.selected = depotName;
+                updateLastDaySection();
+              });
+              depotsUl.appendChild(depotLi);
+              if (depotExpanded && depotLoops.length) {
+                var loopsUl = document.createElement('ul');
+                loopsUl.setAttribute('role', 'group');
+                loopsUl.className = 'opms-tree-children';
+                depotLoops.forEach(function (x) {
+                  var loopKey = x.depot + '|' + x.loop;
+                  var loopExpanded = !!lastDayState.expanded[loopKey];
+                  var loopRoutes = details.filter(function (rec) { return rec.depot === x.depot && rec.loop === x.loop; }).map(function (r) { return r.route; }).sort();
+                  var loopLi = document.createElement('li');
+                  loopLi.setAttribute('role', 'treeitem');
+                  loopLi.setAttribute('aria-expanded', loopExpanded ? 'true' : 'false');
+                  loopLi.setAttribute('data-id', loopKey);
+                  loopLi.className = 'opms-tree-item opms-tree-item-loop' + (lastDayState.selected === loopKey ? ' selected' : '');
+                  var loopLabel = document.createElement('span');
+                  loopLabel.className = 'opms-tree-label';
+                  loopLabel.innerHTML = (loopExpanded ? '<i class="bi bi-chevron-down opms-tree-icon"></i>' : '<i class="bi bi-chevron-right opms-tree-icon"></i>') + '<span>' + escapeHtml(x.loop) + '</span>';
+                  loopLi.appendChild(loopLabel);
+                  loopLi.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    lastDayState.expanded[loopKey] = !lastDayState.expanded[loopKey];
+                    lastDayState.selected = loopKey;
+                    updateLastDaySection();
+                  });
+                  loopsUl.appendChild(loopLi);
+                  if (loopExpanded && loopRoutes.length) {
+                    var routesUl = document.createElement('ul');
+                    routesUl.setAttribute('role', 'group');
+                    routesUl.className = 'opms-tree-children opms-tree-routes';
+                    loopRoutes.forEach(function (routeName) {
+                      var routeLi = document.createElement('li');
+                      routeLi.setAttribute('role', 'treeitem');
+                      routeLi.setAttribute('data-route', routeName);
+                      routeLi.className = 'opms-tree-item opms-tree-item-route' + (lastDayState.selected === routeName ? ' selected' : '');
+                      var routeLabel = document.createElement('span');
+                      routeLabel.className = 'opms-tree-label';
+                      routeLabel.innerHTML = '<span class="opms-tree-route-name">' + escapeHtml(routeName) + '</span>';
+                      routeLi.appendChild(routeLabel);
+                      routeLi.addEventListener('click', function (e) {
+                        e.stopPropagation();
+                        lastDayState.selected = routeName;
+                        updateLastDaySection();
+                      });
+                      routesUl.appendChild(routeLi);
+                    });
+                    loopLi.appendChild(routesUl);
+                  }
+                });
+                depotLi.appendChild(loopsUl);
+              }
+            });
+            allLi.appendChild(depotsUl);
+          }
         }
-
-        var tbody = document.getElementById('lastDayRoutesBody');
-        if (tbody) {
-          var toTargetDecrescent = function (pctTarget) {
-            var num = parseFloat(String(pctTarget).replace('%', '').trim(), 10);
-            if (isNaN(num)) return '—';
-            var missing = 100 - num;
-            return (missing <= 0 ? '' : '-') + missing + '%';
-          };
-          tbody.innerHTML = routesFiltered.map(function (r) {
-            var targetDisplay = toTargetDecrescent(r.pctTarget);
-            return '<tr><td><strong>' + escapeHtml(r.route) + '</strong></td><td>' + escapeHtml(r.spr) + '</td><td>' + escapeHtml(r.sporh) + '</td><td>' + escapeHtml(r.timeWindow) + '</td><td>' + escapeHtml(targetDisplay) + '</td></tr>';
-          }).join('');
+        var routeFilter = '';
+        var loopFilter = null;
+        var depotFilter = null;
+        if (lastDayState.selected === 'all') {
+          routeFilter = '';
+          loopFilter = null;
+          depotFilter = null;
+        } else if (lastDayState.selected.indexOf('|') !== -1) {
+          routeFilter = '';
+          loopFilter = lastDayState.selected.split('|')[1] || null;
+          depotFilter = null;
+        } else if (depotNames.indexOf(lastDayState.selected) !== -1) {
+          routeFilter = '';
+          loopFilter = null;
+          depotFilter = lastDayState.selected;
+        } else {
+          routeFilter = lastDayState.selected;
+          loopFilter = null;
+          depotFilter = null;
         }
+        renderLastDayGoals(selDate, routeFilter, loopFilter, depotFilter);
+      }
 
-        var circumInner = 2 * Math.PI * 35;
-        var circumOuter = 2 * Math.PI * 45;
+      function renderLastDayGoals(storeDate, routeFilter, loopFilter, depotFilter) {
         var wrap = document.getElementById('lastDayGoalsWrap');
-        if (wrap) {
-          var pctNum = function (v) { var n = parseFloat(String(v).replace('%', '').trim(), 10); return isNaN(n) ? 0 : n; };
-          var toTotalPct = function (raw) {
-            var n = pctNum(raw);
-            if (n < 0) return Math.max(0, 100 + n);
-            return Math.min(100, n);
-          };
-          function getTargetPctForLoop(loopName) {
-            var routesInLoop = routesFiltered.filter(function (r) { return r.loop === loopName; });
-            if (!routesInLoop.length) return 100;
-            var sum = 0, count = 0;
-            routesInLoop.forEach(function (r) {
-              var val = toTotalPct(r.pctTarget);
-              if (val > 0) { sum += val; count += 1; }
-            });
-            return count ? Math.round(sum / count) : 100;
-          }
-          function renderOneCircle(twPct, targetPct, label, extraClass) {
-            var twColor = getTimeWindowColor(twPct);
-            var targetColor = getTimeWindowColor(targetPct);
-            var strokeDashOuter = (targetPct / 100) * circumOuter;
-            var strokeDashInner = (twPct / 100) * circumInner;
-            var cls = 'last-day-goal-circle last-day-circle--' + twColor + ' last-day-circle-target--' + targetColor + (extraClass ? ' ' + extraClass : '');
-            return '<div class="' + cls + '">' +
-              '<div class="last-day-circle-svg-wrap">' +
-              '<svg class="last-day-circle-svg" viewBox="0 0 100 100" aria-label="' + escapeHtml(label) + ' – Target ' + targetPct + '%, Time Window ' + twPct + '%">' +
-              '<circle class="last-day-circle-outer last-day-circle-target" cx="50" cy="50" r="45" stroke-dasharray="0 ' + circumOuter + '" stroke-dashoffset="0" transform="rotate(-90 50 50)" data-dash="' + strokeDashOuter + '" data-circum="' + circumOuter + '"/>' +
-              '<circle class="last-day-circle-inner last-day-circle-progress" cx="50" cy="50" r="35" stroke-dasharray="0 ' + circumInner + '" stroke-dashoffset="0" transform="rotate(-90 50 50)" data-dash="' + strokeDashInner + '" data-circum="' + circumInner + '"/>' +
-              '</svg>' +
-              '</div>' +
-              '<div class="last-day-circle-caption">' +
-              '<span class="last-day-circle-label">' + escapeHtml(label) + '</span>' +
-              '<span class="last-day-circle-meta">TW ' + twPct + '% · Target ' + targetPct + '%</span>' +
-              '</div>' +
-              '</div>';
-          }
-          var loopsForSp = lastDayLoops.filter(function (l) { return l.serviceProvider === spName; });
-          var routesForSp = lastDayRoutes.filter(function (r) { return r.serviceProvider === spName; });
-          var overallTw = 0, overallTwCount = 0;
-          loopsForSp.forEach(function (l) {
-            var p = toTotalPct(l.timeWindowPct);
-            overallTw += p;
-            overallTwCount += 1;
+        var emptyEl = document.getElementById('lastDayEmptyState');
+        if (!wrap) return;
+        var data = storeDate ? opmsDataByDate[storeDate] : null;
+        var registeredSet = getRegisteredRouteNamesSet();
+        var hasCounts = data && (data.counts || (data.byRoute && Object.keys(data.byRoute).length > 0));
+        var hasTw = data && data.twByRoute && Object.keys(data.twByRoute).length > 0;
+        if (!data || (!hasCounts && !hasTw)) {
+          wrap.innerHTML = '';
+          wrap.classList.remove('opms-goals-visible');
+          if (emptyEl) emptyEl.classList.remove('hidden');
+          return;
+        }
+        if (emptyEl) emptyEl.classList.add('hidden');
+        var counts = data.counts || {};
+        var depotForRate = '';
+        var routeNamesInLoop = null;
+        var routeNamesInDepot = null;
+        var details = getRegisteredRoutesWithDetails();
+        if (loopFilter) {
+          routeNamesInLoop = {};
+          details.forEach(function (rec) {
+            if (rec.loop === loopFilter) routeNamesInLoop[rec.route] = true;
           });
-          var overallTargetSum = 0, overallTargetCount = 0;
-          routesForSp.forEach(function (r) {
-            var p = toTotalPct(r.pctTarget);
-            if (p > 0) { overallTargetSum += p; overallTargetCount += 1; }
-          });
-          var overallTwPct = overallTwCount ? Math.round(overallTw / overallTwCount) : 100;
-          var overallTargetPct = overallTargetCount ? Math.round(overallTargetSum / overallTargetCount) : 100;
-          var overallCircleHtml = renderOneCircle(overallTwPct, overallTargetPct, 'Overall', 'last-day-goal-circle--overall');
-          var loopsCirclesHtml = loopsFiltered.map(function (l) {
-            var twPct = toTotalPct(l.timeWindowPct);
-            var targetPct = getTargetPctForLoop(l.loop);
-            return renderOneCircle(twPct, targetPct, l.loop, '');
-          }).join('');
-          wrap.innerHTML = overallCircleHtml + loopsCirclesHtml;
-          requestAnimationFrame(function () {
-            requestAnimationFrame(function () {
-              var outerCircles = wrap.querySelectorAll('.last-day-circle-outer');
-              outerCircles.forEach(function (el) {
-                var dash = parseFloat(el.getAttribute('data-dash'), 10);
-                var circum = parseFloat(el.getAttribute('data-circum'), 10);
-                if (!isNaN(dash) && !isNaN(circum)) el.setAttribute('stroke-dasharray', dash + ' ' + circum);
-              });
-              var innerCircles = wrap.querySelectorAll('.last-day-circle-inner');
-              innerCircles.forEach(function (el) {
-                var dash = parseFloat(el.getAttribute('data-dash'), 10);
-                var circum = parseFloat(el.getAttribute('data-circum'), 10);
-                if (!isNaN(dash) && !isNaN(circum)) el.setAttribute('stroke-dasharray', dash + ' ' + circum);
-              });
-            });
+        } else if (depotFilter) {
+          routeNamesInDepot = {};
+          details.forEach(function (rec) {
+            if (rec.depot === depotFilter) routeNamesInDepot[rec.route] = true;
           });
         }
+        if (routeFilter && data.byRoute) {
+          for (var k in data.byRoute) {
+            if (data.byRoute[k].route === routeFilter && registeredSet[routeFilter]) {
+              counts = data.byRoute[k].counts;
+              depotForRate = data.byRoute[k].depot || '';
+              break;
+            }
+          }
+        } else if (data.byRoute && Object.keys(registeredSet).length > 0) {
+          var agg = {};
+          Object.keys(data.byRoute).forEach(function (k) {
+            var r = data.byRoute[k].route;
+            if (!r || !registeredSet[r]) return;
+            if (routeNamesInLoop && !routeNamesInLoop[r]) return;
+            if (routeNamesInDepot && !routeNamesInDepot[r]) return;
+            var routeCounts = data.byRoute[k].counts || {};
+            Object.keys(routeCounts).forEach(function (c) {
+              agg[c] = (agg[c] || 0) + (routeCounts[c] || 0);
+            });
+          });
+          counts = agg;
+        }
+        var tableHtml = '';
+        var circlesParts = [];
+        if (hasCounts) {
+          var metrics = getOpmsDeliveriesAndAfd(counts);
+          var rate = depotForRate ? getLoopDeliveryRateForDepotRoute(depotForRate, routeFilter || '') : 0;
+          if (!rate && routeFilter && data.byRoute) {
+            for (var key in data.byRoute) {
+              if (data.byRoute[key].route === routeFilter) {
+                rate = getLoopDeliveryRateForDepotRoute(data.byRoute[key].depot, routeFilter);
+                break;
+              }
+            }
+          }
+          if (rate === 0) rate = 2.90;
+          var targetDel = depotForRate && routeFilter ? getTargetDelForDepotRoute(depotForRate, routeFilter) : 0;
+          if (!targetDel && routeFilter && data.byRoute) {
+            for (var key in data.byRoute) {
+              if (data.byRoute[key].route === routeFilter) {
+                targetDel = getTargetDelForDepotRoute(data.byRoute[key].depot, routeFilter);
+                break;
+              }
+            }
+          }
+          var totalTarget = targetDel;
+          if (!routeFilter && details.length > 0) {
+            totalTarget = 0;
+            details.forEach(function (rec) {
+              if (routeNamesInLoop && !routeNamesInLoop[rec.route]) return;
+              if (routeNamesInDepot && !routeNamesInDepot[rec.route]) return;
+              if (!registeredSet[rec.route]) return;
+              totalTarget += rec.targetDel || 0;
+            });
+          }
+          var delPctRaw = totalTarget > 0 ? (metrics.deliveries / totalTarget) * 100 : 100;
+          var delOk = counts['OK'] || 0;
+          var delPu = counts['PU'] || 0;
+          var delHn = counts['HN'] || 0;
+          var delTotal = delOk + delPu + delHn;
+          circlesParts.push(
+            '<div class="opms-circle-item opms-circle-item--rate"><div class="opms-circle opms-circle-rate opms-progress-circle-wrap">' +
+              '<div class="opms-progress-circle-inner">' +
+              opmsProgressCircleSvg(delPctRaw, { large: true, progressColor: '#22c55e', trackColor: 'rgba(34,197,94,0.2)', maxForOneLap: 100 }) +
+              '<div class="opms-circle-rate-fields">' +
+              '<span class="opms-circle-rate-row"><strong>DEL</strong> ' + delOk + '</span>' +
+              '<span class="opms-circle-rate-row"><strong>PU</strong> ' + delPu + '</span>' +
+              '<span class="opms-circle-rate-row"><strong>HN</strong> ' + delHn + '</span>' +
+              '<span class="opms-circle-rate-row opms-circle-rate-total"><strong>Total</strong> ' + delTotal + '</span>' +
+              '</div></div>' +
+              '<span class="opms-circle-label">Performance (' + (totalTarget ? Math.round(delPctRaw * 10) / 10 + '%' : '—') + ')</span></div></div>'
+          );
+          var totalCheckpoints = 0;
+          Object.keys(counts || {}).forEach(function (c) { totalCheckpoints += counts[c] || 0; });
+          var afdPct = totalCheckpoints > 0 ? (metrics.afd / totalCheckpoints) * 100 : 0;
+          var afdOver4 = afdPct > 4;
+          var afdColor = afdOver4 ? '#ef4444' : '#f59e0b';
+          var afdTrack = afdOver4 ? 'rgba(239,68,68,0.2)' : 'rgba(245,158,11,0.2)';
+          var afdClass = 'opms-circle-afd' + (afdOver4 ? ' opms-circle-afd--over' : '');
+          circlesParts.push(
+            '<div class="opms-circle-item"><div class="opms-circle ' + afdClass + ' opms-progress-circle-wrap">' +
+              '<div class="opms-progress-circle-inner">' +
+              opmsProgressCircleSvg(afdPct, { progressColor: afdColor, trackColor: afdTrack, maxForOneLap: 6 }) +
+              '<span class="opms-circle-value">' + (Math.round(afdPct * 10) / 10) + '%</span></div>' +
+              '<span class="opms-circle-label">AFD (%)</span></div></div>'
+          );
+          var loopForIncome = routeFilter && depotForRate ? getLoopNameForDepotRoute(depotForRate, routeFilter) : '';
+          var calculatedIncome = (window.DHL_MOCK_DATA && window.DHL_MOCK_DATA.digressiveBands && window.DHL_MOCK_DATA.digressiveBands[loopForIncome])
+            ? calculateDigressiveIncome(metrics.deliveries, loopForIncome)
+            : (metrics.deliveries * rate);
+          var excelIncome = 0;
+          if (routeFilter && data.incomeByRouteFromExcel && data.incomeByRouteFromExcel[routeFilter] != null) {
+            excelIncome = Number(data.incomeByRouteFromExcel[routeFilter]) || 0;
+          } else if (data.incomeByRouteFromExcel && details.length > 0) {
+            details.forEach(function (rec) {
+              if (routeNamesInLoop && !routeNamesInLoop[rec.route]) return;
+              if (routeNamesInDepot && !routeNamesInDepot[rec.route]) return;
+              if (!registeredSet[rec.route]) return;
+              var v = data.incomeByRouteFromExcel[rec.route];
+              if (v != null) excelIncome += Number(v) || 0;
+            });
+          }
+          if (!routeFilter && data.byRoute && details.length > 0) {
+            calculatedIncome = 0;
+            details.forEach(function (rec) {
+              if (routeNamesInLoop && !routeNamesInLoop[rec.route]) return;
+              if (routeNamesInDepot && !routeNamesInDepot[rec.route]) return;
+              if (!registeredSet[rec.route]) return;
+              var key = rec.depot + '|' + rec.route;
+              var routeData = data.byRoute[key];
+              if (routeData && routeData.counts) {
+                var m = getOpmsDeliveriesAndAfd(routeData.counts);
+                var loopName = rec.loop || '';
+                if (window.DHL_MOCK_DATA && window.DHL_MOCK_DATA.digressiveBands && window.DHL_MOCK_DATA.digressiveBands[loopName]) {
+                  calculatedIncome += calculateDigressiveIncome(m.deliveries, loopName);
+                } else {
+                  calculatedIncome += m.deliveries * (rec.deliveryRate || 2.90);
+                }
+              }
+            });
+          }
+          var incomePct = excelIncome > 0 ? (calculatedIncome / excelIncome) * 100 : 100;
+          var incomeFormatted = '£' + (calculatedIncome.toFixed(2)).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+          circlesParts.push(
+            '<div class="opms-circle-item"><div class="opms-circle opms-circle-income opms-progress-circle-wrap">' +
+              '<div class="opms-progress-circle-inner">' +
+              opmsProgressCircleSvg(incomePct, { progressColor: '#6366f1', trackColor: 'rgba(99,102,241,0.2)', maxForOneLap: 100 }) +
+              '<span class="opms-circle-value">' + incomeFormatted + '</span></div>' +
+              '<span class="opms-circle-label">Income (GBP)</span></div></div>'
+          );
+        }
+        var twRaw = null;
+        var twLabel = '% TW Adh DL';
+        if (hasTw && data.twByRoute) {
+          if (routeFilter && registeredSet[routeFilter]) {
+            twRaw = getTwForRoute(data.twByRoute, routeFilter);
+            if (twRaw != null) twLabel = '% TW Adh DL (' + escapeHtml(routeFilter) + ') – valor exato';
+          } else if (loopFilter) {
+            var twValuesLoop = [];
+            details.forEach(function (rec) {
+              if (rec.loop !== loopFilter) return;
+              var v = getTwForRoute(data.twByRoute, rec.route);
+              if (v != null) twValuesLoop.push(v);
+            });
+            if (twValuesLoop.length > 0) {
+              var sumLoop = 0;
+              twValuesLoop.forEach(function (v) { sumLoop += v; });
+              twRaw = sumLoop / twValuesLoop.length;
+              twLabel = '% TW Adh DL (média loop ' + escapeHtml(loopFilter) + ')';
+            }
+          } else if (depotFilter) {
+            var twValuesDepot = [];
+            details.forEach(function (rec) {
+              if (rec.depot !== depotFilter) return;
+              var v = getTwForRoute(data.twByRoute, rec.route);
+              if (v != null) twValuesDepot.push(v);
+            });
+            if (twValuesDepot.length > 0) {
+              var sumDepot = 0;
+              twValuesDepot.forEach(function (v) { sumDepot += v; });
+              twRaw = sumDepot / twValuesDepot.length;
+              twLabel = '% TW Adh DL (média depot ' + escapeHtml(depotFilter) + ')';
+            }
+          } else {
+            var twValuesAll = [];
+            var twKeys = Object.keys(data.twByRoute);
+            twKeys.forEach(function (k) {
+              var val = data.twByRoute[k];
+              if (val != null && typeof val === 'number' && !isNaN(val)) twValuesAll.push(val);
+            });
+            if (twValuesAll.length > 0) {
+              var sumAll = 0;
+              twValuesAll.forEach(function (v) { sumAll += v; });
+              twRaw = sumAll / twValuesAll.length;
+              twLabel = '% TW Adh DL (média todas as operações)';
+            }
+          }
+        }
+        if (twRaw != null) {
+          var twDisplay = (typeof twRaw === 'number' && Number.isFinite(twRaw)) ? (Math.round(twRaw * 1000) / 1000) : twRaw;
+          var twForCircle = twRaw <= 1 ? twRaw * 100 : twRaw;
+          var twColor = getTimeWindowColor(twForCircle);
+          var twStroke = twColor === 'green' ? '#22c55e' : twColor === 'yellow' ? '#eab308' : '#ef4444';
+          circlesParts.push(
+            '<div class="opms-circle-item"><div class="opms-circle opms-circle-tw opms-circle-tw--' + twColor + ' opms-progress-circle-wrap">' +
+              '<div class="opms-progress-circle-inner">' +
+              opmsProgressCircleSvg(twForCircle, { progressColor: twStroke, trackColor: 'rgba(0,0,0,0.06)', maxForOneLap: 100 }) +
+              '<span class="opms-circle-value">' + twDisplay + '%</span></div>' +
+              '<span class="opms-circle-label">' + twLabel + '</span></div></div>'
+          );
+        }
+        var circlesHtml = '<div class="last-day-goals-circles-wrap">' + circlesParts.join('') + '</div>';
+        wrap.innerHTML = tableHtml + circlesHtml;
+        wrap.classList.add('opms-goals-visible');
+      }
+
+      function initLastDay() {
+        var storeDateEl = document.getElementById('lastDayStoreDate');
+        var excelInput = document.getElementById('lastDayExcelUpload');
+        var excelTrigger = document.getElementById('lastDayExcelTrigger');
+        var excelFileName = document.getElementById('lastDayExcelFileName');
+        var processBtn = document.getElementById('lastDayProcessBtn');
+        var viewDateSel = document.getElementById('lastDayViewDate');
+        var twInput = document.getElementById('lastDayTwUpload');
+        var twTrigger = document.getElementById('lastDayTwTrigger');
+        var twFileName = document.getElementById('lastDayTwFileName');
+        function updateProcessBtnState() {
+          if (!processBtn) return;
+          var hasExcel = excelInput && excelInput.files && excelInput.files[0];
+          var hasTw = twInput && twInput.files && twInput.files[0];
+          var hasDate = storeDateEl && storeDateEl.value;
+          processBtn.disabled = !((hasExcel || hasTw) && hasDate);
+        }
+        if (excelTrigger && excelInput) {
+          excelTrigger.addEventListener('click', function () { excelInput.click(); });
+          excelInput.addEventListener('change', function () {
+            var file = excelInput.files && excelInput.files[0];
+            if (excelFileName) excelFileName.textContent = file ? file.name : '';
+            updateProcessBtnState();
+          });
+        }
+        if (twTrigger && twInput) {
+          twTrigger.addEventListener('click', function () { twInput.click(); });
+          twInput.addEventListener('change', function () {
+            var file = twInput.files && twInput.files[0];
+            if (twFileName) twFileName.textContent = file ? file.name : '';
+            updateProcessBtnState();
+          });
+        }
+        if (storeDateEl) {
+          storeDateEl.addEventListener('change', updateProcessBtnState);
+        }
+        if (processBtn) {
+          var successEl = document.getElementById('opmsProcessSuccess');
+          var successDateEl = successEl ? successEl.querySelector('.opms-process-success-date') : null;
+          var btnIcon = processBtn.querySelector('.opms-process-btn-icon');
+          var btnText = processBtn.querySelector('.opms-process-btn-text');
+          var btnSpinner = processBtn.querySelector('.opms-process-btn-spinner');
+          function setProcessLoading(loading) {
+            processBtn.disabled = loading;
+            if (btnIcon) btnIcon.classList.toggle('hidden', loading);
+            if (btnText) btnText.textContent = loading ? 'A processar…' : 'Process';
+            if (btnSpinner) btnSpinner.classList.toggle('hidden', !loading);
+            if (successEl && !loading) successEl.classList.add('hidden');
+          }
+          function showProcessSuccess(dateVal) {
+            if (successDateEl) successDateEl.textContent = ' para ' + (dateVal || '') + '.';
+            if (successEl) {
+              successEl.classList.remove('hidden');
+              successEl.setAttribute('aria-live', 'polite');
+            }
+          }
+          processBtn.addEventListener('click', function () {
+            var dateVal = storeDateEl ? storeDateEl.value : '';
+            if (!dateVal) return;
+            var excelFile = excelInput && excelInput.files && excelInput.files[0];
+            var twFile = twInput && twInput.files && twInput.files[0];
+            if (!excelFile && !twFile) return;
+            if (typeof XLSX === 'undefined') {
+              console.error('SheetJS (XLSX) not loaded');
+              return;
+            }
+            setProcessLoading(true);
+            var opmsParsed = null;
+            var twParsed = null;
+            var filesToRead = (excelFile ? 1 : 0) + (twFile ? 1 : 0);
+            var done = 0;
+            function onDone() {
+              done++;
+              if (done < filesToRead) return;
+              var merged = opmsParsed && (opmsParsed.counts || opmsParsed.byRoute) ? opmsParsed : {};
+              if (!merged.counts && !merged.byRoute && opmsDataByDate[dateVal]) {
+                merged = { counts: opmsDataByDate[dateVal].counts, byRoute: opmsDataByDate[dateVal].byRoute, incomeByRouteFromExcel: opmsDataByDate[dateVal].incomeByRouteFromExcel };
+              }
+              if (twParsed && typeof twParsed === 'object') merged.twByRoute = twParsed;
+              opmsDataByDate[dateVal] = merged;
+              saveOpmsStoredData();
+              lastDayState.dateIndex = 0;
+              lastDayState.dates = getLastDayDates();
+              updateLastDaySection();
+              setProcessLoading(false);
+              updateProcessBtnState();
+              showProcessSuccess(dateVal);
+            }
+            if (excelFile) {
+              var reader = new FileReader();
+              reader.onload = function (e) {
+                try {
+                  opmsParsed = parseOpmsFromWorkbook(XLSX.read(e.target.result, { type: 'array' }));
+                } catch (err) { console.error('OPMS parse error', err); }
+                onDone();
+              };
+              reader.onerror = function () { onDone(); };
+              reader.readAsArrayBuffer(excelFile);
+            }
+            if (twFile) {
+              var readerTw = new FileReader();
+              readerTw.onload = function (e) {
+                try {
+                  twParsed = parseTwFromWorkbook(XLSX.read(e.target.result, { type: 'array' }));
+                } catch (err) { console.error('TW parse error', err); }
+                onDone();
+              };
+              readerTw.onerror = function () { onDone(); };
+              readerTw.readAsArrayBuffer(twFile);
+            }
+          });
+        }
+        var successEl = document.getElementById('opmsProcessSuccess');
+        if (successEl) {
+          function hideSuccessOnChange() {
+            successEl.classList.add('hidden');
+          }
+          if (excelInput) excelInput.addEventListener('change', hideSuccessOnChange);
+          if (twInput) twInput.addEventListener('change', hideSuccessOnChange);
+          if (storeDateEl) storeDateEl.addEventListener('change', hideSuccessOnChange);
+        }
+        var datePrevBtn = document.getElementById('lastDayDatePrev');
+        var dateNextBtn = document.getElementById('lastDayDateNext');
+        var datePickerBtn = document.getElementById('lastDayDatePicker');
+        var dateDropdown = document.getElementById('lastDayDateDropdown');
+        if (datePrevBtn) datePrevBtn.addEventListener('click', function () {
+          if (lastDayState.dateIndex > 0) {
+            lastDayState.dateIndex--;
+            updateLastDaySection();
+          }
+        });
+        if (dateNextBtn) dateNextBtn.addEventListener('click', function () {
+          if (lastDayState.dateIndex < lastDayState.dates.length - 1) {
+            lastDayState.dateIndex++;
+            updateLastDaySection();
+          }
+        });
+        function openDateDropdown() {
+          if (!dateDropdown || !datePickerBtn) return;
+          lastDayState.dates = getLastDayDates();
+          dateDropdown.innerHTML = '';
+          if (lastDayState.dates.length === 0) {
+            var empty = document.createElement('div');
+            empty.className = 'opms-date-dropdown-option';
+            empty.textContent = 'Nenhuma data disponível';
+            empty.style.pointerEvents = 'none';
+            empty.style.opacity = '0.7';
+            dateDropdown.appendChild(empty);
+          } else {
+            lastDayState.dates.forEach(function (d, i) {
+              var opt = document.createElement('button');
+              opt.type = 'button';
+              opt.className = 'opms-date-dropdown-option' + (i === lastDayState.dateIndex ? ' current' : '');
+              opt.textContent = d;
+              opt.setAttribute('role', 'option');
+              opt.setAttribute('data-index', String(i));
+              opt.addEventListener('click', function () {
+                lastDayState.dateIndex = i;
+                dateDropdown.classList.add('hidden');
+                datePickerBtn.setAttribute('aria-expanded', 'false');
+                updateLastDaySection();
+              });
+              dateDropdown.appendChild(opt);
+            });
+          }
+          dateDropdown.classList.remove('hidden');
+          datePickerBtn.setAttribute('aria-expanded', 'true');
+        }
+        function closeDateDropdown() {
+          if (dateDropdown) dateDropdown.classList.add('hidden');
+          if (datePickerBtn) datePickerBtn.setAttribute('aria-expanded', 'false');
+        }
+        if (datePickerBtn && dateDropdown) {
+          datePickerBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            if (dateDropdown.classList.contains('hidden')) openDateDropdown();
+            else closeDateDropdown();
+          });
+        }
+        document.addEventListener('click', function () {
+          closeDateDropdown();
+        });
+        if (dateDropdown) {
+          dateDropdown.addEventListener('click', function (e) {
+            e.stopPropagation();
+          });
+        }
+        updateProcessBtnState();
       }
 
       /** Parse SPMS service item string: extrai HN (Handover), OK (Deliveries), PU (Pickups). DD e PD são somados ao OK. */
@@ -1233,10 +2143,10 @@
         var tabLastDay = document.getElementById('folderLastDay');
         var tabSpms = document.getElementById('folderSpms');
         if (tabDisco) tabDisco.addEventListener('click', function () { switchFolderTab('disco'); });
+        var tabUpload = document.getElementById('folderUpload');
+        if (tabUpload) tabUpload.addEventListener('click', function () { switchFolderTab('upload'); });
         if (tabLastDay) tabLastDay.addEventListener('click', function () { switchFolderTab('lastday'); });
         if (tabSpms) tabSpms.addEventListener('click', function () { switchFolderTab('spms'); });
-        var lastDayLoopFilter = document.getElementById('lastDayFilterLoop');
-        if (lastDayLoopFilter) lastDayLoopFilter.addEventListener('change', function () { updateLastDaySection(); });
         var spmsLoopFilter = document.getElementById('spmsFilterLoop');
         if (spmsLoopFilter) spmsLoopFilter.addEventListener('change', function () { updateSpmsSection(); });
         initDailyOpsModal();
@@ -1339,6 +2249,7 @@
       if (spName) {
         updateDiscoDepotSelect();
         initDisco();
+        initLastDay();
         var discoDepotEl = document.getElementById('discoFilterDepot');
         if (discoDepotEl) discoDepotEl.addEventListener('change', function () { initDisco(); });
       }

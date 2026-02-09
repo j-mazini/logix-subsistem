@@ -62,116 +62,75 @@
     { id: 25, vrn: 'HH88 AGED', vin: 'VF1RFA00065388888', brand: 'Renault', model: 'Trafic', registrationDate: '2012-03-08', fuelType: 'Diesel', vehicleType: 'Van', serviceProvider: 'Metro Freight Partners', color: 'Silver', depot: 'LSE', wrappedVehicle: false, slamLock: false, camera: false, gps: false, bulkhead: false, doors270: false }
   ];
 
-  var MOCK_CONTRACTS = [
+  /* Bandas digressivas BA SP Rates 2025: cada banda [min, max, price]. max=null = última banda (até +inf).
+   * Income = soma por banda: (entregas na banda) × preço; Band 2 = entregas no intervalo Band 2 × preço Band 2, etc. */
+  var DIGRESSIVE_BANDS = {
+    'LL3': [ { min: 1, max: 503, price: 3.81 }, { min: 504, max: 580, price: 3.43 }, { min: 581, max: 657, price: 3.24 }, { min: 658, max: null, price: 3.05 } ],
+    'LL4': [ { min: 1, max: 503, price: 3.81 }, { min: 504, max: 580, price: 3.43 }, { min: 581, max: 657, price: 3.24 }, { min: 658, max: null, price: 3.05 } ],
+    'DY1': [ { min: 1, max: 719, price: 3.66 }, { min: 720, max: 781, price: 3.29 }, { min: 782, max: 843, price: 3.11 }, { min: 844, max: null, price: 2.93 } ],
+    'DY2': [ { min: 1, max: 719, price: 3.66 }, { min: 720, max: 781, price: 3.29 }, { min: 782, max: 843, price: 3.11 }, { min: 844, max: null, price: 2.93 } ],
+    'MD7': [ { min: 1, max: 436, price: 3.38 }, { min: 437, max: 486, price: 3.04 }, { min: 487, max: 536, price: 2.87 }, { min: 537, max: null, price: 2.71 } ]
+  };
+
+  /* Estrutura canónica de depots/loops/rotas (Contract Management + Last Day Operation / planilhas).
+   * deliveryRate = Band 1 para referência; income real usa bandas digressivas (DIGRESSIVE_BANDS). */
+  var CONTRACT_DEPOTS_STRUCTURE = [
     {
-      serviceProvider: 'BA Express',
-      depots: [
-        { name: 'MSE', loops: [
-          { name: 'Loop North', routes: [
-            { name: 'Route 101', type: 'Child', targetDel: 85, targetPu: 12, driver: 'John Smith', postcodes: ['SE1 8XX', 'SE1 9YY', 'SE1 1AA'], deliveries: 12 },
-            { name: 'Route 102', type: 'Flex', targetDel: 90, targetPu: 10, driver: 'Maria Santos', postcodes: ['E1 6AN', 'E1 7BB'], deliveries: 8 },
-            { name: 'Route 103', type: 'Child', targetDel: 78, targetPu: 14, driver: 'Emma Thompson', postcodes: ['SE2 2AA', 'SE2 3BB'], deliveries: 15 }
-          ]},
-          { name: 'Loop South', routes: [
-            { name: 'Route 201', type: 'Child', targetDel: 78, targetPu: 15, driver: 'James Wilson', postcodes: ['SW1A 0AA', 'SW1A 1AB'] },
-            { name: 'Route 202', type: 'Flex', targetDel: 92, targetPu: 9, driver: 'Lucas Lee', postcodes: ['SW2 4XX', 'SW3 5YY'] }
-          ]}
-        ]},
-        { name: 'LCY', loops: [
-          { name: 'Loop East', routes: [
-            { name: 'Route 301', type: 'Flex', targetDel: 95, targetPu: 8, driver: 'Ana Ferreira', postcodes: ['E14 1XX', 'E14 2YY'] },
-            { name: 'Route 302', type: 'Child', targetDel: 82, targetPu: 13, driver: 'Oliver Green', postcodes: ['E15 3AA', 'E16 4BB'] }
-          ]},
-          { name: 'Loop West', routes: [
-            { name: 'Route 303', type: 'Flex', targetDel: 88, targetPu: 11, driver: 'Isabella Martinez', postcodes: ['W1A 1AA', 'W2 2BB'] },
-            { name: 'Route 304', type: 'Child', targetDel: 84, targetPu: 12, driver: 'Rachel Cooper', postcodes: ['W3 3CC', 'W4 4DD'] },
-            { name: 'Route 305', type: 'Flex', targetDel: 91, targetPu: 9, driver: 'Thomas Baker', postcodes: ['W5 5EE'] }
-          ]}
-        ]},
-        { name: 'LSE', loops: [
-          { name: 'Loop Central BA', routes: [
-            { name: 'Route 401', type: 'Child', targetDel: 83, targetPu: 13, driver: 'Victoria Wright', postcodes: ['WC1 1AA'] },
-            { name: 'Route 402', type: 'Flex', targetDel: 89, targetPu: 10, driver: 'Daniel Mitchell', postcodes: ['EC1 1BB', 'EC2 2CC'] }
-          ]}
+      name: 'MSE',
+      loops: [
+        { name: 'MD7', deliveryRate: 3.38, routes: [
+          { name: 'MD7A', type: 'Child', targetDel: 80, targetPu: 10 },
+          { name: 'MD7B', type: 'Child', targetDel: 80, targetPu: 10 },
+          { name: 'MD7C', type: 'Child', targetDel: 80, targetPu: 10 },
+          { name: 'MD7D', type: 'Child', targetDel: 80, targetPu: 10 },
+          { name: 'MD7E', type: 'Child', targetDel: 80, targetPu: 10 },
+          { name: 'MD7X', type: 'Flex', targetDel: 80, targetPu: 10 }
         ]}
       ]
     },
     {
-      serviceProvider: 'Premier Logistics Ltd',
-      depots: [
-        { name: 'LSE', loops: [
-          { name: 'Loop Central', routes: [
-            { name: 'Route A1', type: 'Child', targetDel: 82, targetPu: 14, driver: 'Michael Brown', postcodes: ['WC1A 1AA', 'WC2N 5DU'] },
-            { name: 'Route A2', type: 'Flex', targetDel: 88, targetPu: 11, driver: 'Sofia Rodrigues', postcodes: ['N1 9AG', 'N7 6BU'] },
-            { name: 'Route A3', type: 'Child', targetDel: 80, targetPu: 16, driver: 'Charlotte Taylor', postcodes: ['EC1A 1BB', 'EC2A 2CC'] }
-          ]},
-          { name: 'Loop Outer', routes: [
-            { name: 'Route A4', type: 'Flex', targetDel: 90, targetPu: 10, driver: 'Henry White', postcodes: ['NW1 1AA', 'NW3 2BB'] }
-          ]}
+      name: 'LCY',
+      loops: [
+        { name: 'DY1', deliveryRate: 3.66, routes: [
+          { name: 'DY1A', type: 'Child', targetDel: 80, targetPu: 10 },
+          { name: 'DY1B', type: 'Child', targetDel: 80, targetPu: 10 },
+          { name: 'DY1C', type: 'Child', targetDel: 80, targetPu: 10 },
+          { name: 'DY1X', type: 'Flex', targetDel: 80, targetPu: 10 }
         ]},
-        { name: 'LCY', loops: [
-          { name: 'Loop East LSE', routes: [
-            { name: 'Route B1', type: 'Child', targetDel: 84, targetPu: 12, driver: 'David Clark', postcodes: ['E1 1XX', 'E2 2YY'] },
-            { name: 'Route B2', type: 'Flex', targetDel: 87, targetPu: 11, driver: 'Jessica Campbell', postcodes: ['E3 3ZZ'] }
-          ]}
+        { name: 'DY2', deliveryRate: 3.66, routes: [
+          { name: 'DY2A', type: 'Child', targetDel: 80, targetPu: 10 },
+          { name: 'DY2B', type: 'Child', targetDel: 80, targetPu: 10 },
+          { name: 'DY2C', type: 'Child', targetDel: 80, targetPu: 10 },
+          { name: 'DY2D', type: 'Child', targetDel: 80, targetPu: 10 },
+          { name: 'DY2X', type: 'Flex', targetDel: 80, targetPu: 10 }
         ]}
       ]
     },
     {
-      serviceProvider: 'Swift Haul Solutions',
-      depots: [
-        { name: 'MSE', loops: [
-          { name: 'Loop 1', routes: [
-            { name: 'R1', type: 'Child', targetDel: 80, targetPu: 10, driver: 'David Clark', postcodes: ['RM1 1AA', 'RM2 2BB'] },
-            { name: 'R1b', type: 'Flex', targetDel: 86, targetPu: 11, driver: 'George King', postcodes: ['RM3 3CC'] }
-          ]}
+      name: 'LSE',
+      loops: [
+        { name: 'LL3', deliveryRate: 3.81, routes: [
+          { name: 'LL3A', type: 'Child', targetDel: 80, targetPu: 10 },
+          { name: 'LL3B', type: 'Child', targetDel: 80, targetPu: 10 },
+          { name: 'LL3C', type: 'Child', targetDel: 80, targetPu: 10 },
+          { name: 'LL3D', type: 'Child', targetDel: 80, targetPu: 10 },
+          { name: 'LL3X', type: 'Flex', targetDel: 80, targetPu: 10 }
         ]},
-        { name: 'LCY', loops: [
-          { name: 'Loop 2', routes: [
-            { name: 'R2', type: 'Flex', targetDel: 92, targetPu: 9, driver: 'Emma Thompson', postcodes: ['IG1 1AB', 'IG2 2CD'] }
-          ]}
-        ]},
-        { name: 'LSE', loops: [
-          { name: 'Loop 3', routes: [
-            { name: 'R3', type: 'Child', targetDel: 79, targetPu: 14, driver: 'Amelia Harris', postcodes: ['SE10 1AA', 'SE13 2BB'] }
-          ]}
-        ]}
-      ]
-    },
-    {
-      serviceProvider: 'Metro Freight Partners',
-      depots: [
-        { name: 'MSE', loops: [
-          { name: 'Loop North MFP', routes: [
-            { name: 'M1', type: 'Child', targetDel: 81, targetPu: 13, driver: 'Ana Ferreira', postcodes: ['DA1 1AA', 'DA2 2BB'] },
-            { name: 'M2', type: 'Flex', targetDel: 94, targetPu: 8, driver: 'Oliver Green', postcodes: ['DA3 3CC'] }
-          ]}
-        ]},
-        { name: 'LSE', loops: [
-          { name: 'Loop South MFP', routes: [
-            { name: 'M3', type: 'Child', targetDel: 83, targetPu: 12, driver: 'James Wilson', postcodes: ['BR1 1AA', 'BR2 2BB'] },
-            { name: 'M4', type: 'Flex', targetDel: 90, targetPu: 10, driver: 'Andrew Edwards', postcodes: ['BR3 3CC', 'BR4 4DD'] }
-          ]}
-        ]}
-      ]
-    },
-    {
-      serviceProvider: 'Atlas Transport Services',
-      depots: [
-        { name: 'LSE', loops: [
-          { name: 'Loop ATS', routes: [
-            { name: 'ATS-1', type: 'Child', targetDel: 85, targetPu: 11, driver: 'Michael Brown', postcodes: ['CR0 1AA', 'CR2 2BB'] },
-            { name: 'ATS-2', type: 'Flex', targetDel: 91, targetPu: 9, driver: 'Isabella Martinez', postcodes: ['CR4 3CC', 'CR5 4DD'] },
-            { name: 'ATS-3', type: 'Child', targetDel: 77, targetPu: 15, driver: 'Lucas Lee', postcodes: ['SM1 1AA'] }
-          ]}
-        ]},
-        { name: 'LCY', loops: [
-          { name: 'Loop ATS East', routes: [
-            { name: 'ATS-4', type: 'Flex', targetDel: 89, targetPu: 10, driver: 'Henry White', postcodes: ['E6 1XX', 'E7 2YY'] }
-          ]}
+        { name: 'LL4', deliveryRate: 3.81, routes: [
+          { name: 'LL4A', type: 'Child', targetDel: 80, targetPu: 10 },
+          { name: 'LL4B', type: 'Child', targetDel: 80, targetPu: 10 },
+          { name: 'LL4X', type: 'Flex', targetDel: 80, targetPu: 10 }
         ]}
       ]
     }
+  ];
+
+  var MOCK_CONTRACTS = [
+    { serviceProvider: 'BA Express', depots: CONTRACT_DEPOTS_STRUCTURE },
+    { serviceProvider: 'Premier Logistics Ltd', depots: CONTRACT_DEPOTS_STRUCTURE },
+    { serviceProvider: 'Swift Haul Solutions', depots: CONTRACT_DEPOTS_STRUCTURE },
+    { serviceProvider: 'Metro Freight Partners', depots: CONTRACT_DEPOTS_STRUCTURE },
+    { serviceProvider: 'Atlas Transport Services', depots: CONTRACT_DEPOTS_STRUCTURE }
   ];
 
   var SERVICE_PROVIDERS = [
@@ -293,6 +252,7 @@
     vendors: MOCK_VENDORS,
     vehicles: MOCK_VEHICLES,
     contracts: MOCK_CONTRACTS,
+    digressiveBands: DIGRESSIVE_BANDS,
     serviceProviders: SERVICE_PROVIDERS,
     period: { start: '2025-11-01', end: '2026-01-31' },
     dashboardSummary: {

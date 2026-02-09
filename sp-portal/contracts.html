@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="../contract-management.css" />
   <link rel="stylesheet" href="../sidebar-beam.css" />
   <link rel="stylesheet" href="sp-portal.css" />
+  <link rel="stylesheet" href="../liquid-glass.css" />
 </head>
 <body class="has-beam-sidebar sp-portal">
   <div class="sidebar-wrapper" id="sidebarWrapper">
@@ -98,6 +99,19 @@
 
       var contractData = (window.DHL_MOCK_DATA && window.DHL_MOCK_DATA.contracts) ? window.DHL_MOCK_DATA.contracts : [];
       var spName = getCurrentSp();
+      var ROUTE_TARGETS_STORAGE_KEY = 'dhl_contract_route_targets';
+
+      function getStoredTarget(spNameVal, depotName, routeName) {
+        try {
+          var raw = localStorage.getItem(ROUTE_TARGETS_STORAGE_KEY);
+          if (!raw) return null;
+          var data = JSON.parse(raw);
+          var sp = data[spNameVal];
+          if (!sp) return null;
+          var key = (depotName || '') + '|' + (routeName || '');
+          return sp[key] != null ? Number(sp[key]) : null;
+        } catch (e) { return null; }
+      }
 
       function getFilteredData() {
         if (!spName) return [];
@@ -111,9 +125,12 @@
               for (var L = 0; L < (dep.loops || []).length; L++) {
                 var loop = dep.loops[L];
                 var routes = (loop.routes || []).map(function (r) {
-                  return { name: r.name, type: r.type || 'Child', targetDel: r.targetDel != null ? r.targetDel : 0, targetPu: r.targetPu != null ? r.targetPu : 0, driver: r.driver || '', postcodes: r.postcodes || [] };
+                  var stored = getStoredTarget(prov.serviceProvider, dep.name, r.name);
+                  var target = stored != null && !isNaN(stored) ? stored : (r.targetDel != null ? r.targetDel : 0);
+                  return { name: r.name, type: r.type || 'Child', target: target, driver: r.driver || '', postcodes: r.postcodes || [] };
                 });
-                loops.push({ name: loop.name, routes: routes });
+                var rate = typeof loop.deliveryRate === 'number' ? loop.deliveryRate : 0;
+                loops.push({ name: loop.name, deliveryRate: rate, routes: routes });
               }
               depots.push({ name: dep.name, loops: loops });
             }
@@ -186,8 +203,7 @@
                 var route = loop.routes[r];
                 var routeId = nextId('route');
                 var subpostcodes = postcodesToSubpostcodes(route.postcodes);
-                var targetDel = route.targetDel != null ? route.targetDel : 0;
-                var targetPu = route.targetPu != null ? route.targetPu : 0;
+                var targetVal = route.target != null ? route.target : (route.targetDel != null ? route.targetDel : 0);
                 var typeClass = (route.type || 'Child') === 'Flex' ? 'contract-route-type-flex' : 'contract-route-type-child';
                 html += '<div class="accordion accordion-flush mb-2">';
                 html += '<div class="accordion-item">';
@@ -197,7 +213,10 @@
                 html += '<div class="contract-route-meta">';
                 html += '<span>Type: <strong><span class="' + typeClass + '">' + (route.type || 'Child') + '</span></strong></span>';
                 if (route.driver) html += '<span>Driver: <strong>' + escapeHtml(route.driver) + '</strong></span>';
-                html += '<span>Target Del: <strong>' + targetDel + '</strong></span><span>Target PU: <strong>' + targetPu + '</strong></span>';
+                html += '<span>Target: <strong>' + targetVal + '</strong></span>';
+                var rateVal = (loop.deliveryRate != null && !isNaN(loop.deliveryRate)) ? loop.deliveryRate : 0;
+                var rateStr = rateVal > 0 ? '£' + rateVal.toFixed(2) : '—';
+                html += '<span>Rate: <strong>' + rateStr + '</strong> <span class="text-muted small">(Band 1)</span></span>';
                 html += '</div><p class="small text-muted mb-2"><span class="contract-badge contract-badge-sub">Subpostcode</span></p>';
                 html += '<div class="contract-subpostcodes">';
                 for (var s = 0; s < subpostcodes.length; s++) html += '<span class="contract-subpostcode">' + escapeHtml(subpostcodes[s]) + '</span>';

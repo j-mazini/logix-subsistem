@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="vendor-admin-view.css" />
   <link rel="stylesheet" href="contract-management.css" />
   <link rel="stylesheet" href="sidebar-beam.css" />
+  <link rel="stylesheet" href="liquid-glass.css" />
 </head>
 <body class="has-beam-sidebar">
   <div class="sidebar-wrapper" id="sidebarWrapper">
@@ -195,6 +196,31 @@
       }
 
       var contractData = (window.DHL_MOCK_DATA && window.DHL_MOCK_DATA.contracts) ? window.DHL_MOCK_DATA.contracts : [];
+      var ROUTE_TARGETS_STORAGE_KEY = 'dhl_contract_route_targets';
+
+      function getStoredTarget(spName, depotName, routeName) {
+        try {
+          var raw = localStorage.getItem(ROUTE_TARGETS_STORAGE_KEY);
+          if (!raw) return null;
+          var data = JSON.parse(raw);
+          var sp = data[spName];
+          if (!sp) return null;
+          var key = (depotName || '') + '|' + (routeName || '');
+          return sp[key] != null ? Number(sp[key]) : null;
+        } catch (e) { return null; }
+      }
+
+      function setStoredTarget(spName, depotName, routeName, value) {
+        try {
+          var raw = localStorage.getItem(ROUTE_TARGETS_STORAGE_KEY);
+          var data = raw ? JSON.parse(raw) : {};
+          if (!data[spName]) data[spName] = {};
+          var key = (depotName || '') + '|' + (routeName || '');
+          if (value === '' || value == null || isNaN(Number(value))) delete data[spName][key];
+          else data[spName][key] = Number(value);
+          localStorage.setItem(ROUTE_TARGETS_STORAGE_KEY, JSON.stringify(data));
+        } catch (e) {}
+      }
 
       function escapeHtml(s) {
         if (s == null) return '';
@@ -256,7 +282,8 @@
               postcodes: r.postcodes || []
             };
           });
-          loops.push({ name: loop.name, routes: routes });
+          var rate = typeof loop.deliveryRate === 'number' ? loop.deliveryRate : 0;
+          loops.push({ name: loop.name, deliveryRate: rate, routes: routes });
           }
           if (loops.length) depots.push({ name: dep.name, loops: loops });
         }
@@ -408,11 +435,13 @@
                 var route = loop.routes[r];
                 var routeId = nextId('route');
                 var subpostcodes = postcodesToSubpostcodes(route.postcodes);
-                var targetDel = route.targetDel != null ? route.targetDel : 0;
-                var targetPu = route.targetPu != null ? route.targetPu : 0;
-                var targetTotal = targetDel + targetPu;
+                var storedTarget = getStoredTarget(prov.serviceProvider, dep.name, route.name);
+                var targetVal = storedTarget != null ? storedTarget : (route.targetDel != null ? route.targetDel : 0);
                 var typeClass = (route.type || 'Child') === 'Flex' ? 'contract-route-type-flex' : 'contract-route-type-child';
                 var typeLabel = (route.type || 'Child');
+                var spEsc = escapeHtml(prov.serviceProvider).replace(/'/g, '&#39;');
+                var depEsc = escapeHtml(dep.name || '').replace(/'/g, '&#39;');
+                var routeEsc = escapeHtml(route.name || '').replace(/'/g, '&#39;');
                 html += '<div class="accordion accordion-flush mb-2">';
                 html += '<div class="accordion-item">';
                 html += '<h3 class="accordion-header">';
@@ -424,9 +453,14 @@
                 html += '<div class="contract-route-meta">';
                 html += '<span>Type: <strong><span class="' + typeClass + '">' + escapeHtml(typeLabel) + '</span></strong></span>';
                 if (route.driver) html += '<span>Driver: <strong>' + escapeHtml(route.driver) + '</strong></span>';
-                html += '<span>Target Del: <strong>' + targetDel + '</strong></span>';
-                html += '<span>Target PU: <strong>' + targetPu + '</strong></span>';
-                html += '<span>Target Total: <strong>' + targetTotal + '</strong></span>';
+                html += '<span>Target: <strong class="js-route-target-display">' + targetVal + '</strong></span>';
+                var rateVal = (loop.deliveryRate != null && !isNaN(loop.deliveryRate)) ? loop.deliveryRate : 0;
+                var rateStr = rateVal > 0 ? '£' + rateVal.toFixed(2) : '—';
+                html += '<span>Rate: <strong>' + rateStr + '</strong> <span class="text-muted small">(Band 1)</span></span>';
+                html += '</div>';
+                html += '<div class="contract-route-target-edit mt-2 mb-2">';
+                html += '<label class="form-label small mb-1">Target — parâmetro para comparação e % de aproveitamento</label>';
+                html += '<input type="number" min="0" step="1" class="form-control form-control-sm contract-route-target-input" value="' + targetVal + '" data-sp="' + spEsc + '" data-depot="' + depEsc + '" data-route="' + routeEsc + '" placeholder="Target" aria-label="Target da rota" />';
                 html += '</div>';
                 html += '<p class="small text-muted mb-2"><span class="contract-badge contract-badge-sub">Subpostcode</span></p>';
                 html += '<div class="contract-subpostcodes">';
@@ -488,6 +522,24 @@
         var depotSel = document.getElementById('filterDepot');
         if (depotSel) depotSel.value = '';
         run();
+      });
+
+      document.getElementById('contractTree').addEventListener('input', function (e) {
+        var input = e.target.closest('.contract-route-target-input');
+        if (!input) return;
+        var sp = input.getAttribute('data-sp');
+        var depot = input.getAttribute('data-depot');
+        var route = input.getAttribute('data-route');
+        if (!sp || !route) return;
+        var val = input.value.trim();
+        var num = val === '' ? null : parseInt(val, 10);
+        setStoredTarget(sp, depot, route, num);
+        var display = input.closest('.accordion-body');
+        if (display) {
+          var targetDisplay = display.querySelector('.js-route-target-display');
+          var t = isNaN(num) || num == null ? 0 : num;
+          if (targetDisplay) targetDisplay.textContent = t;
+        }
       });
 
       run();
