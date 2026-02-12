@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vehicles – Service Provider Portal</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../vendor-admin-view.css" />
+  <link rel="stylesheet" href="../../sidebar-beam.css" />
+  <link rel="stylesheet" href="../sp-portal.css" />
+  <link rel="stylesheet" href="../vehicles-page.css" />
+  <link rel="stylesheet" href="../../liquid-glass.css" />
+  <link rel="stylesheet" href="../../modern-ui.css" />
+  <script src="../sp-portal-responsive.js"></script>
+</head>
+<body class="has-beam-sidebar sp-portal">
+  <div class="sidebar-wrapper" id="sidebarWrapper">
+    <div class="sidebar-gap" id="sidebarGap" aria-hidden="true"></div>
+    <div class="beam-overlay" id="beamOverlay" aria-hidden="true"></div>
+    <nav class="beam-sidebar" id="beamSidebar" data-state="closed" role="navigation" aria-label="Service Provider menu">
+      <button type="button" class="beam-trigger" id="beamTrigger" aria-label="Open menu" aria-expanded="false">
+        <i class="bi bi-list beam-icon-menu"></i>
+        <i class="bi bi-x-lg beam-icon-close"></i>
+      </button>
+      <div class="beam-rail" aria-hidden="true"></div>
+      <div class="beam-plates">
+        <a href="../dashboard/index.html" class="beam-plate"><i class="bi bi-house-door-fill beam-plate-icon"></i><span>Home</span></a>
+        <a href="../profile/index.html" class="beam-plate"><i class="bi bi-building beam-plate-icon"></i><span>My Profile</span></a>
+        <a href="../drivers/index.html" class="beam-plate"><i class="bi bi-people-fill beam-plate-icon"></i><span>Drivers</span></a>
+        <a href="index.html" class="beam-plate active"><i class="bi bi-truck beam-plate-icon"></i><span>Vehicles</span></a>
+        <a href="../contracts/index.html" class="beam-plate"><i class="bi bi-file-earmark-text beam-plate-icon"></i><span>Contracts</span></a>
+        <a href="../sop-feed/index.html" class="beam-plate"><i class="bi bi-journal-bookmark-fill beam-plate-icon"></i><span>SOP Feed</span></a>
+        <a href="../../dhl/access-select/index.html" class="beam-plate beam-plate--switch"><i class="bi bi-arrow-left-right beam-plate-icon"></i><span>Select access</span></a>
+      </div>
+    </nav>
+
+    <div class="sidebar-inset" id="sidebarInset">
+      <div class="liquid-glass-page-bg" aria-hidden="true"></div>
+      <div class="page-container">
+        <div class="page-inner">
+          <main class="vendor-admin-main pt-4">
+            <div id="spNotFound" class="alert alert-warning hidden">Service Provider not set. Open with <code>?sp=YourCompany</code>.</div>
+
+            <div id="spVehicleContent" class="hidden">
+              <!-- ModernPageHeader -->
+              <div class="vehicles-page-header mb-4">
+                <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+                  <div>
+                    <h1 class="vehicles-page-title m-0">Vehicles</h1>
+                    <p class="vehicles-page-subtitle m-0">Vehicle fleet management</p>
+                    <div class="vehicles-page-metrics">
+                      <div class="vehicles-page-metric"><span class="vehicles-page-metric-label">Total</span><span class="vehicles-page-metric-value" id="metricTotal">0</span></div>
+                      <div class="vehicles-page-metric"><span class="vehicles-page-metric-label">Active</span><span class="vehicles-page-metric-value" id="metricActive">0</span></div>
+                      <div class="vehicles-page-metric"><span class="vehicles-page-metric-label">Inactive</span><span class="vehicles-page-metric-value" id="metricInactive">0</span></div>
+                      <div class="vehicles-page-metric"><span class="vehicles-page-metric-label">Available</span><span class="vehicles-page-metric-value" id="metricAvailable">0</span></div>
+                    </div>
+                  </div>
+                  <div class="d-flex align-items-center">
+                    <img id="spHeaderAvatar" src="" alt="" class="admin-header-user-avatar admin-header-user-avatar--img me-2" style="display:none;" />
+                    <span class="admin-header-user-name" id="spHeaderName">—</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- VehicleFilters: gradient bar, search + status + fuel + New + Export -->
+              <nav class="vehicles-filters-bar mb-0">
+                <div class="vehicles-filters-inner">
+                  <input type="search" id="vehicleSearch" class="vehicles-filters-search" placeholder="Search by name..." />
+                  <select id="vehicleStatusFilter" class="vehicles-filters-select">
+                    <option value="all">All Statuses</option>
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                  </select>
+                  <select id="vehicleFuelFilter" class="vehicles-filters-select">
+                    <option value="all">All Fuel Types</option>
+                    <option value="Diesel">Diesel</option>
+                    <option value="Electric">Electric</option>
+                  </select>
+                  <div class="vehicles-filters-actions">
+                    <button type="button" class="btn btn-primary" id="addVehicleBtn">New</button>
+                    <div class="dropdown">
+                      <button type="button" class="btn btn-outline-secondary" id="vehicleExportBtn" data-bs-toggle="dropdown" aria-expanded="false">Export</button>
+                      <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="#" id="vehicleExportExcel">Excel</a></li>
+                        <li><a class="dropdown-item" href="#" id="vehicleExportPdf">PDF</a></li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </nav>
+
+              <!-- VehicleTable -->
+              <div class="vehicles-table-wrap">
+                <table class="vehicles-table">
+                  <thead>
+                    <tr>
+                      <th class="vehicles-th-sort" data-sort="vrn">VRN</th>
+                      <th class="vehicles-th-sort" data-sort="brand">Manufacturer</th>
+                      <th class="vehicles-th-sort" data-sort="model">Model</th>
+                      <th class="vehicles-th-sort" data-sort="registrationDate">Registration Date</th>
+                      <th class="vehicles-th-sort" data-sort="fuelType">Fuel Type</th>
+                      <th class="vehicles-th-sort" data-sort="status">Status</th>
+                      <th class="vehicles-th-actions">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="vehicleTableBody"></tbody>
+                </table>
+                <div id="vehicleEmptyState" class="vehicles-table-empty hidden">No vehicles match the current filters.</div>
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VehicleModal – exact copy of Next.js (Add New Vehicle / Edit Vehicle) -->
+  <div id="vehicleModal" class="modal fade" tabindex="-1" aria-labelledby="vehicleModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+      <div class="modal-content vehicle-modal-content">
+        <div class="modal-header vehicle-modal-header border-0">
+          <h5 id="vehicleModalTitle" class="modal-title">Add New Vehicle</h5>
+          <button type="button" class="vehicle-modal-close btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body vehicle-modal-body">
+          <form id="vehicleForm">
+            <!-- Basic Information -->
+            <div class="vehicle-modal-section">
+              <h6 class="vehicle-modal-section-title">Basic Information</h6>
+              <div class="vehicle-modal-grid-2 row g-4">
+                <div class="col-md-6">
+                  <label class="vehicle-modal-label" for="vrn">Registration Plate <span class="required">*</span></label>
+                  <input type="text" id="vrn" class="vehicle-modal-input form-control" placeholder="e.g., AB12CDE" required minlength="1" />
+                </div>
+                <div class="col-md-6">
+                  <label class="vehicle-modal-label" for="brand">Manufacturer <span class="required">*</span></label>
+                  <input type="text" id="brand" class="vehicle-modal-input form-control" placeholder="e.g., Ford, Toyota, BMW" required />
+                </div>
+                <div class="col-md-6">
+                  <label class="vehicle-modal-label" for="model">Model <span class="required">*</span></label>
+                  <input type="text" id="model" class="vehicle-modal-input form-control" placeholder="e.g., Focus, Corolla" required />
+                </div>
+                <div class="col-md-6">
+                  <label class="vehicle-modal-label" for="registrationDate">Registration Date <span class="required">*</span></label>
+                  <input type="date" id="registrationDate" class="vehicle-modal-input form-control" required />
+                </div>
+                <div class="col-md-6">
+                  <label class="vehicle-modal-label" for="color">Color <span class="required">*</span></label>
+                  <input type="text" id="color" class="vehicle-modal-input form-control" placeholder="e.g., Blue, Red, Black" required />
+                </div>
+                <div class="col-md-6">
+                  <label class="vehicle-modal-label" for="fuelType">Fuel Type</label>
+                  <select id="fuelType" class="vehicle-modal-select form-select">
+                    <option value="Diesel">Diesel</option>
+                    <option value="Electric">Electric</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="vehicle-modal-label" for="vehicleType">Vehicle Type</label>
+                  <select id="vehicleType" class="vehicle-modal-select form-select">
+                    <option value="">Select Vehicle Type</option>
+                    <option value="Van">Van</option>
+                    <option value="Car">Car</option>
+                    <option value="Rigid">Rigid</option>
+                    <option value="HGV">HGV</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="vehicle-modal-label" for="depot">Depot <span class="required">*</span></label>
+                  <select id="depot" class="vehicle-modal-select form-select" required></select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Status -->
+            <div class="vehicle-modal-section">
+              <h6 class="vehicle-modal-section-title">Status</h6>
+              <div class="vehicle-modal-grid-2 row g-4">
+                <div class="col-md-6">
+                  <label class="vehicle-modal-label" for="status">Status</label>
+                  <select id="status" class="vehicle-modal-select form-select">
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Technical Information -->
+            <div class="vehicle-modal-section">
+              <h6 class="vehicle-modal-section-title">Technical Information</h6>
+              <div class="vehicle-modal-grid-4 row g-4">
+                <div class="col-6 col-md-4">
+                  <div class="vehicle-modal-check-wrap">
+                    <input type="checkbox" id="wrappedVehicle" class="form-check-input" />
+                    <label for="wrappedVehicle">Wrapped</label>
+                  </div>
+                </div>
+                <div class="col-6 col-md-4">
+                  <div class="vehicle-modal-check-wrap">
+                    <input type="checkbox" id="slamLock" class="form-check-input" />
+                    <label for="slamLock">Slam Lock</label>
+                  </div>
+                </div>
+                <div class="col-6 col-md-4">
+                  <div class="vehicle-modal-check-wrap">
+                    <input type="checkbox" id="camera" class="form-check-input" />
+                    <label for="camera">Camera</label>
+                  </div>
+                </div>
+                <div class="col-6 col-md-4">
+                  <div class="vehicle-modal-check-wrap">
+                    <input type="checkbox" id="gps" class="form-check-input" />
+                    <label for="gps">GPS</label>
+                  </div>
+                </div>
+                <div class="col-6 col-md-4">
+                  <div class="vehicle-modal-check-wrap">
+                    <input type="checkbox" id="bulkhead" class="form-check-input" />
+                    <label for="bulkhead">Bulkhead</label>
+                  </div>
+                </div>
+                <div class="col-6 col-md-4">
+                  <div class="vehicle-modal-check-wrap">
+                    <input type="checkbox" id="doors270" class="form-check-input" />
+                    <label for="doors270">270° Doors</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Additional Information -->
+            <div class="vehicle-modal-section">
+              <h6 class="vehicle-modal-section-title">Additional Information</h6>
+              <div>
+                <label class="vehicle-modal-label" for="additionalNotes">Additional Notes</label>
+                <textarea id="additionalNotes" class="vehicle-modal-textarea form-control" rows="3" placeholder="Optional notes..."></textarea>
+              </div>
+            </div>
+
+            <div class="vehicle-modal-footer border-top mt-3 pt-3">
+              <button type="button" class="btn-cancel btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn-save btn btn-primary" id="vehicleFormSubmit">Save Vehicle</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DeleteVehicleModal – exact Next.js -->
+  <div id="deleteVehicleModal" class="modal fade vehicle-delete-modal" tabindex="-1" aria-labelledby="deleteVehicleModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header border-bottom">
+          <h5 class="modal-title" id="deleteVehicleModalTitle">Confirm Delete</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p class="mb-2">Are you sure you want to delete the vehicle with VRN <span id="deleteVehicleVrn" class="vehicles-vrn-plate">—</span>?</p>
+          <p class="text-danger small mb-0">This action cannot be undone.</p>
+        </div>
+        <div class="modal-footer border-top bg-light">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-danger d-inline-flex align-items-center gap-2" id="deleteVehicleConfirmBtn">
+            <i class="bi bi-trash-fill"></i>
+            <span>Delete Vehicle</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../../dhl-mock-data.js"></script>
+  <script src="../../beam-sidebar.js"></script>
+  <script src="../vehicles-vendor.js"></script>
+</body>
+</html>

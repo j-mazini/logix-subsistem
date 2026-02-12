@@ -3416,36 +3416,36 @@ html[data-viewport="xl"] .sp-portal .page-container {
 
 .dashboard-kpi-grid--compact {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 1rem 1.25rem;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 0.5rem;
   align-content: stretch;
 }
 
 .dashboard-kpi-grid--compact .dashboard-kpi-card {
-  padding: 1.25rem 1rem;
-  min-height: 120px;
+  padding: 0.5rem 0.5rem;
+  min-height: 72px;
   justify-content: center;
 }
 
 .dashboard-kpi-grid--compact .dashboard-kpi-icon-wrap {
-  width: 3.25rem;
-  height: 3.25rem;
-  font-size: 1.6rem;
-  border-radius: 0.875rem;
+  width: 2rem;
+  height: 2rem;
+  font-size: 1rem;
+  border-radius: 0.5rem;
 }
 
 .dashboard-kpi-grid--compact .dashboard-kpi-value {
-  font-size: 1.6rem;
-  font-weight: 800;
+  font-size: 1rem;
+  font-weight: 700;
 }
 
 .dashboard-kpi-grid--compact .dashboard-kpi-label {
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: 0.65rem;
+  font-weight: 500;
 }
 
 .dashboard-kpi-grid--compact .dashboard-kpi-content {
-  gap: 0.35rem;
+  gap: 0.3rem;
 }
 
 /* Time Window: círculo de performance na homepage (e no modal) */
@@ -3793,15 +3793,16 @@ html[data-viewport="xl"] .sp-portal .page-container {
   --premium-bg-subtle: #f8fafc;
 }
 
-/* Fundo da página – mais refinado */
+/* Fundo da página – alinhado ao sistema base (Logixsphere) */
 body.sp-portal .liquid-glass-page-bg {
-  background: linear-gradient(165deg, #f8fafc 0%, #f1f5f9 30%, #eef2ff 70%, #f5f3ff 100%);
+  background: linear-gradient(135deg, #f1f5f9 0%, #e8f0f5 35%, #f1f5f9 100%);
 }
 body.sp-portal .liquid-glass-page-bg::before {
-  background: radial-gradient(1000px 400px at 10% 5%, rgba(79, 70, 229, 0.06), transparent 50%),
-              radial-gradient(900px 350px at 90% 10%, rgba(99, 102, 241, 0.05), transparent 50%);
-  filter: blur(20px) saturate(120%);
-  opacity: 0.9;
+  background: radial-gradient(900px 380px at 18% 12%, rgba(99, 102, 241, 0.24), transparent 60%),
+              radial-gradient(880px 360px at 82% 18%, rgba(236, 72, 153, 0.20), transparent 58%),
+              linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.08) 50%, rgba(236, 72, 153, 0.06) 100%);
+  filter: blur(14px) saturate(160%);
+  opacity: 1;
 }
 
 body.sp-portal .sidebar-inset,
@@ -4317,7 +4318,8 @@ body.sp-portal .page-inner {
   flex: 0 0 auto;
   min-width: 120px;
   max-width: 160px;
-  animation: sp-goals-circle-in 0.45s ease-out backwards;
+  opacity: 1;
+  animation: sp-goals-circle-in 0.45s ease-out both;
 }
 .sp-portal .sp-folder-goals-inline .opms-circle-item:nth-child(1) { animation-delay: 0.08s; }
 .sp-portal .sp-folder-goals-inline .opms-circle-item:nth-child(2) { animation-delay: 0.14s; }
@@ -4778,4 +4780,127 @@ body.sp-portal .page-inner {
   font-size: 1.1rem;
   font-weight: 700;
   color: #0f172a;
+}
+
+/* Disco: animação nos mini KPI cards */
+.sp-portal #spDiscoBlock .sp-module-kpi-card {
+  animation: sp-disco-card-float 4s ease-in-out infinite;
+}
+.sp-portal #spDiscoBlock .sp-module-kpi-card:nth-child(2) { animation-delay: 0.2s; }
+.sp-portal #spDiscoBlock .sp-module-kpi-card:nth-child(3) { animation-delay: 0.4s; }
+.sp-portal #spDiscoBlock .sp-module-kpi-card:nth-child(4) { animation-delay: 0.6s; }
+.sp-portal #spDiscoBlock .sp-module-kpi-card:nth-child(5) { animation-delay: 0.8s; }
+@keyframes sp-disco-card-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+/* ========== Cards modulares (ícone no header, animação) ========== */
+.sp-portal .sp-dashboard-module-card {
+  border: 0;
+  border-radius: 1rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  background: linear-gradient(145deg, #ffffff 0%, #fafbfc 100%);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  animation: sp-module-card-in 0.5s ease-out backwards;
+}
+.sp-portal .sp-dashboard-module-card:hover {
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.08), 0 0 24px rgba(99, 102, 241, 0.08);
+}
+.sp-portal .sp-module-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: transparent;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  flex-wrap: wrap;
+}
+.sp-portal .sp-module-card-header-icon {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.sp-portal .sp-dashboard-module-card:hover .sp-module-card-header-icon {
+  transform: scale(1.05);
+}
+.sp-portal .sp-module-card-header-icon--disco {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+}
+.sp-portal .sp-module-card-header-icon--operations {
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(14, 165, 233, 0.35);
+}
+.sp-portal .sp-module-card-header-icon--compliance {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(34, 197, 94, 0.35);
+}
+.sp-portal .sp-module-card-header-icon--vehicles {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+}
+.sp-portal .sp-module-inner-card {
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  transition: transform 0.25s ease, box-shadow 0.3s ease;
+  animation: sp-inner-card-in 0.4s ease-out backwards;
+}
+.sp-portal .sp-module-inner-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.12);
+}
+.sp-portal .sp-module-inner-card[data-module-delay="0"] { animation-delay: 0.05s; }
+.sp-portal .sp-module-inner-card[data-module-delay="1"] { animation-delay: 0.1s; }
+.sp-portal .sp-module-inner-card[data-module-delay="2"] { animation-delay: 0.15s; }
+.sp-portal .sp-module-inner-card[data-module-delay="3"] { animation-delay: 0.2s; }
+@keyframes sp-module-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes sp-inner-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.sp-portal .sp-module-kpi-card-icon {
+  display: block;
+  font-size: 1.5rem;
+  margin-bottom: 0.35rem;
+  opacity: 0.85;
+}
+.sp-portal .sp-module-kpi-card:hover .sp-module-kpi-card-icon {
+  animation: sp-icon-pulse 0.6s ease;
+}
+@keyframes sp-icon-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.85; }
+  50% { transform: scale(1.15); opacity: 1; }
+}
+.sp-portal .sp-module-kpi {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.sp-portal .sp-module-kpi:hover {
+  transform: translateY(-2px);
 }

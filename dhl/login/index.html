@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Login – DHL Subsystem</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Sans+Pro:wght@300;400;600;700&display=swap" rel="stylesheet" />
+  <style>
+/* Login – DHL (tudo em um ficheiro) */
+:root {
+  --login-primary: #2c3e50;
+  --login-secondary: #3498db;
+  --login-accent: #00d4ff;
+  --login-radius: 12px;
+  --login-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  --login-transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+*,*::before,*::after{box-sizing:border-box;}
+html,body{margin:0;padding:0;width:100%;min-height:100vh;height:100%;}
+.login-page{font-family:'Inter',system-ui,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+.login-page__background{position:fixed;inset:0;z-index:0;background:linear-gradient(160deg,#1e3a5f 0%,#2980b9 40%,#0d47a1 100%) center/cover no-repeat fixed;}
+#tsparticles{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;pointer-events:none!important;}
+#tsparticles canvas{pointer-events:none!important;}
+.login-page__main{position:relative;z-index:10;width:100%;max-width:420px;padding:24px;}
+.login-card{background:rgba(255,255,255,0.2);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.4);border-radius:24px;padding:40px 36px;box-shadow:0 16px 48px rgba(0,0,0,0.15),0 0 0 1px rgba(255,255,255,0.3) inset;transition:transform var(--login-transition),box-shadow var(--login-transition);animation:login-card-enter 0.6s var(--login-transition) forwards;}
+.login-card:hover{box-shadow:0 12px 40px rgba(0,0,0,0.25),0 0 50px rgba(52,152,219,0.25);}
+.login-card--exiting{animation:login-card-exit 0.5s ease-out forwards;}
+@keyframes login-card-enter{from{opacity:0;transform:scale(0.96) translateY(24px);}to{opacity:1;transform:scale(1) translateY(0);}}
+@keyframes login-card-exit{to{opacity:0;transform:scale(0.95) translateY(-16px);filter:blur(8px);}}
+.login-card__form{display:flex;flex-direction:column;gap:20px;}
+.login-card__feedback{padding:12px 16px;border-radius:var(--login-radius);font-size:0.9rem;text-align:center;}
+.login-card__feedback[data-type="error"]{background:rgba(231,76,60,0.15);color:#ff6b6b;border:1px solid rgba(231,76,60,0.3);}
+.login-card__feedback[data-type="success"]{background:rgba(39,174,96,0.15);color:#51cf66;border:1px solid rgba(39,174,96,0.3);}
+.login-card__field{display:flex;flex-direction:column;gap:8px;}
+.login-card__label{display:flex;align-items:center;gap:8px;font-size:0.85rem;font-weight:600;color:rgba(255,255,255,0.95);text-transform:uppercase;letter-spacing:0.05em;}
+.login-card__label i{font-size:1rem;opacity:0.85;}
+.login-card__input-wrap{position:relative;}
+.login-card__input{width:100%;padding:14px 18px;background:rgba(255,255,255,0.25);border:1px solid rgba(255,255,255,0.35);border-radius:14px;color:#fff;font-size:1rem;font-family:inherit;transition:background 0.2s,border-color 0.2s,box-shadow 0.2s;}
+.login-card__input::placeholder{color:rgba(255,255,255,0.5);}
+.login-card__input:focus{outline:none;background:rgba(255,255,255,0.35);border-color:var(--login-secondary);box-shadow:0 0 0 3px rgba(52,152,219,0.3);}
+.login-card__options{display:flex;align-items:center;}
+.login-card__checkbox{display:flex;align-items:center;gap:10px;font-size:0.9rem;color:rgba(255,255,255,0.9);cursor:pointer;user-select:none;}
+.login-card__checkbox input{width:20px;height:20px;accent-color:var(--login-secondary);cursor:pointer;}
+.login-card__submit{width:100%;padding:16px 24px;margin-top:8px;background:linear-gradient(135deg,var(--login-primary) 0%,var(--login-secondary) 100%);border:none;border-radius:var(--login-radius);color:#fff;font-size:1rem;font-weight:600;font-family:inherit;text-transform:uppercase;letter-spacing:0.08em;cursor:pointer;transition:transform 0.2s,box-shadow 0.2s;box-shadow:0 4px 20px rgba(52,152,219,0.4);}
+.login-card__submit:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 28px rgba(52,152,219,0.5);}
+.login-card__submit:disabled{opacity:0.7;cursor:not-allowed;transform:none;}
+.login-card__footer{text-align:center;margin:8px 0 0;}
+.login-card__link{color:rgba(255,255,255,0.8);font-size:0.9rem;text-decoration:none;}
+.login-card__link:hover{color:var(--login-accent);}
+.login-overlay{position:fixed;inset:0;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;background:transparent;opacity:0;visibility:hidden;clip-path:circle(0% at 50% 50%);pointer-events:none;transition:opacity 0.4s ease,visibility 0.4s ease,clip-path 0.8s cubic-bezier(0.34,1.56,0.64,1);}
+.login-overlay--visible{z-index:9999;opacity:1;visibility:visible;clip-path:circle(150vmax at 50% 50%);pointer-events:auto;background:linear-gradient(135deg,#f8fafc 0%,#fff 50%,#f8fafc 100%);backdrop-filter:blur(12px);}
+.login-overlay__loader{position:relative;width:180px;height:180px;opacity:0;transform:scale(0.4);transition:opacity 0.6s cubic-bezier(0.34,1.56,0.64,1),transform 0.6s cubic-bezier(0.34,1.56,0.64,1);}
+.login-overlay__loader--visible{opacity:1;transform:scale(1);}
+.login-overlay__loader--exit{opacity:0;transform:scale(1.2);transition:opacity 0.5s ease-out,transform 0.5s ease-out;}
+.loader{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;}
+.loader__grid{position:absolute;inset:-20%;background-image:linear-gradient(rgba(52,152,219,0.08) 1px,transparent 1px),linear-gradient(90deg,rgba(52,152,219,0.08) 1px,transparent 1px);background-size:24px 24px;border-radius:50%;animation:loader-grid-rotate 20s linear infinite;}
+@keyframes loader-grid-rotate{to{transform:rotate(360deg);}}
+.loader__ring{position:absolute;border-radius:50%;}
+.loader__ring--outer{inset:-8%;background:conic-gradient(from 0deg,transparent 0deg 250deg,var(--login-accent) 280deg,var(--login-secondary) 320deg,transparent 360deg);mask:radial-gradient(circle,transparent 70%,black 71%,black 73%,transparent 74%);-webkit-mask:radial-gradient(circle,transparent 70%,black 71%,black 73%,transparent 74%);animation:loader-ring-spin 2s cubic-bezier(0.5,0,0.5,1) infinite;}
+.loader__ring--mid{inset:8%;background:conic-gradient(from 180deg,transparent 0deg 250deg,var(--login-secondary) 280deg,var(--login-accent) 320deg,transparent 360deg);mask:radial-gradient(circle,transparent 70%,black 71%,black 73%,transparent 74%);-webkit-mask:radial-gradient(circle,transparent 70%,black 71%,black 73%,transparent 74%);animation:loader-ring-spin 1.4s cubic-bezier(0.5,0,0.5,1) infinite reverse;}
+.loader__ring--inner{inset:24%;background:conic-gradient(from 90deg,var(--login-secondary) 0deg,var(--login-accent) 120deg,var(--login-secondary) 240deg,transparent 360deg);mask:radial-gradient(circle,transparent 70%,black 71%,black 73%,transparent 74%);-webkit-mask:radial-gradient(circle,transparent 70%,black 71%,black 73%,transparent 74%);animation:loader-ring-spin 0.9s cubic-bezier(0.5,0,0.5,1) infinite;}
+@keyframes loader-ring-spin{to{transform:rotate(360deg);}}
+.loader__orbit{position:absolute;inset:0;animation:loader-orbit-spin 3s linear infinite;}
+.loader__orbit--2{animation-delay:-0.5s;}.loader__orbit--3{animation-delay:-1s;}.loader__orbit--4{animation-delay:-1.5s;}.loader__orbit--5{animation-delay:-2s;}.loader__orbit--6{animation-delay:-2.5s;}
+.loader__dot{position:absolute;top:50%;left:50%;width:8px;height:8px;margin:-4px 0 0 -4px;background:linear-gradient(135deg,var(--login-accent),var(--login-secondary));border-radius:50%;box-shadow:0 0 14px var(--login-accent),0 0 28px rgba(0,212,255,0.5);transform:translate(-50%,-50%) translateY(-72px);animation:loader-dot-pulse 1.5s ease-in-out infinite;}
+.loader__orbit--2 .loader__dot{animation-delay:0.1s;}.loader__orbit--3 .loader__dot{animation-delay:0.2s;}.loader__orbit--4 .loader__dot{animation-delay:0.3s;}.loader__orbit--5 .loader__dot{animation-delay:0.4s;}.loader__orbit--6 .loader__dot{animation-delay:0.5s;}
+@keyframes loader-orbit-spin{to{transform:rotate(360deg);}}
+@keyframes loader-dot-pulse{0%,100%{opacity:1;transform:translate(-50%,-50%) translateY(-72px) scale(1);}50%{opacity:0.6;transform:translate(-50%,-50%) translateY(-72px) scale(1.4);}}
+.loader__core{position:absolute;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+.loader__core-glow{position:absolute;inset:-100%;background:radial-gradient(circle,rgba(52,152,219,0.4) 0%,rgba(0,212,255,0.2) 30%,transparent 70%);animation:loader-core-glow 2s ease-in-out infinite;}
+.loader__core-pulse{position:absolute;inset:0;background:linear-gradient(135deg,var(--login-secondary),var(--login-accent));border-radius:50%;box-shadow:0 0 20px var(--login-accent),0 0 40px rgba(52,152,219,0.5);animation:loader-core-pulse 1.2s ease-in-out infinite;}
+@keyframes loader-core-glow{0%,100%{opacity:0.6;transform:scale(0.8);}50%{opacity:1;transform:scale(1.2);}}
+@keyframes loader-core-pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.15);box-shadow:0 0 30px var(--login-accent),0 0 60px rgba(52,152,219,0.6);}}
+.login-overlay__welcome{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);opacity:0;visibility:hidden;}
+.login-overlay__welcome--visible{opacity:1;visibility:visible;}
+.login-overlay__welcome--visible .login-overlay__text{animation:login-welcome-enter 0.8s cubic-bezier(0.34,1.56,0.64,1) forwards,login-gradient-flow 3s ease infinite 0.8s;}
+.login-overlay__text{display:inline-block;font-family:'Source Sans Pro','Inter',sans-serif;font-size:clamp(1.5rem,5vw,3rem);font-weight:700;letter-spacing:clamp(2px,1vw,8px);text-transform:uppercase;background:linear-gradient(135deg,#00d4ff 0%,#0099cc 50%,#00d4ff 100%);background-size:200% 200%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;opacity:0;transform:translateY(40px) scale(0.8);filter:blur(8px);position:relative;white-space:nowrap;}
+@keyframes login-welcome-enter{to{opacity:1;transform:translateY(0) scale(1);filter:blur(0);}}
+@keyframes login-gradient-flow{0%{background-position:0% 50%;}50%{background-position:100% 50%;}100%{background-position:0% 50%;}}
+@media (max-width:480px){.login-page__main{padding:16px;}.login-card{padding:28px 24px;}.login-card__input{padding:12px 16px;font-size:0.95rem;}.login-card__submit{padding:14px 20px;font-size:0.95rem;}}
+  </style>
+</head>
+<body class="login-page">
+  <div class="login-page__background">
+    <div id="tsparticles" class="login-page__particles"></div>
+  </div>
+
+  <main class="login-page__main">
+    <section class="login-card">
+      <form id="loginForm" class="login-card__form" novalidate>
+        <div id="feedbackMessage" class="login-card__feedback" role="alert" aria-live="polite" hidden></div>
+        <div class="login-card__field">
+          <label for="email" class="login-card__label"><i class="bi bi-envelope"></i> Email</label>
+          <div class="login-card__input-wrap">
+            <input type="email" id="email" name="email" class="login-card__input" placeholder="your@email.com" autocomplete="email" />
+          </div>
+        </div>
+        <div class="login-card__field">
+          <label for="password" class="login-card__label"><i class="bi bi-lock"></i> Password</label>
+          <div class="login-card__input-wrap">
+            <input type="password" id="password" name="password" class="login-card__input" placeholder="••••••••" autocomplete="current-password" />
+          </div>
+        </div>
+        <div class="login-card__options">
+          <label class="login-card__checkbox">
+            <input type="checkbox" id="rememberMe" name="rememberMe" />
+            <span>Remember me</span>
+          </label>
+        </div>
+        <button type="submit" id="loginButton" class="login-card__submit">Sign In</button>
+        <p class="login-card__footer">
+          <a href="#" class="login-card__link" onclick="return false;">Forgot password?</a>
+        </p>
+      </form>
+    </section>
+  </main>
+
+  <div id="loadingOverlay" class="login-overlay" aria-hidden="true">
+    <div class="login-overlay__loader" id="loadingSpinner">
+      <div class="loader">
+        <div class="loader__grid"></div>
+        <div class="loader__ring loader__ring--outer"></div>
+        <div class="loader__ring loader__ring--mid"></div>
+        <div class="loader__ring loader__ring--inner"></div>
+        <div class="loader__orbit loader__orbit--1"><span class="loader__dot"></span></div>
+        <div class="loader__orbit loader__orbit--2"><span class="loader__dot"></span></div>
+        <div class="loader__orbit loader__orbit--3"><span class="loader__dot"></span></div>
+        <div class="loader__orbit loader__orbit--4"><span class="loader__dot"></span></div>
+        <div class="loader__orbit loader__orbit--5"><span class="loader__dot"></span></div>
+        <div class="loader__orbit loader__orbit--6"><span class="loader__dot"></span></div>
+        <div class="loader__core">
+          <div class="loader__core-pulse"></div>
+          <div class="loader__core-glow"></div>
+        </div>
+      </div>
+    </div>
+    <div class="login-overlay__welcome" id="welcomeMessage">
+      <span class="login-overlay__text">Welcome</span>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tsparticles-slim/2.12.0/tsparticles.slim.bundle.min.js"></script>
+  <script>
+    (function () {
+      'use strict';
+      var REDIRECT_URL = '../dashboard/index.html';
+
+      function initParticles() {
+        if (typeof tsParticles === 'undefined') return;
+        tsParticles.load({
+          id: 'tsparticles',
+          options: {
+            background: { color: { value: 'transparent' } },
+            fpsLimit: 30,
+            interactivity: { events: { onHover: { enable: false }, onClick: { enable: false }, resize: true } },
+            particles: {
+              color: { value: ['#00d4ff', '#0099cc', '#5dade2'] },
+              links: { color: '#00d4ff', distance: 150, enable: true, opacity: 0.4, width: 1 },
+              collisions: { enable: false },
+              move: { enable: true, speed: 0.5, direction: 'none', outModes: 'out', random: false, straight: false },
+              number: { density: { enable: true, area: 800 }, value: 30 },
+              opacity: { value: 0.6 },
+              shape: { type: 'circle' },
+              size: { value: { min: 2, max: 4 } }
+            },
+            detectRetina: false
+          }
+        }).catch(function () {});
+      }
+
+      function handleSubmit(e) {
+        e.preventDefault();
+        var form = document.getElementById('loginForm');
+        var button = document.getElementById('loginButton');
+        var card = document.querySelector('.login-card');
+        var overlay = document.getElementById('loadingOverlay');
+        var spinner = document.getElementById('loadingSpinner');
+        var welcome = document.getElementById('welcomeMessage');
+
+        button.disabled = true;
+        button.textContent = 'Signing in...';
+        card.classList.add('login-card--exiting');
+        overlay.classList.add('login-overlay--visible');
+        overlay.setAttribute('aria-hidden', 'false');
+        spinner.classList.add('login-overlay__loader--visible');
+
+        setTimeout(function () {
+          spinner.classList.remove('login-overlay__loader--visible');
+          spinner.classList.add('login-overlay__loader--exit');
+          welcome.classList.add('login-overlay__welcome--visible');
+        }, 2200);
+
+        setTimeout(function () {
+          window.location.href = REDIRECT_URL;
+        }, 3500);
+      }
+
+      function init() {
+        initParticles();
+        document.getElementById('loginForm').addEventListener('submit', handleSubmit);
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+    })();
+  </script>
+</body>
+</html>

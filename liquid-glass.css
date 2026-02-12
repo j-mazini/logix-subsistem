@@ -1,7 +1,9 @@
 /**
  * Liquid Glass – estilização glassmorphism nas páginas HTML
- * Backdrop blur, bordas translúcidas, sombras suaves
+ * Alinhado ao sistema base (Logixsphere). Carrega tokens e fundo de referência.
  */
+
+@import url('base-system-reference.css');
 
 :root {
   --glass-bg: rgba(255, 255, 255, 0.25);
@@ -17,47 +19,86 @@
   --glass-shadow-hover: 0 12px 40px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
 }
 
-/* ========== Página: fundo suave para o conteúdo ========== */
+/* ========== Página: fundo alinhado ao sistema base (gradiente + auras no body) ========== */
 body.has-beam-sidebar .sidebar-inset,
 body.has-beam-sidebar .page-inner {
-  background: linear-gradient(160deg, #f0f4ff 0%, #e8eef8 35%, #f5f7fb 100%);
+  background: transparent;
   min-height: 100vh;
 }
 
-/* ========== Dashboard header ========== */
-.dashboard-header {
-  background: var(--glass-bg-strong) !important;
-  backdrop-filter: blur(var(--glass-blur-strong));
-  -webkit-backdrop-filter: blur(var(--glass-blur-strong));
-  border: 1px solid var(--glass-border) !important;
-  border-radius: var(--glass-radius-lg) !important;
-  box-shadow: var(--glass-shadow) !important;
+/* ========== Liquid Glass page background (fixo atrás do conteúdo) ========== */
+.liquid-glass-page-bg {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  isolation: isolate;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e8f0f5 35%, #f1f5f9 100%);
+  margin: 0;
+  padding: 0;
+  z-index: -1;
 }
 
-/* ========== KPI cards ========== */
+.liquid-glass-page-bg::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  background: radial-gradient(900px 380px at 18% 12%, rgba(99, 102, 241, 0.24), transparent 60%),
+              radial-gradient(880px 360px at 82% 18%, rgba(236, 72, 153, 0.20), transparent 58%),
+              linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.08) 50%, rgba(236, 72, 153, 0.06) 100%);
+  filter: blur(14px) saturate(160%);
+  opacity: 1;
+  animation: liquidGlassBgDriftA 18s ease-in-out infinite alternate;
+}
+
+@keyframes liquidGlassBgDriftA {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(1.5%, -1.2%, 0) scale(1.03); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .liquid-glass-page-bg::before {
+    animation: none !important;
+  }
+}
+
+/* ========== Dashboard header (estilo sistema – liquid-glass-header) ========== */
+.dashboard-header {
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.06) 0%, rgba(139, 92, 246, 0.05) 40%, rgba(236, 72, 153, 0.03) 72%, rgba(255, 255, 255, 0.10) 100%) !important;
+  backdrop-filter: blur(16px) saturate(165%);
+  -webkit-backdrop-filter: blur(16px) saturate(165%);
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.10), 0 0 0 1px rgba(255, 255, 255, 0.08) inset, 0 6px 14px rgba(0, 0, 0, 0.05) !important;
+  border-radius: var(--glass-radius-lg) !important;
+}
+
+/* ========== KPI cards (estilo sistema – liquid-glass-surface) ========== */
 .dashboard-kpi-card {
-  background: var(--glass-bg) !important;
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  border: 1px solid var(--glass-border-subtle) !important;
+  border: 1px solid rgba(255, 255, 255, 0.26) !important;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.10) 0%, rgba(139, 92, 246, 0.08) 40%, rgba(236, 72, 153, 0.05) 72%, rgba(255, 255, 255, 0.18) 100%) !important;
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.10) inset, 0 8px 18px rgba(0, 0, 0, 0.06) !important;
   border-radius: var(--glass-radius) !important;
-  box-shadow: var(--glass-shadow) !important;
   transition: box-shadow 0.3s ease, transform 0.25s ease, border-color 0.25s ease !important;
 }
 
 .dashboard-kpi-card:hover {
-  box-shadow: var(--glass-shadow-hover) !important;
-  border-color: var(--glass-border) !important;
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.16), 0 0 0 1px rgba(255, 255, 255, 0.14) inset, 0 10px 24px rgba(0, 0, 0, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.35) !important;
 }
 
-/* ========== Compliance cards ========== */
+/* ========== Compliance cards (estilo sistema) ========== */
 .dashboard-compliance-card {
-  background: var(--glass-bg) !important;
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  border: 1px solid var(--glass-border-subtle) !important;
+  border: 1px solid rgba(255, 255, 255, 0.26) !important;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.10) 0%, rgba(139, 92, 246, 0.08) 40%, rgba(236, 72, 153, 0.05) 72%, rgba(255, 255, 255, 0.18) 100%) !important;
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.10) inset, 0 8px 18px rgba(0, 0, 0, 0.06) !important;
   border-radius: var(--glass-radius) !important;
-  box-shadow: var(--glass-shadow) !important;
 }
 
 .dashboard-compliance-card-header {
@@ -96,51 +137,51 @@ body.has-beam-sidebar .page-inner {
   box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.3) inset !important;
 }
 
-/* ========== Folder panels (SP portal – Disco, Last Day, SPMS) ========== */
+/* ========== Folder panels (estilo sistema – liquid-glass-surface) ========== */
 .sp-folder-panel,
 .sp-folder-panel-inner {
-  background: var(--glass-bg) !important;
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  border: 1px solid var(--glass-border-subtle) !important;
+  border: 1px solid rgba(255, 255, 255, 0.26) !important;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.10) 0%, rgba(139, 92, 246, 0.08) 40%, rgba(236, 72, 153, 0.05) 72%, rgba(255, 255, 255, 0.18) 100%) !important;
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.10) inset, 0 8px 18px rgba(0, 0, 0, 0.06) !important;
   border-radius: var(--glass-radius-lg) !important;
-  box-shadow: var(--glass-shadow) !important;
 }
 
-/* ========== Tabelas: wrappers ========== */
+/* ========== Tabelas: wrappers (estilo sistema) ========== */
 .last-day-table-wrap,
 .spms-table-wrap,
 .dashboard-vehicles-table-wrap {
-  background: var(--glass-bg) !important;
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  border: 1px solid var(--glass-border-subtle) !important;
+  border: 1px solid rgba(255, 255, 255, 0.26) !important;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.10) 0%, rgba(139, 92, 246, 0.08) 40%, rgba(236, 72, 153, 0.05) 72%, rgba(255, 255, 255, 0.18) 100%) !important;
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.10) inset, 0 8px 18px rgba(0, 0, 0, 0.06) !important;
   border-radius: var(--glass-radius) !important;
-  box-shadow: var(--glass-shadow) !important;
 }
 
-/* ========== Last day goals wrap (círculos) ========== */
+/* ========== Last day goals wrap (estilo sistema) ========== */
 .last-day-goals-wrap {
   background: transparent;
 }
 
 .last-day-goal-circle {
-  background: var(--glass-bg) !important;
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  border: 1px solid var(--glass-border-subtle) !important;
+  border: 1px solid rgba(255, 255, 255, 0.26) !important;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.10) 0%, rgba(139, 92, 246, 0.08) 40%, rgba(236, 72, 153, 0.05) 72%, rgba(255, 255, 255, 0.18) 100%) !important;
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.10) inset, 0 8px 18px rgba(0, 0, 0, 0.06) !important;
   border-radius: var(--glass-radius) !important;
-  box-shadow: var(--glass-shadow) !important;
 }
 
 .last-day-goal-circle--overall {
   border: 2px solid rgba(59, 130, 246, 0.5) !important;
-  box-shadow: var(--glass-shadow), 0 0 24px rgba(59, 130, 246, 0.15) !important;
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.10) inset, 0 0 24px rgba(59, 130, 246, 0.15) !important;
 }
 
-/* ========== Beam sidebar ========== */
+/* ========== Beam sidebar (estilo sistema – indigo/purple como Next.js) ========== */
 .beam-trigger {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.95) 0%, rgba(139, 92, 246, 0.95) 100%) !important;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.35) !important;
@@ -148,66 +189,70 @@ body.has-beam-sidebar .page-inner {
 }
 
 .beam-plate {
-  background: var(--glass-bg-strong) !important;
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  border: 1px solid var(--glass-border) !important;
-  border-radius: var(--glass-radius) !important;
-  box-shadow: var(--glass-shadow) !important;
+  background: #fff !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 0.75rem !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08) !important;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease, background 0.25s ease, color 0.25s ease !important;
 }
 
 .beam-plate:hover {
-  box-shadow: var(--glass-shadow-hover) !important;
-  border-color: var(--glass-border) !important;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.12) !important;
+  border-color: #c7d2fe !important;
 }
 
-/* ========== Admin header (vendor / SP pages) ========== */
+.beam-plate.active {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+  border-color: #6366f1 !important;
+  color: #fff !important;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25), 0 8px 24px rgba(99, 102, 241, 0.3) !important;
+}
+
+/* ========== Admin header (estilo sistema – liquid-glass-header) ========== */
 .admin-header {
-  background: var(--glass-bg) !important;
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  border: 1px solid var(--glass-border-subtle) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.06) 0%, rgba(139, 92, 246, 0.05) 40%, rgba(236, 72, 153, 0.03) 72%, rgba(255, 255, 255, 0.10) 100%) !important;
+  backdrop-filter: blur(16px) saturate(165%);
+  -webkit-backdrop-filter: blur(16px) saturate(165%);
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.10), 0 0 0 1px rgba(255, 255, 255, 0.08) inset, 0 6px 14px rgba(0, 0, 0, 0.05) !important;
   border-radius: var(--glass-radius) !important;
-  box-shadow: var(--glass-shadow) !important;
 }
 
 .sp-vendor-main .sp-vendor-header {
-  background: var(--glass-bg-strong) !important;
-  backdrop-filter: blur(var(--glass-blur-strong));
-  -webkit-backdrop-filter: blur(var(--glass-blur-strong));
-  border: 1px solid var(--glass-border) !important;
+  border: 1px solid rgba(255, 255, 255, 0.26) !important;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.10) 0%, rgba(139, 92, 246, 0.08) 40%, rgba(236, 72, 153, 0.05) 72%, rgba(255, 255, 255, 0.18) 100%) !important;
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.10) inset, 0 8px 18px rgba(0, 0, 0, 0.06) !important;
   border-radius: var(--glass-radius-lg) !important;
-  box-shadow: var(--glass-shadow) !important;
 }
 
-/* ========== Daily ops slide (notificações) ========== */
+/* ========== Daily ops slide / Carousel / Modais (estilo sistema) ========== */
 .sp-daily-ops-slide-wrap {
-  background: var(--glass-bg) !important;
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  border: 1px solid var(--glass-border-subtle) !important;
+  border: 1px solid rgba(255, 255, 255, 0.26) !important;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.10) 0%, rgba(139, 92, 246, 0.08) 40%, rgba(236, 72, 153, 0.05) 72%, rgba(255, 255, 255, 0.18) 100%) !important;
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.10) inset, 0 8px 18px rgba(0, 0, 0, 0.06) !important;
   border-radius: var(--glass-radius) !important;
-  box-shadow: var(--glass-shadow) !important;
 }
 
-/* ========== Carousel block ========== */
 .sp-dashboard-carousel-block {
-  background: var(--glass-bg) !important;
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  border: 1px solid var(--glass-border-subtle) !important;
+  border: 1px solid rgba(255, 255, 255, 0.26) !important;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.10) 0%, rgba(139, 92, 246, 0.08) 40%, rgba(236, 72, 153, 0.05) 72%, rgba(255, 255, 255, 0.18) 100%) !important;
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.10) inset, 0 8px 18px rgba(0, 0, 0, 0.06) !important;
   border-radius: var(--glass-radius-lg) !important;
-  box-shadow: var(--glass-shadow) !important;
 }
 
-/* ========== Modais ========== */
 .modal-content {
-  background: var(--glass-bg-strong) !important;
-  backdrop-filter: blur(var(--glass-blur-strong));
-  -webkit-backdrop-filter: blur(var(--glass-blur-strong));
-  border: 1px solid var(--glass-border) !important;
-  border-radius: var(--glass-radius-xl) !important;
+  border: 1px solid rgba(255, 255, 255, 0.26) !important;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(139, 92, 246, 0.06) 40%, rgba(236, 72, 153, 0.04) 72%, rgba(255, 255, 255, 0.22) 100%) !important;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   box-shadow: 0 24px 64px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(255, 255, 255, 0.5) inset !important;
+  border-radius: var(--glass-radius-xl) !important;
 }
 
 .modal-header {
@@ -218,14 +263,14 @@ body.has-beam-sidebar .page-inner {
   border-top-color: var(--glass-border-subtle) !important;
 }
 
-/* ========== Form controls ========== */
+/* ========== Form controls (estilo sistema – focus ring indigo) ========== */
 .form-control,
 .form-select {
   background: rgba(255, 255, 255, 0.6) !important;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border: 1px solid var(--glass-border-subtle) !important;
-  border-radius: 0.75rem !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  border-radius: 0.625rem !important;
   transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
 }
 
@@ -234,10 +279,13 @@ body.has-beam-sidebar .page-inner {
   background: rgba(255, 255, 255, 0.85) !important;
   border-color: rgba(99, 102, 241, 0.5) !important;
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
+  outline: none !important;
 }
 
-/* ========== Botões primários ========== */
+/* ========== Botões primários (estilo sistema – indigo/purple) ========== */
 .btn-primary {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
   box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.2) inset !important;
 }
 
@@ -246,7 +294,7 @@ body.has-beam-sidebar .page-inner {
 }
 
 .sp-portal-add-btn {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.95) 0%, rgba(139, 92, 246, 0.95) 100%) !important;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.35) !important;

@@ -6,7 +6,7 @@
   'use strict';
 
   var SP_NAME = 'BA Express';
-  var REDIRECT_URL = 'dashboard.html?sp=' + encodeURIComponent(SP_NAME);
+  var REDIRECT_URL = '../dashboard/index.html?sp=' + encodeURIComponent(SP_NAME);
 
   function initParticles() {
     if (typeof tsParticles === 'undefined') return;

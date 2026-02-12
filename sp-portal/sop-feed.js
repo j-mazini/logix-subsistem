@@ -145,20 +145,4 @@
         }
       });
 
-      function initBeamSidebar() {
-        var beam = document.getElementById('beamSidebar');
-        var trigger = document.getElementById('beamTrigger');
-        var overlay = document.getElementById('beamOverlay');
-        if (!beam || !trigger) return;
-        function toggleBeam() {
-          var isOpen = beam.getAttribute('data-state') === 'open';
-          beam.setAttribute('data-state', isOpen ? 'closed' : 'open');
-          trigger.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
-          if (overlay) overlay.classList.toggle('visible', !isOpen);
-        }
-        trigger.addEventListener('click', toggleBeam);
-        if (overlay) overlay.addEventListener('click', function () { beam.setAttribute('data-state', 'closed'); trigger.setAttribute('aria-expanded', 'false'); overlay.classList.remove('visible'); });
-      }
-      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initBeamSidebar);
-      else initBeamSidebar();
     })();

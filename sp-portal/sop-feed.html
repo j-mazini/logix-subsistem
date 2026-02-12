@@ -3,75 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SOP Feed – Service Provider Portal</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="../vendor-admin-view.css" />
-  <link rel="stylesheet" href="../sidebar-beam.css" />
-  <link rel="stylesheet" href="../sop-feed.css" />
-  <link rel="stylesheet" href="sp-portal.css" />
-  <link rel="stylesheet" href="../liquid-glass.css" />
-  <script src="sp-portal-responsive.js"></script>
+  <title>Redirect – SOP Feed</title>
+  <script>var q = window.location.search; window.location.replace('sop-feed/index.html' + (q ? q : ''));</script>
+  <link rel="canonical" href="sop-feed/index.html" />
 </head>
-<body class="has-beam-sidebar sp-portal">
-  <div class="sidebar-wrapper" id="sidebarWrapper">
-    <div class="sidebar-gap" id="sidebarGap" aria-hidden="true"></div>
-    <div class="beam-overlay" id="beamOverlay" aria-hidden="true"></div>
-    <nav class="beam-sidebar" id="beamSidebar" data-state="closed" role="navigation" aria-label="Service Provider menu">
-      <button type="button" class="beam-trigger" id="beamTrigger" aria-label="Open menu" aria-expanded="false">
-        <i class="bi bi-list beam-icon-menu"></i>
-        <i class="bi bi-x-lg beam-icon-close"></i>
-      </button>
-      <div class="beam-rail" aria-hidden="true"></div>
-      <div class="beam-plates">
-        <a href="dashboard.html" class="beam-plate"><i class="bi bi-house-door-fill beam-plate-icon"></i><span>Home</span></a>
-        <a href="profile.html" class="beam-plate"><i class="bi bi-building beam-plate-icon"></i><span>My Profile</span></a>
-        <a href="drivers.html" class="beam-plate"><i class="bi bi-people-fill beam-plate-icon"></i><span>Drivers</span></a>
-        <a href="vehicles.html" class="beam-plate"><i class="bi bi-truck beam-plate-icon"></i><span>Vehicles</span></a>
-        <a href="contracts.html" class="beam-plate"><i class="bi bi-file-earmark-text beam-plate-icon"></i><span>Contracts</span></a>
-        <a href="sop-feed.html" class="beam-plate active"><i class="bi bi-journal-bookmark-fill beam-plate-icon"></i><span>SOP Feed</span></a>
-        <a href="../access-select.html" class="beam-plate beam-plate--switch"><i class="bi bi-arrow-left-right beam-plate-icon"></i><span>Select access</span></a>
-      </div>
-    </nav>
-
-    <div class="sidebar-inset" id="sidebarInset">
-      <div class="liquid-glass-page-bg" aria-hidden="true"></div>
-      <div class="page-container">
-        <div class="page-inner">
-          <main class="sop-main">
-            <div class="admin-header sop-header">
-              <div class="sop-header-top">
-                <h1 class="admin-header-title">Standard Operating Procedures</h1>
-                <div class="admin-header-user-pill d-flex align-items-center" title="">
-                  <img id="spHeaderAvatar" src="" alt="" class="admin-header-user-avatar admin-header-user-avatar--img" style="display:none;" />
-                  <span class="admin-header-user-name" id="spHeaderName">—</span>
-                </div>
-              </div>
-              <p class="text-muted small mb-2">Read-only feed. Only DHL can create posts.</p>
-              <div class="admin-header-search sop-header-search">
-                <input type="search" id="sopSearch" class="form-control" placeholder="Search tutorials, posts, keywords..." autocomplete="off" />
-              </div>
-            </div>
-
-            <div class="sop-feed" id="sopFeed"></div>
-          </main>
-
-          <div class="sop-post-detail" id="sopPostDetail" aria-hidden="true">
-            <div class="sop-post-detail-backdrop" id="sopPostDetailBackdrop"></div>
-            <div class="sop-post-detail-inner" id="sopPostDetailContent">
-              <p class="sop-post-detail-placeholder" id="sopPostDetailPlaceholder">Click a post to open it</p>
-            </div>
-            <button type="button" class="sop-post-detail-close" id="sopPostDetailClose" aria-label="Close" style="display:none;">
-              <i class="bi bi-x-lg"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <script src="../dhl-mock-data.js"></script>
-  <script src="sop-feed.js"></script>
+<body>
+  <p>Redirecting to <a href="sop-feed/index.html">SOP Feed</a>…</p>
 </body>
 </html>

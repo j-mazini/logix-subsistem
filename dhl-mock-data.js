@@ -8,9 +8,9 @@
 
   var MOCK_VENDORS = [
     { id: 1, firstName: 'John', lastName: 'Smith', email: 'john.smith@example.com', phone: '+44 7700 900123', dob: '1985-03-15', depot: 'MSE', serviceProvider: 'BA Express', vendorType: '1', paymentModel: '1', startDate: '2025-11-01', finishDate: null, status: 'Active', cargoTraining: true, dangerousGoodsTraining: true, manualHandlingTraining: true, cargoTrainingDate: '2025-11-01', dangerousGoodsTrainingDate: '2025-11-05', manualHandlingTrainingDate: '2025-11-10', dhlTrainingNumber: 'DHL-001', criminalRecordDate: '2025-10-20', dbsNumber: 'DBS001234', dvlaCheckDate: '2026-01-15', visaValidity: null, licenceExpiringDate: '2027-08-01', passportExpiringDate: '2028-03-01' },
-    { id: 2, firstName: 'Maria', lastName: 'Santos', email: 'maria.santos@example.com', phone: '+44 7700 900456', dob: '1990-07-22', depot: 'LCY', serviceProvider: 'Premier Logistics Ltd', vendorType: '2', paymentModel: '2', startDate: '2025-11-08', finishDate: null, status: 'Active', cargoTraining: true, dangerousGoodsTraining: true, manualHandlingTraining: true, cargoTrainingDate: '2023-08-01', dangerousGoodsTrainingDate: '2025-10-20', manualHandlingTrainingDate: '2025-10-25', dhlTrainingNumber: 'DHL-002', criminalRecordDate: '2025-10-01', dbsNumber: 'DBS001235', dvlaCheckDate: '2025-10-01', visaValidity: '2026-06-01', licenceExpiringDate: '2026-12-01', passportExpiringDate: '2027-08-01' },
+    { id: 2, firstName: 'Maria', lastName: 'Santos', email: 'maria.santos@example.com', phone: '+44 7700 900456', dob: '1990-07-22', depot: 'LCY', serviceProvider: 'Premier Logistics Ltd', vendorType: '2', paymentModel: '2', startDate: '2025-11-08', finishDate: null, status: 'Active', cargoTraining: true, dangerousGoodsTraining: true, manualHandlingTraining: true, cargoTrainingDate: '2023-08-01', dangerousGoodsTrainingDate: '2025-10-20', manualHandlingTrainingDate: '2025-10-25', dhlTrainingNumber: 'DHL-002', criminalRecordDate: '2025-10-01', dbsNumber: 'DBS001235', dvlaCheckDate: '2025-10-01', visaValidity: '2026-03-20', licenceExpiringDate: '2026-12-01', passportExpiringDate: '2027-08-01' },
     { id: 3, firstName: 'James', lastName: 'Wilson', email: 'james.wilson@example.com', phone: '+44 7700 900789', dob: '1982-11-08', depot: 'LSE', serviceProvider: 'Swift Haul Solutions', vendorType: '1', paymentModel: '1', startDate: '2025-11-15', finishDate: null, status: 'Active', cargoTraining: true, dangerousGoodsTraining: true, manualHandlingTraining: true, cargoTrainingDate: '2025-04-01', dangerousGoodsTrainingDate: '2025-04-05', manualHandlingTrainingDate: '2025-04-01', dhlTrainingNumber: 'DHL-003', criminalRecordDate: '2025-10-15', dbsNumber: 'DBS001236', dvlaCheckDate: '2026-02-01', visaValidity: null, licenceExpiringDate: '2027-08-15', passportExpiringDate: '2028-01-10' },
-    { id: 4, firstName: 'Ana', lastName: 'Ferreira', email: 'ana.ferreira@example.com', phone: '+44 7700 901012', dob: '1988-04-30', depot: 'MSE', serviceProvider: 'Metro Freight Partners', vendorType: '2', paymentModel: '2', startDate: '2025-11-20', finishDate: null, status: 'Active', cargoTraining: true, dangerousGoodsTraining: true, manualHandlingTraining: true, cargoTrainingDate: '2025-11-01', dangerousGoodsTrainingDate: '2025-11-05', manualHandlingTrainingDate: '2025-11-10', dhlTrainingNumber: 'DHL-004', criminalRecordDate: '2025-10-10', dbsNumber: 'DBS001237', dvlaCheckDate: '2025-09-01', visaValidity: '2026-09-01', licenceExpiringDate: '2026-11-20', passportExpiringDate: '2027-05-15' },
+    { id: 4, firstName: 'Ana', lastName: 'Ferreira', email: 'ana.ferreira@example.com', phone: '+44 7700 901012', dob: '1988-04-30', depot: 'MSE', serviceProvider: 'Metro Freight Partners', vendorType: '2', paymentModel: '2', startDate: '2025-11-20', finishDate: null, status: 'Active', cargoTraining: true, dangerousGoodsTraining: true, manualHandlingTraining: true, cargoTrainingDate: '2025-11-01', dangerousGoodsTrainingDate: '2025-11-05', manualHandlingTrainingDate: '2025-11-10', dhlTrainingNumber: 'DHL-004', criminalRecordDate: '2025-10-10', dbsNumber: 'DBS001237', dvlaCheckDate: '2025-09-01', visaValidity: '2026-09-01', licenceExpiringDate: '2026-03-15', passportExpiringDate: '2026-04-10' },
     { id: 5, firstName: 'Michael', lastName: 'Brown', email: 'michael.brown@example.com', phone: '+44 7700 901345', dob: '1979-09-12', depot: 'LCY', serviceProvider: 'Atlas Transport Services', vendorType: '1', paymentModel: '1', startDate: '2025-12-01', finishDate: null, status: 'Active', cargoTraining: true, dangerousGoodsTraining: true, manualHandlingTraining: true, cargoTrainingDate: '2025-12-01', dangerousGoodsTrainingDate: '2025-12-05', manualHandlingTrainingDate: '2025-12-10', dhlTrainingNumber: 'DHL-005', criminalRecordDate: '2025-11-20', dbsNumber: 'DBS001238', dvlaCheckDate: '2026-03-15', visaValidity: null, licenceExpiringDate: '2027-03-01', passportExpiringDate: '2028-06-01' },
     { id: 6, firstName: 'Sofia', lastName: 'Rodrigues', email: 'sofia.rodrigues@example.com', phone: '+44 7700 901678', dob: '1992-01-25', depot: 'LSE', serviceProvider: 'Premier Logistics Ltd', vendorType: '2', paymentModel: '1', startDate: '2025-12-05', finishDate: null, status: 'Active', cargoTraining: true, dangerousGoodsTraining: true, manualHandlingTraining: true, cargoTrainingDate: '2023-09-01', dangerousGoodsTrainingDate: '2025-11-10', manualHandlingTrainingDate: '2025-12-01', dhlTrainingNumber: 'DHL-006', criminalRecordDate: '2025-11-01', dbsNumber: 'DBS001239', dvlaCheckDate: '2026-01-01', visaValidity: '2026-12-01', licenceExpiringDate: '2027-01-10', passportExpiringDate: '2027-04-20' },
     { id: 7, firstName: 'Emma', lastName: 'Thompson', email: 'emma.thompson@example.com', phone: '+44 7700 901999', dob: '1987-05-18', depot: 'LCY', serviceProvider: 'BA Express', vendorType: '1', paymentModel: '1', startDate: '2025-12-10', finishDate: null, status: 'Active', cargoTraining: true, dangerousGoodsTraining: true, manualHandlingTraining: true, cargoTrainingDate: '2025-12-01', dangerousGoodsTrainingDate: '2025-12-05', manualHandlingTrainingDate: '2025-12-10', dhlTrainingNumber: 'DHL-007', criminalRecordDate: '2025-11-25', dbsNumber: 'DBS001240', dvlaCheckDate: '2026-04-10', visaValidity: null, licenceExpiringDate: '2027-10-01', passportExpiringDate: '2028-08-01' },
@@ -31,7 +31,22 @@
     { id: 22, firstName: 'Jessica', lastName: 'Campbell', email: 'jessica.campbell@example.com', phone: '+44 7700 904999', dob: '1994-05-22', depot: 'MSE', serviceProvider: 'Premier Logistics Ltd', vendorType: '1', paymentModel: '1', startDate: '2025-12-01', finishDate: null, status: 'Active', cargoTraining: true, dangerousGoodsTraining: true, manualHandlingTraining: true, cargoTrainingDate: '2025-11-15', dangerousGoodsTrainingDate: '2025-12-01', manualHandlingTrainingDate: '2025-11-20', dhlTrainingNumber: 'DHL-022', criminalRecordDate: '2025-11-01', dbsNumber: 'DBS001255', dvlaCheckDate: '2026-05-20', visaValidity: null, licenceExpiringDate: '2028-02-01', passportExpiringDate: '2029-01-01' },
     { id: 23, firstName: 'Matthew', lastName: 'Parker', email: 'matthew.parker@example.com', phone: '+44 7700 905111', dob: '1980-08-14', depot: 'LCY', serviceProvider: 'Swift Haul Solutions', vendorType: '2', paymentModel: '2', startDate: '2024-11-01', finishDate: null, status: 'Active', cargoTraining: true, dangerousGoodsTraining: true, manualHandlingTraining: true, cargoTrainingDate: '2023-03-20', dangerousGoodsTrainingDate: '2023-05-10', manualHandlingTrainingDate: '2023-04-01', dhlTrainingNumber: 'DHL-023', criminalRecordDate: '2025-10-15', dbsNumber: 'DBS001256', dvlaCheckDate: '2026-06-01', visaValidity: '2026-09-15', licenceExpiringDate: '2027-08-01', passportExpiringDate: '2028-10-01' },
     { id: 24, firstName: 'Sophie', lastName: 'Evans', email: 'sophie.evans@example.com', phone: '+44 7700 905333', dob: '1992-01-08', depot: 'LSE', serviceProvider: 'Metro Freight Partners', vendorType: '1', paymentModel: '1', startDate: '2025-08-20', finishDate: null, status: 'Active', cargoTraining: true, dangerousGoodsTraining: true, manualHandlingTraining: true, cargoTrainingDate: '2024-02-15', dangerousGoodsTrainingDate: '2024-04-01', manualHandlingTrainingDate: '2024-03-10', dhlTrainingNumber: 'DHL-024', criminalRecordDate: '2025-08-25', dbsNumber: 'DBS001257', dvlaCheckDate: '2026-02-28', visaValidity: null, licenceExpiringDate: '2027-10-01', passportExpiringDate: '2028-04-20' },
-    { id: 25, firstName: 'Andrew', lastName: 'Edwards', email: 'andrew.edwards@example.com', phone: '+44 7700 905555', dob: '1988-06-30', depot: 'MSE', serviceProvider: 'Atlas Transport Services', vendorType: '1', paymentModel: '2', startDate: '2024-05-10', finishDate: null, status: 'Active', cargoTraining: true, dangerousGoodsTraining: true, manualHandlingTraining: true, cargoTrainingDate: '2022-12-01', dangerousGoodsTrainingDate: '2023-01-15', manualHandlingTrainingDate: '2022-12-20', dhlTrainingNumber: 'DHL-025', criminalRecordDate: '2025-09-10', dbsNumber: 'DBS001258', dvlaCheckDate: '2025-11-30', visaValidity: null, licenceExpiringDate: '2027-04-15', passportExpiringDate: '2028-08-01' }
+    { id: 25, firstName: 'Andrew', lastName: 'Edwards', email: 'andrew.edwards@example.com', phone: '+44 7700 905555', dob: '1988-06-30', depot: 'MSE', serviceProvider: 'Atlas Transport Services', vendorType: '1', paymentModel: '2', startDate: '2024-05-10', finishDate: null, status: 'Active', cargoTraining: true, dangerousGoodsTraining: true, manualHandlingTraining: true, cargoTrainingDate: '2022-12-01', dangerousGoodsTrainingDate: '2023-01-15', manualHandlingTrainingDate: '2022-12-20', dhlTrainingNumber: 'DHL-025', criminalRecordDate: '2025-09-10', dbsNumber: 'DBS001258', dvlaCheckDate: '2025-11-30', visaValidity: null, licenceExpiringDate: '2027-04-15', passportExpiringDate: '2028-08-01' },
+    { id: 26, firstName: 'Nicole', lastName: 'Brooks', email: 'nicole.brooks@example.com', phone: '+44 7700 906001', dob: '1990-04-17', depot: 'LCY', serviceProvider: 'BA Express', vendorType: '1', paymentModel: '1', startDate: '2025-10-12', finishDate: null, status: 'Active', cargoTraining: true, dangerousGoodsTraining: true, manualHandlingTraining: true, cargoTrainingDate: '2025-10-01', dangerousGoodsTrainingDate: '2025-10-05', manualHandlingTrainingDate: '2025-10-12', dhlTrainingNumber: 'DHL-026', criminalRecordDate: '2025-09-15', dbsNumber: 'DBS001259', dvlaCheckDate: '2026-02-10', visaValidity: null, licenceExpiringDate: '2027-06-01', passportExpiringDate: '2028-02-01' },
+    { id: 27, firstName: 'Peter', lastName: 'Morgan', email: 'peter.morgan@example.com', phone: '+44 7700 906002', dob: '1977-11-23', depot: 'MSE', serviceProvider: 'Premier Logistics Ltd', vendorType: '2', paymentModel: '2', startDate: '2024-02-01', finishDate: '2025-12-31', status: 'Inactive', cargoTraining: true, dangerousGoodsTraining: true, manualHandlingTraining: true, cargoTrainingDate: '2024-01-15', dangerousGoodsTrainingDate: '2024-01-20', manualHandlingTrainingDate: '2024-02-01', dhlTrainingNumber: 'DHL-027', criminalRecordDate: '2024-01-10', dbsNumber: 'DBS001260', dvlaCheckDate: '2025-10-01', visaValidity: null, licenceExpiringDate: '2026-09-01', passportExpiringDate: '2027-03-15' },
+    { id: 28, firstName: 'Laura', lastName: 'Bell', email: 'laura.bell@example.com', phone: '+44 7700 906003', dob: '1986-08-09', depot: 'LSE', serviceProvider: 'Swift Haul Solutions', vendorType: '1', paymentModel: '1', startDate: '2026-02-01', finishDate: null, status: 'Active', cargoTraining: true, dangerousGoodsTraining: true, manualHandlingTraining: true, cargoTrainingDate: '2026-01-25', dangerousGoodsTrainingDate: '2026-01-28', manualHandlingTrainingDate: '2026-02-01', dhlTrainingNumber: 'DHL-028', criminalRecordDate: '2026-01-20', dbsNumber: 'DBS001261', dvlaCheckDate: '2026-08-15', visaValidity: null, licenceExpiringDate: '2028-01-01', passportExpiringDate: '2028-09-10' },
+    { id: 29, firstName: 'Ryan', lastName: 'Murphy', email: 'ryan.murphy@example.com', phone: '+44 7700 906004', dob: '1982-01-14', depot: 'LCY', serviceProvider: 'Metro Freight Partners', vendorType: '1', paymentModel: '2', startDate: '2025-08-01', finishDate: null, status: 'Active', cargoTraining: true, dangerousGoodsTraining: true, manualHandlingTraining: true, cargoTrainingDate: '2024-06-01', dangerousGoodsTrainingDate: '2025-07-20', manualHandlingTrainingDate: '2025-08-01', dhlTrainingNumber: 'DHL-029', criminalRecordDate: '2025-07-01', dbsNumber: 'DBS001262', dvlaCheckDate: '2026-03-20', visaValidity: '2026-11-01', licenceExpiringDate: '2026-05-15', passportExpiringDate: '2027-11-01' },
+    { id: 30, firstName: 'Hannah', lastName: 'Ward', email: 'hannah.ward@example.com', phone: '+44 7700 906005', dob: '1994-06-30', depot: 'MSE', serviceProvider: 'Atlas Transport Services', vendorType: '2', paymentModel: '1', startDate: '2025-11-15', finishDate: null, status: 'Active', cargoTraining: true, dangerousGoodsTraining: true, manualHandlingTraining: true, cargoTrainingDate: '2025-11-10', dangerousGoodsTrainingDate: '2025-11-12', manualHandlingTrainingDate: '2025-11-15', dhlTrainingNumber: 'DHL-030', criminalRecordDate: '2025-10-25', dbsNumber: 'DBS001263', dvlaCheckDate: '2026-05-01', visaValidity: null, licenceExpiringDate: '2027-07-20', passportExpiringDate: '2028-12-01' },
+    { id: 31, firstName: 'Kevin', lastName: 'Richardson', email: 'kevin.richardson@example.com', phone: '+44 7700 906006', dob: '1979-03-08', depot: 'LSE', serviceProvider: 'BA Express', vendorType: '1', paymentModel: '1', startDate: '2023-07-01', finishDate: null, status: 'Active', cargoTraining: true, dangerousGoodsTraining: true, manualHandlingTraining: true, cargoTrainingDate: '2022-05-01', dangerousGoodsTrainingDate: '2023-06-15', manualHandlingTrainingDate: '2023-07-01', dhlTrainingNumber: 'DHL-031', criminalRecordDate: '2025-06-01', dbsNumber: 'DBS001264', dvlaCheckDate: '2025-09-20', visaValidity: null, licenceExpiringDate: '2026-04-01', passportExpiringDate: '2027-10-15' },
+    { id: 32, firstName: 'Zoe', lastName: 'Collins', email: 'zoe.collins@example.com', phone: '+44 7700 906007', dob: '1991-12-19', depot: 'LCY', serviceProvider: 'Premier Logistics Ltd', vendorType: '1', paymentModel: '1', startDate: '2025-12-20', finishDate: null, status: 'Active', cargoTraining: true, dangerousGoodsTraining: true, manualHandlingTraining: true, cargoTrainingDate: '2025-12-15', dangerousGoodsTrainingDate: '2025-12-18', manualHandlingTrainingDate: '2025-12-20', dhlTrainingNumber: 'DHL-032', criminalRecordDate: '2025-12-01', dbsNumber: 'DBS001265', dvlaCheckDate: '2026-06-20', visaValidity: '2026-12-15', licenceExpiringDate: '2027-12-01', passportExpiringDate: '2028-07-01' },
+    { id: 33, firstName: 'Samuel', lastName: 'Turner', email: 'samuel.turner@example.com', phone: '+44 7700 906008', dob: '1984-05-22', depot: 'MSE', serviceProvider: 'Swift Haul Solutions', vendorType: '2', paymentModel: '2', startDate: '2024-09-15', finishDate: null, status: 'Active', cargoTraining: true, dangerousGoodsTraining: true, manualHandlingTraining: true, cargoTrainingDate: '2023-11-01', dangerousGoodsTrainingDate: '2024-09-10', manualHandlingTrainingDate: '2024-09-15', dhlTrainingNumber: 'DHL-033', criminalRecordDate: '2024-08-20', dbsNumber: 'DBS001266', dvlaCheckDate: '2026-01-25', visaValidity: null, licenceExpiringDate: '2027-11-15', passportExpiringDate: '2028-05-20' },
+    { id: 34, firstName: 'Chloe', lastName: 'Scott', email: 'chloe.scott@example.com', phone: '+44 7700 906009', dob: '1988-09-04', depot: 'LSE', serviceProvider: 'Metro Freight Partners', vendorType: '1', paymentModel: '1', startDate: '2026-01-15', finishDate: null, status: 'Active', cargoTraining: true, dangerousGoodsTraining: true, manualHandlingTraining: true, cargoTrainingDate: '2026-01-10', dangerousGoodsTrainingDate: '2026-01-12', manualHandlingTrainingDate: '2026-01-15', dhlTrainingNumber: 'DHL-034', criminalRecordDate: '2026-01-05', dbsNumber: 'DBS001267', dvlaCheckDate: '2026-07-10', visaValidity: null, licenceExpiringDate: '2028-02-20', passportExpiringDate: '2028-11-01' },
+    { id: 35, firstName: 'Nathan', lastName: 'Young', email: 'nathan.young@example.com', phone: '+44 7700 906010', dob: '1980-07-27', depot: 'LCY', serviceProvider: 'Atlas Transport Services', vendorType: '1', paymentModel: '2', startDate: '2025-06-01', finishDate: null, status: 'Active', cargoTraining: true, dangerousGoodsTraining: false, manualHandlingTraining: true, cargoTrainingDate: '2025-05-15', dangerousGoodsTrainingDate: null, manualHandlingTrainingDate: '2025-06-01', dhlTrainingNumber: 'DHL-035', criminalRecordDate: '2025-05-01', dbsNumber: 'DBS001268', dvlaCheckDate: '2026-02-28', visaValidity: null, licenceExpiringDate: '2026-08-01', passportExpiringDate: '2027-06-15' },
+    { id: 36, firstName: 'Megan', lastName: 'Hill', email: 'megan.hill@example.com', phone: '+44 7700 906011', dob: '1993-02-11', depot: 'MSE', serviceProvider: 'BA Express', vendorType: '2', paymentModel: '1', startDate: '2025-09-20', finishDate: null, status: 'Active', cargoTraining: true, dangerousGoodsTraining: true, manualHandlingTraining: true, cargoTrainingDate: '2025-09-15', dangerousGoodsTrainingDate: '2025-09-18', manualHandlingTrainingDate: '2025-09-20', dhlTrainingNumber: 'DHL-036', criminalRecordDate: '2025-09-01', dbsNumber: 'DBS001269', dvlaCheckDate: '2026-03-15', visaValidity: null, licenceExpiringDate: '2027-09-20', passportExpiringDate: '2028-04-10' },
+    { id: 37, firstName: 'Adam', lastName: 'Green', email: 'adam.green@example.com', phone: '+44 7700 906012', dob: '1985-10-06', depot: 'LSE', serviceProvider: 'Premier Logistics Ltd', vendorType: '1', paymentModel: '1', startDate: '2024-12-01', finishDate: null, status: 'Inactive', cargoTraining: true, dangerousGoodsTraining: true, manualHandlingTraining: true, cargoTrainingDate: '2024-11-15', dangerousGoodsTrainingDate: '2024-11-20', manualHandlingTrainingDate: '2024-12-01', dhlTrainingNumber: 'DHL-037', criminalRecordDate: '2024-11-01', dbsNumber: 'DBS001270', dvlaCheckDate: '2025-08-01', visaValidity: null, licenceExpiringDate: '2026-06-01', passportExpiringDate: '2027-02-28' },
+    { id: 38, firstName: 'Grace', lastName: 'Adams', email: 'grace.adams@example.com', phone: '+44 7700 906013', dob: '1992-04-25', depot: 'LCY', serviceProvider: 'Swift Haul Solutions', vendorType: '1', paymentModel: '2', startDate: '2026-02-10', finishDate: null, status: 'Active', cargoTraining: true, dangerousGoodsTraining: true, manualHandlingTraining: true, cargoTrainingDate: '2026-02-05', dangerousGoodsTrainingDate: '2026-02-08', manualHandlingTrainingDate: '2026-02-10', dhlTrainingNumber: 'DHL-038', criminalRecordDate: '2026-02-01', dbsNumber: 'DBS001271', dvlaCheckDate: '2026-08-20', visaValidity: '2026-10-01', licenceExpiringDate: '2028-03-01', passportExpiringDate: '2028-10-15' },
+    { id: 39, firstName: 'Jack', lastName: 'Nelson', email: 'jack.nelson@example.com', phone: '+44 7700 906014', dob: '1987-11-30', depot: 'MSE', serviceProvider: 'Metro Freight Partners', vendorType: '2', paymentModel: '2', startDate: '2025-07-25', finishDate: null, status: 'Active', cargoTraining: true, dangerousGoodsTraining: true, manualHandlingTraining: true, cargoTrainingDate: '2025-07-20', dangerousGoodsTrainingDate: '2025-07-22', manualHandlingTrainingDate: '2025-07-25', dhlTrainingNumber: 'DHL-039', criminalRecordDate: '2025-07-10', dbsNumber: 'DBS001272', dvlaCheckDate: '2026-01-15', visaValidity: null, licenceExpiringDate: '2027-05-30', passportExpiringDate: '2028-01-20' },
+    { id: 40, firstName: 'Ella', lastName: 'Carter', email: 'ella.carter@example.com', phone: '+44 7700 906015', dob: '1995-01-18', depot: 'LSE', serviceProvider: 'Atlas Transport Services', vendorType: '1', paymentModel: '1', startDate: '2025-10-28', finishDate: null, status: 'Active', cargoTraining: true, dangerousGoodsTraining: true, manualHandlingTraining: true, cargoTrainingDate: '2025-10-25', dangerousGoodsTrainingDate: '2025-10-27', manualHandlingTrainingDate: '2025-10-28', dhlTrainingNumber: 'DHL-040', criminalRecordDate: '2025-10-15', dbsNumber: 'DBS001273', dvlaCheckDate: '2026-04-25', visaValidity: null, licenceExpiringDate: '2027-10-10', passportExpiringDate: '2029-01-05' }
   ];
 
   var MOCK_VEHICLES = [
@@ -59,7 +74,22 @@
     { id: 22, vrn: 'EE55 LEGACY', vin: 'VF1RFA00065355555', brand: 'Renault', model: 'Master', registrationDate: '2013-09-12', fuelType: 'Diesel', vehicleType: 'Rigid', serviceProvider: 'Atlas Transport Services', color: 'White', depot: 'LCY', wrappedVehicle: false, slamLock: false, camera: false, gps: false, bulkhead: false, doors270: false },
     { id: 23, vrn: 'FF66 TEC', vin: 'WVWZZZ3CZWE66666', brand: 'Volkswagen', model: 'Transporter', registrationDate: '2025-11-20', fuelType: 'Diesel', vehicleType: 'Van', serviceProvider: 'BA Express', color: 'Black', depot: 'LSE', wrappedVehicle: true, slamLock: true, camera: true, gps: true, bulkhead: true, doors270: true },
     { id: 24, vrn: 'GG77 FLEET', vin: 'WF0XXXTTGXGG77777', brand: 'Ford', model: 'e-Transit', registrationDate: '2025-12-05', fuelType: 'Electric', vehicleType: 'Van', serviceProvider: 'Premier Logistics Ltd', color: 'Blue', depot: 'MSE', wrappedVehicle: false, slamLock: true, camera: true, gps: true, bulkhead: true, doors270: false },
-    { id: 25, vrn: 'HH88 AGED', vin: 'VF1RFA00065388888', brand: 'Renault', model: 'Trafic', registrationDate: '2012-03-08', fuelType: 'Diesel', vehicleType: 'Van', serviceProvider: 'Metro Freight Partners', color: 'Silver', depot: 'LSE', wrappedVehicle: false, slamLock: false, camera: false, gps: false, bulkhead: false, doors270: false }
+    { id: 25, vrn: 'HH88 AGED', vin: 'VF1RFA00065388888', brand: 'Renault', model: 'Trafic', registrationDate: '2012-03-08', fuelType: 'Diesel', vehicleType: 'Van', serviceProvider: 'Metro Freight Partners', color: 'Silver', depot: 'LSE', wrappedVehicle: false, slamLock: false, camera: false, gps: false, bulkhead: false, doors270: false },
+    { id: 26, vrn: 'II99 NEW2', vin: 'WVWZZZ3CZWE99999', brand: 'Volkswagen', model: 'Crafter', registrationDate: '2025-11-01', fuelType: 'Diesel', vehicleType: 'Van', serviceProvider: 'BA Express', color: 'White', depot: 'MSE', wrappedVehicle: true, slamLock: true, camera: true, gps: true, bulkhead: true, doors270: false },
+    { id: 27, vrn: 'JJ01 PLT', vin: 'WF0XXXTTGXJJ01010', brand: 'Ford', model: 'Transit', registrationDate: '2025-10-15', fuelType: 'Diesel', vehicleType: 'Van', serviceProvider: 'Premier Logistics Ltd', color: 'Silver', depot: 'LCY', wrappedVehicle: true, slamLock: true, camera: true, gps: true, bulkhead: false, doors270: true },
+    { id: 28, vrn: 'KK02 SHS', vin: 'VF1RFA00065328028', brand: 'Renault', model: 'Master', registrationDate: '2025-12-01', fuelType: 'Diesel', vehicleType: 'Rigid', serviceProvider: 'Swift Haul Solutions', color: 'Blue', depot: 'LSE', wrappedVehicle: true, slamLock: true, camera: true, gps: true, bulkhead: true, doors270: false },
+    { id: 29, vrn: 'LL03 MFP', vin: '7SAYGDEF0NF29029', brand: 'Tesla', model: 'Semi', registrationDate: '2026-01-20', fuelType: 'Electric', vehicleType: 'HGV', serviceProvider: 'Metro Freight Partners', color: 'White', depot: 'MSE', wrappedVehicle: true, slamLock: true, camera: true, gps: true, bulkhead: true, doors270: false },
+    { id: 30, vrn: 'MM04 ATS', vin: 'WV2ZZZ70ZSH30030', brand: 'Mercedes-Benz', model: 'Sprinter', registrationDate: '2025-09-01', fuelType: 'Diesel', vehicleType: 'Van', serviceProvider: 'Atlas Transport Services', color: 'Black', depot: 'LCY', wrappedVehicle: false, slamLock: true, camera: true, gps: true, bulkhead: true, doors270: false },
+    { id: 31, vrn: 'NN05 CDE', vin: 'WVWZZZ3CZWE31031', brand: 'Volkswagen', model: 'Transporter', registrationDate: '2025-08-20', fuelType: 'Diesel', vehicleType: 'Van', serviceProvider: 'BA Express', color: 'Grey', depot: 'LSE', wrappedVehicle: false, slamLock: true, camera: true, gps: true, bulkhead: false, doors270: true },
+    { id: 32, vrn: 'OO06 FGH', vin: 'WF0XXXTTGXOO32032', brand: 'Ford', model: 'e-Transit', registrationDate: '2026-02-10', fuelType: 'Electric', vehicleType: 'Van', serviceProvider: 'Premier Logistics Ltd', color: 'Blue', depot: 'MSE', wrappedVehicle: true, slamLock: true, camera: true, gps: true, bulkhead: true, doors270: false },
+    { id: 33, vrn: 'PP07 LMN', vin: 'VF1RFA00065333033', brand: 'Renault', model: 'Trafic', registrationDate: '2025-07-15', fuelType: 'Diesel', vehicleType: 'Van', serviceProvider: 'Swift Haul Solutions', color: 'White', depot: 'LCY', wrappedVehicle: false, slamLock: false, camera: true, gps: true, bulkhead: true, doors270: true },
+    { id: 34, vrn: 'QQ08 PQR', vin: '7SAYGDEF0NF34034', brand: 'Tesla', model: 'Semi', registrationDate: '2026-03-01', fuelType: 'Electric', vehicleType: 'HGV', serviceProvider: 'Metro Freight Partners', color: 'Red', depot: 'LSE', wrappedVehicle: true, slamLock: true, camera: true, gps: true, bulkhead: true, doors270: false },
+    { id: 35, vrn: 'RR09 STU', vin: 'WV2ZZZ70ZSH35035', brand: 'Mercedes-Benz', model: 'eVito', registrationDate: '2025-11-28', fuelType: 'Electric', vehicleType: 'Van', serviceProvider: 'Atlas Transport Services', color: 'Silver', depot: 'MSE', wrappedVehicle: false, slamLock: true, camera: true, gps: true, bulkhead: true, doors270: false },
+    { id: 36, vrn: 'SS10 VWX', vin: 'WVWZZZ3CZWE36036', brand: 'Volkswagen', model: 'Crafter', registrationDate: '2025-06-10', fuelType: 'Diesel', vehicleType: 'Van', serviceProvider: 'BA Express', color: 'White', depot: 'LCY', wrappedVehicle: true, slamLock: true, camera: true, gps: true, bulkhead: true, doors270: false },
+    { id: 37, vrn: 'TT11 YZA', vin: 'WF0XXXTTGXTT37037', brand: 'Ford', model: 'Transit Custom', registrationDate: '2025-05-22', fuelType: 'Diesel', vehicleType: 'Van', serviceProvider: 'Premier Logistics Ltd', color: 'Grey', depot: 'LSE', wrappedVehicle: false, slamLock: true, camera: true, gps: true, bulkhead: false, doors270: true },
+    { id: 38, vrn: 'UU12 BCD', vin: 'VF1RFA00065338038', brand: 'Renault', model: 'Master', registrationDate: '2025-04-18', fuelType: 'Diesel', vehicleType: 'Rigid', serviceProvider: 'Swift Haul Solutions', color: 'Blue', depot: 'MSE', wrappedVehicle: true, slamLock: true, camera: true, gps: true, bulkhead: true, doors270: false },
+    { id: 39, vrn: 'VV13 EFG', vin: '7SAYGDEF0NF39039', brand: 'Tesla', model: 'Semi', registrationDate: '2026-02-15', fuelType: 'Electric', vehicleType: 'HGV', serviceProvider: 'Metro Freight Partners', color: 'White', depot: 'LCY', wrappedVehicle: true, slamLock: true, camera: true, gps: true, bulkhead: true, doors270: false },
+    { id: 40, vrn: 'WW14 HIJ', vin: 'WV2ZZZ70ZSH40040', brand: 'Mercedes-Benz', model: 'Sprinter', registrationDate: '2025-03-05', fuelType: 'Diesel', vehicleType: 'Van', serviceProvider: 'Atlas Transport Services', color: 'Black', depot: 'LSE', wrappedVehicle: false, slamLock: true, camera: false, gps: true, bulkhead: false, doors270: false }
   ];
 
   /* Bandas digressivas BA SP Rates 2025: cada banda [min, max, price]. max=null = última banda (até +inf).
@@ -152,12 +182,33 @@
     }
   ];
 
+  /* Clona a estrutura de depots e adiciona deliveries por rota para o dashboard (KPI SPR) – valores determinísticos por rota */
+  function hash(s) { var h = 0; for (var i = 0; i < (s || '').length; i++) h = ((h << 5) - h) + s.charCodeAt(i); return h >>> 0; }
+  function cloneDepotsAndAddDeliveries(depots) {
+    return depots.map(function (d) {
+      return {
+        name: d.name,
+        loops: (d.loops || []).map(function (l) {
+          return {
+            name: l.name,
+            deliveryRate: l.deliveryRate,
+            routes: (l.routes || []).map(function (r) {
+              var seed = hash(d.name + '|' + l.name + '|' + (r.name || ''));
+              var base = (r.postcodes && r.postcodes.length) ? r.postcodes.length * 18 : 72;
+              var del = base + (seed % 28);
+              return { name: r.name, type: r.type, targetDel: r.targetDel, targetPu: r.targetPu, postcodes: r.postcodes, deliveries: del };
+            })
+          };
+        })
+      };
+    });
+  }
   var MOCK_CONTRACTS = [
-    { serviceProvider: 'BA Express', depots: CONTRACT_DEPOTS_STRUCTURE },
-    { serviceProvider: 'Premier Logistics Ltd', depots: CONTRACT_DEPOTS_STRUCTURE },
-    { serviceProvider: 'Swift Haul Solutions', depots: CONTRACT_DEPOTS_STRUCTURE },
-    { serviceProvider: 'Metro Freight Partners', depots: CONTRACT_DEPOTS_STRUCTURE },
-    { serviceProvider: 'Atlas Transport Services', depots: CONTRACT_DEPOTS_STRUCTURE }
+    { serviceProvider: 'BA Express', depots: cloneDepotsAndAddDeliveries(CONTRACT_DEPOTS_STRUCTURE) },
+    { serviceProvider: 'Premier Logistics Ltd', depots: cloneDepotsAndAddDeliveries(CONTRACT_DEPOTS_STRUCTURE) },
+    { serviceProvider: 'Swift Haul Solutions', depots: cloneDepotsAndAddDeliveries(CONTRACT_DEPOTS_STRUCTURE) },
+    { serviceProvider: 'Metro Freight Partners', depots: cloneDepotsAndAddDeliveries(CONTRACT_DEPOTS_STRUCTURE) },
+    { serviceProvider: 'Atlas Transport Services', depots: cloneDepotsAndAddDeliveries(CONTRACT_DEPOTS_STRUCTURE) }
   ];
 
   var SERVICE_PROVIDERS = [
@@ -243,6 +294,8 @@
     { type: 'driver_alert', severity: 'info', icon: 'person', msg: 'Driver on route {{route}} – status update.', route: true }
   ];
   var DAILY_OPERATIONS_NOTIFICATIONS = [];
+  var timeAgoPool = [2, 5, 8, 12, 18, 25, 35, 38, 45, 55, 65, 90, 105, 120, 140, 180];
+  var detailPool = ['customer not available', 'access code required', 'parcel damaged', 'address correction', 'redelivery scheduled', 'signature obtained', 'left with neighbour'];
   MOCK_CONTRACTS.forEach(function (c) {
     var sp = c.serviceProvider;
     var routes = [];
@@ -253,17 +306,18 @@
         });
       });
     });
-    routes = routes.slice(0, 12);
+    routes = routes.slice(0, 15);
+    /* Primeira volta: todos os templates */
     DAILY_OPS_TEMPLATES.forEach(function (t, i) {
       var route = routes[i % routes.length] || 'R-' + (i + 1);
-      var timeAgo = [5, 12, 25, 38, 55, 90, 120][i % 7];
+      var timeAgo = timeAgoPool[(DAILY_OPERATIONS_NOTIFICATIONS.length + i) % timeAgoPool.length];
       var msg = t.msg
         .replace('{{route}}', route)
-        .replace('{{mins}}', String(15 + (i % 4) * 10))
-        .replace('{{stops}}', String(8 + (i % 5)))
-        .replace('{{detail}}', 'customer not found');
+        .replace('{{mins}}', String(10 + (i % 5) * 8))
+        .replace('{{stops}}', String(6 + (i % 8)))
+        .replace('{{detail}}', detailPool[i % detailPool.length]);
       DAILY_OPERATIONS_NOTIFICATIONS.push({
-        id: 'op-' + sp + '-' + i,
+        id: 'op-' + sp + '-' + DAILY_OPERATIONS_NOTIFICATIONS.length,
         serviceProvider: sp,
         type: t.type,
         severity: t.severity,
@@ -273,6 +327,23 @@
         timeAgoMinutes: timeAgo
       });
     });
+    /* Segunda volta: mensagens adicionais por SP */
+    for (var j = 0; j < 4; j++) {
+      var t = DAILY_OPS_TEMPLATES[j % DAILY_OPS_TEMPLATES.length];
+      var route = routes[(j + 3) % routes.length];
+      var timeAgo = timeAgoPool[(DAILY_OPERATIONS_NOTIFICATIONS.length + j + 5) % timeAgoPool.length];
+      var msg = t.msg.replace('{{route}}', route).replace('{{mins}}', String(20 + j * 5)).replace('{{stops}}', String(12 + j)).replace('{{detail}}', detailPool[j % detailPool.length]);
+      DAILY_OPERATIONS_NOTIFICATIONS.push({
+        id: 'op-' + sp + '-b-' + j,
+        serviceProvider: sp,
+        type: t.type,
+        severity: t.severity,
+        icon: t.icon,
+        message: msg,
+        route: route,
+        timeAgoMinutes: timeAgo
+      });
+    }
   });
 
   global.DHL_MOCK_DATA = {
@@ -286,7 +357,11 @@
       spr: 94.2,
       timeWindow: 98.5,
       spohR: 12.4,
-      totalRequests: 2847
+      totalRequests: 3847,
+      activeVendors: 38,
+      activeVehicles: 40,
+      totalDeliveriesToday: 2156,
+      onTimePct: 96.8
     },
     lastDayRoutes: LAST_DAY_ROUTES,
     lastDayLoops: LAST_DAY_LOOPS,

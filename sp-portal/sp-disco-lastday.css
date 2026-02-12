@@ -1,0 +1,1132 @@
+/**
+ * Estilização da aba Disco e da aba Last Day Operations / Financials.
+ */
+
+/* ========== KPI STRIP NO TOPO DA PAGE (SPR) ========== */
+.dashboard-kpi-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.dashboard-kpi-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  min-width: 180px;
+}
+
+.dashboard-kpi-card--spr {
+  border-color: rgba(59, 130, 246, 0.25);
+  background: linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(248,250,252,1) 100%);
+}
+
+.dashboard-kpi-icon {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.75rem;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.12));
+  color: #2563eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+}
+
+.dashboard-kpi-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.dashboard-kpi-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+}
+
+.dashboard-kpi-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e40af;
+}
+
+.dashboard-kpi-sublabel {
+  font-size: 0.7rem;
+  color: #94a3b8;
+}
+
+/* ========== DISCO (#spDiscoBlock) ========== */
+#spDiscoBlock {
+  background: linear-gradient(135deg, rgba(255,255,255,0.97) 0%, rgba(248,250,252,0.98) 100%);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 1.25rem;
+  box-shadow: 0 4px 24px -4px rgba(59, 130, 246, 0.08), 0 0 0 1px rgba(255,255,255,0.8) inset;
+  overflow: hidden;
+}
+
+#spDiscoBlock .dashboard-block-header {
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.08) 0%, transparent 100%);
+  border-bottom: 1px solid rgba(59, 130, 246, 0.12);
+  padding: 1.25rem 1.5rem;
+}
+
+#spDiscoBlock .dashboard-block-title {
+  color: #1e40af !important;
+  font-weight: 700;
+  font-size: 1.15rem;
+}
+
+#spDiscoBlock .dashboard-block-title i {
+  color: #3b82f6;
+}
+
+#spDiscoBlock .dashboard-block-desc {
+  color: #64748b !important;
+  font-size: 0.875rem;
+}
+
+#spDiscoBlock .dashboard-block-content {
+  padding: 1.25rem 1.5rem;
+}
+
+/* KPI SPR dentro do bloco Disco */
+#spDiscoBlock .disco-kpi-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+  background: rgba(248, 250, 252, 0.5);
+}
+
+#spDiscoBlock .disco-kpi-strip .dashboard-kpi-card {
+  margin: 0;
+}
+
+/* Bento grid: KPIs Disco */
+#spDiscoBlock .disco-bento-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 0.75rem;
+  grid-template-areas:
+    "spr pre12 pre12"
+    "asr asr dsr";
+}
+
+#spDiscoBlock .disco-bento-cell {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  min-height: 100px;
+  overflow: hidden;
+}
+
+#spDiscoBlock .disco-bento-spr {
+  grid-area: spr;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0.6rem 0.5rem;
+  min-height: 0;
+}
+
+#spDiscoBlock .disco-bento-pre12 { grid-area: pre12; }
+#spDiscoBlock .disco-bento-asr { grid-area: asr; }
+#spDiscoBlock .disco-bento-dsr { grid-area: dsr; }
+
+#spDiscoBlock .disco-kpi-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+  margin-bottom: 0.25rem;
+}
+
+#spDiscoBlock .disco-bento-spr .disco-kpi-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #1e40af;
+}
+#spDiscoBlock .disco-bento-spr .disco-kpi-label {
+  font-size: 0.65rem;
+  margin-bottom: 0.15rem;
+}
+#spDiscoBlock .disco-bento-spr .disco-kpi-sublabel {
+  font-size: 0.6rem;
+}
+
+#spDiscoBlock .disco-kpi-sublabel {
+  font-size: 0.7rem;
+  color: #94a3b8;
+}
+
+#spDiscoBlock .disco-kpi-list {
+  max-height: 180px;
+  overflow-y: auto;
+  font-size: 0.8rem;
+  color: #334155;
+}
+
+#spDiscoBlock .disco-list-item {
+  padding: 0.35rem 0;
+  border-bottom: 1px solid #f1f5f9;
+  line-height: 1.3;
+}
+
+#spDiscoBlock .disco-list-item:last-child { border-bottom: none; }
+
+#spDiscoBlock .disco-postcode {
+  font-weight: 600;
+  color: #1e40af;
+  margin-right: 0.35rem;
+}
+
+#spDiscoBlock .disco-list-empty,
+#spDiscoBlock .disco-list-more {
+  color: #94a3b8;
+  font-size: 0.8rem;
+  margin: 0.5rem 0 0;
+}
+
+@media (max-width: 768px) {
+  #spDiscoBlock .disco-bento-grid {
+    grid-template-columns: 1fr;
+    grid-template-areas: "spr" "pre12" "asr" "dsr";
+  }
+}
+
+/* Filtros: chips Depot e Loop (no topo do bloco) */
+#spDiscoBlock .disco-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+#spDiscoBlock .disco-filters--top {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+  background: rgba(248, 250, 252, 0.6);
+}
+
+#spDiscoBlock .disco-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+#spDiscoBlock .disco-filter-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+#spDiscoBlock .disco-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+#spDiscoBlock .disco-chip {
+  padding: 0.4rem 0.75rem;
+  border-radius: 2rem;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  font-size: 0.85rem;
+  color: #475569;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+#spDiscoBlock .disco-chip:hover {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.3);
+  color: #1e40af;
+}
+
+#spDiscoBlock .disco-chip.active {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  border-color: transparent;
+  color: #fff;
+}
+
+/* Resumo geral (nenhum depot selecionado) – card */
+#spDiscoBlock .disco-summary-block {
+  margin-bottom: 1.25rem;
+}
+
+#spDiscoBlock .disco-summary-block.hidden {
+  display: none;
+}
+
+#spDiscoBlock .disco-summary-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+#spDiscoBlock .disco-summary-card-header {
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.04) 100%);
+  border-bottom: 1px solid rgba(59, 130, 246, 0.15);
+  padding: 0.85rem 1.25rem;
+}
+
+#spDiscoBlock .disco-summary-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e40af;
+  margin: 0;
+}
+
+#spDiscoBlock .disco-summary-card-body {
+  padding: 1rem 1.25rem;
+}
+
+#spDiscoBlock .disco-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 0.75rem;
+}
+
+#spDiscoBlock .disco-summary-item {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+#spDiscoBlock .disco-summary-item:hover {
+  border-color: rgba(59, 130, 246, 0.3);
+  background: #eff6ff;
+}
+
+#spDiscoBlock .disco-summary-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1e40af;
+}
+
+#spDiscoBlock .disco-summary-label {
+  font-size: 0.7rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* Resumo por loop (depot selecionado, loop não) – usa .disco-route-blocks e .disco-route-block como as rotas */
+#spDiscoBlock .disco-loop-summary-block {
+  margin-bottom: 1.25rem;
+}
+
+#spDiscoBlock .disco-loop-summary-block.hidden {
+  display: none;
+}
+
+#spDiscoBlock .disco-loop-summary-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e40af;
+  margin-bottom: 0.75rem;
+}
+
+/* Grid de blocos resumidos das rotas (largura para caber tabela Pre-12/ASR/DSR) */
+#spDiscoBlock .disco-route-blocks {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+@media (min-width: 768px) {
+  #spDiscoBlock .disco-route-blocks {
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 1rem;
+  }
+}
+
+/* Bloco da rota: cabeçalho + badges + tabela Pre-12/ASR/DSR */
+#spDiscoBlock .disco-route-block {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.6rem;
+  padding: 0.65rem 0.75rem;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+#spDiscoBlock .disco-route-block:hover {
+  border-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 2px 10px rgba(59, 130, 246, 0.12);
+  background: rgba(248, 250, 252, 0.9);
+}
+
+#spDiscoBlock .disco-route-block-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.35rem;
+  margin-bottom: 0.4rem;
+}
+
+#spDiscoBlock .disco-route-block-name {
+  font-weight: 700;
+  color: #1e40af;
+  font-size: 0.9rem;
+}
+
+#spDiscoBlock .disco-route-block-stops {
+  font-weight: 600;
+  color: #64748b;
+  font-size: 0.75rem;
+}
+
+#spDiscoBlock .disco-route-block-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.35rem;
+}
+
+#spDiscoBlock .disco-route-block-badge {
+  font-size: 0.7rem;
+  color: #475569;
+  background: rgba(59, 130, 246, 0.08);
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.35rem;
+}
+
+#spDiscoBlock .disco-route-block-hint {
+  font-size: 0.65rem;
+  color: #94a3b8;
+  display: block;
+}
+
+/* Tabela Pre-12 / ASR / DSR dentro do card da rota */
+#spDiscoBlock .disco-route-block .disco-route-detail-content {
+  margin-top: 0.65rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+#spDiscoBlock .disco-route-block .disco-route-detail-lists {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  padding: 0;
+}
+
+#spDiscoBlock .disco-route-block .disco-route-detail-list-block {
+  border: 1px solid #cbd5e1;
+  border-radius: 0.4rem;
+  overflow: hidden;
+  background: #fff;
+}
+
+#spDiscoBlock .disco-route-block .disco-route-detail-list-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #1e40af;
+  padding: 0.35rem 0.5rem;
+  margin: 0;
+  background: linear-gradient(180deg, #93c5fd 0%, #bfdbfe 100%);
+  border-bottom: 1px dotted rgba(30, 64, 175, 0.2);
+}
+
+#spDiscoBlock .disco-route-block .disco-route-detail-address-list {
+  max-height: 140px;
+  overflow-y: auto;
+  font-size: 0.75rem;
+}
+
+#spDiscoBlock .disco-route-block .disco-route-address-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.72rem;
+}
+
+#spDiscoBlock .disco-route-block .disco-route-address-table td {
+  padding: 0.3rem 0.5rem;
+  border: 1px dotted rgba(30, 64, 175, 0.18);
+  vertical-align: top;
+}
+
+#spDiscoBlock .disco-route-block .disco-route-address-table tbody tr:nth-child(odd) {
+  background: #dbeafe;
+}
+
+#spDiscoBlock .disco-route-block .disco-route-address-table tbody tr:nth-child(even) {
+  background: #eff6ff;
+}
+
+#spDiscoBlock .disco-route-block .disco-addr-postcode {
+  font-weight: 600;
+  color: #1e40af;
+  white-space: nowrap;
+  width: 1%;
+}
+
+#spDiscoBlock .disco-route-block .disco-addr-address {
+  color: #334155;
+}
+
+#spDiscoBlock .disco-route-block .disco-list-empty {
+  padding: 0.4rem 0.5rem;
+  margin: 0;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+/* Modal: lista completa da rota – melhorada */
+.disco-route-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  animation: discoModalFadeIn 0.2s ease-out;
+}
+
+.disco-route-modal.hidden {
+  display: none;
+}
+
+@keyframes discoModalFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.disco-route-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.disco-route-modal-backdrop:hover {
+  background: rgba(15, 23, 42, 0.65);
+}
+
+.disco-route-modal-dialog {
+  position: relative;
+  width: 100%;
+  max-width: 920px;
+  max-height: 88vh;
+  overflow: hidden;
+  border-radius: 1rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  background: #fff;
+  animation: discoModalSlideIn 0.25s ease-out;
+}
+
+@keyframes discoModalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.disco-route-modal-content {
+  max-height: 88vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.disco-route-modal-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.disco-route-modal-content::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.disco-route-modal-content::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.disco-route-modal-content::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.disco-route-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.35rem;
+  background: linear-gradient(135deg, #1e40af 0%, #2563eb 50%, #3b82f6 100%);
+  border-bottom: none;
+  flex-shrink: 0;
+}
+
+.disco-route-modal-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.disco-route-modal-close {
+  flex-shrink: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  cursor: pointer;
+  border-radius: 0.5rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.disco-route-modal-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+}
+
+.disco-route-modal-close:active {
+  transform: scale(0.98);
+}
+
+.disco-route-modal-body {
+  padding: 1.25rem 1.5rem 1.5rem;
+}
+
+.disco-route-modal-body .disco-route-detail-header,
+.disco-route-modal-body .disco-route-detail-table-wrap,
+.disco-route-modal-body .disco-route-detail-lists {
+  margin-top: 0;
+}
+
+/* Detalhe da rota na modal – barra azul, tabela, listas endereços */
+.disco-route-detail-content {
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background: #fafbfc;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.disco-route-modal-body .disco-route-detail-content {
+  margin-top: 0;
+}
+
+/* Barra azul no topo (tipo dropdown) */
+.disco-route-detail-content .disco-route-detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(180deg, #93c5fd 0%, #7dd3fc 100%);
+  border-bottom: 1px dotted rgba(30, 64, 175, 0.25);
+  color: #1e3a8a;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.disco-route-detail-content .disco-route-detail-header-arrow {
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+/* Tabela: cabeçalho azul escuro branco, linhas alternadas, linha TOTAL azul */
+.disco-route-detail-content .disco-route-detail-table-wrap {
+  overflow-x: auto;
+}
+
+.disco-route-detail-content .disco-route-detail-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.disco-route-detail-content .disco-route-detail-table th,
+.disco-route-detail-content .disco-route-detail-table td {
+  padding: 0.55rem 0.75rem;
+  border: 1px dotted rgba(30, 64, 175, 0.2);
+}
+
+.disco-route-detail-content .disco-route-detail-table thead tr {
+  background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+  color: #fff;
+}
+
+.disco-route-detail-content .disco-route-detail-table thead th {
+  font-weight: 700;
+  text-align: left;
+}
+
+.disco-route-detail-content .disco-route-detail-table thead th:nth-child(n+2) {
+  text-align: right;
+}
+
+.disco-route-detail-content .disco-route-detail-table tbody tr:nth-child(odd) {
+  background: #dbeafe;
+}
+
+.disco-route-detail-content .disco-route-detail-table tbody tr:nth-child(even) {
+  background: #eff6ff;
+}
+
+.disco-route-detail-content .disco-route-detail-table td.disco-td-num {
+  text-align: right;
+}
+
+.disco-route-detail-content .disco-route-detail-table tfoot tr {
+  background: linear-gradient(180deg, #1d4ed8 0%, #1e40af 100%);
+  color: #fff;
+  font-weight: 700;
+}
+
+.disco-route-detail-content .disco-route-detail-table tfoot td:nth-child(n+2) {
+  text-align: right;
+}
+
+/* Listas Pre-12 / ASR / DSR: tabela postcode + endereço, estilo imagem */
+.disco-route-detail-content .disco-route-detail-lists {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem 1rem 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .disco-route-detail-content .disco-route-detail-lists {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.disco-route-detail-content .disco-route-detail-list-block {
+  border: 1px solid #cbd5e1;
+  border-radius: 0.4rem;
+  overflow: hidden;
+  background: #fff;
+}
+
+.disco-route-detail-content .disco-route-detail-list-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #1e40af;
+  padding: 0.5rem 0.65rem;
+  margin: 0;
+  background: linear-gradient(180deg, #93c5fd 0%, #bfdbfe 100%);
+  border-bottom: 1px dotted rgba(30, 64, 175, 0.2);
+}
+
+.disco-route-detail-content .disco-route-detail-address-list {
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.disco-route-detail-content .disco-route-detail-address-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.disco-route-detail-content .disco-route-detail-address-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.disco-route-detail-content .disco-route-address-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.disco-route-detail-content .disco-route-address-table td {
+  padding: 0.4rem 0.6rem;
+  border: 1px dotted rgba(30, 64, 175, 0.18);
+  vertical-align: top;
+}
+
+.disco-route-detail-content .disco-route-address-table tbody tr:nth-child(odd) {
+  background: #dbeafe;
+}
+
+.disco-route-detail-content .disco-route-address-table tbody tr:nth-child(even) {
+  background: #eff6ff;
+}
+
+.disco-route-detail-content .disco-route-address-table .disco-addr-postcode {
+  font-weight: 600;
+  color: #1e40af;
+  white-space: nowrap;
+  width: 1%;
+}
+
+.disco-route-detail-content .disco-route-address-table .disco-addr-address {
+  color: #334155;
+}
+
+.disco-route-detail-content .disco-route-detail-address-list .disco-list-empty {
+  padding: 0.6rem 0.65rem;
+  margin: 0;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+#spDiscoBlock .disco-loop-card {
+  background: #fff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+#spDiscoBlock .disco-loop-card .card-header {
+  background: rgba(59, 130, 246, 0.06) !important;
+  border-bottom: 1px solid #e2e8f0;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+#spDiscoBlock .disco-loop-card .badge.bg-primary {
+  background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+  font-size: 0.75rem;
+}
+
+#spDiscoBlock .disco-loop-routes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+#spDiscoBlock .disco-loop-route-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.35rem 0.5rem;
+  background: rgba(0,0,0,0.02);
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+}
+
+#spDiscoBlock .disco-loop-route-name {
+  font-weight: 500;
+  color: #334155;
+}
+
+#spDiscoBlock .disco-loop-route-count {
+  font-weight: 700;
+  color: #1e40af;
+  min-width: 2rem;
+  text-align: right;
+}
+
+#spDiscoBlock .disco-no-data.hidden {
+  display: none !important;
+}
+
+/* Disco: blocos por loop alinhados e do mesmo tamanho */
+#spDiscoBlock .disco-loop-blocks {
+  align-items: stretch;
+}
+
+#spDiscoBlock .disco-loop-blocks > [class*="col-"] {
+  display: flex;
+}
+
+#spDiscoBlock .disco-loop-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 200px;
+  width: 100%;
+}
+
+#spDiscoBlock .disco-loop-card .card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ========== LAST DAY OPERATIONS / FINANCIALS (#spDashboardFoldersBlock) ========== */
+#spDashboardFoldersBlock {
+  background: linear-gradient(135deg, rgba(255,255,255,0.97) 0%, rgba(248,250,252,0.98) 100%);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  border-radius: 1.25rem;
+  box-shadow: 0 4px 24px -4px rgba(34, 197, 94, 0.08), 0 0 0 1px rgba(255,255,255,0.8) inset;
+  overflow: hidden;
+}
+
+#spDashboardFoldersBlock .sp-dashboard-module-card {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0;
+}
+
+#spDashboardFoldersBlock .sp-module-card-header {
+  background: linear-gradient(90deg, rgba(34, 197, 94, 0.08) 0%, transparent 100%) !important;
+  border-bottom: 1px solid rgba(34, 197, 94, 0.12);
+  padding: 1rem 1.5rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+#spDashboardFoldersBlock .sp-module-card-header h2.h5 {
+  color: #166534 !important;
+  font-weight: 700;
+  font-size: 1.15rem;
+}
+
+#spDashboardFoldersBlock .sp-module-card-header .text-muted {
+  color: #64748b !important;
+}
+
+#spDashboardFoldersBlock .sp-module-card-header-icon--operations i {
+  color: #16a34a;
+}
+
+/* Tabs Daily Operations | Financials */
+#spDashboardFoldersBlock .sp-folder-tabs-bootstrap .nav-link {
+  border-radius: 0.5rem;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  color: #64748b;
+  border: 1px solid transparent;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+#spDashboardFoldersBlock .sp-folder-tabs-bootstrap .nav-link:hover {
+  color: #166534;
+  background: rgba(34, 197, 94, 0.08);
+}
+
+#spDashboardFoldersBlock .sp-folder-tabs-bootstrap .nav-link.active {
+  background: linear-gradient(135deg, #22c55e, #16a34a) !important;
+  color: #fff !important;
+  border-color: transparent;
+}
+
+/* Strip de KPIs (Last Day / Financials) – padronizado: mesmo tamanho e estilização */
+#spDashboardFoldersBlock .sp-folder-strip-wrap {
+  background: rgba(255, 255, 255, 0.6) !important;
+  border-bottom: 1px solid rgba(34, 197, 94, 0.12);
+  padding: 0.5rem 1rem !important;
+}
+
+#spDashboardFoldersBlock .dashboard-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 0.65rem;
+  align-items: stretch;
+}
+
+@media (min-width: 576px) {
+  #spDashboardFoldersBlock .dashboard-kpi-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+/* Todos os itens da grelha com a mesma altura e aspecto */
+#spDashboardFoldersBlock .dashboard-kpi-grid > * {
+  min-height: 82px;
+  display: flex;
+}
+
+#spDashboardFoldersBlock .dashboard-kpi-grid > * > .dashboard-kpi-card {
+  flex: 1;
+  width: 100%;
+  min-height: 82px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+#spDashboardFoldersBlock .dashboard-kpi-card {
+  background: #fff !important;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  padding: 0.5rem 0.4rem;
+  min-height: 82px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+#spDashboardFoldersBlock .dashboard-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px -4px rgba(34, 197, 94, 0.15);
+  border-color: rgba(34, 197, 94, 0.25);
+}
+
+#spDashboardFoldersBlock .dashboard-kpi-icon-wrap {
+  border-radius: 0.625rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+#spDashboardFoldersBlock .dashboard-kpi-value {
+  color: #1e293b !important;
+  font-weight: 700;
+}
+
+#spDashboardFoldersBlock .dashboard-kpi-label {
+  color: #64748b !important;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* KPIs padronizados: mesmo tamanho e estilização para todos */
+#spDashboardFoldersBlock .dashboard-kpi-card .dashboard-kpi-label {
+  white-space: normal;
+  line-height: 1.2;
+  text-align: center;
+  font-size: 0.65rem;
+}
+
+#spDashboardFoldersBlock .dashboard-kpi-card .dashboard-kpi-value {
+  font-size: 1rem;
+}
+
+#spDashboardFoldersBlock .dashboard-kpi-content {
+  gap: 0.2rem;
+}
+
+#spDashboardFoldersBlock .dashboard-kpi-icon-wrap {
+  width: 2rem;
+  height: 2rem;
+  font-size: 1rem;
+}
+
+/* Conteúdo das tabs: Last Day – blocos alinhados e do mesmo tamanho */
+#spDashboardFoldersBlock .card-body.tab-content {
+  padding: 1.25rem 1.5rem !important;
+}
+
+#spDashboardFoldersBlock .opms-lastday-layout {
+  align-items: stretch;
+}
+
+#spDashboardFoldersBlock .opms-lastday-left,
+#spDashboardFoldersBlock .opms-lastday-right {
+  min-height: 200px;
+}
+
+#spDashboardFoldersBlock .opms-performance-block {
+  flex: 1;
+  min-width: 0;
+}
+
+#spDashboardFoldersBlock .opms-performance-card {
+  height: 100%;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Financials: blocos da mesma altura na linha */
+#spDashboardFoldersBlock .spms-financials-row {
+  align-items: stretch;
+}
+
+#spDashboardFoldersBlock .spms-financials-row .spms-financials-circle-wrap,
+#spDashboardFoldersBlock .spms-financials-row .spms-financials-stack,
+#spDashboardFoldersBlock .spms-financials-row .spms-avg-block {
+  flex: 1;
+  min-width: 0;
+  min-height: 140px;
+}
+
+#spDashboardFoldersBlock .opms-lastday-header h3.h6 {
+  color: #166534 !important;
+  font-weight: 700;
+}
+
+#spDashboardFoldersBlock .opms-lastday-header h3.h6 .text-primary {
+  color: #16a34a !important;
+}
+
+#spDashboardFoldersBlock .opms-date-edge-btn,
+#spDashboardFoldersBlock .opms-date-center {
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  background: #fff;
+  color: #334155;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+#spDashboardFoldersBlock .opms-date-edge-btn:hover,
+#spDashboardFoldersBlock .opms-date-center:hover {
+  border-color: #22c55e;
+  background: rgba(34, 197, 94, 0.06);
+}
+
+#spDashboardFoldersBlock .opms-viewing-date {
+  color: #1e293b !important;
+}
+
+#spDashboardFoldersBlock .opms-subtitle {
+  color: #64748b !important;
+}
+
+/* Árvore e painéis Last Day */
+#spDashboardFoldersBlock .opms-tree,
+#spDashboardFoldersBlock .opms-panel {
+  color: #334155;
+}
+
+#spDashboardFoldersBlock .opms-tree-item.selected {
+  background: rgba(34, 197, 94, 0.1);
+  color: #166534;
+  font-weight: 600;
+}
+
+#spDashboardFoldersBlock .opms-tree-item:hover:not(.selected) {
+  background: #f8fafc;
+}
+
+/* Financials tab – mesmo bloco, consistência */
+#spDashboardFoldersBlock #folder-panel-spms .card,
+#spDashboardFoldersBlock #folder-panel-spms .sp-module-inner-card {
+  background: #fff !important;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+}
+
+#spDashboardFoldersBlock #folder-panel-spms .card-header {
+  background: rgba(34, 197, 94, 0.06) !important;
+  border-bottom: 1px solid #e2e8f0;
+  color: #1e293b;
+}

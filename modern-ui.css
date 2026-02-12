@@ -1,0 +1,220 @@
+/**
+ * Modern UI – camada de modernização para o DHL Subsystem
+ * Tipografia Plus Jakarta Sans, tokens atualizados, componentes com aspecto atual.
+ * Carregar após base-system-reference.css e liquid-glass.css.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+
+:root {
+  --font-sans: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
+  --modern-radius-sm: 0.5rem;
+  --modern-radius: 0.75rem;
+  --modern-radius-lg: 1rem;
+  --modern-radius-xl: 1.25rem;
+  --modern-radius-2xl: 1.5rem;
+  --modern-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05), 0 0 0 1px rgba(15, 23, 42, 0.04);
+  --modern-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.07), 0 2px 4px -2px rgba(15, 23, 42, 0.05), 0 0 0 1px rgba(15, 23, 42, 0.03);
+  --modern-shadow-md: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.05), 0 0 0 1px rgba(15, 23, 42, 0.04);
+  --modern-shadow-lg: 0 20px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04), 0 0 0 1px rgba(15, 23, 42, 0.03);
+  --modern-shadow-glow: 0 0 0 1px rgba(99, 102, 241, 0.08), 0 4px 14px rgba(99, 102, 241, 0.12);
+  --modern-transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --modern-transition-smooth: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  --modern-surface: rgba(255, 255, 255, 0.72);
+  --modern-surface-hover: rgba(255, 255, 255, 0.88);
+  --modern-border: rgba(15, 23, 42, 0.06);
+  --modern-border-focus: rgba(99, 102, 241, 0.4);
+}
+
+/* Tipografia global */
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.01em;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-primary, #0f172a);
+}
+
+/* Cards modernos (override suave) */
+.card,
+.sp-dashboard-card,
+.sp-dashboard-module-card,
+.liquid-glass-surface {
+  border-radius: var(--modern-radius-lg) !important;
+  border: 1px solid var(--modern-border) !important;
+  box-shadow: var(--modern-shadow) !important;
+  transition: box-shadow var(--modern-transition), transform var(--modern-transition), border-color var(--modern-transition) !important;
+}
+
+.card:hover,
+.sp-dashboard-module-card:hover {
+  box-shadow: var(--modern-shadow-md) !important;
+  border-color: rgba(99, 102, 241, 0.12) !important;
+}
+
+/* Botões modernos */
+.btn {
+  border-radius: var(--modern-radius) !important;
+  font-weight: 600;
+  transition: transform var(--modern-transition), box-shadow var(--modern-transition) !important;
+}
+
+.btn-primary {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05), 0 2px 8px rgba(99, 102, 241, 0.25) !important;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35) !important;
+}
+
+.btn-outline-primary {
+  border-width: 1.5px;
+}
+
+.btn-sm {
+  border-radius: var(--modern-radius-sm) !important;
+}
+
+/* Form controls */
+.form-control,
+.form-select {
+  border-radius: var(--modern-radius) !important;
+  border: 1px solid var(--modern-border) !important;
+  transition: border-color var(--modern-transition), box-shadow var(--modern-transition) !important;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--modern-border-focus) !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12) !important;
+}
+
+/* Tabelas */
+.table {
+  border-radius: var(--modern-radius);
+  overflow: hidden;
+}
+
+.table thead th {
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary, #64748b);
+  border-bottom: 1px solid var(--modern-border) !important;
+}
+
+.table-hover tbody tr:hover {
+  background: rgba(99, 102, 241, 0.04) !important;
+}
+
+/* Badges e pills */
+.badge {
+  border-radius: var(--modern-radius-sm);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* Nav tabs (Bootstrap) */
+.nav-tabs .nav-link {
+  border-radius: var(--modern-radius) var(--modern-radius) 0 0 !important;
+  font-weight: 500;
+  transition: color var(--modern-transition), background var(--modern-transition) !important;
+}
+
+/* Alerts */
+.alert {
+  border-radius: var(--modern-radius) !important;
+  border: 1px solid transparent;
+}
+
+/* Dashboard header */
+.dashboard-header,
+.vendor-admin-header {
+  border-radius: var(--modern-radius-lg) !important;
+  box-shadow: var(--modern-shadow) !important;
+}
+
+/* Sidebar beam – toques modernos */
+.beam-sidebar {
+  border-radius: 0 var(--modern-radius-lg) var(--modern-radius-lg) 0 !important;
+}
+
+.beam-plate {
+  border-radius: var(--modern-radius) !important;
+  transition: background var(--modern-transition), transform var(--modern-transition) !important;
+}
+
+.beam-plate:hover {
+  transform: translateX(2px);
+}
+
+/* Access select page – cards modernos (quando usa classes .access-select-*) */
+.access-select-page {
+  font-family: var(--font-sans) !important;
+}
+
+.access-select-card {
+  border-radius: var(--modern-radius-xl) !important;
+  box-shadow: var(--modern-shadow) !important;
+  border: 1px solid var(--modern-border) !important;
+  transition: transform var(--modern-transition-smooth), box-shadow var(--modern-transition-smooth), border-color var(--modern-transition) !important;
+}
+
+.access-select-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--modern-shadow-lg) !important;
+  border-color: rgba(99, 102, 241, 0.25) !important;
+}
+
+.access-select-card-icon {
+  border-radius: var(--modern-radius-lg) !important;
+  transition: transform var(--modern-transition-smooth) !important;
+}
+
+.access-select-card:hover .access-select-card-icon {
+  transform: scale(1.05);
+}
+
+/* KPI / folder strips */
+.sp-folder-strip-wrap {
+  border-radius: 0 0 var(--modern-radius-lg) var(--modern-radius-lg);
+}
+
+.sp-folder-kpi {
+  border-radius: var(--modern-radius) !important;
+  transition: transform var(--modern-transition), box-shadow var(--modern-transition) !important;
+}
+
+/* Modais */
+.modal-content {
+  border-radius: var(--modern-radius-xl) !important;
+  border: none !important;
+  box-shadow: var(--modern-shadow-lg) !important;
+}
+
+.modal-header {
+  border-radius: var(--modern-radius-xl) var(--modern-radius-xl) 0 0 !important;
+}
+
+/* Utilitários de entrada (animação suave) */
+@media (prefers-reduced-motion: no-preference) {
+  .card,
+  .sp-dashboard-module-card,
+  section[data-aos] {
+    animation-duration: 0.5s;
+  }
+}
+
+/* Ajuste de contraste para acessibilidade */
+@media (prefers-contrast: high) {
+  :root {
+    --modern-border: rgba(15, 23, 42, 0.12);
+  }
+}

@@ -435,8 +435,6 @@
         });
         var spFolderSprFixed = document.getElementById('spFolderKpiSprFixed');
         if (spFolderSprFixed) spFolderSprFixed.textContent = agg.totalDeliveries != null ? agg.totalDeliveries : 0;
-        var spDiscoKpiSpr = document.getElementById('spDiscoKpiSpr');
-        if (spDiscoKpiSpr) spDiscoKpiSpr.textContent = agg.totalDeliveries != null ? agg.totalDeliveries : 0;
 
         var grid = document.getElementById('kpiGrid');
         if (grid) grid.setAttribute('data-loading', 'false');
@@ -542,21 +540,6 @@
         if (modalEmpty) modalEmpty.classList.toggle('hidden', attention.length > 0);
       }
 
-      function initBeamSidebar() {
-        var beam = document.getElementById('beamSidebar');
-        var trigger = document.getElementById('beamTrigger');
-        var overlay = document.getElementById('beamOverlay');
-        if (!beam || !trigger) return;
-        function toggleBeam() {
-          var isOpen = beam.getAttribute('data-state') === 'open';
-          beam.setAttribute('data-state', isOpen ? 'closed' : 'open');
-          trigger.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
-          if (overlay) overlay.classList.toggle('visible', !isOpen);
-        }
-        trigger.addEventListener('click', toggleBeam);
-        if (overlay) overlay.addEventListener('click', function () { beam.setAttribute('data-state', 'closed'); trigger.setAttribute('aria-expanded', 'false'); overlay.classList.remove('visible'); });
-      }
-
       var currentFolderTab = 'lastday';
       function switchFolderTab(folderId) {
         currentFolderTab = folderId;
@@ -578,26 +561,11 @@
           }
           if (tab) { tab.classList.toggle('active', isActive); tab.setAttribute('aria-selected', isActive ? 'true' : 'false'); }
         });
-        var goalsRow = document.getElementById('spFolderGoalsRow');
-        var lastDayPerf = document.getElementById('opmsPerformanceSection');
-        var spmsPerf = document.getElementById('spmsPerformanceSection');
-        if (goalsRow) goalsRow.classList.add('hidden');
-        if (lastDayPerf) lastDayPerf.classList.remove('opms-performance-block--goals-in-strip');
-        if (spmsPerf) spmsPerf.classList.remove('opms-performance-block--goals-in-strip');
-        if (folderId === 'lastday') {
-          if (lastDayPerf) lastDayPerf.classList.add('opms-performance-block--goals-in-strip');
-          updateLastDaySection();
-        }
-        if (folderId === 'spms') {
-          if (spmsPerf) spmsPerf.classList.add('opms-performance-block--goals-in-strip');
-          updateSpmsSection();
-        }
+        if (folderId === 'lastday') updateLastDaySection();
+        if (folderId === 'spms') updateSpmsSection();
         updateSpFolderDashboardStrip(folderId);
       }
 
-      /** Strip Disco: valores para Loop e PRE-12 (preenchidos por updateDiscoSection). */
-      var discoStripLoop = '—';
-      var discoStripPre12 = null;
       /** Dados para a strip Last Day (SPOH-R, SPR, STOPS, TW, AFD). */
       function getLastDayStripData() {
         var selDate = getCurrentViewDate();
@@ -648,8 +616,12 @@
           }
         }
         var twStr = twRaw != null ? (twRaw <= 1 ? (Math.round(twRaw * 1000) / 10) : (Math.round(twRaw * 10) / 10)) + '%' : '—';
-        var stopsFilter = aggregateContracts();
-        return { spohr: spohr != null ? (Math.round(spohr * 10) / 10) : '—', spr: spr, stops: stopsFilter.totalStops, tw: twStr, afd: afdStr };
+        var stopsVal = (data && (data.counts || (data.byRoute && Object.keys(data.byRoute).length))) ? metrics.deliveries : null;
+        if (stopsVal == null) {
+          var agg = aggregateContracts();
+          stopsVal = agg.totalStops;
+        }
+        return { spohr: spohr != null ? (Math.round(spohr * 10) / 10) : '—', spr: spr, stops: stopsVal, tw: twStr, afd: afdStr };
       }
       function getSpmsStripData() {
         var selDate = getCurrentViewDate();
@@ -1065,7 +1037,6 @@
           loopFilter = null;
           depotFilter = null;
         }
-        renderLastDayGoals(selDate, routeFilter, loopFilter, depotFilter);
         renderLastDayDeliveriesTable(selDate, routeFilter, loopFilter, depotFilter);
         if (currentFolderTab === 'lastday') updateSpFolderDashboardStrip('lastday');
       }
@@ -1110,6 +1081,9 @@
       }
 
       function renderLastDayGoals(storeDate, routeFilter, loopFilter, depotFilter) {
+        return;
+      }
+      function _renderLastDayGoalsUnused(storeDate, routeFilter, loopFilter, depotFilter) {
         var wrap = document.getElementById('lastDayGoalsWrap');
         var emptyEl = document.getElementById('lastDayEmptyState');
         if (!wrap) return;
@@ -1300,14 +1274,6 @@
         }
         wrap.innerHTML = tableHtml + circlesHtml + twByRouteHtml;
         wrap.classList.add('opms-goals-visible');
-        var goalsRow = document.getElementById('spFolderGoalsRow');
-        var goalsWrapStrip = document.getElementById('spFolderGoalsWrap');
-        var perfSection = document.getElementById('opmsPerformanceSection');
-        if (currentFolderTab === 'lastday' && goalsRow && goalsWrapStrip) {
-          goalsWrapStrip.innerHTML = circlesHtml;
-          goalsRow.classList.remove('hidden');
-          if (perfSection) perfSection.classList.add('opms-performance-block--goals-in-strip');
-        }
       }
 
       function initLastDay() {
@@ -1632,18 +1598,12 @@
           if (spmsTableWrap) spmsTableWrap.classList.add('hidden');
           if (spmsDashboardEmpty) spmsDashboardEmpty.classList.remove('hidden');
         }
-        if (!wrap) return;
         if (!data || !hasCounts) {
-          wrap.innerHTML = '';
-          wrap.classList.remove('opms-goals-visible');
+          if (wrap) { wrap.innerHTML = ''; wrap.classList.remove('opms-goals-visible'); }
           setSpmsDashboardEmpty();
-          var goalsRow = document.getElementById('spFolderGoalsRow');
-          var spmsPerfSection = document.getElementById('spmsPerformanceSection');
-          if (goalsRow) goalsRow.classList.add('hidden');
-          if (spmsPerfSection) spmsPerfSection.classList.remove('opms-performance-block--goals-in-strip');
           return;
         }
-        wrap.classList.add('opms-goals-visible');
+        if (wrap) wrap.classList.add('opms-goals-visible');
         var counts = data.counts || {};
         var depotForRate = '';
         var routeNamesInLoop = null;
@@ -1788,15 +1748,7 @@
           '<span class="opms-circle-income-pct">' + incomePctDisplay + '</span></div></div>' +
           '<span class="opms-circle-label">Income (GBP)</span></div></div>';
         var goalsCirclesHtml = '<div class="last-day-goals-circles-wrap">' + performanceHtml + incomeHtml + '</div>';
-        wrap.innerHTML = goalsCirclesHtml;
-        var goalsRow = document.getElementById('spFolderGoalsRow');
-        var goalsWrapStrip = document.getElementById('spFolderGoalsWrap');
-        var spmsPerfSection = document.getElementById('spmsPerformanceSection');
-        if (currentFolderTab === 'spms' && goalsRow && goalsWrapStrip) {
-          goalsWrapStrip.innerHTML = goalsCirclesHtml;
-          goalsRow.classList.remove('hidden');
-          if (spmsPerfSection) spmsPerfSection.classList.add('opms-performance-block--goals-in-strip');
-        }
+        if (wrap) wrap.innerHTML = goalsCirclesHtml;
         if (spmsKpiDelEl) spmsKpiDelEl.textContent = delOk;
         if (spmsKpiPuEl) spmsKpiPuEl.textContent = delPu;
         if (spmsKpiHnEl) spmsKpiHnEl.textContent = delHn;
@@ -2062,13 +2014,355 @@
         updateVehicles();
       }
 
+      var discoState = { depot: '', loop: '' };
+
+      function getDiscoDeliveries() {
+        var data = window.DISCO_DATA;
+        return (data && data.deliveries && Array.isArray(data.deliveries)) ? data.deliveries : [];
+      }
+
+      function getFilteredDiscoDeliveries() {
+        var list = getDiscoDeliveries();
+        var depot = (discoState.depot || '').trim();
+        var loop = (discoState.loop || '').trim();
+        if (!depot && !loop) return list;
+        return list.filter(function (d) {
+          if (depot && (d.depot || '').trim() !== depot) return false;
+          if (loop && (d.loop || '').trim() !== loop) return false;
+          return true;
+        });
+      }
+
+      function getDiscoUniqueDepots() {
+        var list = getDiscoDeliveries();
+        var seen = {};
+        list.forEach(function (d) {
+          var v = (d.depot || '').trim();
+          if (v) seen[v] = true;
+        });
+        return Object.keys(seen).sort();
+      }
+
+      /** Loops únicos: se houver depot selecionado, apenas loops desse depot; senão todos. */
+      function getDiscoUniqueLoops() {
+        var list = getDiscoDeliveries();
+        var depot = (discoState.depot || '').trim();
+        var seen = {};
+        list.forEach(function (d) {
+          if (depot && (d.depot || '').trim() !== depot) return;
+          var v = (d.loop || '').trim();
+          if (v) seen[v] = true;
+        });
+        return Object.keys(seen).sort();
+      }
+
+      function getRoutesWithStopsFromDeliveries(deliveries) {
+        var byRoute = {};
+        deliveries.forEach(function (d) {
+          var r = (d.route || '').trim();
+          if (r) byRoute[r] = (byRoute[r] || 0) + 1;
+        });
+        return Object.keys(byRoute).sort().map(function (route) {
+          return { route: route, stops: byRoute[route] };
+        });
+      }
+
+      function getRoutesWithSummary(deliveries) {
+        var byRoute = {};
+        deliveries.forEach(function (d) {
+          var r = (d.route || '').trim();
+          if (!r) return;
+          if (!byRoute[r]) byRoute[r] = { route: r, stops: 0, pre12: 0, asr: 0, dsr: 0 };
+          byRoute[r].stops += 1;
+          if (d.pre12 === true) byRoute[r].pre12 += 1;
+          if (d.asr === true) byRoute[r].asr += 1;
+          if (d.dsr === true) byRoute[r].dsr += 1;
+        });
+        return Object.keys(byRoute).sort().map(function (route) { return byRoute[route]; });
+      }
+
+      function getDeliveriesForRoute(routeName) {
+        return getFilteredDiscoDeliveries().filter(function (d) {
+          return (d.route || '').trim() === routeName;
+        });
+      }
+
+      /** HTML das listas Pre-12, ASR e DSR para um card de rota (tabela por categoria). */
+      function getRoutePre12AsrDsrTableHtml(routeName) {
+        var deliveries = getDeliveriesForRoute(routeName);
+        var pre12 = deliveries.filter(function (d) { return d.pre12 === true; });
+        var asr = deliveries.filter(function (d) { return d.asr === true; });
+        var dsr = deliveries.filter(function (d) { return d.dsr === true; });
+        function rowsHtml(list) {
+          if (!list.length) return '<tr><td colspan="2" class="disco-list-empty">—</td></tr>';
+          return list.map(function (d) {
+            var pc = escapeHtml((d.subpostcode || '').trim());
+            var addr = escapeHtml((d.address || '').trim());
+            return '<tr><td class="disco-addr-postcode">' + pc + '</td><td class="disco-addr-address">' + addr + '</td></tr>';
+          }).join('');
+        }
+        return '<div class="disco-route-detail-content">' +
+          '<div class="disco-route-detail-lists">' +
+            '<div class="disco-route-detail-list-block">' +
+              '<h4 class="disco-route-detail-list-title">Pre-12</h4>' +
+              '<div class="disco-route-detail-address-list">' +
+                '<table class="disco-route-address-table"><tbody>' + rowsHtml(pre12) + '</tbody></table>' +
+              '</div></div>' +
+            '<div class="disco-route-detail-list-block">' +
+              '<h4 class="disco-route-detail-list-title">ASR</h4>' +
+              '<div class="disco-route-detail-address-list">' +
+                '<table class="disco-route-address-table"><tbody>' + rowsHtml(asr) + '</tbody></table>' +
+              '</div></div>' +
+            '<div class="disco-route-detail-list-block">' +
+              '<h4 class="disco-route-detail-list-title">DSR</h4>' +
+              '<div class="disco-route-detail-address-list">' +
+                '<table class="disco-route-address-table"><tbody>' + rowsHtml(dsr) + '</tbody></table>' +
+              '</div></div>' +
+          '</div></div>';
+      }
+
+      function updateSprKpi() {
+        var el = document.getElementById('dashboardSprValue');
+        if (!el) return;
+        var list = getFilteredDiscoDeliveries();
+        el.textContent = list.length;
+      }
+
+      function getDiscoGeneralSummary() {
+        var list = getDiscoDeliveries();
+        var totalDeliveries = list.length;
+        var routes = {};
+        var depots = {};
+        var loops = {};
+        var pre12 = 0, asr = 0, dsr = 0;
+        list.forEach(function (d) {
+          var r = (d.route || '').trim();
+          if (r) routes[r] = true;
+          var dep = (d.depot || '').trim();
+          if (dep) depots[dep] = true;
+          var lp = (d.loop || '').trim();
+          if (lp) loops[lp] = true;
+          if (d.pre12 === true) pre12 += 1;
+          if (d.asr === true) asr += 1;
+          if (d.dsr === true) dsr += 1;
+        });
+        return {
+          totalDeliveries: totalDeliveries,
+          totalRoutes: Object.keys(routes).length,
+          depotsCount: Object.keys(depots).length,
+          loopsCount: Object.keys(loops).length,
+          pre12: pre12,
+          asr: asr,
+          dsr: dsr
+        };
+      }
+
+      /** Resumo por loop para um depot: array de { loop, totalDeliveries, totalRoutes, pre12, asr, dsr }. */
+      function getDiscoLoopSummary(depot) {
+        var list = getDiscoDeliveries();
+        var depotTrim = (depot || '').trim();
+        var byLoop = {};
+        list.forEach(function (d) {
+          if ((d.depot || '').trim() !== depotTrim) return;
+          var lp = (d.loop || '').trim();
+          if (!lp) return;
+          if (!byLoop[lp]) byLoop[lp] = { loop: lp, totalDeliveries: 0, routes: {}, pre12: 0, asr: 0, dsr: 0 };
+          byLoop[lp].totalDeliveries += 1;
+          var r = (d.route || '').trim();
+          if (r) byLoop[lp].routes[r] = true;
+          if (d.pre12 === true) byLoop[lp].pre12 += 1;
+          if (d.asr === true) byLoop[lp].asr += 1;
+          if (d.dsr === true) byLoop[lp].dsr += 1;
+        });
+        return Object.keys(byLoop).sort().map(function (lp) {
+          var o = byLoop[lp];
+          return {
+            loop: o.loop,
+            totalDeliveries: o.totalDeliveries,
+            totalRoutes: Object.keys(o.routes).length,
+            pre12: o.pre12,
+            asr: o.asr,
+            dsr: o.dsr
+          };
+        });
+      }
+
+      function escapeHtml(s) {
+        if (s == null) return '';
+        var div = document.createElement('div');
+        div.textContent = s;
+        return div.innerHTML;
+      }
+
+      function updateDiscoSection() {
+        var depotChips = document.getElementById('discoDepotChips');
+        var loopChips = document.getElementById('discoLoopChips');
+        var routeBlocks = document.getElementById('discoRouteBlocks');
+        var noData = document.getElementById('discoNoData');
+        var deliveries = getDiscoDeliveries();
+        updateSprKpi();
+        if (!deliveries.length) {
+          if (noData) noData.classList.remove('hidden');
+          document.getElementById('dashboardSprValue') && (document.getElementById('dashboardSprValue').textContent = '—');
+          if (depotChips) depotChips.innerHTML = '';
+          if (loopChips) loopChips.innerHTML = '';
+          if (routeBlocks) routeBlocks.innerHTML = '';
+          document.getElementById('discoSummaryBlock') && document.getElementById('discoSummaryBlock').classList.add('hidden');
+          document.getElementById('discoLoopSummaryBlock') && document.getElementById('discoLoopSummaryBlock').classList.add('hidden');
+          return;
+        }
+        if (noData) noData.classList.add('hidden');
+        var hasDepot = !!(discoState.depot || '').trim();
+        var hasLoop = !!(discoState.loop || '').trim();
+        var summaryBlock = document.getElementById('discoSummaryBlock');
+        var loopSummaryBlock = document.getElementById('discoLoopSummaryBlock');
+        var filtered = getFilteredDiscoDeliveries();
+        var routesWithSummary = getRoutesWithSummary(filtered);
+
+        /* Resumo geral: só quando nenhum depot está selecionado */
+        if (summaryBlock) {
+          if (!hasDepot) {
+            summaryBlock.classList.remove('hidden');
+            var summary = getDiscoGeneralSummary();
+            var grid = document.getElementById('discoSummaryGrid');
+            if (grid) {
+              grid.innerHTML =
+                '<div class="disco-summary-item">' +
+                  '<span class="disco-summary-value">' + summary.totalDeliveries + '</span>' +
+                  '<span class="disco-summary-label">Total entregas</span>' +
+                '</div>' +
+                '<div class="disco-summary-item">' +
+                  '<span class="disco-summary-value">' + summary.totalRoutes + '</span>' +
+                  '<span class="disco-summary-label">Rotas</span>' +
+                '</div>' +
+                '<div class="disco-summary-item">' +
+                  '<span class="disco-summary-value">' + summary.depotsCount + '</span>' +
+                  '<span class="disco-summary-label">Depots</span>' +
+                '</div>' +
+                '<div class="disco-summary-item">' +
+                  '<span class="disco-summary-value">' + summary.loopsCount + '</span>' +
+                  '<span class="disco-summary-label">Loops</span>' +
+                '</div>' +
+                '<div class="disco-summary-item">' +
+                  '<span class="disco-summary-value">' + summary.pre12 + '</span>' +
+                  '<span class="disco-summary-label">Pre-12</span>' +
+                '</div>' +
+                '<div class="disco-summary-item">' +
+                  '<span class="disco-summary-value">' + summary.asr + '</span>' +
+                  '<span class="disco-summary-label">ASR</span>' +
+                '</div>' +
+                '<div class="disco-summary-item">' +
+                  '<span class="disco-summary-value">' + summary.dsr + '</span>' +
+                  '<span class="disco-summary-label">DSR</span>' +
+                '</div>';
+            }
+          } else {
+            summaryBlock.classList.add('hidden');
+          }
+        }
+
+        /* Resumo por loop: depot selecionado mas loop não */
+        if (loopSummaryBlock) {
+          if (hasDepot && !hasLoop) {
+            loopSummaryBlock.classList.remove('hidden');
+            var loopSummaryTitle = document.getElementById('discoLoopSummaryTitle');
+            if (loopSummaryTitle) loopSummaryTitle.textContent = 'Loops do depot ' + escapeHtml(discoState.depot);
+            var loopGrid = document.getElementById('discoLoopSummaryGrid');
+            if (loopGrid) {
+              var loopItems = getDiscoLoopSummary(discoState.depot);
+              loopGrid.innerHTML = loopItems.map(function (item) {
+                return '<div class="disco-route-block" data-loop="' + escapeHtml(item.loop) + '">' +
+                  '<div class="disco-route-block-head">' +
+                    '<span class="disco-route-block-name">' + escapeHtml(item.loop) + '</span>' +
+                    '<span class="disco-route-block-stops">' + item.totalDeliveries + ' entregas</span>' +
+                  '</div>' +
+                  '<div class="disco-route-block-summary">' +
+                    '<span class="disco-route-block-badge">Pre-12: ' + item.pre12 + '</span>' +
+                    '<span class="disco-route-block-badge">ASR: ' + item.asr + '</span>' +
+                    '<span class="disco-route-block-badge">DSR: ' + item.dsr + '</span>' +
+                  '</div></div>';
+              }).join('');
+            }
+          } else {
+            loopSummaryBlock.classList.add('hidden');
+          }
+        }
+
+        var depots = getDiscoUniqueDepots();
+        var loops = getDiscoUniqueLoops();
+        if (depotChips) {
+          depotChips.innerHTML = '<button type="button" class="disco-chip' + (!discoState.depot ? ' active' : '') + '" data-depot="">Todos</button>' +
+            depots.map(function (d) {
+              return '<button type="button" class="disco-chip' + (discoState.depot === d ? ' active' : '') + '" data-depot="' + escapeHtml(d) + '">' + escapeHtml(d) + '</button>';
+            }).join('');
+        }
+        if (loopChips) {
+          loopChips.innerHTML = '<button type="button" class="disco-chip' + (!discoState.loop ? ' active' : '') + '" data-loop="">Todos</button>' +
+            loops.map(function (l) {
+              return '<button type="button" class="disco-chip' + (discoState.loop === l ? ' active' : '') + '" data-loop="' + escapeHtml(l) + '">' + escapeHtml(l) + '</button>';
+            }).join('');
+        }
+
+        /* Blocos de rotas: só quando depot e loop estão selecionados */
+        if (routeBlocks) {
+          if (hasDepot && hasLoop) {
+            routeBlocks.classList.remove('hidden');
+            routeBlocks.innerHTML = routesWithSummary.map(function (item) {
+              return '<div class="disco-route-block" data-route="' + escapeHtml(item.route) + '">' +
+                '<div class="disco-route-block-head">' +
+                  '<span class="disco-route-block-name">' + escapeHtml(item.route) + '</span>' +
+                  '<span class="disco-route-block-stops">' + item.stops + ' stops</span>' +
+                '</div>' +
+                '<div class="disco-route-block-summary">' +
+                  '<span class="disco-route-block-badge">Pre-12: ' + item.pre12 + '</span>' +
+                  '<span class="disco-route-block-badge">ASR: ' + item.asr + '</span>' +
+                  '<span class="disco-route-block-badge">DSR: ' + item.dsr + '</span>' +
+                '</div>' +
+                getRoutePre12AsrDsrTableHtml(item.route) +
+                '</div>';
+            }).join('');
+          } else {
+            routeBlocks.classList.add('hidden');
+            routeBlocks.innerHTML = '';
+          }
+        }
+
+        depotChips && depotChips.querySelectorAll('.disco-chip').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+            discoState.depot = (btn.getAttribute('data-depot') || '').trim();
+            var loopsOfDepot = getDiscoUniqueLoops();
+            if (discoState.loop && loopsOfDepot.indexOf(discoState.loop) === -1) discoState.loop = '';
+            updateDiscoSection();
+          });
+        });
+        loopChips && loopChips.querySelectorAll('.disco-chip').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            discoState.loop = (btn.getAttribute('data-loop') || '').trim();
+            updateDiscoSection();
+          });
+        });
+      }
+
+      function initDisco() {
+        var noData = document.getElementById('discoNoData');
+        var deliveries = getDiscoDeliveries();
+        if (!deliveries.length) {
+          if (noData) noData.classList.remove('hidden');
+          document.getElementById('dashboardSprValue') && (document.getElementById('dashboardSprValue').textContent = '—');
+          document.getElementById('discoDepotChips') && (document.getElementById('discoDepotChips').innerHTML = '');
+          document.getElementById('discoLoopChips') && (document.getElementById('discoLoopChips').innerHTML = '');
+          document.getElementById('discoRouteBlocks') && (document.getElementById('discoRouteBlocks').innerHTML = '');
+          return;
+        }
+        updateDiscoSection();
+      }
+
       if (spName) {
         render();
         var tabLastDay = document.getElementById('folderLastDay');
         var tabSpms = document.getElementById('folderSpms');
         if (tabLastDay) tabLastDay.addEventListener('click', function () { switchFolderTab('lastday'); });
         if (tabSpms) tabSpms.addEventListener('click', function () { switchFolderTab('spms'); });
-        initDisco();
         initLastDay();
         initSpms();
         switchFolderTab('lastday');
@@ -2076,8 +2370,7 @@
         initCarousel();
         if (document.getElementById('openFullDashboardBtn')) initFullDashboardModal();
       }
-      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initBeamSidebar);
-      else initBeamSidebar();
+      initDisco();
 
       /* Subpostcodes a partir de postcodes (igual contracts.js): remove últimos 2 caracteres por código. */
       function postcodesToSubpostcodes(postcodes) {
@@ -2090,214 +2383,6 @@
           if (sub && !seen[sub]) { seen[sub] = true; out.push(sub); }
         }
         return out.sort();
-      }
-
-      /** Lista de entregas por depot: subpostcode, endereço, destinatário (uma linha por postcode). depotName vazio = todos os depots. */
-      function getDeliveriesByDepot(depotName) {
-        var list = [];
-        contracts.forEach(function (c) {
-          if (c.serviceProvider !== spName) return;
-          (c.depots || []).forEach(function (d) {
-            if (depotName && d.name !== depotName) return;
-            (d.loops || []).forEach(function (l) {
-              (l.routes || []).forEach(function (r) {
-                var postcodes = r.postcodes || [];
-                for (var i = 0; i < postcodes.length; i++) {
-                  var pc = String(postcodes[i]).trim();
-                  if (!pc) continue;
-                  var sub = pc.length > 2 ? pc.slice(0, -2).trim().replace(/\s+/g, '') : pc;
-                  if (!sub) sub = pc;
-                  list.push({
-                    subpostcode: sub,
-                    address: pc.replace(/\s+/g, ' '),
-                    recipient: 'Destinatário ' + (sub || pc),
-                    depot: d.name
-                  });
-                }
-              });
-            });
-          });
-        });
-        return list;
-      }
-
-      /** Catálogo rota → { depot, loop, subpostcodes } a partir dos contratos do SP (para Disco). */
-      function getDiscoRouteCatalog() {
-        var catalog = {};
-        contracts.forEach(function (c) {
-          if (c.serviceProvider !== spName) return;
-          (c.depots || []).forEach(function (d) {
-            (d.loops || []).forEach(function (l) {
-              (l.routes || []).forEach(function (r) {
-                if (!r.name) return;
-                var subpostcodes = postcodesToSubpostcodes(r.postcodes || []);
-                catalog[r.name] = { depot: d.name, loop: l.name, subpostcodes: subpostcodes };
-              });
-            });
-          });
-        });
-        return catalog;
-      }
-
-      /* Disco: estrutura igual Last Day – árvore Depot > Loop > Rota, switch AM/PM, painel Stops e Subpostcodes */
-      function getDiscoByDepot() {
-        var byDepot = {};
-        contracts.forEach(function (c) {
-          if (c.serviceProvider !== spName) return;
-          (c.depots || []).forEach(function (d) {
-            if (!d.name) return;
-            if (!byDepot[d.name]) byDepot[d.name] = { am: [], pm: [] };
-            (d.loops || []).forEach(function (l, loopIdx) {
-              (l.routes || []).forEach(function (r, routeIdx) {
-                if (!r.name) return;
-                var arr = (loopIdx + routeIdx) % 2 === 0 ? byDepot[d.name].am : byDepot[d.name].pm;
-                if (arr.indexOf(r.name) === -1) arr.push(r.name);
-              });
-            });
-          });
-        });
-        Object.keys(byDepot).forEach(function (depot) {
-          byDepot[depot].am.sort();
-          byDepot[depot].pm.sort();
-        });
-        return byDepot;
-      }
-
-      /** Lista de rotas com depot, loop, route, wave (AM/PM), stops, subpostcodes, pre12 (quantidade), pre12List (lista PRE-12 da rota). */
-      function getDiscoDetails() {
-        var list = [];
-        var catalog = getDiscoRouteCatalog();
-        contracts.forEach(function (c) {
-          if (c.serviceProvider !== spName) return;
-          (c.depots || []).forEach(function (d) {
-            (d.loops || []).forEach(function (l, loopIdx) {
-              (l.routes || []).forEach(function (r, routeIdx) {
-                if (!r.name) return;
-                var wave = (loopIdx + routeIdx) % 2 === 0 ? 'AM' : 'PM';
-                var stops = (r.postcodes && r.postcodes.length) ? r.postcodes.length : 0;
-                var subpostcodes = (catalog[r.name] && catalog[r.name].subpostcodes) ? catalog[r.name].subpostcodes.slice() : [];
-                var fromDisco = (window.DISCO_DATA && window.DISCO_DATA.byRoute && window.DISCO_DATA.byRoute[r.name]) || {};
-                if (fromDisco.subpostcodes && fromDisco.subpostcodes.length) subpostcodes = fromDisco.subpostcodes;
-                var pre12 = (r.pre12 != null && typeof r.pre12 === 'number') ? r.pre12 : Math.abs((d.name + l.name + r.name).split('').reduce(function (a, ch) { return a + ch.charCodeAt(0); }, 0)) % 5;
-                var pre12List = (r.pre12List && Array.isArray(r.pre12List)) ? r.pre12List.slice() : [];
-                if (pre12List.length === 0 && pre12 > 0) {
-                  for (var i = 0; i < pre12; i++) pre12List.push('PRE-12-' + (i + 1));
-                }
-                list.push({ depot: d.name, loop: l.name, route: r.name, wave: wave, stops: stops, subpostcodes: subpostcodes, pre12: pre12, pre12List: pre12List });
-              });
-            });
-          });
-        });
-        return list;
-      }
-
-      var discoState = { selectedDepot: '', selectedLoop: '' };
-
-      function updateDiscoSection() {
-        var depotSel = document.getElementById('discoDepotFilter');
-        var loopSel = document.getElementById('discoLoopFilter');
-        var selectedDepot = (depotSel && depotSel.value) ? depotSel.value : '';
-        var selectedLoop = (loopSel && loopSel.value) ? loopSel.value : '';
-        discoState.selectedDepot = selectedDepot;
-        discoState.selectedLoop = selectedLoop;
-        var errorEl = document.getElementById('discoErrorState');
-        var deliveriesBody = document.getElementById('discoDeliveriesBody');
-        var deliveriesEmpty = document.getElementById('discoDeliveriesEmpty');
-        var pre12ListEl = document.getElementById('discoPre12List');
-        var pre12Empty = document.getElementById('discoPre12Empty');
-        var details = getDiscoDetails();
-        var depots = getDepotsForSp();
-        if (depots.length === 0 && !selectedDepot) {
-          if (errorEl) errorEl.classList.remove('hidden');
-          return;
-        }
-        if (errorEl) errorEl.classList.add('hidden');
-        var deliveries = getDeliveriesByDepot(selectedDepot);
-        var detailsFiltered = details.filter(function (d) {
-          if (selectedDepot && d.depot !== selectedDepot) return false;
-          if (selectedLoop) {
-            var parts = selectedLoop.split('|');
-            if (parts.length >= 2 && (d.depot !== parts[0] || d.loop !== parts[1])) return false;
-          }
-          return true;
-        });
-        if (deliveriesBody) {
-          deliveriesBody.innerHTML = deliveries.map(function (row) {
-            return '<tr><td>' + escapeHtml(row.depot || '') + '</td><td>' + escapeHtml(row.subpostcode) + '</td><td>' + escapeHtml(row.address) + '</td><td>' + escapeHtml(row.recipient) + '</td></tr>';
-          }).join('');
-        }
-        if (deliveriesEmpty) deliveriesEmpty.classList.toggle('hidden', deliveries.length > 0);
-        var loopSet = {};
-        var allPre12 = [];
-        detailsFiltered.forEach(function (d) {
-          loopSet[d.loop] = true;
-          if (d.pre12List && d.pre12List.length) d.pre12List.forEach(function (p) { allPre12.push(p); });
-        });
-        discoStripLoop = Object.keys(loopSet).sort().join(', ') || '—';
-        discoStripPre12 = detailsFiltered.reduce(function (s, d) { return s + (d.pre12 || 0); }, 0);
-        if (pre12ListEl) pre12ListEl.innerHTML = allPre12.map(function (p) { return '<div class="disco-dashboard-tile">' + escapeHtml(p) + '</div>'; }).join('');
-        if (pre12Empty) pre12Empty.classList.toggle('hidden', allPre12.length > 0);
-        var agg = aggregateContracts();
-        var elSpr = document.getElementById('spDiscoKpiSpr');
-        var elPre12 = document.getElementById('spDiscoKpiPre12');
-        var elTotalRoutes = document.getElementById('spDiscoKpiTotalRoutes');
-        if (elSpr) elSpr.textContent = agg.totalDeliveries != null ? agg.totalDeliveries : 0;
-        if (elPre12) elPre12.textContent = discoStripPre12 != null ? discoStripPre12 : '—';
-        if (elTotalRoutes) elTotalRoutes.textContent = agg.routes != null ? agg.routes : '—';
-        var routesCount = detailsFiltered.length;
-        var stopsCount = detailsFiltered.reduce(function (s, d) { return s + (d.stops || 0); }, 0);
-        var loopsCount = Object.keys(loopSet).length;
-        var cardRoutes = document.getElementById('discoCardRoutes');
-        var cardStops = document.getElementById('discoCardStops');
-        var cardLoops = document.getElementById('discoCardLoops');
-        if (cardRoutes) cardRoutes.textContent = routesCount;
-        if (cardStops) cardStops.textContent = stopsCount;
-        if (cardLoops) cardLoops.textContent = loopsCount;
-        var badge = document.getElementById('discoSelectedLoopBadge');
-        var loopSpr = document.getElementById('discoLoopSpr');
-        var loopPre12 = document.getElementById('discoLoopPre12');
-        if (selectedLoop && selectedLoop.indexOf('|') !== -1) {
-          var parts = selectedLoop.split('|');
-          var loopName = parts[1] || selectedLoop;
-          if (badge) badge.textContent = loopName;
-          var loopDetails = detailsFiltered.filter(function (d) { return d.depot === parts[0] && d.loop === parts[1]; });
-          var loopSprVal = loopDetails.reduce(function (s, d) { return s + (d.stops || 0); }, 0);
-          var loopPre12Val = loopDetails.reduce(function (s, d) { return s + (d.pre12 || 0); }, 0);
-          if (loopSpr) loopSpr.textContent = loopSprVal;
-          if (loopPre12) loopPre12.textContent = loopPre12Val;
-        } else {
-          if (badge) badge.textContent = selectedDepot ? 'All loops' : '—';
-          if (loopSpr) loopSpr.textContent = stopsCount;
-          if (loopPre12) loopPre12.textContent = discoStripPre12 != null ? discoStripPre12 : '—';
-        }
-      }
-
-      function initDisco() {
-        var errorEl = document.getElementById('discoErrorState');
-        var discoDateEl = document.getElementById('discoViewingDate');
-        if (discoDateEl) {
-          var t = new Date();
-          var todayStr = t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0') + '-' + String(t.getDate()).padStart(2, '0');
-          discoDateEl.textContent = formatDate(todayStr);
-        }
-        var depotSel = document.getElementById('discoDepotFilter');
-        var loopSel = document.getElementById('discoLoopFilter');
-        if (!depotSel) return;
-        var depots = getDepotsForSp();
-        depotSel.innerHTML = '<option value="">Todos os depots</option>' + depots.map(function (d) { return '<option value="' + escapeHtml(d) + '">' + escapeHtml(d) + '</option>'; }).join('');
-        depotSel.addEventListener('change', updateDiscoSection);
-        var loopsWithDepots = getLoopsWithDepotsForSp();
-        if (loopSel) {
-          loopSel.innerHTML = '<option value="">Todos os loops</option>' + loopsWithDepots.map(function (x) { return '<option value="' + escapeHtml(x.depot + '|' + x.loop) + '">' + escapeHtml(x.loop + ' (' + x.depot + ')') + '</option>'; }).join('');
-          loopSel.addEventListener('change', updateDiscoSection);
-        }
-        var details = getDiscoDetails();
-        if (!details.length && getDepotsForSp().length === 0) {
-          if (errorEl) errorEl.classList.remove('hidden');
-        } else {
-          if (errorEl) errorEl.classList.add('hidden');
-        }
-        updateDiscoSection();
       }
 
     })();

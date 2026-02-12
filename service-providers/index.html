@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Service Providers – DHL Subsystem</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../vendor-admin-view.css" />
+  <link rel="stylesheet" href="../sidebar-beam.css" />
+  <link rel="stylesheet" href="../service-provider-profile.css" />
+  <link rel="stylesheet" href="../liquid-glass.css" />
+  <link rel="stylesheet" href="../modern-ui.css" />
+</head>
+<body class="has-beam-sidebar">
+  <div class="sidebar-wrapper" id="sidebarWrapper">
+    <div class="sidebar-gap" id="sidebarGap" aria-hidden="true"></div>
+    <aside class="sidebar-container" id="sidebarContainer" aria-hidden="true"></aside>
+    <div class="floating-sidebar-toggle" id="floatingSidebarToggle" aria-hidden="true"></div>
+    <div class="beam-overlay" id="beamOverlay" aria-hidden="true"></div>
+    <nav class="beam-sidebar" id="beamSidebar" data-state="closed" role="navigation" aria-label="Main menu">
+      <button type="button" class="beam-trigger" id="beamTrigger" aria-label="Open menu" aria-expanded="false">
+        <i class="bi bi-list beam-icon-menu"></i>
+        <i class="bi bi-x-lg beam-icon-close"></i>
+      </button>
+      <div class="beam-rail" aria-hidden="true"></div>
+      <div class="beam-plates">
+        <a href="../dhl/dashboard/index.html" class="beam-plate">
+          <i class="bi bi-house-door-fill beam-plate-icon"></i>
+          <span>Home</span>
+        </a>
+        <a href="index.html" class="beam-plate active">
+          <i class="bi bi-person-badge beam-plate-icon"></i>
+          <span>Service Providers</span>
+        </a>
+        <a href="../dhl/vendor-admin-view/index.html" class="beam-plate">
+          <i class="bi bi-building beam-plate-icon"></i>
+          <span>Vendors</span>
+        </a>
+        <a href="../dhl/vehicles-admin-view/index.html" class="beam-plate">
+          <i class="bi bi-truck beam-plate-icon"></i>
+          <span>Vehicles</span>
+        </a>
+        <a href="../dhl/contract-management/index.html" class="beam-plate">
+          <i class="bi bi-file-earmark-text beam-plate-icon"></i>
+          <span>Contract Management</span>
+        </a>
+        <a href="../dhl/standard-operating-procedures/index.html" class="beam-plate">
+          <i class="bi bi-journal-bookmark-fill beam-plate-icon"></i>
+          <span>SOP Feed</span>
+        </a>
+        <a href="../dhl/access-select/index.html" class="beam-plate beam-plate--switch">
+          <i class="bi bi-arrow-left-right beam-plate-icon"></i>
+          <span>Select access</span>
+        </a>
+      </div>
+    </nav>
+
+    <div class="sidebar-inset" id="sidebarInset">
+      <div class="liquid-glass-page-bg" aria-hidden="true"></div>
+      <div class="page-container">
+        <div class="page-inner">
+          <main class="sp-profile-main">
+            <div class="admin-header d-flex flex-wrap align-items-center gap-2 mb-4">
+              <h1 class="admin-header-title">Service Providers</h1>
+              <div class="admin-header-user-pill d-flex align-items-center" title="DHL Uk">
+                <img src="../assets/dhl-uk-logo.png" alt="DHL Uk" class="admin-header-user-avatar admin-header-user-avatar--img" />
+                <span class="admin-header-user-name">DHL Uk</span>
+              </div>
+            </div>
+
+            <p class="text-secondary mb-4">Select a Service Provider to view the full profile with vehicles and vendors.</p>
+
+            <div class="sp-providers-grid" id="spProvidersGrid">
+              <!-- preenchido por JS -->
+            </div>
+          </main>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="logoViewerModal" class="logo-viewer-modal" role="dialog" aria-modal="true" aria-label="View logo" hidden>
+    <div class="logo-viewer-backdrop"></div>
+    <div class="logo-viewer-content">
+      <img id="logoViewerImg" src="" alt="" />
+      <button type="button" class="logo-viewer-close" aria-label="Close">&times;</button>
+    </div>
+  </div>
+
+  <script src="../dhl-mock-data.js"></script>
+  <script src="../beam-sidebar.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      function escapeHtml(s) {
+        if (s == null) return '';
+        var d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+      }
+
+      function getSpList() {
+        var data = window.DHL_MOCK_DATA;
+        if (data && data.serviceProviders && data.serviceProviders.length) {
+          return data.serviceProviders;
+        }
+        var seen = {};
+        var vendors = (data && data.vendors) ? data.vendors : [];
+        vendors.forEach(function (v) {
+          var n = v.serviceProvider;
+          if (n && !seen[n]) { seen[n] = true; }
+        });
+        return Object.keys(seen).sort().map(function (n) {
+          return { name: n, initials: n.split(' ').map(function (w) { return w[0]; }).join('').slice(0, 2) || 'SP', color: '#3498db', coverColor: '#2c3e50' };
+        });
+      }
+
+      function render() {
+        var list = getSpList();
+        var grid = document.getElementById('spProvidersGrid');
+        if (!grid) return;
+
+        grid.innerHTML = list.map(function (sp) {
+          var name = sp.name;
+          var url = 'profile.html?sp=' + encodeURIComponent(name);
+          var logoMap = { 'BA Express': 'ba-express-logo.png', 'Premier Logistics Ltd': 'premier-logistics-logo.png', 'Swift Haul Solutions': 'swift-haul-logo.png', 'Metro Freight Partners': 'metro-freight-logo.png', 'Atlas Transport Services': 'atlas-transport-logo.png' };
+          var hasCustomBranding = logoMap[name];
+          var coverStyle = 'background: linear-gradient(135deg, ' + (sp.coverColor || '#2c3e50') + ' 0%, ' + (sp.color || '#3498db') + ' 100%);';
+          var avatarContent = hasCustomBranding
+            ? '<img src="../assets/' + logoMap[name] + '" alt="' + escapeHtml(name) + '" class="sp-provider-card-avatar-img" />'
+            : escapeHtml((sp.initials || name.slice(0, 2)).toUpperCase());
+          var avatarClass = 'sp-provider-card-avatar' + (hasCustomBranding ? ' sp-provider-card-avatar--logo' : '');
+          var avatarStyle = hasCustomBranding ? 'background: #fff;' : 'background: ' + (sp.color || '#3498db') + '; color: #fff;';
+          var portalUrl = '../sp-portal/dashboard/index.html?sp=' + encodeURIComponent(name);
+          return (
+            '<div class="sp-provider-card">' +
+              '<div class="sp-provider-card-cover" style="' + coverStyle + '"></div>' +
+              '<div class="' + avatarClass + '" style="' + avatarStyle + '">' +
+                avatarContent +
+              '</div>' +
+              '<div class="sp-provider-card-body">' +
+                '<strong>' + escapeHtml(name) + '</strong>' +
+                '<div class="sp-provider-card-actions">' +
+                  '<a href="' + url + '" class="sp-provider-card-link">View profile</a>' +
+                  '<a href="' + portalUrl + '" class="sp-provider-card-link sp-provider-card-link--portal">Open portal</a>' +
+                '</div>' +
+              '</div>' +
+            '</div>'
+          );
+        }).join('');
+      }
+
+      function initLogoViewer() {
+        var modal = document.getElementById('logoViewerModal');
+        var img = document.getElementById('logoViewerImg');
+        var backdrop = modal && modal.querySelector('.logo-viewer-backdrop');
+        var closeBtn = modal && modal.querySelector('.logo-viewer-close');
+
+        function openViewer(src, alt) {
+          if (!modal || !img) return;
+          img.src = src || '';
+          img.alt = alt || 'Logo';
+          modal.removeAttribute('hidden');
+        }
+
+        function closeViewer() {
+          if (modal) modal.setAttribute('hidden', '');
+        }
+
+        if (backdrop) backdrop.addEventListener('click', closeViewer);
+        if (closeBtn) closeBtn.addEventListener('click', closeViewer);
+        if (modal) modal.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape') closeViewer();
+        });
+
+        var grid = document.getElementById('spProvidersGrid');
+        if (grid) {
+          grid.addEventListener('click', function (e) {
+            var avatar = e.target.closest('.sp-provider-card-avatar--logo');
+            if (!avatar) return;
+            var avatarImg = avatar.querySelector('img');
+            if (avatarImg && avatarImg.src) {
+              e.preventDefault();
+              openViewer(avatarImg.src, avatarImg.alt || 'Logo');
+            }
+          });
+        }
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function () { render(); initLogoViewer(); });
+      } else {
+        render();
+        initLogoViewer();
+      }
+    })();
+  </script>
+</body>
+</html>
