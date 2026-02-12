@@ -185,7 +185,7 @@
 
     tbody.innerHTML = list.map(function (v, index) {
       var status = v.status || 'Active';
-      var isLocal = localVendors.some(function (lv) { return lv.id === v.id; });
+      var isLocal = localVehicles.some(function (lv) { return lv.id === v.id; });
       var vrnClass = 'vehicles-vrn-plate' + (v.fuelType === 'Electric' ? ' vehicles-vrn-electric' : '');
       var fuelHtml = v.fuelType === 'Electric'
         ? '<span class="d-inline-flex align-items-center justify-content-center gap-1"><i class="bi bi-lightning-charge-fill text-success" title="Electric"></i> Electric</span>'

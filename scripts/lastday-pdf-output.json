@@ -1,0 +1,1710 @@
+{
+  "2026-02-09": {
+    "byRoute": {
+      "LCY|DY1A": {
+        "depot": "LCY",
+        "route": "DY1A",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 6,
+          "DEPAR": 59,
+          "FP": 6
+        }
+      },
+      "LCY|DY1B": {
+        "depot": "LCY",
+        "route": "DY1B",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 5,
+          "DEPAR": 1,
+          "FP": 4,
+          "HN": 49,
+          "ND": 13
+        }
+      },
+      "LCY|DY1C": {
+        "depot": "LCY",
+        "route": "DY1C",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 3,
+          "DEPAR": 2,
+          "FP": 5,
+          "HN": 61,
+          "ND": 7
+        }
+      },
+      "LCY|DY1X": {
+        "depot": "LCY",
+        "route": "DY1X",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 2,
+          "CM": 66,
+          "DEPAR": 16
+        }
+      },
+      "LCY|DY2A": {
+        "depot": "LCY",
+        "route": "DY2A",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 6,
+          "DEPAR": 64,
+          "FP": 9
+        }
+      },
+      "LCY|DY2B": {
+        "depot": "LCY",
+        "route": "DY2B",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 2,
+          "CM": 2,
+          "DEPAR": 3,
+          "FP": 86,
+          "HN": 7
+        }
+      },
+      "LCY|DY2C": {
+        "depot": "LCY",
+        "route": "DY2C",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 2,
+          "DEPAR": 1,
+          "FP": 7,
+          "HN": 67,
+          "ND": 6
+        }
+      },
+      "LCY|DY2D": {
+        "depot": "LCY",
+        "route": "DY2D",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 3,
+          "DEPAR": 2,
+          "FP": 8,
+          "HN": 69,
+          "ND": 12
+        }
+      },
+      "LCY|DY2P": {
+        "depot": "LCY",
+        "route": "DY2P",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 2,
+          "DEPAR": 1,
+          "FP": 44,
+          "HN": 8,
+          "ND": 1
+        }
+      },
+      "LCY|DY2R": {
+        "depot": "LCY",
+        "route": "DY2R",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 2,
+          "CM": 7,
+          "DEPAR": 33
+        }
+      },
+      "LCY|DY2X": {
+        "depot": "LCY",
+        "route": "DY2X",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 1,
+          "DEPAR": 3,
+          "FP": 2,
+          "HN": 11,
+          "ND": 53,
+          "NH": 5
+        }
+      },
+      "LON|LL3A": {
+        "depot": "LON",
+        "route": "LL3A",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 9,
+          "CM": 2,
+          "DEPAR": 6,
+          "FP": 61,
+          "HN": 13
+        }
+      },
+      "LON|LL3B": {
+        "depot": "LON",
+        "route": "LL3B",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 2,
+          "CM": 1,
+          "DEPAR": 4,
+          "FP": 4,
+          "HN": 1,
+          "ND": 27,
+          "NH": 7
+        }
+      },
+      "LON|LL3C": {
+        "depot": "LON",
+        "route": "LL3C",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 3,
+          "DEPAR": 4,
+          "FP": 6,
+          "HN": 38,
+          "ND": 19,
+          "NH": 1
+        }
+      },
+      "LON|LL3D": {
+        "depot": "LON",
+        "route": "LL3D",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 2,
+          "CA": 1,
+          "CM": 5,
+          "DEPAR": 4,
+          "FP": 11,
+          "HN": 53,
+          "ND": 12
+        }
+      },
+      "LON|LL3X": {
+        "depot": "LON",
+        "route": "LL3X",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 3,
+          "CM": 7,
+          "DEPAR": 57,
+          "FP": 1
+        }
+      },
+      "LON|LL4A": {
+        "depot": "LON",
+        "route": "LL4A",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 2,
+          "CA": 1,
+          "CM": 2,
+          "DEPAR": 2,
+          "FP": 62,
+          "HN": 10,
+          "ND": 1
+        }
+      },
+      "LON|LL4B": {
+        "depot": "LON",
+        "route": "LL4B",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 2,
+          "CM": 2,
+          "DEPAR": 4,
+          "FP": 51,
+          "HN": 8,
+          "ND": 1
+        }
+      },
+      "LON|LL4X": {
+        "depot": "LON",
+        "route": "LL4X",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 2,
+          "DEPAR": 2,
+          "FP": 4,
+          "HN": 63,
+          "ND": 7
+        }
+      },
+      "LON|LM9A": {
+        "depot": "LON",
+        "route": "LM9A",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 50
+        }
+      },
+      "LON|LM9X": {
+        "depot": "LON",
+        "route": "LM9X",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 2,
+          "CA": 1,
+          "CM": 1,
+          "DEPAR": 1,
+          "FP": 78
+        }
+      },
+      "MSE|MD7A": {
+        "depot": "MSE",
+        "route": "MD7A",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 5,
+          "DEPAR": 3,
+          "FP": 55,
+          "HN": 7
+        }
+      },
+      "MSE|MD7B": {
+        "depot": "MSE",
+        "route": "MD7B",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 1,
+          "DEPAR": 44,
+          "FP": 8
+        }
+      },
+      "MSE|MD7C": {
+        "depot": "MSE",
+        "route": "MD7C",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 2,
+          "CM": 3,
+          "DEPAR": 5,
+          "FP": 43,
+          "HN": 19
+        }
+      },
+      "MSE|MD7D": {
+        "depot": "MSE",
+        "route": "MD7D",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 1,
+          "DEPAR": 1,
+          "FP": 39,
+          "HN": 10
+        }
+      },
+      "MSE|MD7E": {
+        "depot": "MSE",
+        "route": "MD7E",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 6,
+          "DEPAR": 4,
+          "FP": 30,
+          "HN": 10
+        }
+      },
+      "MSE|MD7X": {
+        "depot": "MSE",
+        "route": "MD7X",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 4,
+          "CM": 1,
+          "DEPAR": 48,
+          "FP": 17
+        }
+      }
+    },
+    "twByRoute": {},
+    "incomeByRouteFromExcel": {}
+  },
+  "2026-02-10": {
+    "byRoute": {
+      "LCY|DY1A": {
+        "depot": "LCY",
+        "route": "DY1A",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 2,
+          "CM": 3,
+          "DEPAR": 6,
+          "FP": 70,
+          "HN": 6
+        }
+      },
+      "LCY|DY1B": {
+        "depot": "LCY",
+        "route": "DY1B",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 1,
+          "DEPAR": 5,
+          "FP": 1,
+          "HN": 5,
+          "ND": 63,
+          "NH": 10
+        }
+      },
+      "LCY|DY1C": {
+        "depot": "LCY",
+        "route": "DY1C",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 1,
+          "DEPAR": 4,
+          "FP": 74,
+          "HN": 10
+        }
+      },
+      "LCY|DY1X": {
+        "depot": "LCY",
+        "route": "DY1X",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 1,
+          "DEPAR": 3,
+          "FP": 1,
+          "HN": 73,
+          "ND": 12
+        }
+      },
+      "LCY|DY2A": {
+        "depot": "LCY",
+        "route": "DY2A",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 3,
+          "DEPAR": 3,
+          "FP": 65,
+          "HN": 6
+        }
+      },
+      "LCY|DY2B": {
+        "depot": "LCY",
+        "route": "DY2B",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 4,
+          "CM": 2,
+          "DEPAR": 6,
+          "FP": 73,
+          "HN": 5
+        }
+      },
+      "LCY|DY2C": {
+        "depot": "LCY",
+        "route": "DY2C",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 2,
+          "CA": 1,
+          "CM": 1,
+          "DEPAR": 1,
+          "FP": 11,
+          "HN": 60,
+          "ND": 9
+        }
+      },
+      "LCY|DY2D": {
+        "depot": "LCY",
+        "route": "DY2D",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 1,
+          "DEPAR": 10,
+          "FP": 55,
+          "HN": 7
+        }
+      },
+      "LCY|DY2P": {
+        "depot": "LCY",
+        "route": "DY2P",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 2,
+          "CM": 1,
+          "DEPAR": 5,
+          "FP": 55,
+          "HN": 9
+        }
+      },
+      "LCY|DY2X": {
+        "depot": "LCY",
+        "route": "DY2X",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 4,
+          "CM": 3,
+          "DEPAR": 7,
+          "FP": 48,
+          "HN": 6
+        }
+      },
+      "LON|LL3A": {
+        "depot": "LON",
+        "route": "LL3A",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 4,
+          "CM": 2,
+          "DEPAR": 5,
+          "FP": 72,
+          "HN": 14
+        }
+      },
+      "LON|LL3B": {
+        "depot": "LON",
+        "route": "LL3B",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 2,
+          "DEPAR": 4,
+          "FP": 4,
+          "HN": 44,
+          "ND": 8
+        }
+      },
+      "LON|LL3C": {
+        "depot": "LON",
+        "route": "LL3C",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 1,
+          "DEPAR": 2,
+          "FP": 2,
+          "HN": 34,
+          "ND": 21
+        }
+      },
+      "LON|LL3D": {
+        "depot": "LON",
+        "route": "LL3D",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 3,
+          "CA": 1,
+          "CM": 1,
+          "DEPAR": 3,
+          "FP": 11,
+          "HN": 36,
+          "ND": 13
+        }
+      },
+      "LON|LL3X": {
+        "depot": "LON",
+        "route": "LL3X",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 5,
+          "CM": 73
+        }
+      },
+      "LON|LL4A": {
+        "depot": "LON",
+        "route": "LL4A",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 2,
+          "CA": 1,
+          "CM": 1,
+          "DEPAR": 2,
+          "FP": 5,
+          "HN": 72,
+          "ND": 9
+        }
+      },
+      "LON|LL4B": {
+        "depot": "LON",
+        "route": "LL4B",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 3,
+          "DEPAR": 2,
+          "FP": 6,
+          "HN": 43,
+          "ND": 9
+        }
+      },
+      "LON|LL4X": {
+        "depot": "LON",
+        "route": "LL4X",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 2,
+          "DEPAR": 7,
+          "FP": 54,
+          "HN": 7
+        }
+      },
+      "LON|LM9A": {
+        "depot": "LON",
+        "route": "LM9A",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 1,
+          "DEPAR": 94
+        }
+      },
+      "LON|LM9X": {
+        "depot": "LON",
+        "route": "LM9X",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 2,
+          "CA": 1,
+          "CM": 90
+        }
+      },
+      "MSE|MD7A": {
+        "depot": "MSE",
+        "route": "MD7A",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 1,
+          "DEPAR": 1,
+          "FP": 65,
+          "HN": 11
+        }
+      },
+      "MSE|MD7B": {
+        "depot": "MSE",
+        "route": "MD7B",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 1,
+          "DEPAR": 1,
+          "FP": 59,
+          "HN": 11
+        }
+      },
+      "MSE|MD7C": {
+        "depot": "MSE",
+        "route": "MD7C",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 2,
+          "DEPAR": 1,
+          "FP": 4,
+          "HN": 60,
+          "ND": 12,
+          "NH": 1
+        }
+      },
+      "MSE|MD7D": {
+        "depot": "MSE",
+        "route": "MD7D",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 5,
+          "CM": 47,
+          "DEPAR": 10
+        }
+      },
+      "MSE|MD7E": {
+        "depot": "MSE",
+        "route": "MD7E",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 1,
+          "DEPAR": 1,
+          "FP": 1,
+          "HN": 66,
+          "ND": 19
+        }
+      },
+      "MSE|MD7X": {
+        "depot": "MSE",
+        "route": "MD7X",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 3,
+          "CM": 45,
+          "DEPAR": 15
+        }
+      }
+    },
+    "twByRoute": {},
+    "incomeByRouteFromExcel": {}
+  },
+  "2026-02-11": {
+    "byRoute": {
+      "LCY|DY1A": {
+        "depot": "LCY",
+        "route": "DY1A",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 1,
+          "DEPAR": 6,
+          "FP": 64,
+          "HN": 5
+        }
+      },
+      "LCY|DY1B": {
+        "depot": "LCY",
+        "route": "DY1B",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 9,
+          "CM": 1,
+          "DEPAR": 6,
+          "FP": 55,
+          "HN": 9
+        }
+      },
+      "LCY|DY1C": {
+        "depot": "LCY",
+        "route": "DY1C",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 2,
+          "CM": 6,
+          "DEPAR": 61,
+          "FP": 8
+        }
+      },
+      "LCY|DY1X": {
+        "depot": "LCY",
+        "route": "DY1X",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 3,
+          "DEPAR": 81,
+          "FP": 11
+        }
+      },
+      "LCY|DY2A": {
+        "depot": "LCY",
+        "route": "DY2A",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 2,
+          "CA": 1,
+          "CM": 1,
+          "DEPAR": 4,
+          "FP": 9,
+          "HN": 54,
+          "ND": 7
+        }
+      },
+      "LCY|DY2B": {
+        "depot": "LCY",
+        "route": "DY2B",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 2,
+          "CM": 3,
+          "DEPAR": 7,
+          "FP": 70,
+          "HN": 12
+        }
+      },
+      "LCY|DY2C": {
+        "depot": "LCY",
+        "route": "DY2C",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 3,
+          "CM": 5,
+          "DEPAR": 76,
+          "FP": 8
+        }
+      },
+      "LCY|DY2D": {
+        "depot": "LCY",
+        "route": "DY2D",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 3,
+          "DEPAR": 1,
+          "FP": 10,
+          "HN": 47,
+          "ND": 12
+        }
+      },
+      "LCY|DY2P": {
+        "depot": "LCY",
+        "route": "DY2P",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 4,
+          "CM": 46,
+          "DEPAR": 9
+        }
+      },
+      "LCY|DY2X": {
+        "depot": "LCY",
+        "route": "DY2X",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 1,
+          "DEPAR": 2,
+          "FP": 5,
+          "HN": 61,
+          "ND": 14
+        }
+      },
+      "LON|LL3A": {
+        "depot": "LON",
+        "route": "LL3A",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 3,
+          "CM": 1,
+          "DEPAR": 3,
+          "FP": 71,
+          "HN": 15
+        }
+      },
+      "LON|LL3B": {
+        "depot": "LON",
+        "route": "LL3B",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 4,
+          "DEPAR": 2,
+          "FP": 30,
+          "HN": 9
+        }
+      },
+      "LON|LL3C": {
+        "depot": "LON",
+        "route": "LL3C",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 2,
+          "CM": 3,
+          "DEPAR": 65,
+          "FP": 24
+        }
+      },
+      "LON|LL3D": {
+        "depot": "LON",
+        "route": "LL3D",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 2,
+          "DEPAR": 1,
+          "FP": 7,
+          "HN": 47,
+          "ND": 9
+        }
+      },
+      "LON|LL3X": {
+        "depot": "LON",
+        "route": "LL3X",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 1,
+          "DEPAR": 1,
+          "FP": 5,
+          "HN": 75
+        }
+      },
+      "LON|LL4A": {
+        "depot": "LON",
+        "route": "LL4A",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 5,
+          "DEPAR": 70,
+          "FP": 10
+        }
+      },
+      "LON|LL4B": {
+        "depot": "LON",
+        "route": "LL4B",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 3,
+          "DEPAR": 1,
+          "FP": 8,
+          "HN": 45,
+          "ND": 6
+        }
+      },
+      "LON|LL4X": {
+        "depot": "LON",
+        "route": "LL4X",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 1,
+          "DEPAR": 1,
+          "FP": 2,
+          "HN": 2,
+          "ND": 59,
+          "NH": 14
+        }
+      },
+      "LON|LM9A": {
+        "depot": "LON",
+        "route": "LM9A",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 2,
+          "DEPAR": 74
+        }
+      },
+      "LON|LM9X": {
+        "depot": "LON",
+        "route": "LM9X",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 3,
+          "CA": 1,
+          "CM": 84
+        }
+      },
+      "MSE|MD7A": {
+        "depot": "MSE",
+        "route": "MD7A",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 65,
+          "DEPAR": 11
+        }
+      },
+      "MSE|MD7B": {
+        "depot": "MSE",
+        "route": "MD7B",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 51,
+          "DEPAR": 7
+        }
+      },
+      "MSE|MD7C": {
+        "depot": "MSE",
+        "route": "MD7C",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 4,
+          "DEPAR": 1,
+          "FP": 2,
+          "HN": 1,
+          "ND": 58,
+          "NH": 18
+        }
+      },
+      "MSE|MD7D": {
+        "depot": "MSE",
+        "route": "MD7D",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 2,
+          "DEPAR": 50,
+          "FP": 10
+        }
+      },
+      "MSE|MD7E": {
+        "depot": "MSE",
+        "route": "MD7E",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 1,
+          "DEPAR": 71,
+          "FP": 9,
+          "HN": 1
+        }
+      },
+      "MSE|MD7X": {
+        "depot": "MSE",
+        "route": "MD7X",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 4,
+          "CM": 45,
+          "DEPAR": 17
+        }
+      }
+    },
+    "twByRoute": {},
+    "incomeByRouteFromExcel": {}
+  },
+  "2026-02-12": {
+    "byRoute": {
+      "LCY|DY1A": {
+        "depot": "LCY",
+        "route": "DY1A",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 2,
+          "CM": 2,
+          "DEPAR": 3,
+          "FP": 54,
+          "HN": 7
+        }
+      },
+      "LCY|DY1B": {
+        "depot": "LCY",
+        "route": "DY1B",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 3,
+          "CM": 1,
+          "DEPAR": 3,
+          "FP": 36,
+          "HN": 17
+        }
+      },
+      "LCY|DY1C": {
+        "depot": "LCY",
+        "route": "DY1C",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 3,
+          "CM": 7,
+          "DEPAR": 53,
+          "FP": 7
+        }
+      },
+      "LCY|DY1X": {
+        "depot": "LCY",
+        "route": "DY1X",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 2,
+          "DEPAR": 2,
+          "FP": 4,
+          "HN": 50,
+          "ND": 14,
+          "NH": 1
+        }
+      },
+      "LCY|DY2A": {
+        "depot": "LCY",
+        "route": "DY2A",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 6,
+          "CM": 2,
+          "DEPAR": 2,
+          "FP": 45,
+          "HN": 6
+        }
+      },
+      "LCY|DY2B": {
+        "depot": "LCY",
+        "route": "DY2B",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 3,
+          "DEPAR": 6,
+          "FP": 52,
+          "HN": 9
+        }
+      },
+      "LCY|DY2C": {
+        "depot": "LCY",
+        "route": "DY2C",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 2,
+          "CM": 11,
+          "DEPAR": 54,
+          "FP": 9
+        }
+      },
+      "LCY|DY2D": {
+        "depot": "LCY",
+        "route": "DY2D",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 2,
+          "CM": 1,
+          "DEPAR": 5,
+          "FP": 43,
+          "HN": 12
+        }
+      },
+      "LCY|DY2P": {
+        "depot": "LCY",
+        "route": "DY2P",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 2,
+          "CA": 1,
+          "CM": 1,
+          "DEPAR": 35,
+          "FP": 6
+        }
+      },
+      "LCY|DY2X": {
+        "depot": "LCY",
+        "route": "DY2X",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 2,
+          "CM": 5,
+          "DEPAR": 45,
+          "FP": 18
+        }
+      },
+      "LON|LL3A": {
+        "depot": "LON",
+        "route": "LL3A",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 2,
+          "DEPAR": 4,
+          "FP": 70,
+          "HN": 12,
+          "ND": 2
+        }
+      },
+      "LON|LL3B": {
+        "depot": "LON",
+        "route": "LL3B",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 2,
+          "CA": 1,
+          "CM": 3,
+          "DEPAR": 2,
+          "FP": 7,
+          "HN": 51,
+          "ND": 8
+        }
+      },
+      "LON|LL3C": {
+        "depot": "LON",
+        "route": "LL3C",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 2,
+          "DEPAR": 8,
+          "FP": 44,
+          "HN": 22,
+          "ND": 1
+        }
+      },
+      "LON|LL3D": {
+        "depot": "LON",
+        "route": "LL3D",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 2,
+          "CA": 1,
+          "CM": 4,
+          "DEPAR": 3,
+          "FP": 8,
+          "HN": 33,
+          "ND": 7,
+          "NH": 1
+        }
+      },
+      "LON|LL4A": {
+        "depot": "LON",
+        "route": "LL4A",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 1,
+          "DEPAR": 1,
+          "FP": 5,
+          "HN": 43,
+          "ND": 12
+        }
+      },
+      "LON|LL4B": {
+        "depot": "LON",
+        "route": "LL4B",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 1,
+          "DEPAR": 3,
+          "FP": 2,
+          "HN": 6,
+          "ND": 47,
+          "NH": 7
+        }
+      },
+      "LON|LL4X": {
+        "depot": "LON",
+        "route": "LL4X",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 1,
+          "DEPAR": 2,
+          "FP": 5,
+          "HN": 42,
+          "ND": 9,
+          "NH": 1
+        }
+      },
+      "LON|LM9A": {
+        "depot": "LON",
+        "route": "LM9A",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 2,
+          "CM": 1,
+          "DEPAR": 1,
+          "FP": 59
+        }
+      },
+      "LON|LM9X": {
+        "depot": "LON",
+        "route": "LM9X",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 2,
+          "CA": 1,
+          "CM": 1,
+          "DEPAR": 72
+        }
+      },
+      "MSE|MD7A": {
+        "depot": "MSE",
+        "route": "MD7A",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 2,
+          "DEPAR": 56,
+          "FP": 17
+        }
+      },
+      "MSE|MD7B": {
+        "depot": "MSE",
+        "route": "MD7B",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 2,
+          "CM": 1,
+          "DEPAR": 52,
+          "FP": 9
+        }
+      },
+      "MSE|MD7C": {
+        "depot": "MSE",
+        "route": "MD7C",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 3,
+          "DEPAR": 2,
+          "FP": 1,
+          "HN": 46,
+          "ND": 16
+        }
+      },
+      "MSE|MD7D": {
+        "depot": "MSE",
+        "route": "MD7D",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 5,
+          "CM": 50,
+          "DEPAR": 10
+        }
+      },
+      "MSE|MD7E": {
+        "depot": "MSE",
+        "route": "MD7E",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 4,
+          "CM": 3,
+          "DEPAR": 37,
+          "FP": 15
+        }
+      },
+      "MSE|MD7X": {
+        "depot": "MSE",
+        "route": "MD7X",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 2,
+          "CM": 1,
+          "DEPAR": 35,
+          "FP": 15
+        }
+      }
+    },
+    "twByRoute": {},
+    "incomeByRouteFromExcel": {}
+  },
+  "2026-02-13": {
+    "byRoute": {
+      "LCY|DY1A": {
+        "depot": "LCY",
+        "route": "DY1A",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 2,
+          "CM": 4,
+          "DEPAR": 68,
+          "FP": 7
+        }
+      },
+      "LCY|DY1B": {
+        "depot": "LCY",
+        "route": "DY1B",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 4,
+          "CM": 1,
+          "DEPAR": 3,
+          "FP": 48,
+          "HN": 16
+        }
+      },
+      "LCY|DY1C": {
+        "depot": "LCY",
+        "route": "DY1C",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 4,
+          "DEPAR": 1,
+          "FP": 5,
+          "HN": 77,
+          "ND": 13
+        }
+      },
+      "LCY|DY1X": {
+        "depot": "LCY",
+        "route": "DY1X",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 1,
+          "DEPAR": 2,
+          "FP": 96,
+          "HN": 14
+        }
+      },
+      "LCY|DY2A": {
+        "depot": "LCY",
+        "route": "DY2A",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 2,
+          "CM": 1,
+          "DEPAR": 4,
+          "FP": 70,
+          "HN": 13
+        }
+      },
+      "LCY|DY2B": {
+        "depot": "LCY",
+        "route": "DY2B",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 2,
+          "CM": 3,
+          "DEPAR": 8,
+          "FP": 71,
+          "HN": 7
+        }
+      },
+      "LCY|DY2C": {
+        "depot": "LCY",
+        "route": "DY2C",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 2,
+          "CM": 7,
+          "DEPAR": 70,
+          "FP": 11
+        }
+      },
+      "LCY|DY2D": {
+        "depot": "LCY",
+        "route": "DY2D",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 5,
+          "CM": 16,
+          "DEPAR": 1,
+          "FP": 64,
+          "HN": 12
+        }
+      },
+      "LCY|DY2P": {
+        "depot": "LCY",
+        "route": "DY2P",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 2,
+          "DEPAR": 1,
+          "FP": 1,
+          "HN": 39,
+          "ND": 8
+        }
+      },
+      "LCY|DY2X": {
+        "depot": "LCY",
+        "route": "DY2X",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 10,
+          "DEPAR": 1,
+          "FP": 5,
+          "HN": 60,
+          "ND": 10
+        }
+      },
+      "LON|LL3A": {
+        "depot": "LON",
+        "route": "LL3A",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 4,
+          "CM": 2,
+          "DEPAR": 3,
+          "FP": 95,
+          "HN": 19
+        }
+      },
+      "LON|LL3B": {
+        "depot": "LON",
+        "route": "LL3B",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 2,
+          "DEPAR": 2,
+          "FP": 5,
+          "HN": 95,
+          "ND": 27
+        }
+      },
+      "LON|LL3C": {
+        "depot": "LON",
+        "route": "LL3C",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 2,
+          "CM": 1,
+          "DEPAR": 7,
+          "FP": 87,
+          "HN": 20
+        }
+      },
+      "LON|LL3D": {
+        "depot": "LON",
+        "route": "LL3D",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 1,
+          "DEPAR": 1,
+          "FP": 10,
+          "HN": 61,
+          "ND": 16
+        }
+      },
+      "LON|LL3X": {
+        "depot": "LON",
+        "route": "LL3X",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 3,
+          "DEPAR": 11,
+          "FP": 48,
+          "HN": 1,
+          "ND": 1
+        }
+      },
+      "LON|LL4A": {
+        "depot": "LON",
+        "route": "LL4A",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 2,
+          "DEPAR": 1,
+          "FP": 6,
+          "HN": 89,
+          "ND": 13
+        }
+      },
+      "LON|LL4B": {
+        "depot": "LON",
+        "route": "LL4B",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 2,
+          "CM": 5,
+          "DEPAR": 50,
+          "FP": 10
+        }
+      },
+      "LON|LL4X": {
+        "depot": "LON",
+        "route": "LL4X",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 2,
+          "CM": 4,
+          "DEPAR": 67,
+          "FP": 7
+        }
+      },
+      "LON|LM9A": {
+        "depot": "LON",
+        "route": "LM9A",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 2,
+          "CM": 2,
+          "DEPAR": 1,
+          "FP": 1,
+          "HN": 112
+        }
+      },
+      "LON|LM9X": {
+        "depot": "LON",
+        "route": "LM9X",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 1,
+          "DEPAR": 102
+        }
+      },
+      "MSE|MD7A": {
+        "depot": "MSE",
+        "route": "MD7A",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 3,
+          "CM": 55,
+          "DEPAR": 12
+        }
+      },
+      "MSE|MD7B": {
+        "depot": "MSE",
+        "route": "MD7B",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 2,
+          "CM": 64,
+          "DEPAR": 7
+        }
+      },
+      "MSE|MD7C": {
+        "depot": "MSE",
+        "route": "MD7C",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 3,
+          "CM": 3,
+          "DEPAR": 4,
+          "FP": 44,
+          "HN": 12
+        }
+      },
+      "MSE|MD7D": {
+        "depot": "MSE",
+        "route": "MD7D",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 5,
+          "DEPAR": 54,
+          "FP": 7
+        }
+      },
+      "MSE|MD7E": {
+        "depot": "MSE",
+        "route": "MD7E",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 1,
+          "CA": 1,
+          "CM": 1,
+          "DEPAR": 66,
+          "FP": 15
+        }
+      },
+      "MSE|MD7X": {
+        "depot": "MSE",
+        "route": "MD7X",
+        "counts": {
+          "ARRVD": 1,
+          "BA": 4,
+          "CA": 1,
+          "CM": 7,
+          "DEPAR": 1,
+          "FP": 47,
+          "HN": 13,
+          "ND": 1
+        }
+      }
+    },
+    "twByRoute": {},
+    "incomeByRouteFromExcel": {}
+  }
+}

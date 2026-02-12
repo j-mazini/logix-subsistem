@@ -12,6 +12,8 @@
   <link rel="stylesheet" href="../dashboard.css" />
   <link rel="stylesheet" href="sp-portal.css" />
   <link rel="stylesheet" href="../liquid-glass.css" />
+  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" />
+  <script src="sp-portal-responsive.js"></script>
 </head>
 <body class="has-beam-sidebar sp-portal">
   <div class="sidebar-wrapper" id="sidebarWrapper">
@@ -60,40 +62,35 @@
       <div class="page-container">
         <div class="page-inner">
           <main class="vendor-admin-main dashboard-main">
-            <header class="dashboard-header">
-              <div class="dashboard-header-top">
-                <div class="dashboard-welcome">
-                  <h1 class="dashboard-title">Dashboard</h1>
-                  <p class="dashboard-welcome-msg" id="welcomeMsg">Your operations summary.</p>
-                </div>
-                <div class="admin-header-user-pill d-flex align-items-center" id="spHeaderPill" title="">
-                  <img id="spHeaderAvatar" src="" alt="" class="admin-header-user-avatar admin-header-user-avatar--img" style="display:none;" />
-                  <span class="admin-header-user-name" id="spHeaderName">—</span>
-                </div>
-              </div>
-            </header>
-
-            <!-- Daily operations – one notification at a time, auto-rotate; click opens modal with all -->
-            <section class="sp-daily-ops-block" id="spDailyOpsBlock" aria-label="Daily operations">
-              <div class="sp-daily-ops-header">
-                <h2 class="sp-daily-ops-title"><i class="bi bi-bell-fill"></i> Daily operations</h2>
-                <p class="sp-daily-ops-subtitle">Notifications about routes, deliveries, delays and issues · <span class="sp-daily-ops-click-hint">Click to view all</span></p>
-              </div>
-              <div class="sp-daily-ops-feed sp-daily-ops-feed--slide" id="dailyOpsFeed">
-                <div class="sp-daily-ops-carousel">
-                  <button type="button" class="sp-daily-ops-nav sp-daily-ops-prev" id="dailyOpsPrev" aria-label="Previous notification"><i class="bi bi-chevron-left"></i></button>
-                  <div class="sp-daily-ops-slide-wrap" id="dailyOpsSlideWrap" role="button" tabindex="0" aria-label="Current notification; click to view all">
-                    <div class="sp-daily-ops-slide" id="dailyOpsSlide"></div>
+            <div class="container-fluid px-0">
+              <header class="dashboard-header mb-4" data-aos="fade-down" data-aos-duration="600" data-aos-once="true">
+                <div class="dashboard-header-top">
+                  <div class="dashboard-welcome">
+                    <h1 class="dashboard-title">Dashboard</h1>
+                    <p class="dashboard-welcome-msg" id="welcomeMsg">Your operations summary.</p>
                   </div>
-                  <button type="button" class="sp-daily-ops-nav sp-daily-ops-next" id="dailyOpsNext" aria-label="Next notification"><i class="bi bi-chevron-right"></i></button>
+                  <div class="dashboard-header-notifications flex-grow-1 mx-3" id="dashboardHeaderNotifications" aria-label="Notificações">
+                    <div class="sp-daily-ops-feed sp-daily-ops-feed--header sp-daily-ops-feed--slide" id="dailyOpsFeed">
+                      <div class="sp-daily-ops-carousel">
+                        <button type="button" class="sp-daily-ops-nav sp-daily-ops-prev" id="dailyOpsPrev" aria-label="Notificação anterior"><i class="bi bi-chevron-left"></i></button>
+                        <div class="sp-daily-ops-slide-wrap" id="dailyOpsSlideWrap" role="button" tabindex="0" aria-label="Notificação atual; clique para ver todas">
+                          <div class="sp-daily-ops-slide" id="dailyOpsSlide"></div>
+                        </div>
+                        <button type="button" class="sp-daily-ops-nav sp-daily-ops-next" id="dailyOpsNext" aria-label="Próxima notificação"><i class="bi bi-chevron-right"></i></button>
+                      </div>
+                      <div class="sp-daily-ops-dots" id="dailyOpsDots" role="tablist" aria-label="Navegar notificações"></div>
+                      <div id="dailyOpsEmpty" class="sp-daily-ops-empty hidden">
+                        <i class="bi bi-inbox"></i>
+                        <p>Sem notificações no momento.</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="admin-header-user-pill d-flex align-items-center" id="spHeaderPill" title="">
+                    <img id="spHeaderAvatar" src="" alt="" class="admin-header-user-avatar admin-header-user-avatar--img" style="display:none;" />
+                    <span class="admin-header-user-name" id="spHeaderName">—</span>
+                  </div>
                 </div>
-                <div class="sp-daily-ops-dots" id="dailyOpsDots" role="tablist" aria-label="Navigate notifications"></div>
-                <div id="dailyOpsEmpty" class="sp-daily-ops-empty hidden">
-                  <i class="bi bi-inbox"></i>
-                  <p>No notifications at the moment.</p>
-                </div>
-              </div>
-            </section>
+              </header>
 
             <!-- Modal: all notifications -->
             <div class="sp-daily-ops-modal hidden" id="dailyOpsModal" role="dialog" aria-modal="true" aria-labelledby="dailyOpsModalTitle">
@@ -111,264 +108,390 @@
               </div>
             </div>
 
-            <!-- Main dashboard with folder tabs (Disco | Last Day Operation | SPMS) -->
-            <section class="sp-dashboard-folders-block" id="spDashboardFoldersBlock" aria-label="Main dashboard">
-              <div class="sp-folder-tabs" role="tablist">
-                <button type="button" class="sp-folder-tab active" role="tab" aria-selected="true" data-folder="disco" id="folderDisco">
-                  <i class="bi bi-file-earmark-text"></i>
-                  <span>Disco</span>
-                </button>
-                <button type="button" class="sp-folder-tab" role="tab" aria-selected="false" data-folder="upload" id="folderUpload">
-                  <i class="bi bi-cloud-upload"></i>
-                  <span>Upload Data</span>
-                </button>
-                <button type="button" class="sp-folder-tab" role="tab" aria-selected="false" data-folder="lastday" id="folderLastDay">
-                  <i class="bi bi-calendar-day"></i>
-                  <span>Last Day Operation</span>
-                </button>
-                <button type="button" class="sp-folder-tab" role="tab" aria-selected="false" data-folder="spms" id="folderSpms">
-                  <i class="bi bi-speedometer2"></i>
-                  <span>SPMS</span>
-                </button>
-              </div>
-              <div class="sp-folder-content">
-                <div id="folder-panel-disco" class="sp-folder-panel" role="tabpanel" aria-labelledby="folderDisco">
-                  <div class="sp-folder-panel-inner sp-folder-panel-inner--scroll">
-                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
-                      <div>
-                        <h2 class="dashboard-block-title mb-1"><i class="bi bi-file-earmark-pdf"></i> Daily Disco</h2>
-                        <p class="dashboard-block-desc mb-0 small">Day's deliveries (Morning, Meeting). <a href="../assets/disco.pdf" target="_blank" rel="noopener">Open original PDF</a></p>
+              <!-- Secção 1: Daily Route Preview (conforme esboço) -->
+              <section class="mb-4" id="spDiscoBlock" aria-label="Daily Route Preview" data-aos="fade-up" data-aos-duration="500" data-aos-delay="100">
+                <div class="card border-0 shadow-sm sp-dashboard-card overflow-hidden">
+                  <div class="card-header bg-white border-0 pt-3 pb-0 px-3">
+                    <h2 class="h5 mb-0 d-flex align-items-center gap-2">
+                      <i class="bi bi-signpost-2 text-primary"></i> Daily Route Preview
+                    </h2>
+                    <p class="text-muted small mb-0 mt-1">Pré-visualização da rota diária por loop e depot.</p>
+                  </div>
+                  <!-- Strip: SPR | TOTAL PRE 12 | TOTAL Routes -->
+                  <div class="card-body sp-folder-strip-wrap py-3 border-bottom" id="spDiscoStrip">
+                    <div class="sp-folder-dashboard-kpis d-flex flex-wrap align-items-center gap-3">
+                      <div class="sp-folder-kpi sp-folder-kpi--spr">
+                        <span class="sp-folder-kpi-value" id="spDiscoKpiSpr">0</span>
+                        <span class="sp-folder-kpi-label">SPR</span>
                       </div>
-                      <div class="disco-filters d-flex align-items-center gap-2">
-                        <label for="discoFilterDepot" class="form-label mb-0 small text-muted">Depot</label>
-                        <select id="discoFilterDepot" class="form-select form-select-sm disco-filter-depot" aria-label="Filter by depot">
-                          <option value="">All</option>
-                        </select>
+                      <div class="sp-folder-kpi">
+                        <span class="sp-folder-kpi-value" id="spDiscoKpiPre12">—</span>
+                        <span class="sp-folder-kpi-label">TOTAL PRE 12</span>
+                      </div>
+                      <div class="sp-folder-kpi">
+                        <span class="sp-folder-kpi-value" id="spDiscoKpiTotalRoutes">—</span>
+                        <span class="sp-folder-kpi-label">TOTAL Routes</span>
                       </div>
                     </div>
-                    <div id="discoIslandsWrap" class="sp-disco-islands row g-4">
-                      <div class="col-12 col-md-6">
-                        <div class="sp-disco-island sp-disco-island--am">
-                          <div class="sp-disco-island-header">
-                            <i class="bi bi-sun"></i>
-                            <div>
-                              <h3 class="sp-disco-island-title">AM Run</h3>
-                              <p class="sp-disco-island-subtitle">Morning operations</p>
-                            </div>
-                            <span class="sp-disco-island-badge" id="discoAmCount">0</span>
+                  </div>
+                  <div class="card-body pt-3">
+                    <!-- LOOP selector -->
+                    <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+                      <label class="small fw-semibold text-muted mb-0 me-2">LOOP</label>
+                      <select class="form-select form-select-sm w-auto" id="discoLoopFilter" aria-label="Selecionar loop">
+                        <option value="">Todos os loops</option>
+                      </select>
+                      <select class="form-select form-select-sm w-auto ms-2" id="discoDepotFilter" aria-label="Filtrar por depot">
+                        <option value="">Todos os depots</option>
+                      </select>
+                      <span id="discoViewingDate" class="opms-viewing-date small text-muted ms-2" aria-live="polite">—</span>
+                      <a href="../assets/disco.pdf" target="_blank" rel="noopener" class="small ms-2">Abrir PDF</a>
+                    </div>
+                    <!-- 5 blocos: 1 detalhado (loop + tabela) + 4 cards -->
+                    <div class="daily-route-blocks row g-3">
+                      <div class="col-12 col-lg-5">
+                        <div class="card border shadow-sm h-100 daily-route-detail-card">
+                          <div class="card-header py-2 d-flex align-items-center justify-content-between">
+                            <h4 class="h6 mb-0"><i class="bi bi-geo-alt-fill text-primary"></i> Loop / Entregas</h4>
+                            <span class="badge bg-primary" id="discoSelectedLoopBadge">—</span>
                           </div>
-                          <div class="sp-disco-island-body">
-                            <ul class="sp-disco-list" id="discoAmList" aria-label="Morning – deliveries"></ul>
-                            <p class="sp-disco-empty hidden" id="discoAmEmpty">No operations</p>
+                          <div class="card-body p-2">
+                            <div class="d-flex flex-wrap gap-3 mb-2 small">
+                              <span><strong>SPR:</strong> <span id="discoLoopSpr">—</span></span>
+                              <span><strong>Pre 12:</strong> <span id="discoLoopPre12">—</span></span>
+                            </div>
+                            <div class="table-responsive" style="max-height: 280px;">
+                              <table class="table table-hover table-sm align-middle mb-0" id="discoDeliveriesTable" aria-label="Entregas do depot">
+                                <thead class="table-light sticky-top"><tr><th>Depot</th><th>Subpostcode</th><th>Endereço</th><th>Destinatário</th></tr></thead>
+                                <tbody id="discoDeliveriesBody"></tbody>
+                              </table>
+                            </div>
+                            <p id="discoDeliveriesEmpty" class="text-muted small text-center py-3 mb-0 hidden">Selecione um loop/depot para ver as entregas.</p>
                           </div>
                         </div>
                       </div>
-                      <div class="col-12 col-md-6">
-                        <div class="sp-disco-island sp-disco-island--pm">
-                          <div class="sp-disco-island-header">
-                            <i class="bi bi-moon"></i>
-                            <div>
-                              <h3 class="sp-disco-island-title">PM Run</h3>
-                              <p class="sp-disco-island-subtitle">Meeting / delivery</p>
-                            </div>
-                            <span class="sp-disco-island-badge" id="discoPmCount">0</span>
+                      <div class="col-6 col-lg">
+                        <div class="card border shadow-sm h-100 daily-route-kpi-card">
+                          <div class="card-body text-center py-3">
+                            <span class="sp-folder-kpi-value d-block" id="discoCardRoutes">—</span>
+                            <span class="sp-folder-kpi-label">Routes</span>
                           </div>
-                          <div class="sp-disco-island-body">
-                            <ul class="sp-disco-list" id="discoPmList" aria-label="Meeting – deliveries"></ul>
-                            <p class="sp-disco-empty hidden" id="discoPmEmpty">No operations</p>
+                        </div>
+                      </div>
+                      <div class="col-6 col-lg">
+                        <div class="card border shadow-sm h-100 daily-route-kpi-card">
+                          <div class="card-body text-center py-3">
+                            <span class="sp-folder-kpi-value d-block" id="discoCardStops">—</span>
+                            <span class="sp-folder-kpi-label">Stops</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-6 col-lg">
+                        <div class="card border shadow-sm h-100 daily-route-kpi-card">
+                          <div class="card-body text-center py-3">
+                            <div id="discoPre12List" class="disco-pre12-list small"></div>
+                            <span class="sp-folder-kpi-label">PRE-12</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-6 col-lg">
+                        <div class="card border shadow-sm h-100 daily-route-kpi-card">
+                          <div class="card-body text-center py-3">
+                            <span class="sp-folder-kpi-value d-block" id="discoCardLoops">—</span>
+                            <span class="sp-folder-kpi-label">Loops</span>
                           </div>
                         </div>
                       </div>
                     </div>
-                    <div id="discoErrorState" class="sp-disco-error hidden" role="alert">
-                      <i class="bi bi-exclamation-circle"></i>
-                      <p class="mb-0">Disco data not available. <a href="../assets/disco.pdf" target="_blank" rel="noopener">Open PDF</a>.</p>
+                    <p id="discoPre12Empty" class="text-muted small mb-0 mt-1 hidden">Nenhum PRE-12 para a seleção.</p>
+                    <div id="discoErrorState" class="alert alert-warning hidden mb-0 mt-3" role="alert">
+                      <i class="bi bi-exclamation-circle"></i> Disco data not available. <a href="../assets/disco.pdf" target="_blank" rel="noopener">Abrir PDF</a>
                     </div>
                   </div>
                 </div>
-                <div id="folder-panel-upload" class="sp-folder-panel hidden" role="tabpanel" aria-labelledby="folderUpload" aria-hidden="true">
-                  <div class="sp-folder-panel-inner sp-folder-panel-inner--scroll opms-panel">
-                    <h2 class="opms-title"><i class="bi bi-cloud-upload"></i> Upload Data</h2>
-                    <p class="opms-subtitle text-muted">Carregue os ficheiros de produção (OPMS) e/ou Time Window por data. Depois use a aba <strong>Last Day Operation</strong> para ver métricas e performance por data e rota.</p>
-                    <section class="opms-upload-card" aria-labelledby="opms-upload-heading">
-                      <h3 id="opms-upload-heading" class="opms-card-title"><i class="bi bi-upload"></i> Upload</h3>
-                      <div class="opms-upload-grid">
-                        <div class="opms-field">
-                          <label for="lastDayStoreDate" class="opms-label">Store for date</label>
-                          <input type="date" id="lastDayStoreDate" class="form-control opms-input" aria-describedby="opms-store-date-hint" />
-                          <span id="opms-store-date-hint" class="opms-hint">Data will be associated to this date</span>
-                        </div>
-                        <div class="opms-field opms-field-upload">
-                          <label class="opms-label">Production data</label>
-                          <p class="opms-hint mb-1">Excel OPMS: sheet com colunas PUD Svc Area (Depot), PUD Rte (Route), Courier id (Driver), Act Ckpt Code. Só contam códigos: BA, CA, CM, FP, HN, NR, OK, PU, RD.</p>
-                          <div class="opms-upload-row">
-                            <input type="file" id="lastDayExcelUpload" class="d-none" accept=".xlsx,.xlsm" aria-label="Production Excel" />
-                            <button type="button" class="opms-upload-btn opms-upload-btn-excel" id="lastDayExcelTrigger" aria-label="Choose production Excel file">
-                              <i class="bi bi-file-earmark-excel"></i>
-                              <span>Choose Excel</span>
-                            </button>
-                            <span id="lastDayExcelFileName" class="opms-filename" aria-live="polite"></span>
-                          </div>
-                        </div>
-                        <div class="opms-field opms-field-upload">
-                          <label class="opms-label">Time Window</label>
-                          <p class="opms-hint mb-1">Excel com colunas <strong>Route</strong> e <strong>% TW Adh DL</strong>. O valor é filtrado por rota e mostrado no círculo de goal.</p>
-                          <div class="opms-upload-row">
-                            <input type="file" id="lastDayTwUpload" class="d-none" accept=".xlsx,.xlsm,.png,.jpg,.jpeg,.webp" aria-label="Time Window file or image" />
-                            <button type="button" class="opms-upload-btn opms-upload-btn-tw" id="lastDayTwTrigger" aria-label="Choose Time Window Excel or image">
-                              <i class="bi bi-image-alt"></i>
-                              <span>Excel or image</span>
-                            </button>
-                            <span id="lastDayTwFileName" class="opms-filename" aria-live="polite"></span>
-                          </div>
-                        </div>
-                        <div class="opms-field opms-field-action">
-                          <label class="opms-label">&nbsp;</label>
-                          <button type="button" class="btn btn-primary opms-process-btn" id="lastDayProcessBtn" disabled>
-                            <i class="bi bi-gear-fill opms-process-btn-icon"></i>
-                            <span class="opms-process-btn-text">Process</span>
-                            <span class="opms-process-btn-spinner hidden" aria-hidden="true"><i class="bi bi-arrow-repeat spin"></i></span>
-                          </button>
-                        </div>
-                      </div>
-                      <div id="opmsProcessSuccess" class="opms-process-success hidden" role="status" aria-live="polite">
-                        <i class="bi bi-check-circle-fill"></i>
-                        <div>
-                          <strong>Dados processados com sucesso.</strong>
-                          <span class="opms-process-success-date"></span> Pode ver os resultados na aba <strong>Last Day Operation</strong>.
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </div>
-                <div id="folder-panel-lastday" class="sp-folder-panel hidden" role="tabpanel" aria-labelledby="folderLastDay" aria-hidden="true">
-                  <div class="sp-folder-panel-inner sp-folder-panel-inner--scroll opms-panel">
-                    <header class="opms-lastday-header opms-lastday-header-with-nav">
-                      <h2 class="opms-title mb-2"><i class="bi bi-calendar-day"></i> Last Day Operations</h2>
-                      <div class="opms-lastday-date-block" role="group" aria-label="Navegar por data">
-                        <button type="button" class="opms-date-edge-btn" id="lastDayDatePrev" aria-label="Data anterior" title="Data anterior"><i class="bi bi-chevron-left"></i></button>
-                        <button type="button" class="opms-date-center" id="lastDayDatePicker" aria-label="Selecionar data" aria-haspopup="listbox" aria-expanded="false">
-                          <span id="lastDayViewingDate" class="opms-viewing-date" aria-live="polite"></span>
-                          <i class="bi bi-calendar3 opms-date-picker-icon"></i>
+              </section>
+
+              <!-- Secção 2: Last Day Operations / Financials (conforme esboço) -->
+              <section class="mb-4" id="spDashboardFoldersBlock" aria-label="Last Day Operations / Financials" data-aos="fade-up" data-aos-duration="500" data-aos-delay="150">
+                <div class="card border-0 shadow-sm sp-dashboard-card overflow-hidden">
+                  <div class="card-header bg-white border-0 pt-3 pb-0 px-3">
+                    <h2 class="h5 mb-2 d-flex align-items-center gap-2">
+                      <i class="bi bi-calendar-day text-primary"></i> Last Day Operations / Financials
+                    </h2>
+                    <ul class="nav nav-tabs card-header-tabs sp-folder-tabs-bootstrap" role="tablist" id="folderTabsList">
+                      <li class="nav-item" role="presentation">
+                        <button type="button" class="nav-link active" role="tab" aria-selected="true" data-folder="lastday" id="folderLastDay" aria-controls="folder-panel-lastday">
+                          <i class="bi bi-calendar-check"></i> Daily Operations
                         </button>
-                        <div id="lastDayDateDropdown" class="opms-date-dropdown hidden" role="listbox" aria-label="Datas disponíveis"></div>
-                        <button type="button" class="opms-date-edge-btn" id="lastDayDateNext" aria-label="Data seguinte" title="Data seguinte"><i class="bi bi-chevron-right"></i></button>
+                      </li>
+                      <li class="nav-item" role="presentation">
+                        <button type="button" class="nav-link" role="tab" aria-selected="false" data-folder="spms" id="folderSpms" aria-controls="folder-panel-spms">
+                          <i class="bi bi-currency-pound"></i> Financials
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
+                  <!-- Strip: SPR | SPOHR | AFD + círculo TW (goals) -->
+                  <div class="card-body sp-folder-strip-wrap py-3 border-bottom" id="spFolderDashboardStrip">
+                    <div class="sp-folder-dashboard-kpis d-flex flex-wrap align-items-center gap-3" id="spFolderDashboardKpis">
+                      <div class="sp-folder-kpi sp-folder-kpi--spr">
+                        <span class="sp-folder-kpi-value" id="spFolderKpiSprFixed">0</span>
+                        <span class="sp-folder-kpi-label">SPR</span>
                       </div>
-                      <p class="opms-subtitle text-muted mb-0 mt-1">Ver métricas e performance por data e rota. Use a aba <strong>Upload Data</strong> para carregar ficheiros.</p>
-                    </header>
-
-                    <div class="opms-lastday-layout">
-                      <aside class="opms-lastday-left">
-                        <div id="lastDayTreeWrap" class="opms-tree-wrap">
-                          <ul id="lastDayTree" class="opms-tree" role="tree" aria-label="All, Loops e Rotas"></ul>
+                      <div class="sp-folder-kpi sp-folder-kpi--lastday hidden" id="spFolderKpiLastDay1"><span class="sp-folder-kpi-value" id="spFolderKpiSpohr">—</span><span class="sp-folder-kpi-label">SPOHR</span></div>
+                      <div class="sp-folder-kpi sp-folder-kpi--lastday hidden" id="spFolderKpiLastDay2"><span class="sp-folder-kpi-value" id="spFolderKpiStops">—</span><span class="sp-folder-kpi-label">STOPS</span></div>
+                      <div class="sp-folder-kpi sp-folder-kpi--lastday hidden" id="spFolderKpiLastDay3"><span class="sp-folder-kpi-value" id="spFolderKpiTw">—</span><span class="sp-folder-kpi-label">Time Window</span></div>
+                      <div class="sp-folder-kpi sp-folder-kpi--lastday hidden" id="spFolderKpiLastDay4"><span class="sp-folder-kpi-value" id="spFolderKpiAfd">—</span><span class="sp-folder-kpi-label">AFD %</span></div>
+                      <div class="sp-folder-kpi sp-folder-kpi--spms hidden" id="spFolderKpiSpms1"><span class="sp-folder-kpi-value" id="spFolderKpiDel">—</span><span class="sp-folder-kpi-label">DEL</span></div>
+                      <div class="sp-folder-kpi sp-folder-kpi--spms hidden" id="spFolderKpiSpms2"><span class="sp-folder-kpi-value" id="spFolderKpiPu">—</span><span class="sp-folder-kpi-label">PU</span></div>
+                      <div class="sp-folder-kpi sp-folder-kpi--spms hidden" id="spFolderKpiSpms3"><span class="sp-folder-kpi-value" id="spFolderKpiHn">—</span><span class="sp-folder-kpi-label">HN</span></div>
+                      <div class="sp-folder-kpi sp-folder-kpi--spms hidden" id="spFolderKpiSpms4"><span class="sp-folder-kpi-value" id="spFolderKpiIncome">—</span><span class="sp-folder-kpi-label">Income</span></div>
+                      <div class="sp-folder-kpi sp-folder-kpi--spms hidden" id="spFolderKpiSpms5"><span class="sp-folder-kpi-value" id="spFolderKpiPct">—</span><span class="sp-folder-kpi-label">% vs target</span></div>
+                    </div>
+                    <div id="spFolderGoalsRow" class="sp-folder-goals-row mt-3 hidden">
+                      <div id="spFolderGoalsWrap" class="last-day-goals-circles-wrap sp-folder-goals-inline"></div>
+                    </div>
+                  </div>
+                  <div class="card-body tab-content pt-3" id="spFolderContent">
+                    <div id="folder-panel-lastday" class="tab-pane fade show active sp-folder-panel opms-panel" role="tabpanel" aria-labelledby="folderLastDay">
+                      <header class="opms-lastday-header opms-lastday-header-with-nav mb-3">
+                        <h3 class="h6 mb-2"><i class="bi bi-calendar-day text-primary"></i> Last Day Operations</h3>
+                        <div class="opms-lastday-date-block" role="group" aria-label="Navegar por data">
+                          <button type="button" class="opms-date-edge-btn" id="lastDayDatePrev" aria-label="Data anterior" title="Data anterior"><i class="bi bi-chevron-left"></i></button>
+                          <button type="button" class="opms-date-center" id="lastDayDatePicker" aria-label="Selecionar data" aria-haspopup="listbox" aria-expanded="false">
+                            <span id="lastDayViewingDate" class="opms-viewing-date" aria-live="polite"></span>
+                            <i class="bi bi-calendar3 opms-date-picker-icon"></i>
+                          </button>
+                          <div id="lastDayDateDropdown" class="opms-date-dropdown hidden" role="listbox" aria-label="Datas disponíveis"></div>
+                          <button type="button" class="opms-date-edge-btn" id="lastDayDateNext" aria-label="Data seguinte" title="Data seguinte"><i class="bi bi-chevron-right"></i></button>
                         </div>
-                      </aside>
-                      <section class="opms-lastday-right" id="opmsPerformanceSection" aria-labelledby="opms-performance-heading">
-                        <h3 id="opms-performance-heading" class="opms-card-title"><i class="bi bi-graph-up"></i> Performance</h3>
-                        <div class="last-day-goals-wrap" id="lastDayGoalsWrap"></div>
-                      </section>
-                    </div>
-                  </div>
-                </div>
-                <div id="folder-panel-spms" class="sp-folder-panel hidden" role="tabpanel" aria-labelledby="folderSpms" aria-hidden="true">
-                  <div class="sp-folder-panel-inner sp-folder-panel-inner--scroll">
-                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
-                      <h2 class="dashboard-block-title mb-0"><i class="bi bi-speedometer2"></i> SPMS</h2>
-                      <div class="spms-filters d-flex align-items-center gap-2">
-                        <label for="spmsFilterLoop" class="form-label mb-0 small text-muted">Aggregation route</label>
-                        <select id="spmsFilterLoop" class="form-select form-select-sm" aria-label="Filter by aggregation route (loop)">
-                          <option value="">All</option>
-                        </select>
+                        <p class="opms-subtitle text-muted mb-0 mt-1 small">Performance (SPOH-R, SPR, STOPS, Time Window, AFD) e lista de entregas do dia anterior.</p>
+                      </header>
+                      <div class="opms-lastday-layout">
+                        <aside class="opms-lastday-left">
+                          <p class="small fw-semibold text-muted mb-2 opms-nav-label">Routes · Loops · Depots</p>
+                          <div id="lastDayTreeWrap" class="opms-tree-wrap">
+                            <ul id="lastDayTree" class="opms-tree" role="tree" aria-label="Routes, Loops e Depots"></ul>
+                          </div>
+                        </aside>
+                        <section class="opms-lastday-right opms-performance-block" id="opmsPerformanceSection" aria-labelledby="opms-performance-heading">
+                          <div class="opms-performance-card">
+                            <header class="opms-performance-header">
+                              <div class="opms-performance-header-icon"><i class="bi bi-graph-up-arrow" aria-hidden="true"></i></div>
+                              <div>
+                                <h4 id="opms-performance-heading" class="opms-performance-title">Performance</h4>
+                                <p class="opms-performance-subtitle">Time Window e AFD por rota, loop ou depot</p>
+                              </div>
+                            </header>
+                            <div class="last-day-goals-wrap" id="lastDayGoalsWrap"></div>
+                          </div>
+                        </section>
+                      </div>
+                      <div class="mt-4">
+                        <h4 class="h6 mb-2"><i class="bi bi-list-ul text-primary"></i> Lista de entregas do dia anterior</h4>
+                        <div class="table-responsive">
+                          <table class="table table-hover table-sm align-middle mb-0" id="lastDayDeliveriesTable" aria-label="Entregas do dia anterior">
+                            <thead class="table-light">
+                              <tr><th>Depot</th><th>Loop</th><th>Rota</th><th class="text-end">DEL</th><th class="text-end">PU</th><th class="text-end">HN</th><th class="text-end">STOPS</th></tr>
+                            </thead>
+                            <tbody id="lastDayDeliveriesBody"></tbody>
+                          </table>
+                        </div>
+                        <p id="lastDayDeliveriesEmpty" class="text-muted small text-center py-3 mb-0 hidden">Selecione uma data para ver as entregas.</p>
                       </div>
                     </div>
-                    <h3 class="spms-overview-title mb-3" id="spmsOverviewTitle">Overview for aggregation route</h3>
-                    <div class="spms-table-wrap table-responsive">
-                      <table class="table table-hover align-middle spms-overview-table">
-                        <thead>
-                          <tr>
-                            <th>Date</th>
-                            <th>Route</th>
-                            <th>Cycle</th>
-                            <th>Service item</th>
-                            <th>HN</th>
-                            <th>Deliverys</th>
-                            <th>PU</th>
-                            <th>Total</th>
-                            <th>Comment</th>
-                          </tr>
-                        </thead>
-                        <tbody id="spmsOverviewBody"></tbody>
-                        <tfoot id="spmsOverviewFoot" class="spms-overview-tfoot">
-                          <tr><td colspan="4"><strong>Total</strong></td><td id="spmsTotalHn">0</td><td id="spmsTotalOk">0</td><td id="spmsTotalPu">0</td><td id="spmsTotalAll">0</td><td></td></tr>
-                        </tfoot>
-                      </table>
+                    <div id="folder-panel-spms" class="tab-pane fade sp-folder-panel opms-panel" role="tabpanel" aria-labelledby="folderSpms" aria-hidden="true">
+                      <header class="opms-lastday-header opms-lastday-header-with-nav mb-3">
+                        <h3 class="h6 mb-2"><i class="bi bi-speedometer2 text-primary"></i> SPMS</h3>
+                        <p class="opms-subtitle text-muted mb-0 mt-1 small">Performance e Income por data e rota.</p>
+                        <div class="opms-lastday-date-block" role="group" aria-label="Navegar por data">
+                          <button type="button" class="opms-date-edge-btn" id="spmsDatePrev" aria-label="Data anterior" title="Data anterior"><i class="bi bi-chevron-left"></i></button>
+                          <button type="button" class="opms-date-center" id="spmsDatePicker" aria-label="Selecionar data" aria-haspopup="listbox" aria-expanded="false">
+                            <span id="spmsViewingDate" class="opms-viewing-date" aria-live="polite"></span>
+                            <i class="bi bi-calendar3 opms-date-picker-icon"></i>
+                          </button>
+                          <div id="spmsDateDropdown" class="opms-date-dropdown hidden" role="listbox" aria-label="Datas disponíveis"></div>
+                          <button type="button" class="opms-date-edge-btn" id="spmsDateNext" aria-label="Data seguinte" title="Data seguinte"><i class="bi bi-chevron-right"></i></button>
+                        </div>
+                      </header>
+                      <div class="opms-lastday-layout">
+                        <aside class="opms-lastday-left">
+                          <p class="small fw-semibold text-muted mb-2 opms-nav-label">Routes · Loops · Depots</p>
+                          <div id="spmsTreeWrap" class="opms-tree-wrap">
+                            <ul id="spmsTree" class="opms-tree" role="tree" aria-label="Routes, Loops e Depots"></ul>
+                          </div>
+                        </aside>
+                        <section class="opms-lastday-right opms-performance-block" id="spmsPerformanceSection" aria-labelledby="spms-performance-heading">
+                          <div class="opms-performance-card">
+                            <header class="opms-performance-header">
+                              <div class="opms-performance-header-icon"><i class="bi bi-graph-up-arrow" aria-hidden="true"></i></div>
+                              <div>
+                                <h4 id="spms-performance-heading" class="opms-performance-title">Performance &amp; Income</h4>
+                                <p class="opms-performance-subtitle">Métricas do dia por rota, loop ou depot</p>
+                              </div>
+                            </header>
+                            <div class="last-day-goals-wrap" id="spmsGoalsWrap"></div>
+                          </div>
+                          <!-- Financials: DEL, PU, HN, TOTAL + Income / Avg (conforme esboço) -->
+                          <div class="spms-financials-block mt-4">
+                            <h4 class="spms-overview-title"><i class="bi bi-currency-pound text-primary"></i> Financials</h4>
+                            <div class="spms-financials-row d-flex flex-wrap align-items-stretch gap-3">
+                              <div class="spms-financials-circle-wrap">
+                                <div class="spms-financials-circle" id="spmsFinancialsCircle" aria-hidden="true">
+                                  <span class="spms-fc-item spms-fc-del">DEL</span>
+                                  <span class="spms-fc-item spms-fc-pu">PU</span>
+                                  <span class="spms-fc-item spms-fc-hn">HN</span>
+                                  <span class="spms-fc-item spms-fc-total">TOTAL</span>
+                                </div>
+                                <div class="spms-financials-currency mt-2"><span class="spms-kpi-value" id="spmsKpiIncome">—</span> <small class="text-muted">Income</small></div>
+                              </div>
+                              <div class="spms-financials-stack d-flex flex-column justify-content-center gap-2">
+                                <div class="spms-kpi-card compact"><span class="spms-kpi-value" id="spmsKpiDel">—</span><span class="spms-kpi-label">DEL</span></div>
+                                <div class="spms-kpi-card compact"><span class="spms-kpi-value" id="spmsKpiPu">—</span><span class="spms-kpi-label">PU</span></div>
+                                <div class="spms-kpi-card compact"><span class="spms-kpi-value" id="spmsKpiHn">—</span><span class="spms-kpi-label">HN</span></div>
+                                <div class="spms-kpi-card compact"><span class="spms-kpi-value" id="spmsKpiPct">—</span><span class="spms-kpi-label">% vs target</span></div>
+                              </div>
+                              <div class="spms-avg-block d-flex flex-column justify-content-center">
+                                <div class="small text-muted mb-1">Avg Income</div>
+                                <div class="sp-folder-kpi-value" id="spmsAvgIncome">—</div>
+                                <div class="small text-muted mt-2 mb-1">Avg Route</div>
+                                <div class="sp-folder-kpi-value" id="spmsAvgRoute">—</div>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="spms-dashboard-block mt-4">
+                            <h4 class="spms-overview-title"><i class="bi bi-table text-primary"></i> Dados por rota (importados)</h4>
+                            <h4 class="spms-overview-title mt-4"><i class="bi bi-table text-primary"></i> Dados por rota (importados)</h4>
+                            <div class="spms-table-wrap" id="spmsTableWrap">
+                              <table class="spms-overview-table table table-striped mb-0" id="spmsOverviewTable" aria-label="Dados SPMS por rota">
+                                <thead>
+                                  <tr>
+                                    <th>Depot</th>
+                                    <th>Loop</th>
+                                    <th>Rota</th>
+                                    <th class="text-end">DEL</th>
+                                    <th class="text-end">PU</th>
+                                    <th class="text-end">HN</th>
+                                    <th class="text-end">Income</th>
+                                    <th class="text-end">%</th>
+                                  </tr>
+                                </thead>
+                                <tbody id="spmsOverviewTbody"></tbody>
+                                <tfoot class="spms-overview-tfoot" id="spmsOverviewTfoot"></tfoot>
+                              </table>
+                            </div>
+                            <p id="spmsDashboardEmpty" class="spms-dashboard-empty text-muted small mt-2 hidden">Nenhum dado importado para esta data. Use o upload OPMS ou importe os ficheiros Excel.</p>
+                          </div>
+                        </section>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </section>
+              </section>
 
-            <!-- Block 2: KPIs / Compliance / Vehicles carousel + open full dashboard button -->
-            <section class="sp-dashboard-carousel-block" aria-label="Summary KPIs, Compliance and Vehicles">
-              <div class="sp-carousel-header">
-                <h2 class="sp-carousel-title"><i class="bi bi-grid-3x3-gap"></i> Summary</h2>
-                <div class="sp-carousel-nav">
-                  <button type="button" class="sp-carousel-btn" id="carouselPrev" aria-label="Previous"><i class="bi bi-chevron-left"></i></button>
-                  <span class="sp-carousel-dots" id="carouselDots"></span>
-                  <button type="button" class="sp-carousel-btn" id="carouselNext" aria-label="Next"><i class="bi bi-chevron-right"></i></button>
-                  <button type="button" class="btn btn-primary btn-sm sp-open-full-dashboard" id="openFullDashboardBtn" title="Open full dashboard">
-                    <i class="bi bi-fullscreen"></i> Open full dashboard
-                  </button>
+              <!-- Compliance + Vehicles (mantidos como está) -->
+              <section class="mb-4" aria-label="Compliance and Vehicles" data-aos="fade-up" data-aos-duration="500" data-aos-delay="200">
+                <div class="row g-4">
+                  <div class="col-12 col-lg-6">
+                    <div class="card border-0 shadow-sm sp-dashboard-card h-100 overflow-hidden">
+                      <div class="card-header bg-white border-0 py-3">
+                        <h2 class="h5 mb-0 d-flex align-items-center gap-2">
+                          <i class="bi bi-shield-check text-primary"></i> Compliance
+                        </h2>
+                        <p class="text-muted small mb-0 mt-1">Expiring and expired training</p>
+                      </div>
+                      <div class="card-body pt-0">
+                        <div class="row g-3" id="complianceGrid">
+                          <div class="col-12 col-md-4">
+                            <div class="card dashboard-compliance-card h-100 border shadow-sm" data-course="cargo">
+                              <div class="card-header py-2 d-flex align-items-center gap-2">
+                                <i class="bi bi-box-seam text-primary"></i>
+                                <h3 class="h6 mb-0">Cargo</h3>
+                              </div>
+                              <div class="card-body py-2">
+                                <div class="compliance-group expiring mb-2">
+                                  <h4 class="small fw-semibold text-warning mb-1"><i class="bi bi-exclamation-triangle"></i> Expiring</h4>
+                                  <ul class="list-group list-group-flush compliance-vendor-list list-group-numbered" id="complianceCargoExpiring"></ul>
+                                </div>
+                                <div class="compliance-group expired">
+                                  <h4 class="small fw-semibold text-danger mb-1"><i class="bi bi-x-circle"></i> Expired</h4>
+                                  <ul class="list-group list-group-flush compliance-vendor-list list-group-numbered" id="complianceCargoExpired"></ul>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="col-12 col-md-4">
+                            <div class="card dashboard-compliance-card h-100 border shadow-sm" data-course="dangerous">
+                              <div class="card-header py-2 d-flex align-items-center gap-2">
+                                <i class="bi bi-exclamation-octagon text-warning"></i>
+                                <h3 class="h6 mb-0">Dangerous Goods</h3>
+                              </div>
+                              <div class="card-body py-2">
+                                <div class="compliance-group expiring mb-2">
+                                  <h4 class="small fw-semibold text-warning mb-1"><i class="bi bi-exclamation-triangle"></i> Expiring</h4>
+                                  <ul class="list-group list-group-flush compliance-vendor-list list-group-numbered" id="complianceDangerousExpiring"></ul>
+                                </div>
+                                <div class="compliance-group expired">
+                                  <h4 class="small fw-semibold text-danger mb-1"><i class="bi bi-x-circle"></i> Expired</h4>
+                                  <ul class="list-group list-group-flush compliance-vendor-list list-group-numbered" id="complianceDangerousExpired"></ul>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="col-12 col-md-4">
+                            <div class="card dashboard-compliance-card h-100 border shadow-sm" data-course="manual">
+                              <div class="card-header py-2 d-flex align-items-center gap-2">
+                                <i class="bi bi-hand-index text-info"></i>
+                                <h3 class="h6 mb-0">Manual Handling</h3>
+                              </div>
+                              <div class="card-body py-2">
+                                <div class="compliance-group expiring mb-2">
+                                  <h4 class="small fw-semibold text-warning mb-1"><i class="bi bi-exclamation-triangle"></i> Expiring</h4>
+                                  <ul class="list-group list-group-flush compliance-vendor-list list-group-numbered" id="complianceManualExpiring"></ul>
+                                </div>
+                                <div class="compliance-group expired">
+                                  <h4 class="small fw-semibold text-danger mb-1"><i class="bi bi-x-circle"></i> Expired</h4>
+                                  <ul class="list-group list-group-flush compliance-vendor-list list-group-numbered" id="complianceManualExpired"></ul>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-12 col-lg-6">
+                    <div class="card border-0 shadow-sm sp-dashboard-card h-100 overflow-hidden">
+                      <div class="card-header bg-white border-0 py-3">
+                        <h2 class="h5 mb-0 d-flex align-items-center gap-2">
+                          <i class="bi bi-truck text-primary"></i> Vehicles requiring attention
+                        </h2>
+                        <p class="text-muted small mb-0 mt-1">VRN, brand, depot and reason</p>
+                      </div>
+                      <div class="card-body pt-0">
+                        <div class="table-responsive">
+                          <table class="table table-hover align-middle table-sm mb-0">
+                            <thead class="table-light">
+                              <tr>
+                                <th>VRN</th>
+                                <th>Brand</th>
+                                <th>Depot</th>
+                                <th>Reason</th>
+                              </tr>
+                            </thead>
+                            <tbody id="vehiclesAttentionBody"></tbody>
+                          </table>
+                        </div>
+                        <div id="vehiclesEmptyState" class="text-center py-4 hidden">
+                          <i class="bi bi-check-circle text-success fs-1"></i>
+                          <p class="mb-0 mt-2 text-muted">No vehicles requiring attention.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div class="sp-carousel-viewport">
-                <div class="sp-carousel-track" id="carouselTrack">
-                  <div class="sp-carousel-slide" data-slide="0">
-                    <div class="sp-carousel-slide-inner" id="carouselSlideKpis">
-                      <div class="dashboard-kpi-grid dashboard-kpi-grid--compact" id="kpiGrid" data-loading="true">
-                        <div class="dashboard-kpi-card" data-animate="1"><div class="dashboard-kpi-icon-wrap kpi-spr"><i class="bi bi-graph-up-arrow"></i></div><div class="dashboard-kpi-content"><span class="dashboard-kpi-value-wrap"><span class="dashboard-kpi-loading-spinner" aria-hidden="true"></span><span class="dashboard-kpi-value" id="kpiSpr">0</span></span><span class="dashboard-kpi-label">SPR</span></div></div>
-                        <div class="dashboard-kpi-card" data-animate="2"><div class="dashboard-kpi-icon-wrap kpi-tw"><i class="bi bi-clock-history"></i></div><div class="dashboard-kpi-content"><span class="dashboard-kpi-value-wrap"><span class="dashboard-kpi-loading-spinner" aria-hidden="true"></span><span class="dashboard-kpi-value" id="kpiTw">0</span></span><span class="dashboard-kpi-label">Time Window</span></div></div>
-                        <div class="dashboard-kpi-card" data-animate="3"><div class="dashboard-kpi-icon-wrap kpi-spohr"><i class="bi bi-speedometer2"></i></div><div class="dashboard-kpi-content"><span class="dashboard-kpi-value-wrap"><span class="dashboard-kpi-loading-spinner" aria-hidden="true"></span><span class="dashboard-kpi-value" id="kpiSpohr">0</span></span><span class="dashboard-kpi-label">SPOH-R</span></div></div>
-                        <div class="dashboard-kpi-card" data-animate="4"><div class="dashboard-kpi-icon-wrap kpi-routes"><i class="bi bi-signpost-2-fill"></i></div><div class="dashboard-kpi-content"><span class="dashboard-kpi-value-wrap"><span class="dashboard-kpi-loading-spinner" aria-hidden="true"></span><span class="dashboard-kpi-value" id="kpiTotalRoutes">0</span></span><span class="dashboard-kpi-label">ROUTES</span></div></div>
-                        <div class="dashboard-kpi-card" data-animate="5"><div class="dashboard-kpi-icon-wrap kpi-stops"><i class="bi bi-geo-alt-fill"></i></div><div class="dashboard-kpi-content"><span class="dashboard-kpi-value-wrap"><span class="dashboard-kpi-loading-spinner" aria-hidden="true"></span><span class="dashboard-kpi-value" id="kpiTotalStops">0</span></span><span class="dashboard-kpi-label">STOPS</span></div></div>
-                        <div class="dashboard-kpi-card" data-animate="6"><div class="dashboard-kpi-icon-wrap kpi-vendors"><i class="bi bi-people-fill"></i></div><div class="dashboard-kpi-content"><span class="dashboard-kpi-value-wrap"><span class="dashboard-kpi-loading-spinner" aria-hidden="true"></span><span class="dashboard-kpi-value" id="kpiVendors">0</span></span><span class="dashboard-kpi-label">VENDORS</span></div></div>
-                        <div class="dashboard-kpi-card" data-animate="7"><div class="dashboard-kpi-icon-wrap kpi-loops"><i class="bi bi-arrow-repeat"></i></div><div class="dashboard-kpi-content"><span class="dashboard-kpi-value-wrap"><span class="dashboard-kpi-loading-spinner" aria-hidden="true"></span><span class="dashboard-kpi-value" id="kpiLoops">0</span></span><span class="dashboard-kpi-label">LOOPS</span></div></div>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="sp-carousel-slide" data-slide="1">
-                    <div class="sp-carousel-slide-inner" id="carouselSlideCompliance">
-                      <div class="dashboard-compliance-grid dashboard-compliance-grid--compact" id="complianceGrid">
-                        <div class="dashboard-compliance-card" data-course="cargo"><div class="dashboard-compliance-card-header"><i class="bi bi-box-seam"></i><h3>Cargo</h3></div><div class="dashboard-compliance-body"><div class="compliance-group expiring"><h4><i class="bi bi-exclamation-triangle"></i> Expiring</h4><ul class="compliance-vendor-list" id="complianceCargoExpiring"></ul></div><div class="compliance-group expired"><h4><i class="bi bi-x-circle"></i> Expired</h4><ul class="compliance-vendor-list" id="complianceCargoExpired"></ul></div></div></div>
-                        <div class="dashboard-compliance-card" data-course="dangerous"><div class="dashboard-compliance-card-header"><i class="bi bi-exclamation-octagon"></i><h3>Dangerous Goods</h3></div><div class="dashboard-compliance-body"><div class="compliance-group expiring"><h4><i class="bi bi-exclamation-triangle"></i> Expiring</h4><ul class="compliance-vendor-list" id="complianceDangerousExpiring"></ul></div><div class="compliance-group expired"><h4><i class="bi bi-x-circle"></i> Expired</h4><ul class="compliance-vendor-list" id="complianceDangerousExpired"></ul></div></div></div>
-                        <div class="dashboard-compliance-card" data-course="manual"><div class="dashboard-compliance-card-header"><i class="bi bi-hand-index"></i><h3>Manual Handling</h3></div><div class="dashboard-compliance-body"><div class="compliance-group expiring"><h4><i class="bi bi-exclamation-triangle"></i> Expiring</h4><ul class="compliance-vendor-list" id="complianceManualExpiring"></ul></div><div class="compliance-group expired"><h4><i class="bi bi-x-circle"></i> Expired</h4><ul class="compliance-vendor-list" id="complianceManualExpired"></ul></div></div></div>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="sp-carousel-slide" data-slide="2">
-                    <div class="sp-carousel-slide-inner" id="carouselSlideVehicles">
-                      <div class="dashboard-vehicles-table-wrap table-responsive">
-                        <table class="table table-hover align-middle dashboard-vehicles-table table-sm">
-                          <thead>
-                            <tr>
-                              <th>VRN</th>
-                              <th>Brand</th>
-                              <th>Depot</th>
-                              <th>Reason</th>
-                            </tr>
-                          </thead>
-                          <tbody id="vehiclesAttentionBody"></tbody>
-                        </table>
-                      </div>
-                      <div id="vehiclesEmptyState" class="dashboard-empty-state hidden">
-                        <i class="bi bi-check-circle"></i>
-                        <p>No vehicles requiring attention.</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
+              </section>
+            </div>
 
             <!-- Modal: full dashboard (KPIs, Compliance, Drivers, Vehicles) -->
             <div class="sp-full-dashboard-modal hidden" id="fullDashboardModal" role="dialog" aria-modal="true" aria-labelledby="fullDashboardModalTitle">
@@ -386,7 +509,6 @@
                       <h3 id="modal-kpis-heading" class="dashboard-block-title"><i class="bi bi-graph-up-arrow"></i> KPIs</h3>
                       <div class="dashboard-kpi-grid" id="modalKpiGrid" data-loading="true">
                         <div class="dashboard-kpi-card"><div class="dashboard-kpi-icon-wrap kpi-spr"><i class="bi bi-graph-up-arrow"></i></div><div class="dashboard-kpi-content"><span class="dashboard-kpi-value-wrap"><span class="dashboard-kpi-value" id="modalKpiSpr">0</span></span><span class="dashboard-kpi-label">SPR</span></div></div>
-                        <div class="dashboard-kpi-card"><div class="dashboard-kpi-icon-wrap kpi-tw"><i class="bi bi-clock-history"></i></div><div class="dashboard-kpi-content"><span class="dashboard-kpi-value-wrap"><span class="dashboard-kpi-value" id="modalKpiTw">0</span></span><span class="dashboard-kpi-label">Time Window</span></div></div>
                         <div class="dashboard-kpi-card"><div class="dashboard-kpi-icon-wrap kpi-spohr"><i class="bi bi-speedometer2"></i></div><div class="dashboard-kpi-content"><span class="dashboard-kpi-value-wrap"><span class="dashboard-kpi-value" id="modalKpiSpohr">0</span></span><span class="dashboard-kpi-label">SPOH-R</span></div></div>
                         <div class="dashboard-kpi-card"><div class="dashboard-kpi-icon-wrap kpi-routes"><i class="bi bi-signpost-2-fill"></i></div><div class="dashboard-kpi-content"><span class="dashboard-kpi-value-wrap"><span class="dashboard-kpi-value" id="modalKpiTotalRoutes">0</span></span><span class="dashboard-kpi-label">TOTAL ROUTES</span></div></div>
                         <div class="dashboard-kpi-card"><div class="dashboard-kpi-icon-wrap kpi-stops"><i class="bi bi-geo-alt-fill"></i></div><div class="dashboard-kpi-content"><span class="dashboard-kpi-value-wrap"><span class="dashboard-kpi-value" id="modalKpiTotalStops">0</span></span><span class="dashboard-kpi-label">TOTAL STOPS</span></div></div>
@@ -455,1805 +577,17 @@
     <strong>Service Provider not set.</strong> Open this portal from the main app with <code>?sp=YourCompany</code> or <a href="../service-providers.html">choose a Service Provider</a>.
   </div>
 
-  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
   <script src="../dhl-mock-data.js"></script>
+  <script src="../dhl-embedded-data.js"></script>
+  <script src="../dhl-lastday-pdf-data.js"></script>
+  <script src="dashboard.js"></script>
   <script>
-    /* Disco (Route Data) – copied into page */
-    window.DISCO_DATA = {
-      am: ['LL4A', 'LL4B', 'LL4X'],
-      pm: []
-    };
+    document.addEventListener('DOMContentLoaded', function () {
+      if (window.AOS) AOS.init({ duration: 500, offset: 50, once: true, easing: 'ease-out-cubic' });
+    });
   </script>
-  <script>
-    (function () {
-      'use strict';
-      var SP_STORAGE_KEY = 'dhl_sp_portal_current_sp';
 
-      function getCurrentSp() {
-        var params = new URLSearchParams(window.location.search);
-        var sp = (params.get('sp') || '').trim();
-        if (sp) {
-          try { sessionStorage.setItem(SP_STORAGE_KEY, sp); } catch (e) {}
-          return sp;
-        }
-        try { return sessionStorage.getItem(SP_STORAGE_KEY) || ''; } catch (e) { return ''; }
-      }
-
-      function appendSpToLinks() {
-        var sp = getCurrentSp();
-        if (!sp) return;
-        document.querySelectorAll('.beam-plate[href]').forEach(function (a) {
-          var href = a.getAttribute('href');
-          if (href && href.indexOf('?') === -1) a.setAttribute('href', href + '?sp=' + encodeURIComponent(sp));
-        });
-      }
-
-      var data = window.DHL_MOCK_DATA || {};
-      var vendors = (data.vendors) ? data.vendors : [];
-      var vehicles = (data.vehicles) ? data.vehicles : [];
-      var contracts = (data.contracts) ? data.contracts : [];
-      var spName = getCurrentSp();
-      var ROUTE_TARGETS_STORAGE_KEY = 'dhl_contract_route_targets';
-      var OPMS_UPLOADED_STORAGE_KEY = 'dhl_opms_uploaded_data';
-
-      function loadOpmsStoredData() {
-        try {
-          var raw = localStorage.getItem(OPMS_UPLOADED_STORAGE_KEY);
-          if (!raw) return {};
-          var all = JSON.parse(raw);
-          return (all[spName] && typeof all[spName] === 'object') ? all[spName] : {};
-        } catch (e) { return {}; }
-      }
-
-      function saveOpmsStoredData() {
-        try {
-          var raw = localStorage.getItem(OPMS_UPLOADED_STORAGE_KEY);
-          var all = raw ? JSON.parse(raw) : {};
-          all[spName] = opmsDataByDate;
-          localStorage.setItem(OPMS_UPLOADED_STORAGE_KEY, JSON.stringify(all));
-        } catch (e) { console.warn('OPMS save failed', e); }
-      }
-
-      function getStoredTarget(spNameVal, depotName, routeName) {
-        try {
-          var raw = localStorage.getItem(ROUTE_TARGETS_STORAGE_KEY);
-          if (!raw) return null;
-          var data = JSON.parse(raw);
-          var sp = data[spNameVal];
-          if (!sp) return null;
-          var key = (depotName || '') + '|' + (routeName || '');
-          return sp[key] != null ? Number(sp[key]) : null;
-        } catch (e) { return null; }
-      }
-
-      var filterState = { depot: '', loop: '', route: '' };
-
-      function getDepotsForSp() {
-        var out = [], seen = {};
-        contracts.forEach(function (c) {
-          if (c.serviceProvider !== spName) return;
-          (c.depots || []).forEach(function (d) {
-            if (d.name && !seen[d.name]) { seen[d.name] = true; out.push(d.name); }
-          });
-        });
-        return out.sort();
-      }
-
-      function getLoopsForSp(depotName) {
-        var out = [], seen = {};
-        contracts.forEach(function (c) {
-          if (c.serviceProvider !== spName) return;
-          (c.depots || []).forEach(function (d) {
-            if (d.name !== depotName || !d.loops) return;
-            d.loops.forEach(function (l) {
-              if (l.name && !seen[l.name]) { seen[l.name] = true; out.push(l.name); }
-            });
-          });
-        });
-        return out.sort();
-      }
-
-      function getRoutesForSp(depotName, loopName) {
-        var out = [];
-        contracts.forEach(function (c) {
-          if (c.serviceProvider !== spName) return;
-          (c.depots || []).forEach(function (d) {
-            if (d.name !== depotName || !d.loops) return;
-            d.loops.forEach(function (l) {
-              if (l.name !== loopName || !l.routes) return;
-              l.routes.forEach(function (r) {
-                if (r.name) out.push(r.name);
-              });
-            });
-          });
-        });
-        return out;
-      }
-
-      /** Returns the loop delivery rate (band rate) for a given depot and route for current SP, or 0 if not found. */
-      function getLoopDeliveryRateForDepotRoute(depotName, routeName) {
-        var rate = 0;
-        contracts.forEach(function (c) {
-          if (c.serviceProvider !== spName) return;
-          (c.depots || []).forEach(function (d) {
-            if (d.name !== depotName || !d.loops) return;
-            d.loops.forEach(function (l) {
-              if (!l.routes) return;
-              for (var i = 0; i < l.routes.length; i++) {
-                if (String(l.routes[i].name) === String(routeName)) {
-                  rate = typeof l.deliveryRate === 'number' ? l.deliveryRate : 0;
-                  return;
-                }
-              }
-            });
-          });
-        });
-        return rate;
-      }
-
-      /** Returns the loop name for a given depot and route for current SP, or '' if not found. */
-      function getLoopNameForDepotRoute(depotName, routeName) {
-        var loopName = '';
-        contracts.forEach(function (c) {
-          if (c.serviceProvider !== spName) return;
-          (c.depots || []).forEach(function (d) {
-            if (d.name !== depotName || !d.loops) return;
-            d.loops.forEach(function (l) {
-              if (!l.routes) return;
-              for (var i = 0; i < l.routes.length; i++) {
-                if (String(l.routes[i].name) === String(routeName)) {
-                  loopName = l.name || '';
-                  return;
-                }
-              }
-            });
-          });
-        });
-        return loopName;
-      }
-
-      /** Income digressivo: Band 1 com um valor, Band 2 = (entregas no intervalo Band 2) × preço Band 2, etc. Retorna total em GBP. */
-      function calculateDigressiveIncome(deliveries, loopName) {
-        var bands = (window.DHL_MOCK_DATA && window.DHL_MOCK_DATA.digressiveBands) ? window.DHL_MOCK_DATA.digressiveBands[loopName] : null;
-        if (!bands || !bands.length) return 0;
-        var d = Math.max(0, Math.floor(deliveries));
-        var total = 0;
-        for (var i = 0; i < bands.length && d > 0; i++) {
-          var b = bands[i];
-          var min = b.min;
-          var max = b.max == null ? 1e9 : b.max;
-          var inBand = Math.min(d, max - min + 1);
-          total += inBand * (b.price || 0);
-          d -= inBand;
-        }
-        return total;
-      }
-
-      /** Returns target (meta de entregas) for a given depot and route for current SP. Usa o valor cadastrado no Contract Management (localStorage) se existir; senão o do contrato. */
-      function getTargetDelForDepotRoute(depotName, routeName) {
-        var stored = getStoredTarget(spName, depotName, routeName);
-        if (stored != null && !isNaN(stored)) return stored;
-        var target = 0;
-        contracts.forEach(function (c) {
-          if (c.serviceProvider !== spName) return;
-          (c.depots || []).forEach(function (d) {
-            if (d.name !== depotName || !d.loops) return;
-            d.loops.forEach(function (l) {
-              if (!l.routes) return;
-              for (var i = 0; i < l.routes.length; i++) {
-                if (String(l.routes[i].name) === String(routeName)) {
-                  target = typeof l.routes[i].targetDel === 'number' ? l.routes[i].targetDel : 0;
-                  return;
-                }
-              }
-            });
-          });
-        });
-        return target;
-      }
-
-      /** Set de nomes de rotas cadastradas no sistema (contracts) para o SP atual. */
-      function getRegisteredRouteNamesSet() {
-        var set = {};
-        contracts.forEach(function (c) {
-          if (c.serviceProvider !== spName) return;
-          (c.depots || []).forEach(function (d) {
-            (d.loops || []).forEach(function (l) {
-              (l.routes || []).forEach(function (r) {
-                if (r.name) set[r.name] = true;
-              });
-            });
-          });
-        });
-        return set;
-      }
-
-      /** Lista de pares depot+loop para o SP atual (para dropdown Select Loop). */
-      function getLoopsWithDepotsForSp() {
-        var out = [];
-        var seen = {};
-        contracts.forEach(function (c) {
-          if (c.serviceProvider !== spName) return;
-          (c.depots || []).forEach(function (d) {
-            (d.loops || []).forEach(function (l) {
-              var key = (d.name || '') + '|' + (l.name || '');
-              if (l.name && !seen[key]) { seen[key] = true; out.push({ depot: d.name, loop: l.name }); }
-            });
-          });
-        });
-        return out.sort(function (a, b) { return (a.depot + a.loop).localeCompare(b.depot + b.loop); });
-      }
-
-      /** Lista de rotas cadastradas com depot, loop, targetDel (do cadastro ou contrato), targetPu, deliveryRate (para comparação e % aproveitamento). */
-      function getRegisteredRoutesWithDetails() {
-        var list = [];
-        contracts.forEach(function (c) {
-          if (c.serviceProvider !== spName) return;
-          (c.depots || []).forEach(function (d) {
-            (d.loops || []).forEach(function (l) {
-              var rate = typeof l.deliveryRate === 'number' ? l.deliveryRate : 0;
-              (l.routes || []).forEach(function (r) {
-                if (!r.name) return;
-                var storedTarget = getStoredTarget(spName, d.name, r.name);
-                var targetDel = storedTarget != null && !isNaN(storedTarget) ? storedTarget : (typeof r.targetDel === 'number' ? r.targetDel : 0);
-                list.push({
-                  depot: d.name,
-                  loop: l.name,
-                  route: r.name,
-                  targetDel: targetDel,
-                  targetPu: typeof r.targetPu === 'number' ? r.targetPu : 0,
-                  deliveryRate: rate
-                });
-              });
-            });
-          });
-        });
-        return list;
-      }
-
-      /** Gera SVG de círculo de progresso. Suporta OVERLAPS: quando valor > maxForOneLap, a primeira volta usa progressColor; a segunda volta (overlap) é desenhada em glow branco.
-       * opts: radius, strokeWidth, trackColor, progressColor, large, maxForOneLap (default 100; para AFD use 6). */
-      function opmsProgressCircleSvg(pct, opts) {
-        opts = opts || {};
-        var r = opts.radius != null ? opts.radius : 42;
-        var strokeWidth = opts.strokeWidth != null ? opts.strokeWidth : 8;
-        if (opts.large) { r = 58; strokeWidth = 10; }
-        var trackColor = opts.trackColor || '#e2e8f0';
-        var progressColor = opts.progressColor || '#22c55e';
-        var maxForOneLap = opts.maxForOneLap != null ? opts.maxForOneLap : 100;
-        var size = (r + strokeWidth) * 2;
-        var cx = size / 2;
-        var cy = size / 2;
-        var circum = 2 * Math.PI * r;
-        var pctNum = typeof pct === 'number' && !isNaN(pct) ? pct : 0;
-        var firstLapPct = pctNum >= maxForOneLap ? 100 : Math.max(0, (pctNum / maxForOneLap) * 100);
-        var overlapPct = pctNum > maxForOneLap ? Math.min(100, ((pctNum - maxForOneLap) / maxForOneLap) * 100) : 0;
-        var firstDash = circum * firstLapPct / 100;
-        var overlapDash = overlapPct > 0 ? circum * overlapPct / 100 : 0;
-        var rot = 'rotate(-90 ' + cx + ' ' + cy + ')';
-        var track = '<circle class="opms-progress-track" cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="' + trackColor + '" stroke-width="' + strokeWidth + '"/>';
-        var fill = '<circle class="opms-progress-fill" cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="' + progressColor + '" stroke-width="' + strokeWidth + '" stroke-dasharray="0 ' + circum + '" style="--opms-dash:' + firstDash + ';--opms-circum:' + circum + '" transform="' + rot + '"/>';
-        var overlap = overlapDash > 0
-          ? '<circle class="opms-progress-overlap" cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="rgba(255,255,255,0.95)" stroke-width="' + strokeWidth + '" stroke-dasharray="0 ' + circum + '" style="--opms-dash:' + overlapDash + ';--opms-circum:' + circum + '" transform="' + rot + '"/>'
-          : '';
-        return '<svg class="opms-progress-svg' + (overlapDash > 0 ? ' opms-progress-has-overlap' : '') + '" viewBox="0 0 ' + size + ' ' + size + '" width="' + size + '" height="' + size + '" aria-hidden="true">' +
-          track + fill + overlap +
-          '</svg>';
-      }
-
-      function updateFilterSelects() {
-        var depotSel = document.getElementById('spFilterDepot');
-        var loopWrap = document.getElementById('spLoopFilterWrap');
-        var loopSel = document.getElementById('spFilterLoop');
-        var routeWrap = document.getElementById('spRouteFilterWrap');
-        var routeSel = document.getElementById('spFilterRoute');
-        if (!depotSel) return;
-        var depots = getDepotsForSp();
-        var currentDepot = filterState.depot;
-        depotSel.innerHTML = '<option value="">All depots</option>' + depots.map(function (d) {
-          return '<option value="' + d + '"' + (d === currentDepot ? ' selected' : '') + '>' + d + '</option>';
-        }).join('');
-        if (loopWrap && loopSel) {
-          if (currentDepot) {
-            loopWrap.classList.remove('hidden');
-            loopWrap.setAttribute('aria-hidden', 'false');
-            var loops = getLoopsForSp(currentDepot);
-            var currentLoop = filterState.loop;
-            if (loops.indexOf(currentLoop) === -1) currentLoop = '';
-            loopSel.innerHTML = '<option value="">All loops</option>' + loops.map(function (l) {
-              return '<option value="' + l + '"' + (l === currentLoop ? ' selected' : '') + '>' + l + '</option>';
-            }).join('');
-            if (routeWrap && routeSel) {
-              if (filterState.loop) {
-                routeWrap.classList.remove('hidden');
-                routeWrap.setAttribute('aria-hidden', 'false');
-                var routes = getRoutesForSp(currentDepot, filterState.loop);
-                var currentRoute = filterState.route;
-                if (routes.indexOf(currentRoute) === -1) currentRoute = '';
-                routeSel.innerHTML = '<option value="">All routes</option>' + routes.map(function (r) {
-                  return '<option value="' + r + '"' + (r === currentRoute ? ' selected' : '') + '>' + r + '</option>';
-                }).join('');
-              } else {
-                routeWrap.classList.add('hidden');
-                routeWrap.setAttribute('aria-hidden', 'true');
-                filterState.route = '';
-              }
-            }
-          } else {
-            loopWrap.classList.add('hidden');
-            loopWrap.setAttribute('aria-hidden', 'true');
-            if (routeWrap) { routeWrap.classList.add('hidden'); routeWrap.setAttribute('aria-hidden', 'true'); }
-            filterState.loop = '';
-            filterState.route = '';
-          }
-        }
-      }
-
-      if (!spName) {
-        document.getElementById('spNotFound').classList.remove('hidden');
-        document.querySelector('.sidebar-inset').style.display = 'none';
-        var fw = document.getElementById('spDashboardFoldersBlock');
-        if (fw) fw.style.display = 'none';
-      } else {
-        document.getElementById('welcomeMsg').textContent = 'Welcome, ' + spName + '. Here is your operations summary.';
-        document.getElementById('spHeaderName').textContent = spName;
-        document.getElementById('spHeaderPill').setAttribute('title', spName);
-        var logoMap = { 'BA Express': 'ba-express-logo.png', 'Premier Logistics Ltd': 'premier-logistics-logo.png', 'Swift Haul Solutions': 'swift-haul-logo.png', 'Metro Freight Partners': 'metro-freight-logo.png', 'Atlas Transport Services': 'atlas-transport-logo.png' };
-        var avatar = document.getElementById('spHeaderAvatar');
-        if (avatar && logoMap[spName]) { avatar.src = '../assets/' + logoMap[spName]; avatar.alt = spName; avatar.style.display = 'block'; }
-        appendSpToLinks();
-      }
-
-      function filterVendors() {
-        var list = vendors.filter(function (v) { return v.serviceProvider === spName && v.status === 'Active'; });
-        if (filterState.depot) list = list.filter(function (v) { return v.depot === filterState.depot; });
-        return list;
-      }
-      function filterVehicles() {
-        var list = vehicles.filter(function (v) { return v.serviceProvider === spName; });
-        if (filterState.depot) list = list.filter(function (v) { return v.depot === filterState.depot; });
-        return list;
-      }
-      function aggregateContracts() {
-        var totalLoops = 0, totalRoutes = 0, totalStops = 0, totalDeliveries = 0, sumDel = 0, countDel = 0;
-        contracts.forEach(function (c) {
-          if (c.serviceProvider !== spName) return;
-          (c.depots || []).forEach(function (d) {
-            if (filterState.depot && d.name !== filterState.depot) return;
-            (d.loops || []).forEach(function (l) {
-              if (filterState.loop && l.name !== filterState.loop) return;
-              totalLoops++;
-              (l.routes || []).forEach(function (r) {
-                if (filterState.route && r.name !== filterState.route) return;
-                totalRoutes++;
-                if (r.postcodes && Array.isArray(r.postcodes)) totalStops += r.postcodes.length;
-                totalDeliveries += Math.floor(Number(r.deliveries) || (r.postcodes && r.postcodes.length) || 0);
-                if (r.targetDel != null) { sumDel += r.targetDel; countDel++; }
-              });
-            });
-          });
-        });
-        return { loops: totalLoops, routes: totalRoutes, totalStops: totalStops, totalDeliveries: totalDeliveries };
-      }
-
-      function getValidityStatus(dateStr, monthsValidity) {
-        if (!dateStr) return 'expired';
-        var d = new Date(dateStr);
-        if (isNaN(d.getTime())) return 'expired';
-        var exp = new Date(d);
-        exp.setMonth(exp.getMonth() + monthsValidity);
-        var now = new Date();
-        var warn = new Date(now);
-        warn.setMonth(warn.getMonth() + 3);
-        if (exp < now) return 'expired';
-        if (exp < warn) return 'expiring';
-        return 'ok';
-      }
-      function getDirectExpiryStatus(dateStr) {
-        if (!dateStr) return 'ok';
-        var d = new Date(dateStr);
-        if (isNaN(d.getTime())) return 'ok';
-        var now = new Date();
-        var warn = new Date(now);
-        warn.setMonth(warn.getMonth() + 3);
-        if (d < now) return 'expired';
-        if (d < warn) return 'expiring';
-        return 'ok';
-      }
-      function formatDate(dateStr) {
-        if (!dateStr) return '—';
-        var parts = String(dateStr).split('-');
-        if (parts.length >= 3) return parts[2] + '/' + parts[1] + '/' + parts[0];
-        return dateStr;
-      }
-      function escapeHtml(s) {
-        if (s == null) return '';
-        var d = document.createElement('div');
-        d.textContent = s;
-        return d.innerHTML;
-      }
-
-      function hasNoTechnicalInfo(v) {
-        var fields = ['wrappedVehicle', 'slamLock', 'camera', 'gps', 'bulkhead', 'doors270'];
-        return fields.every(function (f) { return !v[f]; });
-      }
-      function getVehicleAgeYears(dateStr) {
-        if (!dateStr) return 0;
-        var d = new Date(dateStr);
-        if (isNaN(d.getTime())) return 0;
-        return (new Date() - d) / (365.25 * 24 * 60 * 60 * 1000);
-      }
-
-      function updateKPIs() {
-        if (!spName) return;
-        var filteredVendors = filterVendors();
-        var agg = aggregateContracts();
-        var summary = (data.dashboardSummary) || { timeWindow: 98.5, spohR: 12.4 };
-        var twVal = summary.timeWindow != null ? Math.round(summary.timeWindow * 10) / 10 : 0;
-        var spohrVal = summary.spohR != null ? Math.round(summary.spohR * 10) / 10 : 0;
-
-        var vals = { spr: agg.totalDeliveries || 0, tw: twVal + '%', spohr: spohrVal, routes: agg.routes || 0, stops: agg.totalStops || 0, vendors: filteredVendors.length, loops: agg.loops || 0 };
-        ['kpiSpr', 'kpiTw', 'kpiSpohr', 'kpiTotalRoutes', 'kpiTotalStops', 'kpiVendors', 'kpiLoops'].forEach(function (id, i) {
-          var el = document.getElementById(id);
-          if (el) el.textContent = vals[['spr', 'tw', 'spohr', 'routes', 'stops', 'vendors', 'loops'][i]];
-        });
-        ['modalKpiSpr', 'modalKpiTw', 'modalKpiSpohr', 'modalKpiTotalRoutes', 'modalKpiTotalStops', 'modalKpiVendors', 'modalKpiLoops'].forEach(function (id, i) {
-          var el = document.getElementById(id);
-          if (el) el.textContent = vals[['spr', 'tw', 'spohr', 'routes', 'stops', 'vendors', 'loops'][i]];
-        });
-        var grid = document.getElementById('kpiGrid');
-        if (grid) grid.setAttribute('data-loading', 'false');
-        var modalGrid = document.getElementById('modalKpiGrid');
-        if (modalGrid) modalGrid.setAttribute('data-loading', 'false');
-      }
-
-      function updateCompliance() {
-        if (!spName) return;
-        var filtered = filterVendors();
-        var courses = [
-          { key: 'cargo', dateKey: 'cargoTrainingDate', expId: 'complianceCargoExpiring', expId2: 'complianceCargoExpired' },
-          { key: 'dangerous', dateKey: 'dangerousGoodsTrainingDate', expId: 'complianceDangerousExpiring', expId2: 'complianceDangerousExpired' },
-          { key: 'manual', dateKey: 'manualHandlingTrainingDate', expId: 'complianceManualExpiring', expId2: 'complianceManualExpired' }
-        ];
-        courses.forEach(function (c) {
-          var expiring = [], expired = [];
-          filtered.forEach(function (v) {
-            var st = getValidityStatus(v[c.dateKey], 24);
-            var name = (v.firstName || '') + ' ' + (v.lastName || '');
-            if (st === 'expiring') expiring.push(name);
-            if (st === 'expired') expired.push(name);
-          });
-          var htmlExp = expiring.length ? expiring.map(function (x) { return '<li>' + escapeHtml(x) + '</li>'; }).join('') : '<li class="none">None</li>';
-          var htmlExp2 = expired.length ? expired.map(function (x) { return '<li>' + escapeHtml(x) + '</li>'; }).join('') : '<li class="none">None</li>';
-          var elExp = document.getElementById(c.expId);
-          var elExp2 = document.getElementById(c.expId2);
-          if (elExp) elExp.innerHTML = htmlExp;
-          if (elExp2) elExp2.innerHTML = htmlExp2;
-          var modalExp = document.getElementById('modal' + c.expId.charAt(0).toUpperCase() + c.expId.slice(1));
-          var modalExp2 = document.getElementById('modal' + c.expId2.charAt(0).toUpperCase() + c.expId2.slice(1));
-          if (modalExp) modalExp.innerHTML = htmlExp;
-          if (modalExp2) modalExp2.innerHTML = htmlExp2;
-        });
-      }
-
-      function updateDriversDocs() {
-        if (!spName) return;
-        var filtered = filterVendors();
-        var rows = [];
-        filtered.forEach(function (v) {
-          var name = (v.firstName || '') + ' ' + (v.lastName || '');
-          var st = getValidityStatus(v.dvlaCheckDate, 6);
-          if (st === 'expiring' || st === 'expired') rows.push({ vendor: v, name: name, document: 'DVLA Check', date: v.dvlaCheckDate, status: st });
-          ['licenceExpiringDate', 'passportExpiringDate', 'visaValidity'].forEach(function (key) {
-            if (!v[key]) return;
-            var labels = { licenceExpiringDate: 'Licence', passportExpiringDate: 'Passport', visaValidity: 'Visa' };
-            var st = getDirectExpiryStatus(v[key]);
-            if (st === 'expiring' || st === 'expired') rows.push({ vendor: v, name: name, document: labels[key], date: v[key], status: st });
-          });
-        });
-        var tbody = document.getElementById('modalDriversDocsBody');
-        var emptyEl = document.getElementById('modalDriversDocsEmpty');
-        if (!tbody) return;
-        var rowHtml = rows.map(function (r) {
-          var statusClass = r.status === 'expired' ? 'dashboard-status-expired' : 'dashboard-status-expiring';
-          return '<tr><td><strong>' + escapeHtml(r.name) + '</strong></td><td>' + escapeHtml(r.vendor.depot || '—') + '</td><td>' + escapeHtml(r.document) + '</td><td>' + formatDate(r.date) + '</td><td><span class="dashboard-reason-badge ' + statusClass + '">' + (r.status === 'expired' ? 'Expired' : 'Expiring') + '</span></td></tr>';
-        }).join('');
-        if (rows.length === 0) {
-          tbody.innerHTML = '';
-          if (emptyEl) emptyEl.classList.remove('hidden');
-          return;
-        }
-        if (emptyEl) emptyEl.classList.add('hidden');
-        tbody.innerHTML = rowHtml;
-      }
-
-      function updateVehicles() {
-        if (!spName) return;
-        var filtered = filterVehicles();
-        var attention = filtered.filter(function (v) {
-          var age = getVehicleAgeYears(v.registrationDate);
-          var noTech = hasNoTechnicalInfo(v);
-          return age >= 6 || noTech;
-        });
-        var rowHtmlShort = attention.map(function (v) {
-          var age = getVehicleAgeYears(v.registrationDate);
-          var noTech = hasNoTechnicalInfo(v);
-          var reason = [];
-          if (age >= 6) reason.push('6+ years');
-          if (noTech) reason.push('No Technical Info');
-          return '<tr><td><strong>' + escapeHtml(v.vrn || '—') + '</strong></td><td>' + escapeHtml(v.brand || '—') + '</td><td>' + escapeHtml(v.depot || '—') + '</td><td><span class="dashboard-reason-badge">' + escapeHtml(reason.join(' • ')) + '</span></td></tr>';
-        }).join('');
-        var rowHtmlFull = attention.map(function (v) {
-          var age = getVehicleAgeYears(v.registrationDate);
-          var noTech = hasNoTechnicalInfo(v);
-          var reason = [];
-          if (age >= 6) reason.push('6+ years');
-          if (noTech) reason.push('No Technical Info');
-          return '<tr><td><strong>' + escapeHtml(v.vrn || '—') + '</strong></td><td>' + escapeHtml(v.brand || '—') + '</td><td>' + escapeHtml(v.model || '—') + '</td><td>' + formatDate(v.registrationDate) + '</td><td>' + escapeHtml(v.depot || '—') + '</td><td><span class="dashboard-reason-badge">' + escapeHtml(reason.join(' • ')) + '</span></td></tr>';
-        }).join('');
-        var tbody = document.getElementById('vehiclesAttentionBody');
-        var emptyEl = document.getElementById('vehiclesEmptyState');
-        if (tbody) {
-          if (attention.length === 0) { tbody.innerHTML = ''; } else { tbody.innerHTML = rowHtmlShort; }
-        }
-        if (emptyEl) emptyEl.classList.toggle('hidden', attention.length > 0);
-        var modalBody = document.getElementById('modalVehiclesBody');
-        var modalEmpty = document.getElementById('modalVehiclesEmpty');
-        if (modalBody) {
-          if (attention.length === 0) { modalBody.innerHTML = ''; } else { modalBody.innerHTML = rowHtmlFull; }
-        }
-        if (modalEmpty) modalEmpty.classList.toggle('hidden', attention.length > 0);
-      }
-
-      function initBeamSidebar() {
-        var beam = document.getElementById('beamSidebar');
-        var trigger = document.getElementById('beamTrigger');
-        var overlay = document.getElementById('beamOverlay');
-        if (!beam || !trigger) return;
-        function toggleBeam() {
-          var isOpen = beam.getAttribute('data-state') === 'open';
-          beam.setAttribute('data-state', isOpen ? 'closed' : 'open');
-          trigger.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
-          if (overlay) overlay.classList.toggle('visible', !isOpen);
-        }
-        trigger.addEventListener('click', toggleBeam);
-        if (overlay) overlay.addEventListener('click', function () { beam.setAttribute('data-state', 'closed'); trigger.setAttribute('aria-expanded', 'false'); overlay.classList.remove('visible'); });
-      }
-
-      function switchFolderTab(folderId) {
-        var panels = { disco: 'folder-panel-disco', upload: 'folder-panel-upload', lastday: 'folder-panel-lastday', spms: 'folder-panel-spms' };
-        var tabs = { disco: 'folderDisco', upload: 'folderUpload', lastday: 'folderLastDay', spms: 'folderSpms' };
-        Object.keys(panels).forEach(function (id) {
-          var panel = document.getElementById(panels[id]);
-          var tab = document.getElementById(tabs[id]);
-          var isActive = id === folderId;
-          if (panel) { panel.classList.toggle('hidden', !isActive); panel.setAttribute('aria-hidden', isActive ? 'false' : 'true'); }
-          if (tab) { tab.classList.toggle('active', isActive); tab.setAttribute('aria-selected', isActive ? 'true' : 'false'); }
-        });
-      }
-
-      var carouselIndex = 0;
-      var carouselTotal = 3;
-      function updateCarousel() {
-        var track = document.getElementById('carouselTrack');
-        if (track) track.style.transform = 'translateX(-' + (carouselIndex * 100) + '%)';
-        var dots = document.getElementById('carouselDots');
-        if (dots) dots.innerHTML = [0, 1, 2].map(function (i) { return '<button type="button" class="sp-carousel-dot' + (i === carouselIndex ? ' active' : '') + '" data-index="' + i + '" aria-label="Slide ' + (i + 1) + '"></button>'; }).join('');
-      }
-      function initCarousel() {
-        var prev = document.getElementById('carouselPrev');
-        var next = document.getElementById('carouselNext');
-        var dotsWrap = document.getElementById('carouselDots');
-        if (prev) prev.addEventListener('click', function () { carouselIndex = (carouselIndex - 1 + carouselTotal) % carouselTotal; updateCarousel(); });
-        if (next) next.addEventListener('click', function () { carouselIndex = (carouselIndex + 1) % carouselTotal; updateCarousel(); });
-        if (dotsWrap) dotsWrap.addEventListener('click', function (e) {
-          var btn = e.target.closest('.sp-carousel-dot');
-          if (btn && btn.dataset.index != null) { carouselIndex = parseInt(btn.dataset.index, 10); updateCarousel(); }
-        });
-        updateCarousel();
-      }
-
-      var modalCarouselIndex = 0;
-      var modalCarouselInterval = null;
-      var MODAL_SLIDES = 4;
-      var MODAL_AUTO_INTERVAL_MS = 4500;
-
-      function updateModalCarousel() {
-        var track = document.getElementById('modalTrack');
-        if (track) track.style.transform = 'translateX(-' + (modalCarouselIndex * 100) + '%)';
-        var dotsWrap = document.getElementById('modalCategoryDots');
-        if (dotsWrap) {
-          var labels = ['KPIs', 'Compliance', 'Drivers', 'Vehicles'];
-          dotsWrap.innerHTML = labels.map(function (label, i) {
-            return '<button type="button" class="sp-modal-category-dot' + (i === modalCarouselIndex ? ' active' : '') + '" data-index="' + i + '" title="' + label + '">' + label + '</button>';
-          }).join('');
-        }
-      }
-
-      function startModalAutoCarousel() {
-        stopModalAutoCarousel();
-        modalCarouselInterval = setInterval(function () {
-          modalCarouselIndex = (modalCarouselIndex + 1) % MODAL_SLIDES;
-          updateModalCarousel();
-        }, MODAL_AUTO_INTERVAL_MS);
-      }
-
-      function stopModalAutoCarousel() {
-        if (modalCarouselInterval) { clearInterval(modalCarouselInterval); modalCarouselInterval = null; }
-      }
-
-      function openFullDashboardModal() {
-        var modal = document.getElementById('fullDashboardModal');
-        if (!modal) return;
-        modal.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-        modalCarouselIndex = 0;
-        updateModalCarousel();
-        requestAnimationFrame(function () { requestAnimationFrame(function () { modal.classList.add('sp-full-dashboard-modal--open'); }); });
-      }
-
-      function closeFullDashboardModal() {
-        var modal = document.getElementById('fullDashboardModal');
-        if (!modal) return;
-        modal.classList.remove('sp-full-dashboard-modal--open');
-        stopModalAutoCarousel();
-        setTimeout(function () {
-          modal.classList.add('hidden');
-          document.body.style.overflow = '';
-        }, 280);
-      }
-
-      function initFullDashboardModal() {
-        var openBtn = document.getElementById('openFullDashboardBtn');
-        var closeBtn = document.getElementById('closeFullDashboardBtn');
-        var backdrop = document.getElementById('fullDashboardModalBackdrop');
-        if (openBtn) openBtn.addEventListener('click', openFullDashboardModal);
-        if (closeBtn) closeBtn.addEventListener('click', closeFullDashboardModal);
-        if (backdrop) backdrop.addEventListener('click', closeFullDashboardModal);
-        var dotsEl = document.getElementById('modalCategoryDots');
-        if (dotsEl) dotsEl.addEventListener('click', function (e) {
-          var btn = e.target.closest('.sp-modal-category-dot');
-          if (btn && btn.dataset.index != null) {
-            modalCarouselIndex = parseInt(btn.dataset.index, 10);
-            updateModalCarousel();
-          }
-        });
-      }
-
-      function getTimeWindowColor(pct) {
-        if (pct > 90) return 'green';
-        if (pct >= 80) return 'yellow';
-        return 'red';
-      }
-
-      /** OPMS (Last Day): AFD = soma de TODOS os códigos da coluna Act Ckpt Code, exceto: OK, PU, HN, DEPAR, ARRVD. Sem outros cálculos. */
-      var OPMS_AFD_EXCLUDED = ['OK', 'PU', 'HN', 'DEPAR', 'ARRVD'];
-      var OPMS_DELIVERIES_CODES = ['PU', 'HN', 'OK'];
-      var opmsDataByDate = loadOpmsStoredData();
-
-      function parseOpmsFromWorkbook(wb) {
-        if (!wb || !wb.SheetNames || !wb.Sheets || typeof XLSX === 'undefined' || !XLSX.utils) return null;
-        var data = null;
-        var headerRowIdx = 0;
-        for (var s = 0; s < wb.SheetNames.length; s++) {
-          var sh = wb.Sheets[wb.SheetNames[s]];
-          if (!sh) continue;
-          var rows = XLSX.utils.sheet_to_json(sh, { header: 1, defval: '' });
-          if (!rows || rows.length < 2) continue;
-          for (var hr = 0; hr < Math.min(5, rows.length); hr++) {
-            var row = rows[hr];
-            if (!row) continue;
-            for (var c = 0; c < row.length; c++) {
-              if (String(row[c] || '').trim() === 'Act Ckpt Code') {
-                data = rows;
-                headerRowIdx = hr;
-                break;
-              }
-            }
-            if (data) break;
-          }
-          if (data) break;
-        }
-        if (!data) return null;
-        var header = data[headerRowIdx];
-        var idxDepot = header.indexOf('PUD Svc Area');
-        var idxRoute = header.indexOf('PUD Rte');
-        var idxCourier = header.indexOf('Courier id');
-        var idxCkpt = header.indexOf('Act Ckpt Code');
-        if (idxCkpt === -1) return null;
-        if (idxDepot === -1) { for (var i = 0; i < header.length; i++) { if ((header[i] || '').indexOf('PUD Svc') !== -1) { idxDepot = i; break; } } }
-        if (idxRoute === -1) { for (var i = 0; i < header.length; i++) { if ((header[i] || '').indexOf('PUD Rte') !== -1) { idxRoute = i; break; } } }
-        if (idxCourier === -1) { for (var i = 0; i < header.length; i++) { if ((header[i] || '').toLowerCase().indexOf('courier') !== -1) { idxCourier = i; break; } } }
-        var counts = {};
-        var byRoute = {};
-        for (var r = headerRowIdx + 1; r < data.length; r++) {
-          var row = data[r];
-          var ckpt = (row[idxCkpt] != null ? String(row[idxCkpt]).trim().toUpperCase() : '');
-          if (!ckpt) continue;
-          counts[ckpt] = (counts[ckpt] || 0) + 1;
-          var depot = idxDepot >= 0 && row[idxDepot] != null ? String(row[idxDepot]).trim() : '';
-          var route = idxRoute >= 0 && row[idxRoute] != null ? String(row[idxRoute]).trim() : '';
-          var key = depot + '|' + route;
-          if (!byRoute[key]) {
-            byRoute[key] = { depot: depot, route: route, counts: {} };
-          }
-          byRoute[key].counts[ckpt] = (byRoute[key].counts[ckpt] || 0) + 1;
-        }
-        /** Procura em todas as folhas colunas Income/Revenue e Route/PUD Rte para preencher incomeByRouteFromExcel. */
-        var incomeByRouteFromExcel = {};
-        for (var s2 = 0; s2 < wb.SheetNames.length; s2++) {
-          var sh2 = wb.Sheets[wb.SheetNames[s2]];
-          if (!sh2) continue;
-          var rows2;
-          try {
-            rows2 = XLSX.utils.sheet_to_json(sh2, { header: 1, defval: '', raw: true });
-          } catch (e) { continue; }
-          if (!rows2 || rows2.length < 2) continue;
-          var colRoute2 = -1, colIncome2 = -1, headerRowIdx2 = 0;
-          for (var hr2 = 0; hr2 < Math.min(8, rows2.length); hr2++) {
-            var header2 = rows2[hr2];
-            if (!header2) continue;
-            colRoute2 = -1; colIncome2 = -1;
-            for (var c2 = 0; c2 < (header2.length || 0); c2++) {
-              var h2 = String(header2[c2] != null ? header2[c2] : '').replace(/\s+/g, ' ').trim().toLowerCase();
-              if (h2 === 'route' || h2 === 'pud rte' || h2.indexOf('route') === 0) colRoute2 = c2;
-              if (h2 === 'income' || h2 === 'revenue' || h2.indexOf('income') !== -1 || h2.indexOf('revenue') !== -1) colIncome2 = c2;
-            }
-            if (colRoute2 !== -1 && colIncome2 !== -1) { headerRowIdx2 = hr2; break; }
-          }
-          if (colRoute2 === -1 || colIncome2 === -1) continue;
-          for (var r2 = headerRowIdx2 + 1; r2 < rows2.length; r2++) {
-            var row2 = rows2[r2];
-            if (!row2) continue;
-            var routeName = String(row2[colRoute2] != null ? row2[colRoute2] : '').replace(/\s+/g, ' ').trim();
-            var incVal = row2[colIncome2];
-            var num = null;
-            if (typeof incVal === 'number' && !isNaN(incVal)) num = incVal;
-            else if (incVal != null && incVal !== '') num = parseFloat(String(incVal).replace(',', '.').replace(/\s/g, ''));
-            if (routeName && num != null && !isNaN(num)) incomeByRouteFromExcel[routeName] = (incomeByRouteFromExcel[routeName] || 0) + num;
-          }
-          if (Object.keys(incomeByRouteFromExcel).length > 0) break;
-        }
-        return { counts: counts, byRoute: byRoute, incomeByRouteFromExcel: incomeByRouteFromExcel };
-      }
-
-      /** Extrai valor de célula: SheetJS pode devolver objeto { v: valor } ou o valor direto. */
-      function cellValue(cell) {
-        if (cell == null) return null;
-        if (typeof cell === 'object' && 'v' in cell) return cell.v;
-        return cell;
-      }
-      /** Time Window: parse Excel com colunas Route e "% TW Adh DL". Devolve { routeName: valorExato } — valor exato da célula, sem qualquer cálculo. */
-      function parseTwFromWorkbook(wb) {
-        if (!wb || !wb.SheetNames || !wb.Sheets || typeof XLSX === 'undefined' || !XLSX.utils) return null;
-        var twByRoute = {};
-        var colRoute = -1;
-        var colTwAdhDl = -1;
-        var headerRowIdx = 0;
-        var data = null;
-        function norm(s) {
-          var v = cellValue(s);
-          return String(v != null ? v : '').replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim();
-        }
-        function isRouteHeader(h) {
-          var n = norm(h).toLowerCase().replace(/^%\s*/, '');
-          return n === 'route' || n === 'pud rte' || n.indexOf('route') === 0 || n.indexOf('pud rte') !== -1;
-        }
-        function isTwAdhDlHeader(h) {
-          var n = norm(h).toLowerCase().replace(/\s+/g, ' ');
-          var n2 = n.replace(/^%\s*/, '');
-          return n.indexOf('tw adh dl') !== -1 || n2.indexOf('tw adh dl') !== -1 ||
-            n.indexOf('tw adherence dl') !== -1 || (n.indexOf('adh') !== -1 && n.indexOf('dl') !== -1 && (n.indexOf('tw') !== -1 || n.indexOf('time') !== -1));
-        }
-        for (var s = 0; s < wb.SheetNames.length; s++) {
-          var sh = wb.Sheets[wb.SheetNames[s]];
-          if (!sh) continue;
-          var rows;
-          try {
-            rows = XLSX.utils.sheet_to_json(sh, { header: 1, defval: '', raw: true });
-          } catch (err) {
-            continue;
-          }
-          if (!rows || !rows.length) continue;
-          for (var hr = 0; hr < Math.min(10, rows.length); hr++) {
-            var header = rows[hr];
-            if (!header) continue;
-            var len = Array.isArray(header) ? header.length : (header && typeof header.length === 'number' ? header.length : 0);
-            colRoute = -1;
-            colTwAdhDl = -1;
-            for (var c = 0; c < len; c++) {
-              var h = norm(header[c]);
-              if (isRouteHeader(h)) colRoute = c;
-              if (isTwAdhDlHeader(h)) colTwAdhDl = c;
-            }
-            if (colRoute !== -1 && colTwAdhDl !== -1) {
-              data = rows;
-              headerRowIdx = hr;
-              break;
-            }
-          }
-          if (data) break;
-        }
-        if (!data || colRoute === -1 || colTwAdhDl === -1) return twByRoute;
-        function twRouteKey(name) {
-          return String(name || '').replace(/\s+/g, ' ').trim();
-        }
-        for (var r = headerRowIdx + 1; r < data.length; r++) {
-          var row = data[r];
-          if (!row) continue;
-          var route = norm(row[colRoute]);
-          var val = cellValue(row[colTwAdhDl]);
-          if (!route) continue;
-          var num = null;
-          if (typeof val === 'number' && !isNaN(val)) num = val;
-          else if (val != null && val !== '') num = parseFloat(String(val).replace(',', '.').replace(/\s/g, ''));
-          if (num != null && !isNaN(num)) {
-            var key = twRouteKey(route);
-            twByRoute[key] = num;
-            if (key !== route) twByRoute[route] = num;
-          }
-        }
-        return twByRoute;
-      }
-      /** Lookup TW por rota: tenta chave exata e chave normalizada (trim, espaços colapsados). */
-      function getTwForRoute(twByRoute, routeName) {
-        if (!twByRoute || routeName == null) return null;
-        var r = String(routeName).replace(/\s+/g, ' ').trim();
-        if (twByRoute[r] != null) return twByRoute[r];
-        for (var k in twByRoute) {
-          if (String(k).replace(/\s+/g, ' ').trim() === r) return twByRoute[k];
-        }
-        return null;
-      }
-
-      /** AFD = soma de todos os códigos da coluna Act Ckpt Code exceto OK, PU, HN, DEPAR, ARRVD. Deliveries = PU + HN + OK (apenas para comparação interna). */
-      function getOpmsDeliveriesAndAfd(counts) {
-        var deliveries = 0, afd = 0;
-        OPMS_DELIVERIES_CODES.forEach(function (c) { deliveries += counts[c] || 0; });
-        var excluded = {};
-        OPMS_AFD_EXCLUDED.forEach(function (c) { excluded[c] = true; });
-        Object.keys(counts || {}).forEach(function (c) {
-          if (!excluded[c]) afd += (counts[c] || 0);
-        });
-        return { deliveries: deliveries, afd: afd };
-      }
-
-      var lastDayState = {
-        dates: [],
-        dateIndex: 0,
-        selected: 'all',
-        expanded: { all: true }
-      };
-
-      function getLastDayDates() {
-        return Object.keys(opmsDataByDate).filter(function (d) {
-          var day = opmsDataByDate[d];
-          return (day.counts || day.byRoute || (day.twByRoute && Object.keys(day.twByRoute).length));
-        }).sort().reverse();
-      }
-
-      function getCurrentViewDate() {
-        if (lastDayState.dates.length === 0) return '';
-        var i = Math.max(0, Math.min(lastDayState.dateIndex, lastDayState.dates.length - 1));
-        return lastDayState.dates[i] || '';
-      }
-
-      function updateLastDaySection() {
-        if (!spName) return;
-        lastDayState.dates = getLastDayDates();
-        if (lastDayState.dateIndex >= lastDayState.dates.length) lastDayState.dateIndex = Math.max(0, lastDayState.dates.length - 1);
-        var selDate = getCurrentViewDate();
-        var viewingDateEl = document.getElementById('lastDayViewingDate');
-        var datePrevBtn = document.getElementById('lastDayDatePrev');
-        var dateNextBtn = document.getElementById('lastDayDateNext');
-        if (viewingDateEl) viewingDateEl.textContent = selDate || '—';
-        if (datePrevBtn) {
-          datePrevBtn.disabled = lastDayState.dates.length === 0 || lastDayState.dateIndex <= 0;
-          datePrevBtn.setAttribute('aria-disabled', datePrevBtn.disabled ? 'true' : 'false');
-        }
-        if (dateNextBtn) {
-          dateNextBtn.disabled = lastDayState.dates.length === 0 || lastDayState.dateIndex >= lastDayState.dates.length - 1;
-          dateNextBtn.setAttribute('aria-disabled', dateNextBtn.disabled ? 'true' : 'false');
-        }
-        var treeEl = document.getElementById('lastDayTree');
-        var details = getRegisteredRoutesWithDetails();
-        var loopsWithDepots = getLoopsWithDepotsForSp();
-        var depotNames = [];
-        var seenDepot = {};
-        loopsWithDepots.forEach(function (x) {
-          if (!seenDepot[x.depot]) { seenDepot[x.depot] = true; depotNames.push(x.depot); }
-        });
-        depotNames.sort();
-        if (treeEl) {
-          treeEl.innerHTML = '';
-          var allLi = document.createElement('li');
-          allLi.setAttribute('role', 'treeitem');
-          allLi.setAttribute('aria-expanded', lastDayState.expanded.all ? 'true' : 'false');
-          allLi.setAttribute('data-id', 'all');
-          allLi.className = 'opms-tree-item opms-tree-item-all' + (lastDayState.selected === 'all' ? ' selected' : '');
-          var allLabel = document.createElement('span');
-          allLabel.className = 'opms-tree-label';
-          allLabel.innerHTML = (lastDayState.expanded.all ? '<i class="bi bi-chevron-down opms-tree-icon"></i>' : '<i class="bi bi-chevron-right opms-tree-icon"></i>') + '<span>All</span>';
-          allLi.appendChild(allLabel);
-          allLi.addEventListener('click', function (e) {
-            e.stopPropagation();
-            lastDayState.expanded.all = !lastDayState.expanded.all;
-            lastDayState.selected = 'all';
-            updateLastDaySection();
-          });
-          treeEl.appendChild(allLi);
-          if (lastDayState.expanded.all && depotNames.length) {
-            var depotsUl = document.createElement('ul');
-            depotsUl.setAttribute('role', 'group');
-            depotsUl.className = 'opms-tree-children';
-            depotNames.forEach(function (depotName) {
-              var depotExpanded = !!lastDayState.expanded[depotName];
-              var depotLoops = loopsWithDepots.filter(function (x) { return x.depot === depotName; });
-              var depotLi = document.createElement('li');
-              depotLi.setAttribute('role', 'treeitem');
-              depotLi.setAttribute('aria-expanded', depotExpanded ? 'true' : 'false');
-              depotLi.setAttribute('data-id', depotName);
-              depotLi.className = 'opms-tree-item opms-tree-item-depot' + (lastDayState.selected === depotName ? ' selected' : '');
-              var depotLabel = document.createElement('span');
-              depotLabel.className = 'opms-tree-label';
-              depotLabel.innerHTML = (depotExpanded ? '<i class="bi bi-chevron-down opms-tree-icon"></i>' : '<i class="bi bi-chevron-right opms-tree-icon"></i>') + '<span>' + escapeHtml(depotName) + '</span>';
-              depotLi.appendChild(depotLabel);
-              depotLi.addEventListener('click', function (e) {
-                e.stopPropagation();
-                lastDayState.expanded[depotName] = !lastDayState.expanded[depotName];
-                lastDayState.selected = depotName;
-                updateLastDaySection();
-              });
-              depotsUl.appendChild(depotLi);
-              if (depotExpanded && depotLoops.length) {
-                var loopsUl = document.createElement('ul');
-                loopsUl.setAttribute('role', 'group');
-                loopsUl.className = 'opms-tree-children';
-                depotLoops.forEach(function (x) {
-                  var loopKey = x.depot + '|' + x.loop;
-                  var loopExpanded = !!lastDayState.expanded[loopKey];
-                  var loopRoutes = details.filter(function (rec) { return rec.depot === x.depot && rec.loop === x.loop; }).map(function (r) { return r.route; }).sort();
-                  var loopLi = document.createElement('li');
-                  loopLi.setAttribute('role', 'treeitem');
-                  loopLi.setAttribute('aria-expanded', loopExpanded ? 'true' : 'false');
-                  loopLi.setAttribute('data-id', loopKey);
-                  loopLi.className = 'opms-tree-item opms-tree-item-loop' + (lastDayState.selected === loopKey ? ' selected' : '');
-                  var loopLabel = document.createElement('span');
-                  loopLabel.className = 'opms-tree-label';
-                  loopLabel.innerHTML = (loopExpanded ? '<i class="bi bi-chevron-down opms-tree-icon"></i>' : '<i class="bi bi-chevron-right opms-tree-icon"></i>') + '<span>' + escapeHtml(x.loop) + '</span>';
-                  loopLi.appendChild(loopLabel);
-                  loopLi.addEventListener('click', function (e) {
-                    e.stopPropagation();
-                    lastDayState.expanded[loopKey] = !lastDayState.expanded[loopKey];
-                    lastDayState.selected = loopKey;
-                    updateLastDaySection();
-                  });
-                  loopsUl.appendChild(loopLi);
-                  if (loopExpanded && loopRoutes.length) {
-                    var routesUl = document.createElement('ul');
-                    routesUl.setAttribute('role', 'group');
-                    routesUl.className = 'opms-tree-children opms-tree-routes';
-                    loopRoutes.forEach(function (routeName) {
-                      var routeLi = document.createElement('li');
-                      routeLi.setAttribute('role', 'treeitem');
-                      routeLi.setAttribute('data-route', routeName);
-                      routeLi.className = 'opms-tree-item opms-tree-item-route' + (lastDayState.selected === routeName ? ' selected' : '');
-                      var routeLabel = document.createElement('span');
-                      routeLabel.className = 'opms-tree-label';
-                      routeLabel.innerHTML = '<span class="opms-tree-route-name">' + escapeHtml(routeName) + '</span>';
-                      routeLi.appendChild(routeLabel);
-                      routeLi.addEventListener('click', function (e) {
-                        e.stopPropagation();
-                        lastDayState.selected = routeName;
-                        updateLastDaySection();
-                      });
-                      routesUl.appendChild(routeLi);
-                    });
-                    loopLi.appendChild(routesUl);
-                  }
-                });
-                depotLi.appendChild(loopsUl);
-              }
-            });
-            allLi.appendChild(depotsUl);
-          }
-        }
-        var routeFilter = '';
-        var loopFilter = null;
-        var depotFilter = null;
-        if (lastDayState.selected === 'all') {
-          routeFilter = '';
-          loopFilter = null;
-          depotFilter = null;
-        } else if (lastDayState.selected.indexOf('|') !== -1) {
-          routeFilter = '';
-          loopFilter = lastDayState.selected.split('|')[1] || null;
-          depotFilter = null;
-        } else if (depotNames.indexOf(lastDayState.selected) !== -1) {
-          routeFilter = '';
-          loopFilter = null;
-          depotFilter = lastDayState.selected;
-        } else {
-          routeFilter = lastDayState.selected;
-          loopFilter = null;
-          depotFilter = null;
-        }
-        renderLastDayGoals(selDate, routeFilter, loopFilter, depotFilter);
-      }
-
-      function renderLastDayGoals(storeDate, routeFilter, loopFilter, depotFilter) {
-        var wrap = document.getElementById('lastDayGoalsWrap');
-        var emptyEl = document.getElementById('lastDayEmptyState');
-        if (!wrap) return;
-        var data = storeDate ? opmsDataByDate[storeDate] : null;
-        var registeredSet = getRegisteredRouteNamesSet();
-        var hasCounts = data && (data.counts || (data.byRoute && Object.keys(data.byRoute).length > 0));
-        var hasTw = data && data.twByRoute && Object.keys(data.twByRoute).length > 0;
-        if (!data || (!hasCounts && !hasTw)) {
-          wrap.innerHTML = '';
-          wrap.classList.remove('opms-goals-visible');
-          if (emptyEl) emptyEl.classList.remove('hidden');
-          return;
-        }
-        if (emptyEl) emptyEl.classList.add('hidden');
-        var counts = data.counts || {};
-        var depotForRate = '';
-        var routeNamesInLoop = null;
-        var routeNamesInDepot = null;
-        var details = getRegisteredRoutesWithDetails();
-        if (loopFilter) {
-          routeNamesInLoop = {};
-          details.forEach(function (rec) {
-            if (rec.loop === loopFilter) routeNamesInLoop[rec.route] = true;
-          });
-        } else if (depotFilter) {
-          routeNamesInDepot = {};
-          details.forEach(function (rec) {
-            if (rec.depot === depotFilter) routeNamesInDepot[rec.route] = true;
-          });
-        }
-        if (routeFilter && data.byRoute) {
-          for (var k in data.byRoute) {
-            if (data.byRoute[k].route === routeFilter && registeredSet[routeFilter]) {
-              counts = data.byRoute[k].counts;
-              depotForRate = data.byRoute[k].depot || '';
-              break;
-            }
-          }
-        } else if (data.byRoute && Object.keys(registeredSet).length > 0) {
-          var agg = {};
-          Object.keys(data.byRoute).forEach(function (k) {
-            var r = data.byRoute[k].route;
-            if (!r || !registeredSet[r]) return;
-            if (routeNamesInLoop && !routeNamesInLoop[r]) return;
-            if (routeNamesInDepot && !routeNamesInDepot[r]) return;
-            var routeCounts = data.byRoute[k].counts || {};
-            Object.keys(routeCounts).forEach(function (c) {
-              agg[c] = (agg[c] || 0) + (routeCounts[c] || 0);
-            });
-          });
-          counts = agg;
-        }
-        var tableHtml = '';
-        var circlesParts = [];
-        if (hasCounts) {
-          var metrics = getOpmsDeliveriesAndAfd(counts);
-          var rate = depotForRate ? getLoopDeliveryRateForDepotRoute(depotForRate, routeFilter || '') : 0;
-          if (!rate && routeFilter && data.byRoute) {
-            for (var key in data.byRoute) {
-              if (data.byRoute[key].route === routeFilter) {
-                rate = getLoopDeliveryRateForDepotRoute(data.byRoute[key].depot, routeFilter);
-                break;
-              }
-            }
-          }
-          if (rate === 0) rate = 2.90;
-          var targetDel = depotForRate && routeFilter ? getTargetDelForDepotRoute(depotForRate, routeFilter) : 0;
-          if (!targetDel && routeFilter && data.byRoute) {
-            for (var key in data.byRoute) {
-              if (data.byRoute[key].route === routeFilter) {
-                targetDel = getTargetDelForDepotRoute(data.byRoute[key].depot, routeFilter);
-                break;
-              }
-            }
-          }
-          var totalTarget = targetDel;
-          if (!routeFilter && details.length > 0) {
-            totalTarget = 0;
-            details.forEach(function (rec) {
-              if (routeNamesInLoop && !routeNamesInLoop[rec.route]) return;
-              if (routeNamesInDepot && !routeNamesInDepot[rec.route]) return;
-              if (!registeredSet[rec.route]) return;
-              totalTarget += rec.targetDel || 0;
-            });
-          }
-          var delPctRaw = totalTarget > 0 ? (metrics.deliveries / totalTarget) * 100 : 100;
-          var delOk = counts['OK'] || 0;
-          var delPu = counts['PU'] || 0;
-          var delHn = counts['HN'] || 0;
-          var delTotal = delOk + delPu + delHn;
-          circlesParts.push(
-            '<div class="opms-circle-item opms-circle-item--rate"><div class="opms-circle opms-circle-rate opms-progress-circle-wrap">' +
-              '<div class="opms-progress-circle-inner">' +
-              opmsProgressCircleSvg(delPctRaw, { large: true, progressColor: '#22c55e', trackColor: 'rgba(34,197,94,0.2)', maxForOneLap: 100 }) +
-              '<div class="opms-circle-rate-fields">' +
-              '<span class="opms-circle-rate-row"><strong>DEL</strong> ' + delOk + '</span>' +
-              '<span class="opms-circle-rate-row"><strong>PU</strong> ' + delPu + '</span>' +
-              '<span class="opms-circle-rate-row"><strong>HN</strong> ' + delHn + '</span>' +
-              '<span class="opms-circle-rate-row opms-circle-rate-total"><strong>Total</strong> ' + delTotal + '</span>' +
-              '</div></div>' +
-              '<span class="opms-circle-label">Performance (' + (totalTarget ? Math.round(delPctRaw * 10) / 10 + '%' : '—') + ')</span></div></div>'
-          );
-          var totalCheckpoints = 0;
-          Object.keys(counts || {}).forEach(function (c) { totalCheckpoints += counts[c] || 0; });
-          var afdPct = totalCheckpoints > 0 ? (metrics.afd / totalCheckpoints) * 100 : 0;
-          var afdOver4 = afdPct > 4;
-          var afdColor = afdOver4 ? '#ef4444' : '#f59e0b';
-          var afdTrack = afdOver4 ? 'rgba(239,68,68,0.2)' : 'rgba(245,158,11,0.2)';
-          var afdClass = 'opms-circle-afd' + (afdOver4 ? ' opms-circle-afd--over' : '');
-          circlesParts.push(
-            '<div class="opms-circle-item"><div class="opms-circle ' + afdClass + ' opms-progress-circle-wrap">' +
-              '<div class="opms-progress-circle-inner">' +
-              opmsProgressCircleSvg(afdPct, { progressColor: afdColor, trackColor: afdTrack, maxForOneLap: 6 }) +
-              '<span class="opms-circle-value">' + (Math.round(afdPct * 10) / 10) + '%</span></div>' +
-              '<span class="opms-circle-label">AFD (%)</span></div></div>'
-          );
-          var loopForIncome = routeFilter && depotForRate ? getLoopNameForDepotRoute(depotForRate, routeFilter) : '';
-          var calculatedIncome = (window.DHL_MOCK_DATA && window.DHL_MOCK_DATA.digressiveBands && window.DHL_MOCK_DATA.digressiveBands[loopForIncome])
-            ? calculateDigressiveIncome(metrics.deliveries, loopForIncome)
-            : (metrics.deliveries * rate);
-          var excelIncome = 0;
-          if (routeFilter && data.incomeByRouteFromExcel && data.incomeByRouteFromExcel[routeFilter] != null) {
-            excelIncome = Number(data.incomeByRouteFromExcel[routeFilter]) || 0;
-          } else if (data.incomeByRouteFromExcel && details.length > 0) {
-            details.forEach(function (rec) {
-              if (routeNamesInLoop && !routeNamesInLoop[rec.route]) return;
-              if (routeNamesInDepot && !routeNamesInDepot[rec.route]) return;
-              if (!registeredSet[rec.route]) return;
-              var v = data.incomeByRouteFromExcel[rec.route];
-              if (v != null) excelIncome += Number(v) || 0;
-            });
-          }
-          if (!routeFilter && data.byRoute && details.length > 0) {
-            calculatedIncome = 0;
-            details.forEach(function (rec) {
-              if (routeNamesInLoop && !routeNamesInLoop[rec.route]) return;
-              if (routeNamesInDepot && !routeNamesInDepot[rec.route]) return;
-              if (!registeredSet[rec.route]) return;
-              var key = rec.depot + '|' + rec.route;
-              var routeData = data.byRoute[key];
-              if (routeData && routeData.counts) {
-                var m = getOpmsDeliveriesAndAfd(routeData.counts);
-                var loopName = rec.loop || '';
-                if (window.DHL_MOCK_DATA && window.DHL_MOCK_DATA.digressiveBands && window.DHL_MOCK_DATA.digressiveBands[loopName]) {
-                  calculatedIncome += calculateDigressiveIncome(m.deliveries, loopName);
-                } else {
-                  calculatedIncome += m.deliveries * (rec.deliveryRate || 2.90);
-                }
-              }
-            });
-          }
-          var incomePct = excelIncome > 0 ? (calculatedIncome / excelIncome) * 100 : 100;
-          var incomeFormatted = '£' + (calculatedIncome.toFixed(2)).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-          circlesParts.push(
-            '<div class="opms-circle-item"><div class="opms-circle opms-circle-income opms-progress-circle-wrap">' +
-              '<div class="opms-progress-circle-inner">' +
-              opmsProgressCircleSvg(incomePct, { progressColor: '#6366f1', trackColor: 'rgba(99,102,241,0.2)', maxForOneLap: 100 }) +
-              '<span class="opms-circle-value">' + incomeFormatted + '</span></div>' +
-              '<span class="opms-circle-label">Income (GBP)</span></div></div>'
-          );
-        }
-        var twRaw = null;
-        var twLabel = '% TW Adh DL';
-        if (hasTw && data.twByRoute) {
-          if (routeFilter && registeredSet[routeFilter]) {
-            twRaw = getTwForRoute(data.twByRoute, routeFilter);
-            if (twRaw != null) twLabel = '% TW Adh DL (' + escapeHtml(routeFilter) + ') – valor exato';
-          } else if (loopFilter) {
-            var twValuesLoop = [];
-            details.forEach(function (rec) {
-              if (rec.loop !== loopFilter) return;
-              var v = getTwForRoute(data.twByRoute, rec.route);
-              if (v != null) twValuesLoop.push(v);
-            });
-            if (twValuesLoop.length > 0) {
-              var sumLoop = 0;
-              twValuesLoop.forEach(function (v) { sumLoop += v; });
-              twRaw = sumLoop / twValuesLoop.length;
-              twLabel = '% TW Adh DL (média loop ' + escapeHtml(loopFilter) + ')';
-            }
-          } else if (depotFilter) {
-            var twValuesDepot = [];
-            details.forEach(function (rec) {
-              if (rec.depot !== depotFilter) return;
-              var v = getTwForRoute(data.twByRoute, rec.route);
-              if (v != null) twValuesDepot.push(v);
-            });
-            if (twValuesDepot.length > 0) {
-              var sumDepot = 0;
-              twValuesDepot.forEach(function (v) { sumDepot += v; });
-              twRaw = sumDepot / twValuesDepot.length;
-              twLabel = '% TW Adh DL (média depot ' + escapeHtml(depotFilter) + ')';
-            }
-          } else {
-            var twValuesAll = [];
-            var twKeys = Object.keys(data.twByRoute);
-            twKeys.forEach(function (k) {
-              var val = data.twByRoute[k];
-              if (val != null && typeof val === 'number' && !isNaN(val)) twValuesAll.push(val);
-            });
-            if (twValuesAll.length > 0) {
-              var sumAll = 0;
-              twValuesAll.forEach(function (v) { sumAll += v; });
-              twRaw = sumAll / twValuesAll.length;
-              twLabel = '% TW Adh DL (média todas as operações)';
-            }
-          }
-        }
-        if (twRaw != null) {
-          var twDisplay = (typeof twRaw === 'number' && Number.isFinite(twRaw)) ? (Math.round(twRaw * 1000) / 1000) : twRaw;
-          var twForCircle = twRaw <= 1 ? twRaw * 100 : twRaw;
-          var twColor = getTimeWindowColor(twForCircle);
-          var twStroke = twColor === 'green' ? '#22c55e' : twColor === 'yellow' ? '#eab308' : '#ef4444';
-          circlesParts.push(
-            '<div class="opms-circle-item"><div class="opms-circle opms-circle-tw opms-circle-tw--' + twColor + ' opms-progress-circle-wrap">' +
-              '<div class="opms-progress-circle-inner">' +
-              opmsProgressCircleSvg(twForCircle, { progressColor: twStroke, trackColor: 'rgba(0,0,0,0.06)', maxForOneLap: 100 }) +
-              '<span class="opms-circle-value">' + twDisplay + '%</span></div>' +
-              '<span class="opms-circle-label">' + twLabel + '</span></div></div>'
-          );
-        }
-        var circlesHtml = '<div class="last-day-goals-circles-wrap">' + circlesParts.join('') + '</div>';
-        wrap.innerHTML = tableHtml + circlesHtml;
-        wrap.classList.add('opms-goals-visible');
-      }
-
-      function initLastDay() {
-        var storeDateEl = document.getElementById('lastDayStoreDate');
-        var excelInput = document.getElementById('lastDayExcelUpload');
-        var excelTrigger = document.getElementById('lastDayExcelTrigger');
-        var excelFileName = document.getElementById('lastDayExcelFileName');
-        var processBtn = document.getElementById('lastDayProcessBtn');
-        var viewDateSel = document.getElementById('lastDayViewDate');
-        var twInput = document.getElementById('lastDayTwUpload');
-        var twTrigger = document.getElementById('lastDayTwTrigger');
-        var twFileName = document.getElementById('lastDayTwFileName');
-        function updateProcessBtnState() {
-          if (!processBtn) return;
-          var hasExcel = excelInput && excelInput.files && excelInput.files[0];
-          var hasTw = twInput && twInput.files && twInput.files[0];
-          var hasDate = storeDateEl && storeDateEl.value;
-          processBtn.disabled = !((hasExcel || hasTw) && hasDate);
-        }
-        if (excelTrigger && excelInput) {
-          excelTrigger.addEventListener('click', function () { excelInput.click(); });
-          excelInput.addEventListener('change', function () {
-            var file = excelInput.files && excelInput.files[0];
-            if (excelFileName) excelFileName.textContent = file ? file.name : '';
-            updateProcessBtnState();
-          });
-        }
-        if (twTrigger && twInput) {
-          twTrigger.addEventListener('click', function () { twInput.click(); });
-          twInput.addEventListener('change', function () {
-            var file = twInput.files && twInput.files[0];
-            if (twFileName) twFileName.textContent = file ? file.name : '';
-            updateProcessBtnState();
-          });
-        }
-        if (storeDateEl) {
-          storeDateEl.addEventListener('change', updateProcessBtnState);
-        }
-        if (processBtn) {
-          var successEl = document.getElementById('opmsProcessSuccess');
-          var successDateEl = successEl ? successEl.querySelector('.opms-process-success-date') : null;
-          var btnIcon = processBtn.querySelector('.opms-process-btn-icon');
-          var btnText = processBtn.querySelector('.opms-process-btn-text');
-          var btnSpinner = processBtn.querySelector('.opms-process-btn-spinner');
-          function setProcessLoading(loading) {
-            processBtn.disabled = loading;
-            if (btnIcon) btnIcon.classList.toggle('hidden', loading);
-            if (btnText) btnText.textContent = loading ? 'A processar…' : 'Process';
-            if (btnSpinner) btnSpinner.classList.toggle('hidden', !loading);
-            if (successEl && !loading) successEl.classList.add('hidden');
-          }
-          function showProcessSuccess(dateVal) {
-            if (successDateEl) successDateEl.textContent = ' para ' + (dateVal || '') + '.';
-            if (successEl) {
-              successEl.classList.remove('hidden');
-              successEl.setAttribute('aria-live', 'polite');
-            }
-          }
-          processBtn.addEventListener('click', function () {
-            var dateVal = storeDateEl ? storeDateEl.value : '';
-            if (!dateVal) return;
-            var excelFile = excelInput && excelInput.files && excelInput.files[0];
-            var twFile = twInput && twInput.files && twInput.files[0];
-            if (!excelFile && !twFile) return;
-            if (typeof XLSX === 'undefined') {
-              console.error('SheetJS (XLSX) not loaded');
-              return;
-            }
-            setProcessLoading(true);
-            var opmsParsed = null;
-            var twParsed = null;
-            var filesToRead = (excelFile ? 1 : 0) + (twFile ? 1 : 0);
-            var done = 0;
-            function onDone() {
-              done++;
-              if (done < filesToRead) return;
-              var merged = opmsParsed && (opmsParsed.counts || opmsParsed.byRoute) ? opmsParsed : {};
-              if (!merged.counts && !merged.byRoute && opmsDataByDate[dateVal]) {
-                merged = { counts: opmsDataByDate[dateVal].counts, byRoute: opmsDataByDate[dateVal].byRoute, incomeByRouteFromExcel: opmsDataByDate[dateVal].incomeByRouteFromExcel };
-              }
-              if (twParsed && typeof twParsed === 'object') merged.twByRoute = twParsed;
-              opmsDataByDate[dateVal] = merged;
-              saveOpmsStoredData();
-              lastDayState.dateIndex = 0;
-              lastDayState.dates = getLastDayDates();
-              updateLastDaySection();
-              setProcessLoading(false);
-              updateProcessBtnState();
-              showProcessSuccess(dateVal);
-            }
-            if (excelFile) {
-              var reader = new FileReader();
-              reader.onload = function (e) {
-                try {
-                  opmsParsed = parseOpmsFromWorkbook(XLSX.read(e.target.result, { type: 'array' }));
-                } catch (err) { console.error('OPMS parse error', err); }
-                onDone();
-              };
-              reader.onerror = function () { onDone(); };
-              reader.readAsArrayBuffer(excelFile);
-            }
-            if (twFile) {
-              var readerTw = new FileReader();
-              readerTw.onload = function (e) {
-                try {
-                  twParsed = parseTwFromWorkbook(XLSX.read(e.target.result, { type: 'array' }));
-                } catch (err) { console.error('TW parse error', err); }
-                onDone();
-              };
-              readerTw.onerror = function () { onDone(); };
-              readerTw.readAsArrayBuffer(twFile);
-            }
-          });
-        }
-        var successEl = document.getElementById('opmsProcessSuccess');
-        if (successEl) {
-          function hideSuccessOnChange() {
-            successEl.classList.add('hidden');
-          }
-          if (excelInput) excelInput.addEventListener('change', hideSuccessOnChange);
-          if (twInput) twInput.addEventListener('change', hideSuccessOnChange);
-          if (storeDateEl) storeDateEl.addEventListener('change', hideSuccessOnChange);
-        }
-        var datePrevBtn = document.getElementById('lastDayDatePrev');
-        var dateNextBtn = document.getElementById('lastDayDateNext');
-        var datePickerBtn = document.getElementById('lastDayDatePicker');
-        var dateDropdown = document.getElementById('lastDayDateDropdown');
-        if (datePrevBtn) datePrevBtn.addEventListener('click', function () {
-          if (lastDayState.dateIndex > 0) {
-            lastDayState.dateIndex--;
-            updateLastDaySection();
-          }
-        });
-        if (dateNextBtn) dateNextBtn.addEventListener('click', function () {
-          if (lastDayState.dateIndex < lastDayState.dates.length - 1) {
-            lastDayState.dateIndex++;
-            updateLastDaySection();
-          }
-        });
-        function openDateDropdown() {
-          if (!dateDropdown || !datePickerBtn) return;
-          lastDayState.dates = getLastDayDates();
-          dateDropdown.innerHTML = '';
-          if (lastDayState.dates.length === 0) {
-            var empty = document.createElement('div');
-            empty.className = 'opms-date-dropdown-option';
-            empty.textContent = 'Nenhuma data disponível';
-            empty.style.pointerEvents = 'none';
-            empty.style.opacity = '0.7';
-            dateDropdown.appendChild(empty);
-          } else {
-            lastDayState.dates.forEach(function (d, i) {
-              var opt = document.createElement('button');
-              opt.type = 'button';
-              opt.className = 'opms-date-dropdown-option' + (i === lastDayState.dateIndex ? ' current' : '');
-              opt.textContent = d;
-              opt.setAttribute('role', 'option');
-              opt.setAttribute('data-index', String(i));
-              opt.addEventListener('click', function () {
-                lastDayState.dateIndex = i;
-                dateDropdown.classList.add('hidden');
-                datePickerBtn.setAttribute('aria-expanded', 'false');
-                updateLastDaySection();
-              });
-              dateDropdown.appendChild(opt);
-            });
-          }
-          dateDropdown.classList.remove('hidden');
-          datePickerBtn.setAttribute('aria-expanded', 'true');
-        }
-        function closeDateDropdown() {
-          if (dateDropdown) dateDropdown.classList.add('hidden');
-          if (datePickerBtn) datePickerBtn.setAttribute('aria-expanded', 'false');
-        }
-        if (datePickerBtn && dateDropdown) {
-          datePickerBtn.addEventListener('click', function (e) {
-            e.stopPropagation();
-            if (dateDropdown.classList.contains('hidden')) openDateDropdown();
-            else closeDateDropdown();
-          });
-        }
-        document.addEventListener('click', function () {
-          closeDateDropdown();
-        });
-        if (dateDropdown) {
-          dateDropdown.addEventListener('click', function (e) {
-            e.stopPropagation();
-          });
-        }
-        updateProcessBtnState();
-      }
-
-      /** Parse SPMS service item string: extrai HN (Handover), OK (Deliveries), PU (Pickups). DD e PD são somados ao OK. */
-      function parseSpmsServiceItem(serviceItem) {
-        var s = String(serviceItem || '');
-        var hn = 0, ok = 0, pu = 0, dd = 0, pd = 0;
-        var hnMatch = s.match(/(\d+)\s*x\s*HN\s*-/i) || s.match(/(\d+)\s*xHN/i);
-        if (hnMatch) hn = parseInt(hnMatch[1], 10) || 0;
-        var okMatch = s.match(/(\d+)\s*x\s*OK\b/i) || s.match(/(\d+)\s*xOK/i);
-        if (okMatch) ok = parseInt(okMatch[1], 10) || 0;
-        var ddMatch = s.match(/(\d+)\s*x\s*DD\b/i) || s.match(/(\d+)\s*xDD/i);
-        if (ddMatch) dd = parseInt(ddMatch[1], 10) || 0;
-        var pdMatch = s.match(/(\d+)\s*x\s*PD\b/i) || s.match(/(\d+)\s*xPD/i);
-        if (pdMatch) pd = parseInt(pdMatch[1], 10) || 0;
-        var puMatch = s.match(/(\d+)\s*x\s*PU\b/i) || s.match(/(\d+)\s*xPU/i);
-        if (puMatch) pu = parseInt(puMatch[1], 10) || 0;
-        return { hn: hn, ok: ok + dd + pd, pu: pu };
-      }
-
-      /** Remove "NxDaily Service Charge LOOP" e "NxDaily Electric Charge" do texto do Service item. */
-      function formatSpmsServiceItemDisplay(serviceItem) {
-        var s = String(serviceItem || '');
-        s = s.replace(/\d*x\s*Daily\s+Service\s+Charge\s+LOOP/gi, '').replace(/\d*x\s*Daily\s+Electric\s+Charge/gi, '');
-        s = s.replace(/,\s*,/g, ',').replace(/^\s*,\s*|\s*,\s*$/g, '').trim();
-        return s || '—';
-      }
-
-      function updateSpmsSection() {
-        if (!spName) return;
-        var spmsOverview = (data.spmsOverview) ? data.spmsOverview : [];
-        var rowsForSp = spmsOverview.filter(function (r) { return r.serviceProvider === spName; });
-        var loopFilterEl = document.getElementById('spmsFilterLoop');
-        var loopNames = [];
-        rowsForSp.forEach(function (r) {
-          if (r.loop && loopNames.indexOf(r.loop) === -1) loopNames.push(r.loop);
-        });
-        loopNames.sort();
-        if (loopFilterEl) {
-          var currentVal = loopFilterEl.value;
-          loopFilterEl.innerHTML = '<option value="">All</option>' + loopNames.map(function (name) {
-            return '<option value="' + escapeHtml(name) + '"' + (name === currentVal ? ' selected' : '') + '>' + escapeHtml(name) + '</option>';
-          }).join('');
-          if (currentVal && loopNames.indexOf(currentVal) === -1) loopFilterEl.value = '';
-        }
-        var selectedLoop = loopFilterEl ? loopFilterEl.value : '';
-        var rows = selectedLoop ? rowsForSp.filter(function (r) { return r.loop === selectedLoop; }) : rowsForSp;
-        var titleEl = document.getElementById('spmsOverviewTitle');
-        if (titleEl) titleEl.textContent = selectedLoop ? 'Overview for aggregation route ' + selectedLoop : 'Overview for aggregation route';
-        var totalHn = 0, totalOk = 0, totalPu = 0;
-        var tbody = document.getElementById('spmsOverviewBody');
-        if (tbody) {
-          tbody.innerHTML = rows.map(function (r) {
-            var parsed = parseSpmsServiceItem(r.serviceItem);
-            totalHn += parsed.hn;
-            totalOk += parsed.ok;
-            totalPu += parsed.pu;
-            var rowTotal = parsed.hn + parsed.ok + parsed.pu;
-            var displayItem = formatSpmsServiceItemDisplay(r.serviceItem);
-            return '<tr><td>' + escapeHtml(r.date) + '</td><td><strong>' + escapeHtml(r.route) + '</strong></td><td>' + escapeHtml(r.cycle) + '</td><td>' + escapeHtml(displayItem) + '</td><td>' + parsed.hn + '</td><td>' + parsed.ok + '</td><td>' + parsed.pu + '</td><td><strong>' + rowTotal + '</strong></td><td>' + escapeHtml(r.comment || '') + '</td></tr>';
-          }).join('');
-        }
-        var totalAll = totalHn + totalOk + totalPu;
-        var footHn = document.getElementById('spmsTotalHn');
-        var footOk = document.getElementById('spmsTotalOk');
-        var footPu = document.getElementById('spmsTotalPu');
-        var footAll = document.getElementById('spmsTotalAll');
-        if (footHn) footHn.textContent = totalHn;
-        if (footOk) footOk.textContent = totalOk;
-        if (footPu) footPu.textContent = totalPu;
-        if (footAll) footAll.textContent = totalAll;
-      }
-
-      var dailyOpsFilteredList = [];
-      var dailyOpsIndex = 0;
-      var dailyOpsInterval = null;
-      var DAILY_OPS_AUTO_MS = 4500;
-
-      function getDailyOpsTimeText(n) {
-        var m = n.timeAgoMinutes || 0;
-        return m <= 60 ? m + ' min ago' : Math.floor(m / 60) + ' h ago';
-      }
-
-      function renderDailyOpsItem(n) {
-        var timeText = getDailyOpsTimeText(n);
-        return '<div class="sp-daily-ops-item sp-daily-ops-item--' + (n.severity || 'info') + '" role="listitem">' +
-          '<span class="sp-daily-ops-item-icon"><i class="bi bi-' + (n.icon || 'bell') + '"></i></span>' +
-          '<div class="sp-daily-ops-item-body">' +
-          '<p class="sp-daily-ops-item-msg">' + escapeHtml(n.message) + '</p>' +
-          '<span class="sp-daily-ops-item-time">' + escapeHtml(timeText) + '</span>' +
-          '</div></div>';
-      }
-
-      function renderDailyOpsSlide() {
-        var slideEl = document.getElementById('dailyOpsSlide');
-        var dotsEl = document.getElementById('dailyOpsDots');
-        if (!slideEl || !dailyOpsFilteredList.length) return;
-        var n = dailyOpsFilteredList[dailyOpsIndex];
-        slideEl.innerHTML = renderDailyOpsItem(n);
-        slideEl.classList.remove('hidden');
-        if (dotsEl) {
-          dotsEl.innerHTML = dailyOpsFilteredList.map(function (_, i) {
-            return '<button type="button" class="sp-daily-ops-dot' + (i === dailyOpsIndex ? ' active' : '') + '" data-index="' + i + '" role="tab" aria-selected="' + (i === dailyOpsIndex) + '" aria-label="Notification ' + (i + 1) + ' of ' + dailyOpsFilteredList.length + '"></button>';
-          }).join('');
-        }
-      }
-
-      function goToDailyOpsIndex(index) {
-        if (!dailyOpsFilteredList.length) return;
-        var newIndex = (index + dailyOpsFilteredList.length) % dailyOpsFilteredList.length;
-        var slideEl = document.getElementById('dailyOpsSlide');
-        if (!slideEl) return;
-        var direction = newIndex > dailyOpsIndex ? 1 : (newIndex < dailyOpsIndex ? -1 : 1);
-        if (slideEl.classList.contains('sp-daily-ops-slide--exit')) {
-          dailyOpsIndex = newIndex;
-          renderDailyOpsSlide();
-          startDailyOpsAutoAdvance();
-          return;
-        }
-        slideEl.classList.add('sp-daily-ops-slide--exit', direction === 1 ? 'sp-daily-ops-slide--exit-next' : 'sp-daily-ops-slide--exit-prev');
-        setTimeout(function () {
-          dailyOpsIndex = newIndex;
-          renderDailyOpsSlide();
-          slideEl.classList.remove('sp-daily-ops-slide--exit', 'sp-daily-ops-slide--exit-next', 'sp-daily-ops-slide--exit-prev');
-          slideEl.classList.add('sp-daily-ops-slide--enter', direction === 1 ? 'sp-daily-ops-slide--enter-from-right' : 'sp-daily-ops-slide--enter-from-left');
-          requestAnimationFrame(function () {
-            requestAnimationFrame(function () {
-              slideEl.classList.add('sp-daily-ops-slide--enter-active');
-            });
-          });
-          setTimeout(function () {
-            slideEl.classList.remove('sp-daily-ops-slide--enter', 'sp-daily-ops-slide--enter-from-right', 'sp-daily-ops-slide--enter-from-left', 'sp-daily-ops-slide--enter-active');
-          }, 260);
-          startDailyOpsAutoAdvance();
-        }, 200);
-      }
-
-      function startDailyOpsAutoAdvance() {
-        stopDailyOpsAutoAdvance();
-        if (dailyOpsFilteredList.length <= 1) return;
-        dailyOpsInterval = setInterval(function () {
-          goToDailyOpsIndex(dailyOpsIndex + 1);
-        }, DAILY_OPS_AUTO_MS);
-      }
-
-      function stopDailyOpsAutoAdvance() {
-        if (dailyOpsInterval) { clearInterval(dailyOpsInterval); dailyOpsInterval = null; }
-      }
-
-      function openDailyOpsModal() {
-        var modal = document.getElementById('dailyOpsModal');
-        var listEl = document.getElementById('dailyOpsModalList');
-        if (!modal || !listEl) return;
-        listEl.innerHTML = dailyOpsFilteredList.map(function (n) { return renderDailyOpsItem(n); }).join('');
-        modal.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-        requestAnimationFrame(function () { modal.classList.add('sp-daily-ops-modal--open'); });
-      }
-
-      function closeDailyOpsModal() {
-        var modal = document.getElementById('dailyOpsModal');
-        if (!modal) return;
-        modal.classList.remove('sp-daily-ops-modal--open');
-        setTimeout(function () {
-          modal.classList.add('hidden');
-          document.body.style.overflow = '';
-        }, 220);
-      }
-
-      function updateDailyOpsSection() {
-        var slideEl = document.getElementById('dailyOpsSlide');
-        var feedEl = document.getElementById('dailyOpsFeed');
-        var emptyEl = document.getElementById('dailyOpsEmpty');
-        if (!slideEl) return;
-        var notifications = (data.dailyOperationsNotifications) ? data.dailyOperationsNotifications : [];
-        dailyOpsFilteredList = spName ? notifications.filter(function (n) { return n.serviceProvider === spName; }) : [];
-        dailyOpsFilteredList.sort(function (a, b) { return (a.timeAgoMinutes || 0) - (b.timeAgoMinutes || 0); });
-        dailyOpsIndex = 0;
-        stopDailyOpsAutoAdvance();
-        if (dailyOpsFilteredList.length === 0) {
-          slideEl.innerHTML = '';
-          slideEl.classList.add('hidden');
-          if (feedEl) {
-            feedEl.classList.remove('sp-daily-ops-feed--clickable');
-            feedEl.classList.add('sp-daily-ops-feed--empty');
-          }
-          var dotsEl = document.getElementById('dailyOpsDots');
-          if (dotsEl) dotsEl.innerHTML = '';
-          if (emptyEl) emptyEl.classList.remove('hidden');
-          return;
-        }
-        if (emptyEl) emptyEl.classList.add('hidden');
-        if (feedEl) {
-          feedEl.classList.add('sp-daily-ops-feed--clickable');
-          feedEl.classList.remove('sp-daily-ops-feed--empty');
-        }
-        renderDailyOpsSlide();
-        startDailyOpsAutoAdvance();
-      }
-
-      function initDailyOpsModal() {
-        var slideWrapEl = document.getElementById('dailyOpsSlideWrap');
-        var prevBtn = document.getElementById('dailyOpsPrev');
-        var nextBtn = document.getElementById('dailyOpsNext');
-        var dotsEl = document.getElementById('dailyOpsDots');
-        var backdrop = document.getElementById('dailyOpsModalBackdrop');
-        var closeBtn = document.getElementById('dailyOpsModalClose');
-        if (slideWrapEl) {
-          slideWrapEl.addEventListener('click', function () {
-            if (dailyOpsFilteredList.length > 0) openDailyOpsModal();
-          });
-          slideWrapEl.addEventListener('keydown', function (e) {
-            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (dailyOpsFilteredList.length > 0) openDailyOpsModal(); }
-          });
-        }
-        if (prevBtn) prevBtn.addEventListener('click', function (e) { e.stopPropagation(); goToDailyOpsIndex(dailyOpsIndex - 1); });
-        if (nextBtn) nextBtn.addEventListener('click', function (e) { e.stopPropagation(); goToDailyOpsIndex(dailyOpsIndex + 1); });
-        if (dotsEl) dotsEl.addEventListener('click', function (e) {
-          var btn = e.target.closest('.sp-daily-ops-dot[data-index]');
-          if (btn && btn.dataset.index != null) { e.stopPropagation(); goToDailyOpsIndex(parseInt(btn.dataset.index, 10)); }
-        });
-        if (backdrop) backdrop.addEventListener('click', closeDailyOpsModal);
-        if (closeBtn) closeBtn.addEventListener('click', closeDailyOpsModal);
-      }
-
-      function render() {
-        var depotEl = document.getElementById('spFilterDepot');
-        var loopEl = document.getElementById('spFilterLoop');
-        var routeEl = document.getElementById('spFilterRoute');
-        filterState.depot = depotEl ? depotEl.value : '';
-        filterState.loop = loopEl ? loopEl.value : '';
-        filterState.route = routeEl ? routeEl.value : '';
-        updateDailyOpsSection();
-        updateKPIs();
-        updateLastDaySection();
-        updateSpmsSection();
-        updateCompliance();
-        updateDriversDocs();
-        updateVehicles();
-      }
-
-      if (spName) {
-        render();
-        var tabDisco = document.getElementById('folderDisco');
-        var tabLastDay = document.getElementById('folderLastDay');
-        var tabSpms = document.getElementById('folderSpms');
-        if (tabDisco) tabDisco.addEventListener('click', function () { switchFolderTab('disco'); });
-        var tabUpload = document.getElementById('folderUpload');
-        if (tabUpload) tabUpload.addEventListener('click', function () { switchFolderTab('upload'); });
-        if (tabLastDay) tabLastDay.addEventListener('click', function () { switchFolderTab('lastday'); });
-        if (tabSpms) tabSpms.addEventListener('click', function () { switchFolderTab('spms'); });
-        var spmsLoopFilter = document.getElementById('spmsFilterLoop');
-        if (spmsLoopFilter) spmsLoopFilter.addEventListener('change', function () { updateSpmsSection(); });
-        initDailyOpsModal();
-        initCarousel();
-        initFullDashboardModal();
-      }
-      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initBeamSidebar);
-      else initBeamSidebar();
-
-      /* Disco: data by depot from SP contracts; depot filter */
-      function getDiscoByDepot() {
-        var byDepot = {};
-        contracts.forEach(function (c) {
-          if (c.serviceProvider !== spName) return;
-          (c.depots || []).forEach(function (d) {
-            if (!d.name) return;
-            if (!byDepot[d.name]) byDepot[d.name] = { am: [], pm: [] };
-            (d.loops || []).forEach(function (l, loopIdx) {
-              (l.routes || []).forEach(function (r, routeIdx) {
-                if (!r.name) return;
-                var arr = (loopIdx + routeIdx) % 2 === 0 ? byDepot[d.name].am : byDepot[d.name].pm;
-                if (arr.indexOf(r.name) === -1) arr.push(r.name);
-              });
-            });
-          });
-        });
-        Object.keys(byDepot).forEach(function (depot) {
-          byDepot[depot].am.sort();
-          byDepot[depot].pm.sort();
-        });
-        return byDepot;
-      }
-
-      function getDiscoDataForDepot(selectedDepot) {
-        var discoByDepot = getDiscoByDepot();
-        if (selectedDepot && discoByDepot[selectedDepot]) {
-          return discoByDepot[selectedDepot];
-        }
-        var fallback = window.DISCO_DATA || {};
-        if (!selectedDepot && Object.keys(discoByDepot).length > 0) {
-          var am = [], pm = [];
-          Object.keys(discoByDepot).forEach(function (depot) {
-            (discoByDepot[depot].am || []).forEach(function (r) { if (am.indexOf(r) === -1) am.push(r); });
-            (discoByDepot[depot].pm || []).forEach(function (r) { if (pm.indexOf(r) === -1) pm.push(r); });
-          });
-          am.sort();
-          pm.sort();
-          return { am: am, pm: pm };
-        }
-        return fallback;
-      }
-
-      function updateDiscoDepotSelect() {
-        var sel = document.getElementById('discoFilterDepot');
-        if (!sel) return;
-        var depots = getDepotsForSp();
-        var current = sel.value;
-        sel.innerHTML = '<option value="">All</option>' + depots.map(function (d) {
-          return '<option value="' + escapeHtml(d) + '"' + (d === current ? ' selected' : '') + '>' + escapeHtml(d) + '</option>';
-        }).join('');
-      }
-
-      function initDisco() {
-        var islandsWrap = document.getElementById('discoIslandsWrap');
-        var errorEl = document.getElementById('discoErrorState');
-        var amList = document.getElementById('discoAmList');
-        var pmList = document.getElementById('discoPmList');
-        var amEmpty = document.getElementById('discoAmEmpty');
-        var pmEmpty = document.getElementById('discoPmEmpty');
-        var amCount = document.getElementById('discoAmCount');
-        var pmCount = document.getElementById('discoPmCount');
-        var depotSel = document.getElementById('discoFilterDepot');
-        if (!islandsWrap) return;
-
-        var selectedDepot = depotSel ? depotSel.value : '';
-        var data = getDiscoDataForDepot(selectedDepot);
-        if (!data || (!data.am && !data.pm)) {
-          if (islandsWrap) islandsWrap.classList.add('hidden');
-          if (errorEl) errorEl.classList.remove('hidden');
-          return;
-        }
-        if (errorEl) errorEl.classList.add('hidden');
-        islandsWrap.classList.remove('hidden');
-
-        var amArr = (data.am || []).slice().sort();
-        var pmArr = (data.pm || []).slice().sort();
-
-        if (amList) {
-          amList.innerHTML = amArr.map(function (r) { return '<li><span class="sp-disco-route">' + escapeHtml(r) + '</span><span class="sp-disco-meta">D AM</span></li>'; }).join('');
-          if (amEmpty) amEmpty.classList.toggle('hidden', amArr.length > 0);
-        }
-        if (pmList) {
-          pmList.innerHTML = pmArr.map(function (r) { return '<li><span class="sp-disco-route">' + escapeHtml(r) + '</span><span class="sp-disco-meta">D PM</span></li>'; }).join('');
-          if (pmEmpty) pmEmpty.classList.toggle('hidden', pmArr.length > 0);
-        }
-        if (amCount) amCount.textContent = amArr.length;
-        if (pmCount) pmCount.textContent = pmArr.length;
-      }
-
-      if (spName) {
-        updateDiscoDepotSelect();
-        initDisco();
-        initLastDay();
-        var discoDepotEl = document.getElementById('discoFilterDepot');
-        if (discoDepotEl) discoDepotEl.addEventListener('change', function () { initDisco(); });
-      }
-    })();
-  </script>
 </body>
 </html>

@@ -74,17 +74,44 @@
 
   /* Estrutura canónica de depots/loops/rotas (Contract Management + Last Day Operation / planilhas).
    * deliveryRate = Band 1 para referência; income real usa bandas digressivas (DIGRESSIVE_BANDS). */
+  /* Postcodes por rota para cadastro de subpostcodes (Disco + contratos). Subpostcode = outward code (ex.: ME7, E1, LL3). */
+  var ROUTE_POSTCODES = {
+    'MSE|MD7A': ['ME7 1AA', 'ME7 2AB', 'ME7 3AC', 'ME8 4AD'],
+    'MSE|MD7B': ['ME7 5BA', 'ME7 6BB', 'ME8 7BC'],
+    'MSE|MD7C': ['ME7 8CA', 'ME8 9CB', 'ME8 0CC'],
+    'MSE|MD7D': ['ME9 1DA', 'ME9 2DB', 'ME9 3DC'],
+    'MSE|MD7E': ['ME9 4EA', 'ME9 5EB', 'ME10 6EC'],
+    'MSE|MD7X': ['ME7 0XA', 'ME8 0XB', 'ME9 0XC'],
+    'LCY|DY1A': ['E1 1AA', 'E1 2AB', 'E2 3AC'],
+    'LCY|DY1B': ['E1 4BA', 'E2 5BB', 'E3 6BC'],
+    'LCY|DY1C': ['E2 7CA', 'E3 8CB', 'E3 9CC'],
+    'LCY|DY1X': ['E1 0XA', 'E2 0XB'],
+    'LCY|DY2A': ['E4 1AA', 'E5 2AB', 'E5 3AC'],
+    'LCY|DY2B': ['E6 4BA', 'E7 5BB', 'E8 6BC'],
+    'LCY|DY2C': ['E9 7CA', 'E10 8CB', 'E11 9CC'],
+    'LCY|DY2D': ['E12 1DA', 'E13 2DB', 'E14 3DC'],
+    'LCY|DY2X': ['E4 0XA', 'E6 0XB', 'E9 0XC'],
+    'LSE|LL3A': ['LL3 1AA', 'LL3 2AB', 'LL3 3AC'],
+    'LSE|LL3B': ['LL3 4BA', 'LL3 5BB', 'LL4 6BC'],
+    'LSE|LL3C': ['LL3 7CA', 'LL4 8CB'],
+    'LSE|LL3D': ['LL4 9DA', 'LL4 0DB', 'LL5 1DC'],
+    'LSE|LL3X': ['LL3 0XA', 'LL4 0XB'],
+    'LSE|LL4A': ['LL4 2AA', 'LL4 3AB', 'LL5 4AC'],
+    'LSE|LL4B': ['LL5 5BA', 'LL5 6BB', 'LL6 7BC'],
+    'LSE|LL4X': ['LL4 0XA', 'LL5 0XB']
+  };
+
   var CONTRACT_DEPOTS_STRUCTURE = [
     {
       name: 'MSE',
       loops: [
         { name: 'MD7', deliveryRate: 3.38, routes: [
-          { name: 'MD7A', type: 'Child', targetDel: 80, targetPu: 10 },
-          { name: 'MD7B', type: 'Child', targetDel: 80, targetPu: 10 },
-          { name: 'MD7C', type: 'Child', targetDel: 80, targetPu: 10 },
-          { name: 'MD7D', type: 'Child', targetDel: 80, targetPu: 10 },
-          { name: 'MD7E', type: 'Child', targetDel: 80, targetPu: 10 },
-          { name: 'MD7X', type: 'Flex', targetDel: 80, targetPu: 10 }
+          { name: 'MD7A', type: 'Child', targetDel: 80, targetPu: 10, postcodes: ROUTE_POSTCODES['MSE|MD7A'] },
+          { name: 'MD7B', type: 'Child', targetDel: 80, targetPu: 10, postcodes: ROUTE_POSTCODES['MSE|MD7B'] },
+          { name: 'MD7C', type: 'Child', targetDel: 80, targetPu: 10, postcodes: ROUTE_POSTCODES['MSE|MD7C'] },
+          { name: 'MD7D', type: 'Child', targetDel: 80, targetPu: 10, postcodes: ROUTE_POSTCODES['MSE|MD7D'] },
+          { name: 'MD7E', type: 'Child', targetDel: 80, targetPu: 10, postcodes: ROUTE_POSTCODES['MSE|MD7E'] },
+          { name: 'MD7X', type: 'Flex', targetDel: 80, targetPu: 10, postcodes: ROUTE_POSTCODES['MSE|MD7X'] }
         ]}
       ]
     },
@@ -92,17 +119,17 @@
       name: 'LCY',
       loops: [
         { name: 'DY1', deliveryRate: 3.66, routes: [
-          { name: 'DY1A', type: 'Child', targetDel: 80, targetPu: 10 },
-          { name: 'DY1B', type: 'Child', targetDel: 80, targetPu: 10 },
-          { name: 'DY1C', type: 'Child', targetDel: 80, targetPu: 10 },
-          { name: 'DY1X', type: 'Flex', targetDel: 80, targetPu: 10 }
+          { name: 'DY1A', type: 'Child', targetDel: 80, targetPu: 10, postcodes: ROUTE_POSTCODES['LCY|DY1A'] },
+          { name: 'DY1B', type: 'Child', targetDel: 80, targetPu: 10, postcodes: ROUTE_POSTCODES['LCY|DY1B'] },
+          { name: 'DY1C', type: 'Child', targetDel: 80, targetPu: 10, postcodes: ROUTE_POSTCODES['LCY|DY1C'] },
+          { name: 'DY1X', type: 'Flex', targetDel: 80, targetPu: 10, postcodes: ROUTE_POSTCODES['LCY|DY1X'] }
         ]},
         { name: 'DY2', deliveryRate: 3.66, routes: [
-          { name: 'DY2A', type: 'Child', targetDel: 80, targetPu: 10 },
-          { name: 'DY2B', type: 'Child', targetDel: 80, targetPu: 10 },
-          { name: 'DY2C', type: 'Child', targetDel: 80, targetPu: 10 },
-          { name: 'DY2D', type: 'Child', targetDel: 80, targetPu: 10 },
-          { name: 'DY2X', type: 'Flex', targetDel: 80, targetPu: 10 }
+          { name: 'DY2A', type: 'Child', targetDel: 80, targetPu: 10, postcodes: ROUTE_POSTCODES['LCY|DY2A'] },
+          { name: 'DY2B', type: 'Child', targetDel: 80, targetPu: 10, postcodes: ROUTE_POSTCODES['LCY|DY2B'] },
+          { name: 'DY2C', type: 'Child', targetDel: 80, targetPu: 10, postcodes: ROUTE_POSTCODES['LCY|DY2C'] },
+          { name: 'DY2D', type: 'Child', targetDel: 80, targetPu: 10, postcodes: ROUTE_POSTCODES['LCY|DY2D'] },
+          { name: 'DY2X', type: 'Flex', targetDel: 80, targetPu: 10, postcodes: ROUTE_POSTCODES['LCY|DY2X'] }
         ]}
       ]
     },
@@ -110,16 +137,16 @@
       name: 'LSE',
       loops: [
         { name: 'LL3', deliveryRate: 3.81, routes: [
-          { name: 'LL3A', type: 'Child', targetDel: 80, targetPu: 10 },
-          { name: 'LL3B', type: 'Child', targetDel: 80, targetPu: 10 },
-          { name: 'LL3C', type: 'Child', targetDel: 80, targetPu: 10 },
-          { name: 'LL3D', type: 'Child', targetDel: 80, targetPu: 10 },
-          { name: 'LL3X', type: 'Flex', targetDel: 80, targetPu: 10 }
+          { name: 'LL3A', type: 'Child', targetDel: 80, targetPu: 10, postcodes: ROUTE_POSTCODES['LSE|LL3A'] },
+          { name: 'LL3B', type: 'Child', targetDel: 80, targetPu: 10, postcodes: ROUTE_POSTCODES['LSE|LL3B'] },
+          { name: 'LL3C', type: 'Child', targetDel: 80, targetPu: 10, postcodes: ROUTE_POSTCODES['LSE|LL3C'] },
+          { name: 'LL3D', type: 'Child', targetDel: 80, targetPu: 10, postcodes: ROUTE_POSTCODES['LSE|LL3D'] },
+          { name: 'LL3X', type: 'Flex', targetDel: 80, targetPu: 10, postcodes: ROUTE_POSTCODES['LSE|LL3X'] }
         ]},
         { name: 'LL4', deliveryRate: 3.81, routes: [
-          { name: 'LL4A', type: 'Child', targetDel: 80, targetPu: 10 },
-          { name: 'LL4B', type: 'Child', targetDel: 80, targetPu: 10 },
-          { name: 'LL4X', type: 'Flex', targetDel: 80, targetPu: 10 }
+          { name: 'LL4A', type: 'Child', targetDel: 80, targetPu: 10, postcodes: ROUTE_POSTCODES['LSE|LL4A'] },
+          { name: 'LL4B', type: 'Child', targetDel: 80, targetPu: 10, postcodes: ROUTE_POSTCODES['LSE|LL4B'] },
+          { name: 'LL4X', type: 'Flex', targetDel: 80, targetPu: 10, postcodes: ROUTE_POSTCODES['LSE|LL4X'] }
         ]}
       ]
     }

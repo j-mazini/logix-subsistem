@@ -73,6 +73,22 @@
                   <h1 class="dashboard-title">Dashboard</h1>
                   <p class="dashboard-welcome-msg">Welcome back! Here's a summary of your operations.</p>
                 </div>
+                <div class="dashboard-header-notifications flex-grow-1 mx-3" id="dashboardHeaderNotifications" aria-label="Notifications">
+                  <div class="dhl-daily-ops-feed dhl-daily-ops-feed--header" id="dhlDailyOpsFeed">
+                    <div class="dhl-daily-ops-carousel">
+                      <button type="button" class="dhl-daily-ops-nav" id="dhlDailyOpsPrev" aria-label="Previous notification"><i class="bi bi-chevron-left"></i></button>
+                      <div class="dhl-daily-ops-slide-wrap" id="dhlDailyOpsSlideWrap" role="button" tabindex="0" aria-label="Current notification; click to view all">
+                        <div class="dhl-daily-ops-slide" id="dhlDailyOpsSlide"></div>
+                      </div>
+                      <button type="button" class="dhl-daily-ops-nav" id="dhlDailyOpsNext" aria-label="Next notification"><i class="bi bi-chevron-right"></i></button>
+                    </div>
+                    <div class="dhl-daily-ops-dots" id="dhlDailyOpsDots" role="tablist" aria-label="Navigate notifications"></div>
+                    <div id="dhlDailyOpsEmpty" class="dhl-daily-ops-empty hidden">
+                      <i class="bi bi-inbox"></i>
+                      <p>No notifications at the moment.</p>
+                    </div>
+                  </div>
+                </div>
                 <div class="dashboard-header-right d-flex align-items-center gap-2 flex-wrap">
                   <button type="button" class="btn btn-primary dashboard-alert-btn" id="createAlertBtn" aria-label="Create alert for all depots and service providers">
                     <i class="bi bi-megaphone-fill"></i>
@@ -352,6 +368,22 @@
     </div>
   </div>
 
+  <!-- Modal: all notifications (DHL) -->
+  <div class="dhl-daily-ops-modal hidden" id="dhlDailyOpsModal" role="dialog" aria-modal="true" aria-labelledby="dhlDailyOpsModalTitle">
+    <div class="dhl-daily-ops-modal-backdrop" id="dhlDailyOpsModalBackdrop"></div>
+    <div class="dhl-daily-ops-modal-dialog">
+      <div class="dhl-daily-ops-modal-content">
+        <div class="dhl-daily-ops-modal-header">
+          <h2 id="dhlDailyOpsModalTitle" class="dhl-daily-ops-modal-title"><i class="bi bi-bell-fill"></i> All notifications</h2>
+          <button type="button" class="dhl-daily-ops-modal-close" id="dhlDailyOpsModalClose" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="dhl-daily-ops-modal-body">
+          <div class="dhl-daily-ops-list" id="dhlDailyOpsModalList" role="list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="alertModal" class="alert-modal" role="dialog" aria-modal="true" aria-labelledby="alertModalTitle" aria-hidden="true" hidden>
     <div class="alert-modal-backdrop"></div>
     <div class="alert-modal-content">
@@ -414,8 +446,139 @@
           { serviceProvider: 'BA Express', depots: [{ name: 'MSE', loops: [{ name: 'Loop North', routes: [{ targetDel: 85 }, { targetDel: 90 }] }] }, { name: 'LCY', loops: [{ name: 'Loop East', routes: [{ targetDel: 95 }] }] }] },
           { serviceProvider: 'Premier Logistics Ltd', depots: [{ name: 'LSE', loops: [{ name: 'Loop Central', routes: [{ targetDel: 82 }, { targetDel: 88 }] }] }] }
         ],
-        dashboardSummary: { spr: 94.2, timeWindow: 98.5, spohR: 12.4, totalRequests: 2847 }
+        dashboardSummary: { spr: 94.2, timeWindow: 98.5, spohR: 12.4, totalRequests: 2847 },
+        dailyOperationsNotifications: []
       };
+
+      if (!data.dailyOperationsNotifications) data.dailyOperationsNotifications = [];
+
+      // DHL Header notifications (strip + modal)
+      var dhlDailyOpsFilteredList = [];
+      var dhlDailyOpsIndex = 0;
+      var dhlDailyOpsInterval = null;
+      var DHL_DAILY_OPS_AUTO_MS = 4500;
+      var DHL_NOTIFICATION_TYPE_ICONS = {
+        delay: 'clock-history',
+        delivery_done: 'check-circle',
+        problem: 'exclamation-triangle',
+        route_change: 'signpost-2',
+        vehicle_issue: 'truck',
+        driver_alert: 'person',
+        alert: 'megaphone-fill',
+        info: 'info-circle'
+      };
+      function getDhlIconForNotification(n) {
+        if (n.type && DHL_NOTIFICATION_TYPE_ICONS[n.type]) return DHL_NOTIFICATION_TYPE_ICONS[n.type];
+        if (n.icon) return n.icon;
+        return 'bell';
+      }
+      function getDhlDailyOpsTimeText(n) {
+        var m = n.timeAgoMinutes || 0;
+        return m <= 60 ? m + ' min ago' : Math.floor(m / 60) + ' h ago';
+      }
+      function escapeDhlHtml(s) {
+        if (s == null) return '';
+        var d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+      }
+      function renderDhlDailyOpsItem(n) {
+        var timeText = getDhlDailyOpsTimeText(n);
+        var icon = getDhlIconForNotification(n);
+        return '<div class="dhl-daily-ops-item dhl-daily-ops-item--' + (n.severity || 'info') + '" role="listitem">' +
+          '<span class="dhl-daily-ops-item-icon"><i class="bi bi-' + icon + '"></i></span>' +
+          '<div class="dhl-daily-ops-item-body">' +
+          '<p class="dhl-daily-ops-item-msg">' + escapeDhlHtml(n.message) + '</p>' +
+          '<span class="dhl-daily-ops-item-time">' + escapeDhlHtml(timeText) + '</span>' +
+          '</div></div>';
+      }
+      function renderDhlDailyOpsSlide() {
+        var slideEl = document.getElementById('dhlDailyOpsSlide');
+        var dotsEl = document.getElementById('dhlDailyOpsDots');
+        if (!slideEl || !dhlDailyOpsFilteredList.length) return;
+        var n = dhlDailyOpsFilteredList[dhlDailyOpsIndex];
+        slideEl.innerHTML = renderDhlDailyOpsItem(n);
+        slideEl.classList.remove('hidden');
+        if (dotsEl) {
+          dotsEl.innerHTML = dhlDailyOpsFilteredList.map(function (_, i) {
+            return '<button type="button" class="dhl-daily-ops-dot' + (i === dhlDailyOpsIndex ? ' active' : '') + '" data-index="' + i + '" role="tab" aria-selected="' + (i === dhlDailyOpsIndex) + '" aria-label="Notification ' + (i + 1) + ' of ' + dhlDailyOpsFilteredList.length + '"></button>';
+          }).join('');
+        }
+      }
+      function goToDhlDailyOpsIndex(index) {
+        if (!dhlDailyOpsFilteredList.length) return;
+        var newIndex = (index + dhlDailyOpsFilteredList.length) % dhlDailyOpsFilteredList.length;
+        dhlDailyOpsIndex = newIndex;
+        renderDhlDailyOpsSlide();
+        startDhlDailyOpsAutoAdvance();
+      }
+      function startDhlDailyOpsAutoAdvance() {
+        if (dhlDailyOpsInterval) clearInterval(dhlDailyOpsInterval);
+        dhlDailyOpsInterval = null;
+        if (dhlDailyOpsFilteredList.length <= 1) return;
+        dhlDailyOpsInterval = setInterval(function () { goToDhlDailyOpsIndex(dhlDailyOpsIndex + 1); }, DHL_DAILY_OPS_AUTO_MS);
+      }
+      function stopDhlDailyOpsAutoAdvance() {
+        if (dhlDailyOpsInterval) { clearInterval(dhlDailyOpsInterval); dhlDailyOpsInterval = null; }
+      }
+      function openDhlDailyOpsModal() {
+        var modal = document.getElementById('dhlDailyOpsModal');
+        var listEl = document.getElementById('dhlDailyOpsModalList');
+        if (!modal || !listEl) return;
+        listEl.innerHTML = dhlDailyOpsFilteredList.map(function (n) { return renderDhlDailyOpsItem(n); }).join('');
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        requestAnimationFrame(function () { modal.classList.add('dhl-daily-ops-modal--open'); });
+      }
+      function closeDhlDailyOpsModal() {
+        var modal = document.getElementById('dhlDailyOpsModal');
+        if (!modal) return;
+        modal.classList.remove('dhl-daily-ops-modal--open');
+        setTimeout(function () { modal.classList.add('hidden'); document.body.style.overflow = ''; }, 220);
+      }
+      function updateDhlDailyOpsSection() {
+        var list = (data.dailyOperationsNotifications) ? data.dailyOperationsNotifications.slice() : [];
+        dhlDailyOpsFilteredList = list.sort(function (a, b) { return (a.timeAgoMinutes || 0) - (b.timeAgoMinutes || 0); });
+        dhlDailyOpsIndex = 0;
+        stopDhlDailyOpsAutoAdvance();
+        var slideEl = document.getElementById('dhlDailyOpsSlide');
+        var feedEl = document.getElementById('dhlDailyOpsFeed');
+        var emptyEl = document.getElementById('dhlDailyOpsEmpty');
+        if (!slideEl) return;
+        if (dhlDailyOpsFilteredList.length === 0) {
+          slideEl.innerHTML = '';
+          slideEl.classList.add('hidden');
+          if (feedEl) feedEl.classList.add('dhl-daily-ops-feed--empty');
+          var dotsEl = document.getElementById('dhlDailyOpsDots');
+          if (dotsEl) dotsEl.innerHTML = '';
+          if (emptyEl) emptyEl.classList.remove('hidden');
+          return;
+        }
+        if (emptyEl) emptyEl.classList.add('hidden');
+        if (feedEl) feedEl.classList.remove('dhl-daily-ops-feed--empty');
+        renderDhlDailyOpsSlide();
+        startDhlDailyOpsAutoAdvance();
+      }
+      function initDhlDailyOpsModal() {
+        var slideWrap = document.getElementById('dhlDailyOpsSlideWrap');
+        var prevBtn = document.getElementById('dhlDailyOpsPrev');
+        var nextBtn = document.getElementById('dhlDailyOpsNext');
+        var dotsEl = document.getElementById('dhlDailyOpsDots');
+        var backdrop = document.getElementById('dhlDailyOpsModalBackdrop');
+        var closeBtn = document.getElementById('dhlDailyOpsModalClose');
+        if (slideWrap) {
+          slideWrap.addEventListener('click', function () { if (dhlDailyOpsFilteredList.length > 0) openDhlDailyOpsModal(); });
+          slideWrap.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (dhlDailyOpsFilteredList.length > 0) openDhlDailyOpsModal(); } });
+        }
+        if (prevBtn) prevBtn.addEventListener('click', function (e) { e.stopPropagation(); goToDhlDailyOpsIndex(dhlDailyOpsIndex - 1); });
+        if (nextBtn) nextBtn.addEventListener('click', function (e) { e.stopPropagation(); goToDhlDailyOpsIndex(dhlDailyOpsIndex + 1); });
+        if (dotsEl) dotsEl.addEventListener('click', function (e) {
+          var btn = e.target.closest('.dhl-daily-ops-dot[data-index]');
+          if (btn && btn.dataset.index != null) { e.stopPropagation(); goToDhlDailyOpsIndex(parseInt(btn.dataset.index, 10)); }
+        });
+        if (backdrop) backdrop.addEventListener('click', closeDhlDailyOpsModal);
+        if (closeBtn) closeBtn.addEventListener('click', closeDhlDailyOpsModal);
+      }
 
       // Region -> Depots mapping
       var REGION_TO_DEPOTS = {
@@ -1068,6 +1231,18 @@
           closeModal();
           var formattedDate = new Date(expiringDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
           showToast('Alert sent to ' + depots.length + ' depot(s) and ' + sps.length + ' service provider(s). Active until ' + formattedDate + '.');
+          var notifList = data.dailyOperationsNotifications || [];
+          var notifMsg = (title ? title + ' – ' : '') + msg;
+          notifList.unshift({
+            id: 'alert-' + Date.now(),
+            type: 'alert',
+            severity: 'info',
+            icon: 'megaphone-fill',
+            message: notifMsg,
+            timeAgoMinutes: 0
+          });
+          data.dailyOperationsNotifications = notifList;
+          if (typeof updateDhlDailyOpsSection === 'function') updateDhlDailyOpsSection();
         }
 
         if (btn) btn.addEventListener('click', openModal);
@@ -1080,6 +1255,8 @@
         });
       }
 
+      updateDhlDailyOpsSection();
+      initDhlDailyOpsModal();
       initAlertModal();
     })();
   </script>
