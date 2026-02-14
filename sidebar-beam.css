@@ -10,6 +10,20 @@ body.has-beam-sidebar .floating-sidebar-toggle {
   display: none !important;
 }
 
+/* Garantir que o scroll da página funcione (evitar travamento) */
+body.has-beam-sidebar {
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: auto;
+  min-height: 100%;
+  -webkit-overflow-scrolling: touch;
+}
+body.has-beam-sidebar .sidebar-wrapper {
+  min-height: 100vh;
+  height: auto;
+  overflow-x: visible;
+  overflow-y: visible;
+}
 body.has-beam-sidebar .sidebar-inset {
   width: 100% !important;
   max-width: 100% !important;
@@ -17,11 +31,8 @@ body.has-beam-sidebar .sidebar-inset {
   margin-right: 0 !important;
   min-width: 0;
   overflow-x: hidden;
-}
-
-body.has-beam-sidebar .sidebar-wrapper {
-  overflow-x: visible;
   overflow-y: visible;
+  min-height: 0;
 }
 
 /* ========== Beam Sidebar ========== */

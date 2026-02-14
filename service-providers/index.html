@@ -65,7 +65,8 @@
             <div class="admin-header d-flex flex-wrap align-items-center gap-2 mb-4">
               <h1 class="admin-header-title">Service Providers</h1>
               <div class="admin-header-user-pill d-flex align-items-center" title="DHL Uk">
-                <img src="../assets/dhl-uk-logo.png" alt="DHL Uk" class="admin-header-user-avatar admin-header-user-avatar--img" />
+                <span class="admin-header-user-avatar admin-header-user-avatar-fallback" id="dhlHeaderAvatarFallback" style="display:none;">DHL</span>
+                <img src="../assets/dhl-uk-logo.png" alt="DHL Uk" class="admin-header-user-avatar admin-header-user-avatar--img" id="dhlHeaderAvatarImg" onerror="this.style.display='none'; document.getElementById('dhlHeaderAvatarFallback').style.display='flex';" />
                 <span class="admin-header-user-name">DHL Uk</span>
               </div>
             </div>
@@ -129,9 +130,10 @@
           var logoMap = { 'BA Express': 'ba-express-logo.png', 'Premier Logistics Ltd': 'premier-logistics-logo.png', 'Swift Haul Solutions': 'swift-haul-logo.png', 'Metro Freight Partners': 'metro-freight-logo.png', 'Atlas Transport Services': 'atlas-transport-logo.png' };
           var hasCustomBranding = logoMap[name];
           var coverStyle = 'background: linear-gradient(135deg, ' + (sp.coverColor || '#2c3e50') + ' 0%, ' + (sp.color || '#3498db') + ' 100%);';
+          var initials = (sp.initials || name.split(' ').map(function (w) { return w[0]; }).join('').slice(0, 2) || 'SP').toUpperCase();
           var avatarContent = hasCustomBranding
-            ? '<img src="../assets/' + logoMap[name] + '" alt="' + escapeHtml(name) + '" class="sp-provider-card-avatar-img" />'
-            : escapeHtml((sp.initials || name.slice(0, 2)).toUpperCase());
+            ? '<span class="sp-provider-card-avatar-fallback" style="display:none;">' + escapeHtml(initials) + '</span><img src="../assets/' + logoMap[name] + '" alt="' + escapeHtml(name) + '" class="sp-provider-card-avatar-img" onerror="this.style.display=\'none\'; if(this.previousElementSibling) this.previousElementSibling.style.display=\'flex\';" />'
+            : escapeHtml(initials);
           var avatarClass = 'sp-provider-card-avatar' + (hasCustomBranding ? ' sp-provider-card-avatar--logo' : '');
           var avatarStyle = hasCustomBranding ? 'background: #fff;' : 'background: ' + (sp.color || '#3498db') + '; color: #fff;';
           var portalUrl = '../sp-portal/dashboard/index.html?sp=' + encodeURIComponent(name);

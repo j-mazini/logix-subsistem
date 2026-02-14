@@ -7,7 +7,17 @@
 
   var SP_STORAGE_KEY = 'dhl_sp_portal_current_sp';
   var SORT_DAYS_EXPIRING = 30;
-  var STEPS = ['personal', 'address', 'employment', 'cost', 'training', 'compliance'];
+  var STEPS = ['personal', 'employment', 'training', 'compliance'];
+  var SEARCH_DEBOUNCE_MS = 200;
+
+  function debounce(fn, ms) {
+    var t;
+    return function () {
+      var self = this, args = arguments;
+      if (t) clearTimeout(t);
+      t = setTimeout(function () { fn.apply(self, args); }, ms);
+    };
+  }
 
   function getCurrentSp() {
     var params = new URLSearchParams(window.location.search);
@@ -33,6 +43,24 @@
     var d = document.createElement('div');
     d.textContent = s;
     return d.innerHTML;
+  }
+
+  /** Courier ID: máx. 7 caracteres do primeiro nome + iniciais do apelido, total 8. */
+  function computeCourierId(firstName, lastName) {
+    var first = (firstName || '').replace(/\s/g, '').toUpperCase().slice(0, 7);
+    var need = 8 - first.length;
+    var lastRaw = (lastName || '').trim();
+    var initials = lastRaw.split(/\s+/).filter(Boolean).map(function (w) { return w[0]; }).join('').toUpperCase();
+    var rest = (lastRaw || '').replace(/\s/g, '').toUpperCase();
+    var part2 = (initials + rest).slice(0, need);
+    return (first + part2).slice(0, 8);
+  }
+
+  function updateCourierIdFromName() {
+    var first = document.getElementById('vFirstName');
+    var last = document.getElementById('vLastName');
+    var out = document.getElementById('vCourierId');
+    if (out) out.value = computeCourierId(first ? first.value : '', last ? last.value : '');
   }
 
   function formatDateOnly(dateStr) {
@@ -87,6 +115,33 @@
     return { label: 'Complete', class: 'status-badge-active' };
   }
 
+  /** Status para um único training (data + 2 anos = expiry). */
+  function getSingleTrainingStatus(trainingDate) {
+    if (!trainingDate) return 'pending';
+    var d = parseYMD(trainingDate);
+    if (!d) return 'pending';
+    var expiry = new Date(d);
+    expiry.setFullYear(expiry.getFullYear() + 2);
+    if (isExpired(expiry)) return 'expiring';
+    if (isExpiringSoon(expiry)) return 'warning';
+    return 'active';
+  }
+
+  /** Status para um documento (expiry dates: expired/expiring/ok; check dates: verified/pending). */
+  function getDocumentItemStatus(key, v) {
+    if (key === 'criminalRecord' || key === 'dvlaCheck') {
+      var date = key === 'criminalRecord' ? v.criminalRecordDate : v.dvlaCheckDate;
+      return date ? 'verified' : 'pending';
+    }
+    var dateStr = (key === 'visa' && v.visaValidity) || (key === 'licence' && v.licenceExpiringDate) || (key === 'passport' && v.passportExpiringDate) ? (v.visaValidity || v.licenceExpiringDate || v.passportExpiringDate) : null;
+    if (!dateStr) return null;
+    var d = parseYMD(dateStr);
+    if (!d) return null;
+    if (isExpired(d)) return 'expiring';
+    if (isExpiringSoon(d)) return 'warning';
+    return 'active';
+  }
+
   function getDocumentsStatus(v) {
     if (!v.criminalRecordDate || !v.dvlaCheckDate) return { label: 'Pending', class: 'status-badge-pending' };
     var items = [];
@@ -130,6 +185,21 @@
       if (c.serviceProvider !== spName) return;
       (c.depots || []).forEach(function (d) {
         if (d.name && !seen[d.name]) { seen[d.name] = true; out.push(d.name); }
+      });
+    });
+    return out.sort();
+  }
+
+  function getRoutesForSp() {
+    var out = [], seen = {};
+    contracts.forEach(function (c) {
+      if (c.serviceProvider !== spName) return;
+      (c.depots || []).forEach(function (d) {
+        (d.loops || []).forEach(function (l) {
+          (l.routes || []).forEach(function (r) {
+            if (r.name && !seen[r.name]) { seen[r.name] = true; out.push(r.name); }
+          });
+        });
       });
     });
     return out.sort();
@@ -192,9 +262,9 @@
           va = (a.vendorType || '').toString();
           vb = (b.vendorType || '').toString();
           return sortDir * (va < vb ? -1 : va > vb ? 1 : 0);
-        case 'paymentModel':
-          va = (a.paymentModel || '').toString();
-          vb = (b.paymentModel || '').toString();
+        case 'route':
+          va = (a.route || '').toString().toLowerCase();
+          vb = (b.route || '').toString().toLowerCase();
           return sortDir * (va < vb ? -1 : va > vb ? 1 : 0);
         case 'status':
           va = (a.status || '').toLowerCase();
@@ -239,10 +309,6 @@
     return (v.vendorType === '2') ? 'Subcontractor' : 'Driver';
   }
 
-  function paymentModelLabel(v) {
-    return (v.paymentModel === '2') ? 'Day Rate' : 'Per Stop';
-  }
-
   function statusBadgeClass(v) {
     if (v.status === 'Active') return 'status-badge-active';
     if (v.status === 'Inactive') return 'status-badge-inactive';
@@ -275,7 +341,7 @@
       var row = '<tr data-vendor-id="' + v.id + '">' +
         '<td class="vendor-td-name"><span class="vendor-cell-name-strong">' + escapeHtml(name.trim() || '—') + '</span><span class="vendor-cell-email">' + escapeHtml(email) + '</span></td>' +
         '<td>' + escapeHtml(vendorTypeLabel(v)) + '</td>' +
-        '<td>' + escapeHtml(paymentModelLabel(v)) + '</td>' +
+        '<td>' + escapeHtml(v.route || '—') + '</td>' +
         '<td><span class="status-badge ' + statusBadgeClass(v) + '">' + escapeHtml(status) + '</span></td>' +
         '<td>' + (formatDateOnly(v.startDate) || '—') + '</td>' +
         '<td><button type="button" class="vendor-badge-btn status-badge ' + t.class + '" data-vendor-id="' + v.id + '" data-info="training">' + escapeHtml(t.label) + '</button></td>' +
@@ -288,15 +354,25 @@
     }).join('');
 
     tbody.querySelectorAll('.vendor-badge-btn').forEach(function (btn) {
-      btn.addEventListener('click', function () {
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
         openInfoModal(parseInt(btn.getAttribute('data-vendor-id'), 10), btn.getAttribute('data-info'));
       });
     });
     tbody.querySelectorAll('.vendor-action-btn[data-action="edit"]').forEach(function (btn) {
-      btn.addEventListener('click', function () { openEditModal(parseInt(btn.getAttribute('data-vendor-id'), 10)); });
+      btn.addEventListener('click', function (e) { e.stopPropagation(); openEditModal(parseInt(btn.getAttribute('data-vendor-id'), 10)); });
     });
     tbody.querySelectorAll('.vendor-action-btn[data-action="delete"]').forEach(function (btn) {
-      btn.addEventListener('click', function () { openDeleteModal(parseInt(btn.getAttribute('data-vendor-id'), 10)); });
+      btn.addEventListener('click', function (e) { e.stopPropagation(); openDeleteModal(parseInt(btn.getAttribute('data-vendor-id'), 10)); });
+    });
+    tbody.querySelectorAll('tr[data-vendor-id]').forEach(function (row) {
+      row.style.cursor = 'pointer';
+      row.setAttribute('role', 'button');
+      row.setAttribute('tabindex', '0');
+      row.addEventListener('click', function (e) {
+        if (e.target.closest('.vendor-action-btn') || e.target.closest('.vendor-badge-btn')) return;
+        openDriverDetailModal(parseInt(row.getAttribute('data-vendor-id'), 10));
+      });
     });
 
     updateSortHeaders();
@@ -326,35 +402,127 @@
     badgeEl.textContent = type === 'training' ? 'Training Details' : 'Documents Details';
 
     if (type === 'training') {
-      var expiry = getTrainingExpiryDate(v);
-      var expiryStr = expiry ? formatDateOnly(expiry.toISOString().slice(0, 10)) : '—';
+      var cargoStatus = getSingleTrainingStatus(v.cargoTrainingDate);
+      var cargoExpiry = v.cargoTrainingDate ? (function () { var d = parseYMD(v.cargoTrainingDate); if (!d) return null; d = new Date(d); d.setFullYear(d.getFullYear() + 2); return formatDateOnly(d.toISOString().slice(0, 10)); })() : null;
       var items = [
-        { label: 'Cargo Training', value: v.cargoTrainingDate ? formatDateOnly(v.cargoTrainingDate) : 'Pending', detail: expiryStr ? 'Expires: ' + expiryStr : null, badge: v.cargoTrainingDate ? 'active' : 'pending' },
-        { label: 'Dangerous Goods Training', value: v.dangerousGoodsTrainingDate ? formatDateOnly(v.dangerousGoodsTrainingDate) : 'Pending', detail: null, badge: v.dangerousGoodsTrainingDate ? 'active' : 'pending' },
-        { label: 'Manual Handling Training', value: v.manualHandlingTrainingDate ? formatDateOnly(v.manualHandlingTrainingDate) : 'Pending', detail: null, badge: v.manualHandlingTrainingDate ? 'active' : 'pending' },
-        { label: 'DHL Training Number', value: v.dhlTrainingNumber || 'N/A', detail: null, badge: null }
+        { label: 'Cargo Training', value: v.cargoTrainingDate ? formatDateOnly(v.cargoTrainingDate) : 'Pending', detail: cargoExpiry ? 'Expires: ' + cargoExpiry : null, badge: cargoStatus, status: cargoStatus },
+        { label: 'Dangerous Goods Training', value: v.dangerousGoodsTrainingDate ? formatDateOnly(v.dangerousGoodsTrainingDate) : 'Pending', detail: null, badge: getSingleTrainingStatus(v.dangerousGoodsTrainingDate), status: getSingleTrainingStatus(v.dangerousGoodsTrainingDate) },
+        { label: 'Manual Handling Training', value: v.manualHandlingTrainingDate ? formatDateOnly(v.manualHandlingTrainingDate) : 'Pending', detail: null, badge: getSingleTrainingStatus(v.manualHandlingTrainingDate), status: getSingleTrainingStatus(v.manualHandlingTrainingDate) },
+        { label: 'DHL Training Number', value: v.dhlTrainingNumber || 'N/A', detail: null, badge: null, status: null }
       ];
       bodyEl.innerHTML = items.map(function (item) {
+        var flagHtml = item.status ? '<span class="vendor-info-modal-flag vendor-info-modal-flag--' + item.status + '" title="' + (item.status === 'active' ? 'Complete' : item.status === 'warning' ? 'Expiring Soon' : item.status === 'expiring' ? 'Expired' : 'Pending') + '"></span>' : '';
         var badgeHtml = item.badge ? '<span class="status-badge status-badge-' + item.badge + '">' + escapeHtml(item.value) + '</span>' : '<span class="vendor-info-modal-item-value">' + escapeHtml(item.value) + '</span>';
         var detailHtml = item.detail ? '<span class="vendor-info-modal-item-detail">' + escapeHtml(item.detail) + '</span>' : '';
-        return '<div class="vendor-info-modal-item"><div><span class="vendor-info-modal-item-label">' + escapeHtml(item.label) + '</span>' + detailHtml + '</div><div>' + badgeHtml + '</div></div>';
+        return '<div class="vendor-info-modal-item vendor-info-modal-item--has-flag"><div class="vendor-info-modal-item-label-wrap">' + flagHtml + '<div class="vendor-info-modal-item-head">' + '<span class="vendor-info-modal-item-label">' + escapeHtml(item.label) + '</span>' + detailHtml + '</div></div><div>' + badgeHtml + '</div></div>';
       }).join('');
     } else {
       var docItems = [
-        { label: 'Criminal Record Check', value: v.criminalRecordDate ? formatDateOnly(v.criminalRecordDate) : 'Pending', badge: v.criminalRecordDate ? 'verified' : 'pending' },
-        { label: 'DVLA Check', value: v.dvlaCheckDate ? formatDateOnly(v.dvlaCheckDate) : 'Pending', badge: v.dvlaCheckDate ? 'verified' : 'pending' },
-        { label: 'Visa Validity', value: v.visaValidity ? formatDateOnly(v.visaValidity) : 'N/A', badge: v.visaValidity ? 'verified' : null },
-        { label: 'Driving Licence Expiry', value: v.licenceExpiringDate ? formatDateOnly(v.licenceExpiringDate) : 'N/A', badge: null },
-        { label: 'Passport Expiry', value: v.passportExpiringDate ? formatDateOnly(v.passportExpiringDate) : 'N/A', badge: null }
+        { label: 'Criminal Record Check', value: v.criminalRecordDate ? formatDateOnly(v.criminalRecordDate) : 'Pending', status: getDocumentItemStatus('criminalRecord', v) },
+        { label: 'DVLA Check', value: v.dvlaCheckDate ? formatDateOnly(v.dvlaCheckDate) : 'Pending', status: getDocumentItemStatus('dvlaCheck', v) },
+        { label: 'Visa Validity', value: v.visaValidity ? formatDateOnly(v.visaValidity) : 'N/A', status: getDocumentItemStatus('visa', v) },
+        { label: 'Driving Licence Expiry', value: v.licenceExpiringDate ? formatDateOnly(v.licenceExpiringDate) : 'N/A', status: getDocumentItemStatus('licence', v) },
+        { label: 'Passport Expiry', value: v.passportExpiringDate ? formatDateOnly(v.passportExpiringDate) : 'N/A', status: getDocumentItemStatus('passport', v) }
       ];
       bodyEl.innerHTML = docItems.map(function (item) {
-        var badgeHtml = item.badge ? '<span class="status-badge status-badge-' + item.badge + '">' + escapeHtml(item.value) + '</span>' : '<span class="vendor-info-modal-item-value">' + escapeHtml(item.value) + '</span>';
-        return '<div class="vendor-info-modal-item"><div><span class="vendor-info-modal-item-label">' + escapeHtml(item.label) + '</span></div><div>' + badgeHtml + '</div></div>';
+        var flagHtml = item.status ? '<span class="vendor-info-modal-flag vendor-info-modal-flag--' + item.status + '" title="' + (item.status === 'active' || item.status === 'verified' ? 'OK' : item.status === 'warning' ? 'Expiring Soon' : item.status === 'expiring' ? 'Expired' : 'Pending') + '"></span>' : '';
+        var badgeHtml = item.status ? '<span class="status-badge status-badge-' + (item.status === 'verified' ? 'verified' : item.status) + '">' + escapeHtml(item.value) + '</span>' : '<span class="vendor-info-modal-item-value">' + escapeHtml(item.value) + '</span>';
+        return '<div class="vendor-info-modal-item vendor-info-modal-item--has-flag"><div class="vendor-info-modal-item-label-wrap">' + flagHtml + '<span class="vendor-info-modal-item-label">' + escapeHtml(item.label) + '</span></div><div>' + badgeHtml + '</div></div>';
       }).join('');
     }
 
     var modalEl = document.getElementById('infoModal');
     if (modalEl) bootstrap.Modal.getOrCreateInstance(modalEl).show();
+  }
+
+  function openDriverDetailModal(vendorId) {
+    var all = getAllVendorsForSp();
+    var v = all.filter(function (x) { return x.id === vendorId; })[0];
+    if (!v) return;
+
+    var name = (v.firstName || '') + ' ' + (v.lastName || '');
+    var courierId = v.courierId || computeCourierId(v.firstName || '', v.lastName || '');
+    var route = v.route || '—';
+
+    document.getElementById('driverDetailModalTitle').textContent = name.trim() || '—';
+
+    var sections = [
+      {
+        title: 'Personal',
+        rows: [
+          { label: 'Courier ID', value: courierId },
+          { label: 'First name', value: v.firstName || '—' },
+          { label: 'Last name', value: v.lastName || '—' },
+          { label: 'Email', value: v.email || '—' },
+          { label: 'Phone', value: v.phone || '—' },
+          { label: 'Date of birth', value: v.dob ? formatDateOnly(v.dob) : '—' }
+        ]
+      },
+      {
+        title: 'Contract',
+        rows: [
+          { label: 'Depot', value: v.depot || '—' },
+          { label: 'Vendor Type', value: vendorTypeLabel(v) },
+          { label: 'Route', value: route },
+          { label: 'Start date', value: formatDateOnly(v.startDate) || '—' },
+          { label: 'Finish date', value: formatDateOnly(v.finishDate) || '—' },
+          { label: 'Status', value: v.status || '—' }
+        ]
+      },
+      {
+        title: 'Training',
+        rows: [
+          { label: 'Cargo training date', value: v.cargoTrainingDate ? formatDateOnly(v.cargoTrainingDate) : '—' },
+          { label: 'Dangerous goods training date', value: v.dangerousGoodsTrainingDate ? formatDateOnly(v.dangerousGoodsTrainingDate) : '—' },
+          { label: 'Manual handling training date', value: v.manualHandlingTrainingDate ? formatDateOnly(v.manualHandlingTrainingDate) : '—' },
+          { label: 'DHL Training Number', value: v.dhlTrainingNumber || '—' }
+        ]
+      },
+      {
+        title: 'Compliance',
+        rows: [
+          { label: 'Criminal record check date', value: v.criminalRecordDate ? formatDateOnly(v.criminalRecordDate) : '—' },
+          { label: 'DBS Number', value: v.dbsNumber || '—' },
+          { label: 'DVLA check date', value: v.dvlaCheckDate ? formatDateOnly(v.dvlaCheckDate) : '—' },
+          { label: 'Visa validity', value: v.visaValidity ? formatDateOnly(v.visaValidity) : '—' },
+          { label: 'Licence expiring date', value: v.licenceExpiringDate ? formatDateOnly(v.licenceExpiringDate) : '—' },
+          { label: 'Passport expiring date', value: v.passportExpiringDate ? formatDateOnly(v.passportExpiringDate) : '—' }
+        ]
+      }
+    ];
+
+    var gridHtml = sections.map(function (sec) {
+      return '<section class="driver-detail-section"><h3 class="driver-detail-section-title">' + escapeHtml(sec.title) + '</h3>' +
+        sec.rows.map(function (r) {
+          return '<div class="driver-detail-row"><span class="driver-detail-row-label">' + escapeHtml(r.label) + '</span><span class="driver-detail-row-value">' + escapeHtml(r.value) + '</span></div>';
+        }).join('') + '</section>';
+    }).join('');
+
+    var gridEl = document.getElementById('driverDetailGrid');
+    if (gridEl) gridEl.innerHTML = gridHtml;
+
+    var qrText = 'Courier ID: ' + courierId + '\nRoute: ' + route;
+    var qrEl = document.getElementById('driverDetailQr');
+    if (qrEl) {
+      qrEl.innerHTML = '';
+      if (typeof QRCode !== 'undefined') {
+        try {
+          new QRCode(qrEl, { text: qrText, width: 180, height: 180 });
+        } catch (err) {
+          qrEl.textContent = 'QR unavailable';
+        }
+      } else {
+        qrEl.textContent = 'QR library not loaded';
+      }
+    }
+
+    document.getElementById('driverDetailModalBackdrop').classList.remove('hidden');
+    document.getElementById('driverDetailModalWrap').classList.remove('hidden');
+  }
+
+  function closeDriverDetailModal() {
+    document.getElementById('driverDetailModalBackdrop').classList.add('hidden');
+    document.getElementById('driverDetailModalWrap').classList.add('hidden');
   }
 
   function showVendorModalStep(step) {
@@ -385,12 +553,15 @@
 
     document.getElementById('vFirstName').value = v.firstName || '';
     document.getElementById('vLastName').value = v.lastName || '';
+    var courierIdEl = document.getElementById('vCourierId');
+    if (courierIdEl) courierIdEl.value = v.courierId || computeCourierId(v.firstName || '', v.lastName || '');
     document.getElementById('vEmail').value = v.email || '';
     document.getElementById('vPhone').value = v.phone || '';
     document.getElementById('vDob').value = v.dob || '';
     document.getElementById('vDepot').value = v.depot || '';
     document.getElementById('vVendorType').value = (v.vendorType || '1').toString();
-    document.getElementById('vPaymentModel').value = (v.paymentModel || '1').toString();
+    fillRouteSelect();
+    document.getElementById('vRoute').value = v.route || '';
     document.getElementById('vStartDate').value = v.startDate || '';
     document.getElementById('vFinishDate').value = v.finishDate || '';
     document.getElementById('vCargoDate').value = v.cargoTrainingDate || '';
@@ -441,16 +612,31 @@
     }).join('');
   }
 
+  function fillRouteSelect() {
+    var routeSel = document.getElementById('vRoute');
+    if (!routeSel) return;
+    var routes = getRoutesForSp();
+    var base = '<option value="">— Select route —</option>';
+    routeSel.innerHTML = base + routes.map(function (r) {
+      return '<option value="' + escapeHtml(r) + '">' + escapeHtml(r) + '</option>';
+    }).join('');
+  }
+
   function collectFormData() {
+    var first = document.getElementById('vFirstName').value.trim();
+    var last = document.getElementById('vLastName').value.trim();
+    var courierIdEl = document.getElementById('vCourierId');
+    var courierId = (courierIdEl && courierIdEl.value) ? courierIdEl.value.trim() : computeCourierId(first, last);
     return {
-      firstName: document.getElementById('vFirstName').value.trim(),
-      lastName: document.getElementById('vLastName').value.trim(),
+      firstName: first,
+      lastName: last,
+      courierId: courierId || computeCourierId(first, last),
       email: document.getElementById('vEmail').value.trim(),
       phone: document.getElementById('vPhone').value.trim(),
       dob: document.getElementById('vDob').value || null,
       depot: document.getElementById('vDepot').value,
       vendorType: document.getElementById('vVendorType').value,
-      paymentModel: document.getElementById('vPaymentModel').value,
+      route: document.getElementById('vRoute').value || null,
       startDate: document.getElementById('vStartDate').value,
       finishDate: document.getElementById('vFinishDate').value || null,
       cargoTrainingDate: document.getElementById('vCargoDate').value || null,
@@ -477,10 +663,20 @@
     var logoMap = { 'BA Express': 'ba-express-logo.png', 'Premier Logistics Ltd': 'premier-logistics-logo.png', 'Swift Haul Solutions': 'swift-haul-logo.png', 'Metro Freight Partners': 'metro-freight-logo.png', 'Atlas Transport Services': 'atlas-transport-logo.png' };
     document.getElementById('spHeaderName').textContent = spName;
     var avatar = document.getElementById('spHeaderAvatar');
-    if (avatar && logoMap[spName]) {
-      avatar.src = '../assets/' + logoMap[spName];
-      avatar.alt = spName;
-      avatar.style.display = 'block';
+    if (avatar) {
+      var fallback = document.getElementById('spHeaderAvatarFallback');
+      var showFallback = function (txt) {
+        if (fallback) { fallback.textContent = (txt || spName || '').split(' ').map(function (w) { return w[0]; }).join('').slice(0, 2).toUpperCase(); fallback.style.display = 'flex'; }
+        if (avatar) avatar.style.display = 'none';
+      };
+      if (logoMap[spName]) {
+        avatar.onerror = function () { showFallback(spName); };
+        avatar.src = '../../assets/' + logoMap[spName];
+        avatar.alt = spName;
+        avatar.style.display = 'block';
+      } else {
+        showFallback(spName);
+      }
     }
 
     fillDepotSelect();
@@ -488,7 +684,7 @@
     renderTable();
     initSort();
 
-    document.getElementById('vendorSearch').addEventListener('input', function () { updateMetrics(); renderTable(); });
+    document.getElementById('vendorSearch').addEventListener('input', debounce(function () { updateMetrics(); renderTable(); }, SEARCH_DEBOUNCE_MS));
 
     document.querySelectorAll('.vendor-filters-status-btn').forEach(function (btn) {
       btn.addEventListener('click', function () {
@@ -515,10 +711,15 @@
       document.getElementById('vendorModalTitle').textContent = 'New vendor';
       document.getElementById('vendorForm').reset();
       fillDepotSelect();
+      fillRouteSelect();
+      updateCourierIdFromName();
       showVendorModalStep('personal');
       var modalEl = document.getElementById('vendorModal');
       if (modalEl) bootstrap.Modal.getOrCreateInstance(modalEl).show();
     });
+
+    document.getElementById('vFirstName').addEventListener('input', updateCourierIdFromName);
+    document.getElementById('vLastName').addEventListener('input', updateCourierIdFromName);
 
     document.getElementById('vendorForm').addEventListener('submit', function (e) {
       e.preventDefault();
@@ -561,16 +762,29 @@
       renderTable();
     });
 
+    document.getElementById('driverDetailModalClose').addEventListener('click', closeDriverDetailModal);
+    document.getElementById('driverDetailModalBackdrop').addEventListener('click', closeDriverDetailModal);
+    document.getElementById('driverDetailModalWrap').addEventListener('click', function (e) {
+      if (e.target === document.getElementById('driverDetailModalWrap')) closeDriverDetailModal();
+    });
+    var driverDetailDialog = document.querySelector('.driver-detail-modal');
+    if (driverDetailDialog) driverDetailDialog.addEventListener('click', function (e) { e.stopPropagation(); });
+    document.addEventListener('keydown', function driverDetailKeydown(e) {
+      if (e.key === 'Escape' && !document.getElementById('driverDetailModalWrap').classList.contains('hidden')) {
+        closeDriverDetailModal();
+      }
+    });
+
     document.getElementById('vendorExportExcel').addEventListener('click', function (e) {
       e.preventDefault();
       var list = filterAndSortVendors();
-      var headers = ['Name', 'Email', 'Vendor Type', 'Payment Model', 'Status', 'Start Date'];
+      var headers = ['Name', 'Email', 'Vendor Type', 'Route', 'Status', 'Start Date'];
       var rows = list.map(function (v) {
         return [
           (v.firstName || '') + ' ' + (v.lastName || ''),
           v.email || '',
           vendorTypeLabel(v),
-          paymentModelLabel(v),
+          v.route || '',
           v.status || 'Active',
           v.startDate || ''
         ].map(function (cell) { return '"' + String(cell).replace(/"/g, '""') + '"'; }).join(',');

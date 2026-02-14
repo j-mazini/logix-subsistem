@@ -1,8 +1,22 @@
 /* Dashboard DHL Subsystem – Homepage com animações e layout harmonioso */
+/* Otimizado para performance máxima com GPU acceleration */
+
+/* Performance: otimização global de renderização */
+.dashboard-main * {
+  box-sizing: border-box;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .dashboard-main {
+    scroll-behavior: smooth;
+  }
+}
 
 /* Preencher mais a tela: largura total e altura */
 .sidebar-inset:has(.dashboard-main) {
   min-height: 100vh;
+  /* Performance: isolamento de conteúdo */
+  contain: layout style;
 }
 
 .page-container:has(.dashboard-main) {
@@ -23,6 +37,12 @@
   min-width: 0;
   max-width: 100%;
   overflow-x: hidden;
+  /* Performance: isolamento de layout e renderização */
+  contain: layout style;
+  will-change: contents;
+  /* Scroll otimizado */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 
 @media (min-width: 768px) {
@@ -47,6 +67,10 @@
   padding: 1.25rem 1.5rem;
   margin-bottom: 1.25rem;
   box-shadow: 0 4px 24px -4px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(255,255,255,0.5) inset;
+  /* Performance: animação GPU-accelerated */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  contain: layout style paint;
   animation: dashboardSlideDown 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
@@ -433,6 +457,10 @@
   border: 1px solid rgba(255,255,255,0.8);
   box-shadow: 0 4px 24px -4px rgba(15, 23, 42, 0.06), 0 0 0 1px rgba(0,0,0,0.04);
   overflow: hidden;
+  /* Performance: isolamento de conteúdo e GPU acceleration */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  contain: layout style paint;
 }
 
 .dashboard-block-header {
@@ -488,6 +516,9 @@
   grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
   gap: 0.5rem;
   width: 100%;
+  /* Performance: isolamento de layout */
+  contain: layout style;
+  will-change: contents;
 }
 
 .dashboard-kpi-card {

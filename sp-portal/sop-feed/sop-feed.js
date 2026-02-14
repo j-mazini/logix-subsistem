@@ -1,7 +1,16 @@
     (function () {
       'use strict';
       var SP_STORAGE_KEY = 'dhl_sp_portal_current_sp';
+      var SEARCH_DEBOUNCE_MS = 200;
       var ASSET = function (path) { return path ? path.replace(/^assets\//, '../assets/') : ''; };
+      function debounce(fn, ms) {
+        var t;
+        return function () {
+          var self = this, args = arguments;
+          if (t) clearTimeout(t);
+          t = setTimeout(function () { fn.apply(self, args); }, ms);
+        };
+      }
       function getCurrentSp() {
         var params = new URLSearchParams(window.location.search);
         var sp = (params.get('sp') || '').trim();
@@ -122,12 +131,26 @@
         document.getElementById('spHeaderName').textContent = spName;
         var logoMap = { 'BA Express': 'ba-express-logo.png', 'Premier Logistics Ltd': 'premier-logistics-logo.png', 'Swift Haul Solutions': 'swift-haul-logo.png', 'Metro Freight Partners': 'metro-freight-logo.png', 'Atlas Transport Services': 'atlas-transport-logo.png' };
         var avatar = document.getElementById('spHeaderAvatar');
-        if (avatar && logoMap[spName]) { avatar.src = '../assets/' + logoMap[spName]; avatar.alt = spName; avatar.style.display = 'block'; }
+        if (avatar) {
+          var fallback = document.getElementById('spHeaderAvatarFallback');
+          var showFallback = function (txt) {
+            if (fallback) { fallback.textContent = (txt || spName || '').split(' ').map(function (w) { return w[0]; }).join('').slice(0, 2).toUpperCase(); fallback.style.display = 'flex'; }
+            if (avatar) avatar.style.display = 'none';
+          };
+          if (logoMap[spName]) {
+            avatar.onerror = function () { showFallback(spName); };
+            avatar.src = '../../assets/' + logoMap[spName];
+            avatar.alt = spName;
+            avatar.style.display = 'block';
+          } else {
+            showFallback(spName);
+          }
+        }
       }
       appendSpToLinks();
       render();
 
-      document.getElementById('sopSearch').addEventListener('input', function () { render(this.value); });
+      document.getElementById('sopSearch').addEventListener('input', debounce(function () { render(this.value); }, SEARCH_DEBOUNCE_MS));
 
       document.getElementById('sopFeed').addEventListener('click', function (e) {
         var post = e.target.closest('.sop-post--preview');

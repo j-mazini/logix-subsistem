@@ -1,19 +1,21 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-GB">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Vehicles – Service Provider Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../../vendor-admin-view.css" />
   <link rel="stylesheet" href="../../sidebar-beam.css" />
   <link rel="stylesheet" href="../sp-portal.css" />
-  <link rel="stylesheet" href="../vehicles-page.css" />
+  <link rel="stylesheet" href="vehicles.css" />
   <link rel="stylesheet" href="../../liquid-glass.css" />
   <link rel="stylesheet" href="../../modern-ui.css" />
-  <script src="../sp-portal-responsive.js"></script>
+  <script src="../sp-portal-responsive.js" defer></script>
 </head>
 <body class="has-beam-sidebar sp-portal">
   <div class="sidebar-wrapper" id="sidebarWrapper">
@@ -58,6 +60,7 @@
                     </div>
                   </div>
                   <div class="d-flex align-items-center">
+                    <span id="spHeaderAvatarFallback" class="admin-header-user-avatar admin-header-user-avatar-fallback me-2" style="display:none;"></span>
                     <img id="spHeaderAvatar" src="" alt="" class="admin-header-user-avatar admin-header-user-avatar--img me-2" style="display:none;" />
                     <span class="admin-header-user-name" id="spHeaderName">—</span>
                   </div>
@@ -273,9 +276,31 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="../../dhl-mock-data.js"></script>
-  <script src="../../beam-sidebar.js"></script>
-  <script src="../vehicles-vendor.js"></script>
+  <!-- Vehicle Detail Modal – liquid glass: todas as informações + QR Code (Registration Plate + Vehicle ID) -->
+  <div id="vehicleDetailModalBackdrop" class="vehicle-detail-modal-backdrop hidden" aria-hidden="true"></div>
+  <div id="vehicleDetailModalWrap" class="vehicle-detail-modal-wrap hidden" role="dialog" aria-modal="true" aria-labelledby="vehicleDetailModalTitle">
+    <div class="vehicle-detail-modal liquid-glass-modal">
+      <div class="vehicle-detail-modal-header">
+        <div class="vehicle-detail-modal-header-inner">
+          <span class="vehicle-detail-modal-badge">Vehicle</span>
+          <h2 id="vehicleDetailModalTitle" class="vehicle-detail-modal-title">—</h2>
+        </div>
+        <button type="button" class="vehicle-detail-modal-close" id="vehicleDetailModalClose" aria-label="Fechar"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="vehicle-detail-modal-body" id="vehicleDetailModalBody">
+        <div class="vehicle-detail-qr-wrap">
+          <p class="vehicle-detail-qr-label">QR Code</p>
+          <div id="vehicleDetailQr" class="vehicle-detail-qr-box" aria-hidden="false"></div>
+        </div>
+        <div class="vehicle-detail-grid" id="vehicleDetailGrid"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+  <script src="../../dhl-mock-data.js" defer></script>
+  <script src="../../beam-sidebar.js" defer></script>
+  <script src="vehicles.js" defer></script>
 </body>
 </html>

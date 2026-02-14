@@ -6,6 +6,16 @@
   'use strict';
 
   var SP_STORAGE_KEY = 'dhl_sp_portal_current_sp';
+  var SEARCH_DEBOUNCE_MS = 200;
+
+  function debounce(fn, ms) {
+    var t;
+    return function () {
+      var self = this, args = arguments;
+      if (t) clearTimeout(t);
+      t = setTimeout(function () { fn.apply(self, args); }, ms);
+    };
+  }
 
   function getCurrentSp() {
     var params = new URLSearchParams(window.location.search);
@@ -205,10 +215,19 @@
     }).join('');
 
     tbody.querySelectorAll('.vehicles-action-btn[data-action="edit"]').forEach(function (btn) {
-      btn.addEventListener('click', function () { openEditModal(parseInt(btn.getAttribute('data-vehicle-id'), 10)); });
+      btn.addEventListener('click', function (e) { e.stopPropagation(); openEditModal(parseInt(btn.getAttribute('data-vehicle-id'), 10)); });
     });
     tbody.querySelectorAll('.vehicles-action-btn[data-action="delete"]').forEach(function (btn) {
-      btn.addEventListener('click', function () { openDeleteModal(parseInt(btn.getAttribute('data-vehicle-id'), 10)); });
+      btn.addEventListener('click', function (e) { e.stopPropagation(); openDeleteModal(parseInt(btn.getAttribute('data-vehicle-id'), 10)); });
+    });
+    tbody.querySelectorAll('tr[data-vehicle-id]').forEach(function (row) {
+      row.style.cursor = 'pointer';
+      row.setAttribute('role', 'button');
+      row.setAttribute('tabindex', '0');
+      row.addEventListener('click', function (e) {
+        if (e.target.closest('.vehicles-action-btn')) return;
+        openVehicleDetailModal(parseInt(row.getAttribute('data-vehicle-id'), 10));
+      });
     });
 
     updateSortHeaders();
@@ -273,6 +292,81 @@
     if (modalEl) bootstrap.Modal.getOrCreateInstance(modalEl).show();
   }
 
+  function openVehicleDetailModal(vehicleId) {
+    var all = getAllVehiclesForSp();
+    var v = all.filter(function (x) { return x.id === vehicleId; })[0];
+    if (!v) return;
+
+    var title = (v.brand || '') + ' ' + (v.model || '').trim() || (v.vrn || '—');
+    var vrn = v.vrn || '—';
+    var vehicleIdStr = String(v.id);
+
+    document.getElementById('vehicleDetailModalTitle').textContent = title.trim() || vrn;
+
+    var sections = [
+      {
+        title: 'General',
+        rows: [
+          { label: 'Vehicle ID', value: vehicleIdStr },
+          { label: 'Registration Plate', value: vrn },
+          { label: 'VIN', value: v.vin || '—' },
+          { label: 'Brand', value: v.brand || '—' },
+          { label: 'Model', value: v.model || '—' },
+          { label: 'Color', value: v.color || '—' },
+          { label: 'Registration Date', value: formatDateDisplay(v.registrationDate) },
+          { label: 'Fuel Type', value: v.fuelType || '—' },
+          { label: 'Vehicle Type', value: v.vehicleType || '—' },
+          { label: 'Depot', value: v.depot || '—' },
+          { label: 'Status', value: v.status || 'Active' }
+        ]
+      },
+      {
+        title: 'Technical',
+        rows: [
+          { label: 'Wrapped', value: v.wrappedVehicle ? 'Yes' : 'No' },
+          { label: 'Slam Lock', value: v.slamLock ? 'Yes' : 'No' },
+          { label: 'Camera', value: v.camera ? 'Yes' : 'No' },
+          { label: 'GPS', value: v.gps ? 'Yes' : 'No' },
+          { label: 'Bulkhead', value: v.bulkhead ? 'Yes' : 'No' },
+          { label: '270° Doors', value: v.doors270 ? 'Yes' : 'No' }
+        ]
+      }
+    ];
+
+    var gridHtml = sections.map(function (sec) {
+      return '<section class="vehicle-detail-section"><h3 class="vehicle-detail-section-title">' + escapeHtml(sec.title) + '</h3>' +
+        sec.rows.map(function (r) {
+          return '<div class="vehicle-detail-row"><span class="vehicle-detail-row-label">' + escapeHtml(r.label) + '</span><span class="vehicle-detail-row-value">' + escapeHtml(r.value) + '</span></div>';
+        }).join('') + '</section>';
+    }).join('');
+
+    var gridEl = document.getElementById('vehicleDetailGrid');
+    if (gridEl) gridEl.innerHTML = gridHtml;
+
+    var qrText = 'Registration Plate: ' + vrn + '\nVehicle ID: ' + vehicleIdStr;
+    var qrEl = document.getElementById('vehicleDetailQr');
+    if (qrEl) {
+      qrEl.innerHTML = '';
+      if (typeof QRCode !== 'undefined') {
+        try {
+          new QRCode(qrEl, { text: qrText, width: 180, height: 180 });
+        } catch (err) {
+          qrEl.textContent = 'QR unavailable';
+        }
+      } else {
+        qrEl.textContent = 'QR library not loaded';
+      }
+    }
+
+    document.getElementById('vehicleDetailModalBackdrop').classList.remove('hidden');
+    document.getElementById('vehicleDetailModalWrap').classList.remove('hidden');
+  }
+
+  function closeVehicleDetailModal() {
+    document.getElementById('vehicleDetailModalBackdrop').classList.add('hidden');
+    document.getElementById('vehicleDetailModalWrap').classList.add('hidden');
+  }
+
   function collectFormData() {
     return {
       vrn: document.getElementById('vrn').value.trim(),
@@ -315,10 +409,20 @@
     var logoMap = { 'BA Express': 'ba-express-logo.png', 'Premier Logistics Ltd': 'premier-logistics-logo.png', 'Swift Haul Solutions': 'swift-haul-logo.png', 'Metro Freight Partners': 'metro-freight-logo.png', 'Atlas Transport Services': 'atlas-transport-logo.png' };
     document.getElementById('spHeaderName').textContent = spName;
     var avatar = document.getElementById('spHeaderAvatar');
-    if (avatar && logoMap[spName]) {
-      avatar.src = '../assets/' + logoMap[spName];
-      avatar.alt = spName;
-      avatar.style.display = 'block';
+    if (avatar) {
+      var fallback = document.getElementById('spHeaderAvatarFallback');
+      var showFallback = function (txt) {
+        if (fallback) { fallback.textContent = (txt || spName || '').split(' ').map(function (w) { return w[0]; }).join('').slice(0, 2).toUpperCase(); fallback.style.display = 'flex'; }
+        if (avatar) avatar.style.display = 'none';
+      };
+      if (logoMap[spName]) {
+        avatar.onerror = function () { showFallback(spName); };
+        avatar.src = '../../assets/' + logoMap[spName];
+        avatar.alt = spName;
+        avatar.style.display = 'block';
+      } else {
+        showFallback(spName);
+      }
     }
 
     fillDepotSelect();
@@ -326,7 +430,7 @@
     renderTable();
     initSort();
 
-    document.getElementById('vehicleSearch').addEventListener('input', function () { updateMetrics(); renderTable(); });
+    document.getElementById('vehicleSearch').addEventListener('input', debounce(function () { updateMetrics(); renderTable(); }, SEARCH_DEBOUNCE_MS));
     document.getElementById('vehicleStatusFilter').addEventListener('change', function () { updateMetrics(); renderTable(); });
     document.getElementById('vehicleFuelFilter').addEventListener('change', function () { updateMetrics(); renderTable(); });
 
@@ -400,6 +504,19 @@
     document.getElementById('vehicleExportPdf').addEventListener('click', function (e) {
       e.preventDefault();
       window.print();
+    });
+
+    document.getElementById('vehicleDetailModalClose').addEventListener('click', closeVehicleDetailModal);
+    document.getElementById('vehicleDetailModalBackdrop').addEventListener('click', closeVehicleDetailModal);
+    document.getElementById('vehicleDetailModalWrap').addEventListener('click', function (e) {
+      if (e.target === document.getElementById('vehicleDetailModalWrap')) closeVehicleDetailModal();
+    });
+    var vehicleDetailDialog = document.querySelector('.vehicle-detail-modal');
+    if (vehicleDetailDialog) vehicleDetailDialog.addEventListener('click', function (e) { e.stopPropagation(); });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && !document.getElementById('vehicleDetailModalWrap').classList.contains('hidden')) {
+        closeVehicleDetailModal();
+      }
     });
   }
 

@@ -1,19 +1,21 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-GB">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Vendors – Service Provider Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../../vendor-admin-view.css" />
   <link rel="stylesheet" href="../../sidebar-beam.css" />
   <link rel="stylesheet" href="../sp-portal.css" />
-  <link rel="stylesheet" href="../vendor-page.css" />
+  <link rel="stylesheet" href="drivers.css" />
   <link rel="stylesheet" href="../../liquid-glass.css" />
   <link rel="stylesheet" href="../../modern-ui.css" />
-  <script src="../sp-portal-responsive.js"></script>
+  <script src="../sp-portal-responsive.js" defer></script>
 </head>
 <body class="has-beam-sidebar sp-portal">
   <div class="sidebar-wrapper" id="sidebarWrapper">
@@ -59,6 +61,7 @@
                       </div>
                     </div>
                     <div class="vendor-page-header-user">
+                      <span id="spHeaderAvatarFallback" class="admin-header-user-avatar admin-header-user-avatar-fallback" style="display:none;"></span>
                       <img id="spHeaderAvatar" src="" alt="" class="admin-header-user-avatar admin-header-user-avatar--img" style="display:none;" />
                       <span class="admin-header-user-name" id="spHeaderName">—</span>
                     </div>
@@ -102,7 +105,7 @@
                     <tr>
                       <th class="vendor-th vendor-th-sort vendor-th-left" data-sort="name">Name</th>
                       <th class="vendor-th vendor-th-sort" data-sort="vendorType">Vendor Type</th>
-                      <th class="vendor-th vendor-th-sort" data-sort="paymentModel">Payment Model</th>
+                      <th class="vendor-th vendor-th-sort" data-sort="route">Route</th>
                       <th class="vendor-th vendor-th-sort" data-sort="status">Status</th>
                       <th class="vendor-th vendor-th-sort" data-sort="startDate">Start Date</th>
                       <th class="vendor-th vendor-th-sort" data-sort="training">Training</th>
@@ -121,50 +124,42 @@
     </div>
   </div>
 
-  <!-- VendorModal: 6-step stepper (Personal, Address, Contract, Cost Model, Training, Compliance) -->
-  <div id="vendorModal" class="modal fade" tabindex="-1" aria-labelledby="vendorModalTitle" aria-hidden="true">
+  <!-- VendorModal: 4-step stepper (Personal, Contract, Training, Compliance) – Liquid Glass -->
+  <div id="vendorModal" class="modal fade vendor-modal-liquid-glass" tabindex="-1" aria-labelledby="vendorModalTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header border-0 pb-0">
+      <div class="modal-content vendor-modal-content-lg">
+        <div class="modal-header vendor-modal-header-lg border-0 pb-0">
           <h2 id="vendorModalTitle" class="modal-title">New vendor</h2>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          <button type="button" class="btn-close vendor-modal-close-lg" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <div class="modal-body pt-0">
-          <div class="vendor-modal-stepper" id="vendorModalStepper">
+        <div class="modal-body vendor-modal-body-lg pt-0">
+          <div class="vendor-modal-stepper vendor-modal-stepper-lg" id="vendorModalStepper">
             <button type="button" class="vendor-modal-step active" data-step="personal"><i class="bi bi-person"></i> Personal</button>
-            <button type="button" class="vendor-modal-step" data-step="address"><i class="bi bi-geo-alt"></i> Address</button>
             <button type="button" class="vendor-modal-step" data-step="employment"><i class="bi bi-briefcase"></i> Contract</button>
-            <button type="button" class="vendor-modal-step" data-step="cost"><i class="bi bi-calculator"></i> Cost Model</button>
             <button type="button" class="vendor-modal-step" data-step="training"><i class="bi bi-book"></i> Training</button>
             <button type="button" class="vendor-modal-step" data-step="compliance"><i class="bi bi-shield-check"></i> Compliance</button>
           </div>
-          <form id="vendorForm">
-            <div id="vendorStepPersonal" class="vendor-modal-pane">
-              <!-- first step visible by default -->
+          <form id="vendorForm" class="vendor-form-lg">
+            <div id="vendorStepPersonal" class="vendor-modal-pane vendor-modal-pane-lg">
               <div class="row g-3">
                 <div class="col-md-6"><label for="vFirstName" class="form-label">First name</label><input type="text" id="vFirstName" class="form-control" required /></div>
                 <div class="col-md-6"><label for="vLastName" class="form-label">Last name</label><input type="text" id="vLastName" class="form-control" required /></div>
+                <div class="col-md-6"><label for="vCourierId" class="form-label">Courier ID</label><input type="text" id="vCourierId" class="form-control" readonly maxlength="8" placeholder="Auto (7 primeiros do nome + iniciais do apelido)" /></div>
                 <div class="col-md-6"><label for="vEmail" class="form-label">Email</label><input type="email" id="vEmail" class="form-control" required /></div>
                 <div class="col-md-6"><label for="vPhone" class="form-label">Phone</label><input type="text" id="vPhone" class="form-control" /></div>
                 <div class="col-md-6"><label for="vDob" class="form-label">Date of birth</label><input type="date" id="vDob" class="form-control" /></div>
               </div>
             </div>
-            <div id="vendorStepAddress" class="vendor-modal-pane hidden">
-              <p class="text-muted small">Address details can be managed by your administrator.</p>
-            </div>
-            <div id="vendorStepEmployment" class="vendor-modal-pane hidden">
+            <div id="vendorStepEmployment" class="vendor-modal-pane vendor-modal-pane-lg hidden">
               <div class="row g-3">
                 <div class="col-md-6"><label for="vDepot" class="form-label">Depot</label><select id="vDepot" class="form-select" required></select></div>
                 <div class="col-md-6"><label for="vVendorType" class="form-label">Vendor Type</label><select id="vVendorType" class="form-select"><option value="1">Driver</option><option value="2">Subcontractor</option></select></div>
-                <div class="col-md-6"><label for="vPaymentModel" class="form-label">Payment Model</label><select id="vPaymentModel" class="form-select"><option value="1">Per Stop</option><option value="2">Day Rate</option></select></div>
+                <div class="col-md-6"><label for="vRoute" class="form-label">Route</label><select id="vRoute" class="form-select"><option value="">— Select route —</option></select></div>
                 <div class="col-md-6"><label for="vStartDate" class="form-label">Start date</label><input type="date" id="vStartDate" class="form-control" required /></div>
                 <div class="col-md-6"><label for="vFinishDate" class="form-label">Finish date</label><input type="date" id="vFinishDate" class="form-control" /></div>
               </div>
             </div>
-            <div id="vendorStepCost" class="vendor-modal-pane hidden">
-              <p class="text-muted small">Cost model is managed by DHL. Contact your administrator for changes.</p>
-            </div>
-            <div id="vendorStepTraining" class="vendor-modal-pane hidden">
+            <div id="vendorStepTraining" class="vendor-modal-pane vendor-modal-pane-lg hidden">
               <div class="row g-3">
                 <div class="col-md-6"><label for="vCargoDate" class="form-label">Cargo training date</label><input type="date" id="vCargoDate" class="form-control" /></div>
                 <div class="col-md-6"><label for="vDangerousDate" class="form-label">Dangerous goods training date</label><input type="date" id="vDangerousDate" class="form-control" /></div>
@@ -172,7 +167,7 @@
                 <div class="col-md-6"><label for="vDhlTrainingNumber" class="form-label">DHL Training Number</label><input type="text" id="vDhlTrainingNumber" class="form-control" /></div>
               </div>
             </div>
-            <div id="vendorStepCompliance" class="vendor-modal-pane hidden">
+            <div id="vendorStepCompliance" class="vendor-modal-pane vendor-modal-pane-lg hidden">
               <div class="row g-3">
                 <div class="col-md-6"><label for="vCriminalRecordDate" class="form-label">Criminal record check date</label><input type="date" id="vCriminalRecordDate" class="form-control" /></div>
                 <div class="col-md-6"><label for="vDbsNumber" class="form-label">DBS Number</label><input type="text" id="vDbsNumber" class="form-control" /></div>
@@ -182,10 +177,10 @@
                 <div class="col-md-6"><label for="vPassportExpiring" class="form-label">Passport expiring date</label><input type="date" id="vPassportExpiring" class="form-control" /></div>
               </div>
             </div>
-            <div class="vendor-modal-footer mt-3 pt-3 border-top">
-              <button type="button" class="btn btn-outline-secondary" id="vendorModalPrev">Previous</button>
-              <button type="button" class="btn btn-outline-primary" id="vendorModalNext">Next</button>
-              <button type="submit" class="btn btn-primary hidden" id="vendorFormSubmit">Save</button>
+            <div class="vendor-modal-footer vendor-modal-footer-lg mt-3 pt-3 border-top">
+              <button type="button" class="btn btn-outline-secondary vendor-modal-btn-lg" id="vendorModalPrev">Previous</button>
+              <button type="button" class="btn btn-outline-primary vendor-modal-btn-lg" id="vendorModalNext">Next</button>
+              <button type="submit" class="btn btn-primary vendor-modal-btn-primary-lg hidden" id="vendorFormSubmit">Save</button>
             </div>
           </form>
         </div>
@@ -245,9 +240,31 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="../../dhl-mock-data.js"></script>
-  <script src="../../beam-sidebar.js"></script>
-  <script src="../drivers-vendor.js"></script>
+  <!-- Driver Detail Modal – liquid glass: todas as informações + QR Code (Courier ID + Route) -->
+  <div id="driverDetailModalBackdrop" class="driver-detail-modal-backdrop hidden" aria-hidden="true"></div>
+  <div id="driverDetailModalWrap" class="driver-detail-modal-wrap hidden" role="dialog" aria-modal="true" aria-labelledby="driverDetailModalTitle">
+    <div class="driver-detail-modal liquid-glass-modal">
+      <div class="driver-detail-modal-header">
+        <div class="driver-detail-modal-header-inner">
+          <span class="driver-detail-modal-badge">Driver</span>
+          <h2 id="driverDetailModalTitle" class="driver-detail-modal-title">—</h2>
+        </div>
+        <button type="button" class="driver-detail-modal-close" id="driverDetailModalClose" aria-label="Fechar"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="driver-detail-modal-body" id="driverDetailModalBody">
+        <div class="driver-detail-qr-wrap">
+          <p class="driver-detail-qr-label">QR Code</p>
+          <div id="driverDetailQr" class="driver-detail-qr-box" aria-hidden="false"></div>
+        </div>
+        <div class="driver-detail-grid" id="driverDetailGrid"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+  <script src="../../dhl-mock-data.js" defer></script>
+  <script src="../../beam-sidebar.js" defer></script>
+  <script src="drivers.js" defer></script>
 </body>
 </html>

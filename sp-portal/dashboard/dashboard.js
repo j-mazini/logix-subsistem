@@ -333,7 +333,21 @@
         document.getElementById('spHeaderPill').setAttribute('title', spName);
         var logoMap = { 'BA Express': 'ba-express-logo.png', 'Premier Logistics Ltd': 'premier-logistics-logo.png', 'Swift Haul Solutions': 'swift-haul-logo.png', 'Metro Freight Partners': 'metro-freight-logo.png', 'Atlas Transport Services': 'atlas-transport-logo.png' };
         var avatar = document.getElementById('spHeaderAvatar');
-        if (avatar && logoMap[spName]) { avatar.src = '../assets/' + logoMap[spName]; avatar.alt = spName; avatar.style.display = 'block'; }
+        if (avatar) {
+          var fallback = document.getElementById('spHeaderAvatarFallback');
+          var showFallback = function (txt) {
+            if (fallback) { fallback.textContent = (txt || spName || '').split(' ').map(function (w) { return w[0]; }).join('').slice(0, 2).toUpperCase(); fallback.style.display = 'flex'; }
+            if (avatar) avatar.style.display = 'none';
+          };
+          if (logoMap[spName]) {
+            avatar.onerror = function () { showFallback(spName); };
+            avatar.src = '../../assets/' + logoMap[spName];
+            avatar.alt = spName;
+            avatar.style.display = 'block';
+          } else {
+            showFallback(spName);
+          }
+        }
         appendSpToLinks();
       }
 
@@ -1267,7 +1281,7 @@
             var displayVal = twValForRoute <= 1 ? (Math.round(twValForRoute * 1000) / 10) : (Math.round(twValForRoute * 10) / 10);
             twByRouteHtml = '<div class="opms-tw-by-route-wrap"><h4 class="opms-tw-by-route-title"><i class="bi bi-clock-history"></i> Time Window – ' + escapeHtml(routeFilter) + '</h4>' +
               '<div class="opms-tw-by-route-table-wrap"><table class="opms-tw-by-route-table" aria-label="Time Window % da rota">' +
-              '<thead><tr><th>Rota</th><th>% TW Adh DL</th></tr></thead><tbody>' +
+              '<thead><tr><th>Route</th><th>% TW Adh DL</th></tr></thead><tbody>' +
               '<tr><td class="opms-tw-route-name">' + escapeHtml(routeFilter) + '</td><td class="opms-tw-route-value opms-tw-route-value--' + colorClass + '">' + displayVal + '%</td></tr>' +
               '</tbody></table></div></div>';
           }
@@ -1300,7 +1314,7 @@
           if (lastDayState.dates.length === 0) {
             var empty = document.createElement('div');
             empty.className = 'opms-date-dropdown-option';
-            empty.textContent = 'Nenhuma data disponível';
+            empty.textContent = 'No date available';
             empty.style.pointerEvents = 'none';
             empty.style.opacity = '0.7';
             dateDropdown.appendChild(empty);
@@ -1371,7 +1385,7 @@
           if (lastDayState.dates.length === 0) {
             var empty = document.createElement('div');
             empty.className = 'opms-date-dropdown-option';
-            empty.textContent = 'Nenhuma data disponível';
+            empty.textContent = 'No date available';
             empty.style.pointerEvents = 'none';
             empty.style.opacity = '0.7';
             spmsDropdown.appendChild(empty);
@@ -1829,9 +1843,32 @@
       }
 
       var dailyOpsFilteredList = [];
-      var dailyOpsIndex = 0;
-      var dailyOpsInterval = null;
-      var DAILY_OPS_AUTO_MS = 4500;
+      var dailyOpsPreviousCount = -1;
+      var dailyOpsAutoCloseTimer = null;
+      var DAILY_OPS_NEW_PEEK_MS = 5000;
+      var DAILY_OPS_CARD_STORAGE_KEY = 'dhl_sp_daily_ops_card';
+
+      function saveDailyOpsToCard() {
+        if (!spName || !dailyOpsFilteredList.length) return;
+        try {
+          var toSave = dailyOpsFilteredList.map(function (n) {
+            return { message: n.message, type: n.type, severity: n.severity || 'info', timeAgoMinutes: n.timeAgoMinutes, serviceProvider: n.serviceProvider, icon: n.icon };
+          });
+          var payload = { serviceProvider: spName, notifications: toSave, updatedAt: new Date().toISOString() };
+          localStorage.setItem(DAILY_OPS_CARD_STORAGE_KEY, JSON.stringify(payload));
+        } catch (e) {}
+      }
+
+      function loadDailyOpsFromCard() {
+        if (!spName) return null;
+        try {
+          var raw = localStorage.getItem(DAILY_OPS_CARD_STORAGE_KEY);
+          if (!raw) return null;
+          var payload = JSON.parse(raw);
+          if (!payload || payload.serviceProvider !== spName || !Array.isArray(payload.notifications) || !payload.notifications.length) return null;
+          return { notifications: payload.notifications };
+        } catch (e) { return null; }
+      }
 
       var NOTIFICATION_TYPE_ICONS = {
         delay: 'clock-history',
@@ -1854,147 +1891,132 @@
         return m <= 60 ? m + ' min ago' : Math.floor(m / 60) + ' h ago';
       }
 
-      function renderDailyOpsItem(n) {
+      function renderNotifSidebarItem(n) {
         var timeText = getDailyOpsTimeText(n);
         var icon = getIconForNotification(n);
-        return '<div class="sp-daily-ops-item sp-daily-ops-item--' + (n.severity || 'info') + '" role="listitem">' +
-          '<span class="sp-daily-ops-item-icon"><i class="bi bi-' + icon + '"></i></span>' +
-          '<div class="sp-daily-ops-item-body">' +
-          '<p class="sp-daily-ops-item-msg">' + escapeHtml(n.message) + '</p>' +
-          '<span class="sp-daily-ops-item-time">' + escapeHtml(timeText) + '</span>' +
+        var severity = n.severity || 'info';
+        return '<div class="sp-notif-item sp-notif-item--' + severity + '" role="listitem">' +
+          '<span class="sp-notif-item-icon"><i class="bi bi-' + icon + '"></i></span>' +
+          '<div class="sp-notif-item-body">' +
+          '<p class="sp-notif-item-msg">' + escapeHtml(n.message) + '</p>' +
+          '<span class="sp-notif-item-time">' + escapeHtml(timeText) + '</span>' +
           '</div></div>';
       }
 
-      function renderDailyOpsSlide() {
-        var slideEl = document.getElementById('dailyOpsSlide');
-        var dotsEl = document.getElementById('dailyOpsDots');
-        if (!slideEl || !dailyOpsFilteredList.length) return;
-        var n = dailyOpsFilteredList[dailyOpsIndex];
-        slideEl.innerHTML = renderDailyOpsItem(n);
-        slideEl.classList.remove('hidden');
-        if (dotsEl) {
-          dotsEl.innerHTML = dailyOpsFilteredList.map(function (_, i) {
-            return '<button type="button" class="sp-daily-ops-dot' + (i === dailyOpsIndex ? ' active' : '') + '" data-index="' + i + '" role="tab" aria-selected="' + (i === dailyOpsIndex) + '" aria-label="Notification ' + (i + 1) + ' of ' + dailyOpsFilteredList.length + '"></button>';
-          }).join('');
-        }
+      function openNotificationsSidebar() {
+        var sidebar = document.getElementById('spNotifSidebar');
+        if (!sidebar) return;
+        if (dailyOpsAutoCloseTimer) { clearTimeout(dailyOpsAutoCloseTimer); dailyOpsAutoCloseTimer = null; }
+        sidebar.classList.add('is-open');
+        sidebar.setAttribute('aria-hidden', 'false');
+        var tab = document.getElementById('spNotifTab');
+        if (tab) tab.setAttribute('aria-expanded', 'true');
+        document.body.style.overflow = 'hidden';
       }
 
-      function goToDailyOpsIndex(index) {
-        if (!dailyOpsFilteredList.length) return;
-        var newIndex = (index + dailyOpsFilteredList.length) % dailyOpsFilteredList.length;
-        var slideEl = document.getElementById('dailyOpsSlide');
-        if (!slideEl) return;
-        var direction = newIndex > dailyOpsIndex ? 1 : (newIndex < dailyOpsIndex ? -1 : 1);
-        if (slideEl.classList.contains('sp-daily-ops-slide--exit')) {
-          dailyOpsIndex = newIndex;
-          renderDailyOpsSlide();
-          startDailyOpsAutoAdvance();
+      function closeNotificationsSidebar() {
+        var sidebar = document.getElementById('spNotifSidebar');
+        if (!sidebar) return;
+        if (dailyOpsAutoCloseTimer) { clearTimeout(dailyOpsAutoCloseTimer); dailyOpsAutoCloseTimer = null; }
+        sidebar.classList.remove('is-open');
+        sidebar.setAttribute('aria-hidden', 'true');
+        var tab = document.getElementById('spNotifTab');
+        if (tab) tab.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+      }
+
+      function updateNotifSidebarContent() {
+        var listEl = document.getElementById('spNotifList');
+        var emptyEl = document.getElementById('spNotifEmpty');
+        var panel = document.querySelector('.sp-notif-sidebar-panel');
+        if (!listEl) return;
+        if (dailyOpsFilteredList.length === 0) {
+          listEl.innerHTML = '';
+          if (emptyEl) { emptyEl.classList.remove('hidden'); }
+          if (panel) {
+            var emptyTotalRem = 3.5 + 6;
+            panel.style.maxHeight = (emptyTotalRem * 16) + 'px';
+            panel.style.height = 'auto';
+          }
           return;
         }
-        slideEl.classList.add('sp-daily-ops-slide--exit', direction === 1 ? 'sp-daily-ops-slide--exit-next' : 'sp-daily-ops-slide--exit-prev');
-        setTimeout(function () {
-          dailyOpsIndex = newIndex;
-          renderDailyOpsSlide();
-          slideEl.classList.remove('sp-daily-ops-slide--exit', 'sp-daily-ops-slide--exit-next', 'sp-daily-ops-slide--exit-prev');
-          slideEl.classList.add('sp-daily-ops-slide--enter', direction === 1 ? 'sp-daily-ops-slide--enter-from-right' : 'sp-daily-ops-slide--enter-from-left');
-          requestAnimationFrame(function () {
-            requestAnimationFrame(function () {
-              slideEl.classList.add('sp-daily-ops-slide--enter-active');
-            });
-          });
-          setTimeout(function () {
-            slideEl.classList.remove('sp-daily-ops-slide--enter', 'sp-daily-ops-slide--enter-from-right', 'sp-daily-ops-slide--enter-from-left', 'sp-daily-ops-slide--enter-active');
-          }, 260);
-          startDailyOpsAutoAdvance();
-        }, 200);
+        listEl.innerHTML = dailyOpsFilteredList.map(function (n) { return renderNotifSidebarItem(n); }).join('');
+        if (emptyEl) emptyEl.classList.add('hidden');
+        if (panel) {
+          var count = dailyOpsFilteredList.length;
+          var headerRem = 3.5;
+          var itemRem = 4.25;
+          var emptyBodyRem = 5;
+          var contentRem = count * itemRem;
+          var totalRem = headerRem + contentRem;
+          var maxVhPx = window.innerHeight * 0.9;
+          var totalPx = Math.min(totalRem * 16, maxVhPx);
+          panel.style.maxHeight = totalPx + 'px';
+          panel.style.height = 'auto';
+        }
       }
 
-      function startDailyOpsAutoAdvance() {
-        stopDailyOpsAutoAdvance();
-        if (dailyOpsFilteredList.length <= 1) return;
-        dailyOpsInterval = setInterval(function () {
-          goToDailyOpsIndex(dailyOpsIndex + 1);
-        }, DAILY_OPS_AUTO_MS);
-      }
-
-      function stopDailyOpsAutoAdvance() {
-        if (dailyOpsInterval) { clearInterval(dailyOpsInterval); dailyOpsInterval = null; }
-      }
-
-      function openDailyOpsModal() {
-        var modal = document.getElementById('dailyOpsModal');
-        var listEl = document.getElementById('dailyOpsModalList');
-        if (!modal || !listEl) return;
-        listEl.innerHTML = dailyOpsFilteredList.map(function (n) { return renderDailyOpsItem(n); }).join('');
-        modal.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-        requestAnimationFrame(function () { modal.classList.add('sp-daily-ops-modal--open'); });
-      }
-
-      function closeDailyOpsModal() {
-        var modal = document.getElementById('dailyOpsModal');
-        if (!modal) return;
-        modal.classList.remove('sp-daily-ops-modal--open');
-        setTimeout(function () {
-          modal.classList.add('hidden');
-          document.body.style.overflow = '';
-        }, 220);
+      function updateNotifTabBadge() {
+        var badge = document.getElementById('spNotifTabBadge');
+        if (!badge) return;
+        if (dailyOpsFilteredList.length === 0) {
+          badge.classList.add('hidden');
+          return;
+        }
+        badge.textContent = dailyOpsFilteredList.length > 99 ? '99+' : String(dailyOpsFilteredList.length);
+        badge.classList.remove('hidden');
       }
 
       function updateDailyOpsSection() {
-        var slideEl = document.getElementById('dailyOpsSlide');
-        var feedEl = document.getElementById('dailyOpsFeed');
-        var emptyEl = document.getElementById('dailyOpsEmpty');
-        if (!slideEl) return;
+        var listEl = document.getElementById('spNotifList');
+        var emptyEl = document.getElementById('spNotifEmpty');
+        if (!listEl) return;
         var notifications = (data.dailyOperationsNotifications) ? data.dailyOperationsNotifications : [];
+        var prevLen = dailyOpsFilteredList.length;
         dailyOpsFilteredList = spName ? notifications.filter(function (n) { return n.serviceProvider === spName; }) : [];
         dailyOpsFilteredList.sort(function (a, b) { return (a.timeAgoMinutes || 0) - (b.timeAgoMinutes || 0); });
-        dailyOpsIndex = 0;
-        stopDailyOpsAutoAdvance();
         if (dailyOpsFilteredList.length === 0) {
-          slideEl.innerHTML = '';
-          slideEl.classList.add('hidden');
-          if (feedEl) {
-            feedEl.classList.remove('sp-daily-ops-feed--clickable');
-            feedEl.classList.add('sp-daily-ops-feed--empty');
+          var saved = loadDailyOpsFromCard();
+          if (saved && saved.notifications && saved.notifications.length) {
+            dailyOpsFilteredList = saved.notifications;
+            updateNotifSidebarContent();
+            updateNotifTabBadge();
+            dailyOpsPreviousCount = dailyOpsFilteredList.length;
+            return;
           }
-          var dotsEl = document.getElementById('dailyOpsDots');
-          if (dotsEl) dotsEl.innerHTML = '';
-          if (emptyEl) emptyEl.classList.remove('hidden');
+          updateNotifSidebarContent();
+          updateNotifTabBadge();
+          dailyOpsPreviousCount = 0;
           return;
         }
-        if (emptyEl) emptyEl.classList.add('hidden');
-        if (feedEl) {
-          feedEl.classList.add('sp-daily-ops-feed--clickable');
-          feedEl.classList.remove('sp-daily-ops-feed--empty');
+        saveDailyOpsToCard();
+        updateNotifSidebarContent();
+        updateNotifTabBadge();
+        var isNewNotification = dailyOpsPreviousCount >= 0 && dailyOpsFilteredList.length > dailyOpsPreviousCount;
+        dailyOpsPreviousCount = dailyOpsFilteredList.length;
+        if (isNewNotification) {
+          openNotificationsSidebar();
+          if (dailyOpsAutoCloseTimer) clearTimeout(dailyOpsAutoCloseTimer);
+          dailyOpsAutoCloseTimer = setTimeout(function () {
+            dailyOpsAutoCloseTimer = null;
+            closeNotificationsSidebar();
+          }, DAILY_OPS_NEW_PEEK_MS);
         }
-        renderDailyOpsSlide();
-        startDailyOpsAutoAdvance();
       }
 
-      function initDailyOpsModal() {
-        var slideWrapEl = document.getElementById('dailyOpsSlideWrap');
-        var prevBtn = document.getElementById('dailyOpsPrev');
-        var nextBtn = document.getElementById('dailyOpsNext');
-        var dotsEl = document.getElementById('dailyOpsDots');
-        var backdrop = document.getElementById('dailyOpsModalBackdrop');
-        var closeBtn = document.getElementById('dailyOpsModalClose');
-        if (slideWrapEl) {
-          slideWrapEl.addEventListener('click', function () {
-            if (dailyOpsFilteredList.length > 0) openDailyOpsModal();
-          });
-          slideWrapEl.addEventListener('keydown', function (e) {
-            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (dailyOpsFilteredList.length > 0) openDailyOpsModal(); }
+      function initNotificationsSidebar() {
+        var tab = document.getElementById('spNotifTab');
+        var sidebar = document.getElementById('spNotifSidebar');
+        var backdrop = document.getElementById('spNotifSidebarBackdrop');
+        var closeBtn = document.getElementById('spNotifSidebarClose');
+        if (tab) {
+          tab.addEventListener('click', function () {
+            if (sidebar && sidebar.classList.contains('is-open')) closeNotificationsSidebar();
+            else openNotificationsSidebar();
           });
         }
-        if (prevBtn) prevBtn.addEventListener('click', function (e) { e.stopPropagation(); goToDailyOpsIndex(dailyOpsIndex - 1); });
-        if (nextBtn) nextBtn.addEventListener('click', function (e) { e.stopPropagation(); goToDailyOpsIndex(dailyOpsIndex + 1); });
-        if (dotsEl) dotsEl.addEventListener('click', function (e) {
-          var btn = e.target.closest('.sp-daily-ops-dot[data-index]');
-          if (btn && btn.dataset.index != null) { e.stopPropagation(); goToDailyOpsIndex(parseInt(btn.dataset.index, 10)); }
-        });
-        if (backdrop) backdrop.addEventListener('click', closeDailyOpsModal);
-        if (closeBtn) closeBtn.addEventListener('click', closeDailyOpsModal);
+        if (backdrop) backdrop.addEventListener('click', closeNotificationsSidebar);
+        if (closeBtn) closeBtn.addEventListener('click', closeNotificationsSidebar);
       }
 
       function render() {
@@ -2087,44 +2109,100 @@
         });
       }
 
-      /** HTML das listas Pre-12, ASR e DSR para um card de rota (tabela por categoria). */
-      function getRoutePre12AsrDsrTableHtml(routeName) {
-        var deliveries = getDeliveriesForRoute(routeName);
+      /** Entregas de um depot (lista completa, sem filtro de estado). */
+      function getDeliveriesForDepot(depotName) {
+        var list = getDiscoDeliveries();
+        var depotTrim = (depotName || '').trim();
+        if (!depotTrim) return [];
+        return list.filter(function (d) {
+          return (d.depot || '').trim() === depotTrim;
+        });
+      }
+
+      /** Entregas de um loop (depot já fixo no estado; lista completa). */
+      function getDeliveriesForLoop(depotName, loopName) {
+        var list = getDiscoDeliveries();
+        var depotTrim = (depotName || '').trim();
+        var loopTrim = (loopName || '').trim();
+        if (!depotTrim || !loopTrim) return [];
+        return list.filter(function (d) {
+          return (d.depot || '').trim() === depotTrim && (d.loop || '').trim() === loopTrim;
+        });
+      }
+
+      /** Resumo por depot: array de { depot, totalDeliveries, pre12, asr, dsr }. */
+      function getDiscoDepotSummary() {
+        var list = getDiscoDeliveries();
+        var byDepot = {};
+        list.forEach(function (d) {
+          var dep = (d.depot || '').trim();
+          if (!dep) return;
+          if (!byDepot[dep]) byDepot[dep] = { depot: dep, totalDeliveries: 0, pre12: 0, asr: 0, dsr: 0 };
+          byDepot[dep].totalDeliveries += 1;
+          if (d.pre12 === true) byDepot[dep].pre12 += 1;
+          if (d.asr === true) byDepot[dep].asr += 1;
+          if (d.dsr === true) byDepot[dep].dsr += 1;
+        });
+        return Object.keys(byDepot).sort().map(function (dep) {
+          var o = byDepot[dep];
+          return {
+            depot: o.depot,
+            totalDeliveries: o.totalDeliveries,
+            pre12: o.pre12,
+            asr: o.asr,
+            dsr: o.dsr
+          };
+        });
+      }
+
+      /** Gera HTML das listas Pre-12, ASR e DSR a partir de um array de entregas. Sem entregas numa categoria: só o header do bloco. */
+      function getPre12AsrDsrTableHtmlFromDeliveries(deliveries) {
         var pre12 = deliveries.filter(function (d) { return d.pre12 === true; });
         var asr = deliveries.filter(function (d) { return d.asr === true; });
         var dsr = deliveries.filter(function (d) { return d.dsr === true; });
         function rowsHtml(list) {
-          if (!list.length) return '<tr><td colspan="2" class="disco-list-empty">—</td></tr>';
+          if (!list.length) return '';
           return list.map(function (d) {
             var pc = escapeHtml((d.subpostcode || '').trim());
             var addr = escapeHtml((d.address || '').trim());
             return '<tr><td class="disco-addr-postcode">' + pc + '</td><td class="disco-addr-address">' + addr + '</td></tr>';
           }).join('');
         }
+        function blockHtml(title, list) {
+          var onlyHeader = !list.length;
+          var body = onlyHeader ? '' : '<div class="disco-route-detail-address-list">' +
+            '<table class="disco-route-address-table"><tbody>' + rowsHtml(list) + '</tbody></table></div>';
+          return '<div class="disco-route-detail-list-block' + (onlyHeader ? ' disco-route-detail-list-block--header-only' : '') + '">' +
+            '<h4 class="disco-route-detail-list-title">' + title + '</h4>' + body + '</div>';
+        }
         return '<div class="disco-route-detail-content">' +
           '<div class="disco-route-detail-lists">' +
-            '<div class="disco-route-detail-list-block">' +
-              '<h4 class="disco-route-detail-list-title">Pre-12</h4>' +
-              '<div class="disco-route-detail-address-list">' +
-                '<table class="disco-route-address-table"><tbody>' + rowsHtml(pre12) + '</tbody></table>' +
-              '</div></div>' +
-            '<div class="disco-route-detail-list-block">' +
-              '<h4 class="disco-route-detail-list-title">ASR</h4>' +
-              '<div class="disco-route-detail-address-list">' +
-                '<table class="disco-route-address-table"><tbody>' + rowsHtml(asr) + '</tbody></table>' +
-              '</div></div>' +
-            '<div class="disco-route-detail-list-block">' +
-              '<h4 class="disco-route-detail-list-title">DSR</h4>' +
-              '<div class="disco-route-detail-address-list">' +
-                '<table class="disco-route-address-table"><tbody>' + rowsHtml(dsr) + '</tbody></table>' +
-              '</div></div>' +
+            blockHtml('Pre-12', pre12) +
+            blockHtml('ASR', asr) +
+            blockHtml('DSR', dsr) +
           '</div></div>';
       }
 
-      function updateSprKpi() {
-        var el = document.getElementById('dashboardSprValue');
+      /** HTML das listas Pre-12, ASR e DSR para um card de rota (tabela por categoria). */
+      function getRoutePre12AsrDsrTableHtml(routeName) {
+        return getPre12AsrDsrTableHtmlFromDeliveries(getDeliveriesForRoute(routeName));
+      }
+
+      /** HTML das listas Pre-12, ASR e DSR para um card de depot. */
+      function getDepotPre12AsrDsrTableHtml(depotName) {
+        return getPre12AsrDsrTableHtmlFromDeliveries(getDeliveriesForDepot(depotName));
+      }
+
+      /** HTML das listas Pre-12, ASR e DSR para um card de loop (depot já no estado). */
+      function getLoopPre12AsrDsrTableHtml(loopName) {
+        return getPre12AsrDsrTableHtmlFromDeliveries(getDeliveriesForLoop(discoState.depot, loopName));
+      }
+
+      /** Total stops no header: sempre o total sem filtro (depot/loop). */
+      function updateStopsKpi() {
+        var el = document.getElementById('dashboardStopsValue');
         if (!el) return;
-        var list = getFilteredDiscoDeliveries();
+        var list = getDiscoDeliveries();
         el.textContent = list.length;
       }
 
@@ -2146,14 +2224,19 @@
           if (d.asr === true) asr += 1;
           if (d.dsr === true) dsr += 1;
         });
+        var totalRoutes = Object.keys(routes).length;
+        var spr = totalRoutes > 0 ? totalDeliveries / totalRoutes : 0;
+        var sporH = totalRoutes > 0 ? (totalDeliveries / totalRoutes) / 8 : 0;
         return {
           totalDeliveries: totalDeliveries,
-          totalRoutes: Object.keys(routes).length,
+          totalRoutes: totalRoutes,
           depotsCount: Object.keys(depots).length,
           loopsCount: Object.keys(loops).length,
           pre12: pre12,
           asr: asr,
-          dsr: dsr
+          dsr: dsr,
+          spr: spr,
+          sporH: sporH
         };
       }
 
@@ -2195,19 +2278,22 @@
       }
 
       function updateDiscoSection() {
-        var depotChips = document.getElementById('discoDepotChips');
-        var loopChips = document.getElementById('discoLoopChips');
-        var routeBlocks = document.getElementById('discoRouteBlocks');
-        var noData = document.getElementById('discoNoData');
-        var deliveries = getDiscoDeliveries();
-        updateSprKpi();
+        // Performance: usar requestAnimationFrame para renderização suave
+        requestAnimationFrame(function() {
+          var depotChips = document.getElementById('discoDepotChips');
+          var loopChips = document.getElementById('discoLoopChips');
+          var routeBlocks = document.getElementById('discoRouteBlocks');
+          var noData = document.getElementById('discoNoData');
+          var deliveries = getDiscoDeliveries();
+          updateStopsKpi();
         if (!deliveries.length) {
           if (noData) noData.classList.remove('hidden');
-          document.getElementById('dashboardSprValue') && (document.getElementById('dashboardSprValue').textContent = '—');
+          document.getElementById('dashboardStopsValue') && (document.getElementById('dashboardStopsValue').textContent = '—');
           if (depotChips) depotChips.innerHTML = '';
           if (loopChips) loopChips.innerHTML = '';
           if (routeBlocks) routeBlocks.innerHTML = '';
           document.getElementById('discoSummaryBlock') && document.getElementById('discoSummaryBlock').classList.add('hidden');
+          document.getElementById('discoDepotBlocksWrap') && document.getElementById('discoDepotBlocksWrap').classList.add('hidden');
           document.getElementById('discoLoopSummaryBlock') && document.getElementById('discoLoopSummaryBlock').classList.add('hidden');
           return;
         }
@@ -2219,9 +2305,9 @@
         var filtered = getFilteredDiscoDeliveries();
         var routesWithSummary = getRoutesWithSummary(filtered);
 
-        /* Resumo geral: só quando nenhum depot está selecionado */
+        /* Resumo geral: só quando nenhum depot nem loop está selecionado */
         if (summaryBlock) {
-          if (!hasDepot) {
+          if (!hasDepot && !hasLoop) {
             summaryBlock.classList.remove('hidden');
             var summary = getDiscoGeneralSummary();
             var grid = document.getElementById('discoSummaryGrid');
@@ -2229,11 +2315,19 @@
               grid.innerHTML =
                 '<div class="disco-summary-item">' +
                   '<span class="disco-summary-value">' + summary.totalDeliveries + '</span>' +
-                  '<span class="disco-summary-label">Total entregas</span>' +
+                  '<span class="disco-summary-label">Total deliveries</span>' +
                 '</div>' +
                 '<div class="disco-summary-item">' +
                   '<span class="disco-summary-value">' + summary.totalRoutes + '</span>' +
-                  '<span class="disco-summary-label">Rotas</span>' +
+                  '<span class="disco-summary-label">Routes</span>' +
+                '</div>' +
+                '<div class="disco-summary-item disco-summary-item--kpi">' +
+                  '<span class="disco-summary-value">' + (summary.totalRoutes ? summary.spr.toFixed(1) : '—') + '</span>' +
+                  '<span class="disco-summary-label">SPR (Stops per Route)</span>' +
+                '</div>' +
+                '<div class="disco-summary-item disco-summary-item--kpi">' +
+                  '<span class="disco-summary-value">' + (summary.totalRoutes ? summary.sporH.toFixed(1) : '—') + '</span>' +
+                  '<span class="disco-summary-label">SPOR-H (÷8h)</span>' +
                 '</div>' +
                 '<div class="disco-summary-item">' +
                   '<span class="disco-summary-value">' + summary.depotsCount + '</span>' +
@@ -2261,59 +2355,92 @@
           }
         }
 
-        /* Resumo por loop: depot selecionado mas loop não */
+        /* Cards por depot (Depot = Todos, Loop = Todos): um card por depot com Pre-12, ASR e DSR */
+        var depotBlocksWrap = document.getElementById('discoDepotBlocksWrap');
+        var depotBlocks = document.getElementById('discoDepotBlocks');
+        if (depotBlocksWrap && depotBlocks) {
+          if (!hasDepot && !hasLoop) {
+            depotBlocksWrap.classList.remove('hidden');
+            var depotItems = getDiscoDepotSummary();
+            depotBlocks.innerHTML = depotItems.map(function (item) {
+              return '<div class="disco-route-block disco-depot-block shadow-sm" data-depot="' + escapeHtml(item.depot) + '">' +
+                '<div class="disco-route-block-head d-flex justify-content-between align-items-center flex-wrap gap-2">' +
+                  '<span class="disco-route-block-name">' + escapeHtml(item.depot) + '</span>' +
+                  '<span class="disco-route-block-stops">' + item.totalDeliveries + ' deliveries</span>' +
+                '</div>' +
+                '<div class="disco-route-block-summary d-flex flex-wrap gap-2">' +
+                  '<span class="disco-route-block-badge">Pre-12: ' + item.pre12 + '</span>' +
+                  '<span class="disco-route-block-badge">ASR: ' + item.asr + '</span>' +
+                  '<span class="disco-route-block-badge">DSR: ' + item.dsr + '</span>' +
+                '</div>' +
+                getDepotPre12AsrDsrTableHtml(item.depot) +
+                '</div>';
+            }).join('');
+            depotBlocks.setAttribute('data-count', String(depotItems.length));
+          } else {
+            depotBlocksWrap.classList.add('hidden');
+            depotBlocks.innerHTML = '';
+            depotBlocks.removeAttribute('data-count');
+          }
+        }
+
+        /* Blocos por loop (depot selecionado, loop = Todos): um card por loop com Pre-12, ASR e DSR */
         if (loopSummaryBlock) {
           if (hasDepot && !hasLoop) {
             loopSummaryBlock.classList.remove('hidden');
             var loopSummaryTitle = document.getElementById('discoLoopSummaryTitle');
-            if (loopSummaryTitle) loopSummaryTitle.textContent = 'Loops do depot ' + escapeHtml(discoState.depot);
+            if (loopSummaryTitle) loopSummaryTitle.textContent = 'Depot loops: ' + escapeHtml(discoState.depot);
             var loopGrid = document.getElementById('discoLoopSummaryGrid');
             if (loopGrid) {
               var loopItems = getDiscoLoopSummary(discoState.depot);
               loopGrid.innerHTML = loopItems.map(function (item) {
-                return '<div class="disco-route-block" data-loop="' + escapeHtml(item.loop) + '">' +
-                  '<div class="disco-route-block-head">' +
+                return '<div class="disco-route-block disco-loop-block shadow-sm" data-loop="' + escapeHtml(item.loop) + '">' +
+                  '<div class="disco-route-block-head d-flex justify-content-between align-items-center flex-wrap gap-2">' +
                     '<span class="disco-route-block-name">' + escapeHtml(item.loop) + '</span>' +
-                    '<span class="disco-route-block-stops">' + item.totalDeliveries + ' entregas</span>' +
+                    '<span class="disco-route-block-stops">' + item.totalDeliveries + ' deliveries</span>' +
                   '</div>' +
-                  '<div class="disco-route-block-summary">' +
+                  '<div class="disco-route-block-summary d-flex flex-wrap gap-2">' +
                     '<span class="disco-route-block-badge">Pre-12: ' + item.pre12 + '</span>' +
                     '<span class="disco-route-block-badge">ASR: ' + item.asr + '</span>' +
                     '<span class="disco-route-block-badge">DSR: ' + item.dsr + '</span>' +
-                  '</div></div>';
+                  '</div>' +
+                  getLoopPre12AsrDsrTableHtml(item.loop) +
+                  '</div>';
               }).join('');
+              loopGrid.setAttribute('data-count', String(loopItems.length));
             }
           } else {
             loopSummaryBlock.classList.add('hidden');
+            if (document.getElementById('discoLoopSummaryGrid')) document.getElementById('discoLoopSummaryGrid').removeAttribute('data-count');
           }
         }
 
         var depots = getDiscoUniqueDepots();
         var loops = getDiscoUniqueLoops();
         if (depotChips) {
-          depotChips.innerHTML = '<button type="button" class="disco-chip' + (!discoState.depot ? ' active' : '') + '" data-depot="">Todos</button>' +
+          depotChips.innerHTML = '<button type="button" class="disco-chip' + (!discoState.depot ? ' active' : '') + '" data-depot="">All</button>' +
             depots.map(function (d) {
               return '<button type="button" class="disco-chip' + (discoState.depot === d ? ' active' : '') + '" data-depot="' + escapeHtml(d) + '">' + escapeHtml(d) + '</button>';
             }).join('');
         }
         if (loopChips) {
-          loopChips.innerHTML = '<button type="button" class="disco-chip' + (!discoState.loop ? ' active' : '') + '" data-loop="">Todos</button>' +
+          loopChips.innerHTML = '<button type="button" class="disco-chip' + (!discoState.loop ? ' active' : '') + '" data-loop="">All</button>' +
             loops.map(function (l) {
               return '<button type="button" class="disco-chip' + (discoState.loop === l ? ' active' : '') + '" data-loop="' + escapeHtml(l) + '">' + escapeHtml(l) + '</button>';
             }).join('');
         }
 
-        /* Blocos de rotas: só quando depot e loop estão selecionados */
+        /* Blocos de rotas: quando há loop selecionado (com ou sem depot) */
         if (routeBlocks) {
-          if (hasDepot && hasLoop) {
+          if (hasLoop) {
             routeBlocks.classList.remove('hidden');
             routeBlocks.innerHTML = routesWithSummary.map(function (item) {
-              return '<div class="disco-route-block" data-route="' + escapeHtml(item.route) + '">' +
-                '<div class="disco-route-block-head">' +
+              return '<div class="disco-route-block shadow-sm" data-route="' + escapeHtml(item.route) + '">' +
+                '<div class="disco-route-block-head d-flex justify-content-between align-items-center flex-wrap gap-2">' +
                   '<span class="disco-route-block-name">' + escapeHtml(item.route) + '</span>' +
                   '<span class="disco-route-block-stops">' + item.stops + ' stops</span>' +
                 '</div>' +
-                '<div class="disco-route-block-summary">' +
+                '<div class="disco-route-block-summary d-flex flex-wrap gap-2">' +
                   '<span class="disco-route-block-badge">Pre-12: ' + item.pre12 + '</span>' +
                   '<span class="disco-route-block-badge">ASR: ' + item.asr + '</span>' +
                   '<span class="disco-route-block-badge">DSR: ' + item.dsr + '</span>' +
@@ -2321,9 +2448,11 @@
                 getRoutePre12AsrDsrTableHtml(item.route) +
                 '</div>';
             }).join('');
+            routeBlocks.setAttribute('data-count', String(routesWithSummary.length));
           } else {
             routeBlocks.classList.add('hidden');
             routeBlocks.innerHTML = '';
+            routeBlocks.removeAttribute('data-count');
           }
         }
 
@@ -2341,6 +2470,7 @@
             updateDiscoSection();
           });
         });
+        }); // Fim do requestAnimationFrame
       }
 
       function initDisco() {
@@ -2348,10 +2478,15 @@
         var deliveries = getDiscoDeliveries();
         if (!deliveries.length) {
           if (noData) noData.classList.remove('hidden');
-          document.getElementById('dashboardSprValue') && (document.getElementById('dashboardSprValue').textContent = '—');
+          document.getElementById('dashboardStopsValue') && (document.getElementById('dashboardStopsValue').textContent = '—');
           document.getElementById('discoDepotChips') && (document.getElementById('discoDepotChips').innerHTML = '');
           document.getElementById('discoLoopChips') && (document.getElementById('discoLoopChips').innerHTML = '');
           document.getElementById('discoRouteBlocks') && (document.getElementById('discoRouteBlocks').innerHTML = '');
+          var depotWrap = document.getElementById('discoDepotBlocksWrap');
+          var depotBlocks = document.getElementById('discoDepotBlocks');
+          if (depotWrap) depotWrap.classList.add('hidden');
+          if (depotBlocks) depotBlocks.innerHTML = '';
+          document.getElementById('discoLoopSummaryBlock') && document.getElementById('discoLoopSummaryBlock').classList.add('hidden');
           return;
         }
         updateDiscoSection();
@@ -2366,7 +2501,7 @@
         initLastDay();
         initSpms();
         switchFolderTab('lastday');
-        initDailyOpsModal();
+        initNotificationsSidebar();
         initCarousel();
         if (document.getElementById('openFullDashboardBtn')) initFullDashboardModal();
       }
@@ -2385,4 +2520,7 @@
         return out.sort();
       }
 
+      document.addEventListener('DOMContentLoaded', function () {
+        if (window.AOS) AOS.init({ duration: 500, offset: 50, once: true, easing: 'ease-out-cubic' });
+      });
     })();

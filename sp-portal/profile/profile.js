@@ -43,7 +43,21 @@
         document.getElementById('spHeaderName').textContent = spName;
         var logoMap = { 'BA Express': 'ba-express-logo.png', 'Premier Logistics Ltd': 'premier-logistics-logo.png', 'Swift Haul Solutions': 'swift-haul-logo.png', 'Metro Freight Partners': 'metro-freight-logo.png', 'Atlas Transport Services': 'atlas-transport-logo.png' };
         var avatar = document.getElementById('spHeaderAvatar');
-        if (avatar && logoMap[spName]) { avatar.src = '../assets/' + logoMap[spName]; avatar.alt = spName; avatar.style.display = 'block'; }
+        if (avatar) {
+          var fallback = document.getElementById('spHeaderAvatarFallback');
+          var showFallback = function (txt) {
+            if (fallback) { fallback.textContent = (txt || spName || '').split(' ').map(function (w) { return w[0]; }).join('').slice(0, 2).toUpperCase(); fallback.style.display = 'flex'; }
+            if (avatar) avatar.style.display = 'none';
+          };
+          if (logoMap[spName]) {
+            avatar.onerror = function () { showFallback(spName); };
+            avatar.src = '../../assets/' + logoMap[spName];
+            avatar.alt = spName;
+            avatar.style.display = 'block';
+          } else {
+            showFallback(spName);
+          }
+        }
         appendSpToLinks();
         var meta = getSpMeta(spName);
         if (meta) {

@@ -691,6 +691,20 @@ body {
   display: block;
 }
 
+.admin-header-user-avatar-fallback {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
 .admin-header-user-name {
   font-size: 0.8125rem;
   font-weight: 600;

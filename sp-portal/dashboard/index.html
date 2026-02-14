@@ -1,21 +1,23 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-GB">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard – Service Provider Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../../vendor-admin-view.css" />
   <link rel="stylesheet" href="../../sidebar-beam.css" />
   <link rel="stylesheet" href="../../dashboard.css" />
   <link rel="stylesheet" href="../sp-portal.css" />
   <link rel="stylesheet" href="../../liquid-glass.css" />
   <link rel="stylesheet" href="../../modern-ui.css" />
-  <link rel="stylesheet" href="../sp-disco-lastday.css" />
-  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" />
-  <script src="../sp-portal-responsive.js"></script>
+  <link rel="stylesheet" href="disco.css" />
+  <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" />
+  <script src="../sp-portal-responsive.js" defer></script>
 </head>
 <body class="has-beam-sidebar sp-portal">
   <div class="sidebar-wrapper" id="sidebarWrapper">
@@ -71,72 +73,36 @@
                     <h1 class="dashboard-title">Dashboard</h1>
                     <p class="dashboard-welcome-msg" id="welcomeMsg">Your operations summary.</p>
                   </div>
-                  <div class="dashboard-header-notifications flex-grow-1 mx-3" id="dashboardHeaderNotifications" aria-label="Notificações">
-                    <div class="sp-daily-ops-feed sp-daily-ops-feed--header sp-daily-ops-feed--slide" id="dailyOpsFeed">
-                      <div class="sp-daily-ops-carousel">
-                        <button type="button" class="sp-daily-ops-nav sp-daily-ops-prev" id="dailyOpsPrev" aria-label="Notificação anterior"><i class="bi bi-chevron-left"></i></button>
-                        <div class="sp-daily-ops-slide-wrap" id="dailyOpsSlideWrap" role="button" tabindex="0" aria-label="Notificação atual; clique para ver todas">
-                          <div class="sp-daily-ops-slide" id="dailyOpsSlide"></div>
-                        </div>
-                        <button type="button" class="sp-daily-ops-nav sp-daily-ops-next" id="dailyOpsNext" aria-label="Próxima notificação"><i class="bi bi-chevron-right"></i></button>
-                      </div>
-                      <div class="sp-daily-ops-dots" id="dailyOpsDots" role="tablist" aria-label="Navegar notificações"></div>
-                      <div id="dailyOpsEmpty" class="sp-daily-ops-empty hidden">
-                        <i class="bi bi-inbox"></i>
-                        <p>Sem notificações no momento.</p>
-                      </div>
-                    </div>
-                  </div>
                   <div class="admin-header-user-pill d-flex align-items-center" id="spHeaderPill" title="">
+                    <span id="spHeaderAvatarFallback" class="admin-header-user-avatar admin-header-user-avatar-fallback" style="display:none;"></span>
                     <img id="spHeaderAvatar" src="" alt="" class="admin-header-user-avatar admin-header-user-avatar--img" style="display:none;" />
                     <span class="admin-header-user-name" id="spHeaderName">—</span>
                   </div>
                 </div>
               </header>
 
-            <!-- Modal: all notifications -->
-            <div class="sp-daily-ops-modal hidden" id="dailyOpsModal" role="dialog" aria-modal="true" aria-labelledby="dailyOpsModalTitle">
-              <div class="sp-daily-ops-modal-backdrop" id="dailyOpsModalBackdrop"></div>
-              <div class="sp-daily-ops-modal-dialog">
-                <div class="sp-daily-ops-modal-content">
-                  <div class="sp-daily-ops-modal-header">
-                    <h2 id="dailyOpsModalTitle" class="sp-daily-ops-modal-title"><i class="bi bi-bell-fill"></i> All notifications</h2>
-                    <button type="button" class="sp-daily-ops-modal-close" id="dailyOpsModalClose" aria-label="Close"><i class="bi bi-x-lg"></i></button>
-                  </div>
-                  <div class="sp-daily-ops-modal-body">
-                    <div class="sp-daily-ops-list" id="dailyOpsModalList" role="list"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
               <!-- Bloco: Disco (dados do Excel DISCO_RouteData) -->
               <section class="dashboard-section dashboard-block mb-4" id="spDiscoBlock" aria-label="Disco" data-aos="fade-up" data-aos-duration="500" data-aos-delay="80">
                 <div class="card sp-dashboard-module-card overflow-hidden">
-                  <div class="dashboard-block-header">
-                    <h2 class="dashboard-block-title"><i class="bi bi-truck me-2" aria-hidden="true"></i>Disco</h2>
-                    <p class="dashboard-block-desc mb-0">Dados de rota por loop. Fonte: ficheiro Excel DISCO_RouteData.</p>
-                  </div>
-                  <!-- KPI SPR dentro do bloco -->
-                  <div class="disco-kpi-strip" id="dashboardKpiStrip" aria-label="SPR">
-                    <div class="dashboard-kpi-card dashboard-kpi-card--spr">
-                      <div class="dashboard-kpi-icon"><i class="bi bi-box-seam" aria-hidden="true"></i></div>
-                      <div class="dashboard-kpi-content">
-                        <span class="dashboard-kpi-label">SPR</span>
-                        <span class="dashboard-kpi-value" id="dashboardSprValue">—</span>
-                        <span class="dashboard-kpi-sublabel">Total entregas</span>
-                      </div>
+                  <div class="dashboard-block-header d-flex flex-wrap align-items-center justify-content-between gap-3">
+                    <div>
+                      <h2 class="dashboard-block-title mb-1"><i class="bi bi-truck me-2" aria-hidden="true"></i>Disco</h2>
+                      <p class="dashboard-block-desc mb-0">Route data by loop. Source: DISCO_RouteData Excel file.</p>
+                    </div>
+                    <div class="disco-header-stops-kpi rounded-3 px-3 py-2 d-flex flex-column align-items-center justify-content-center" id="discoHeaderStopsKpi" aria-label="Total stops">
+                      <span class="disco-header-stops-label small text-uppercase fw-semibold text-muted">Stops</span>
+                      <span class="disco-header-stops-value fs-4 fw-bold text-primary" id="dashboardStopsValue">—</span>
                     </div>
                   </div>
-                  <!-- Filtros no topo do bloco -->
-                  <div class="disco-filters disco-filters--top" id="discoFiltersWrap">
-                    <div class="disco-filter-group">
-                      <span class="disco-filter-label">Depot</span>
-                      <div id="discoDepotChips" class="disco-chips" role="group" aria-label="Filtrar por depot"></div>
+                  <!-- Filtros no topo do bloco (Bootstrap flex + gap) -->
+                  <div class="disco-filters disco-filters--top d-flex flex-wrap align-items-end gap-3 gap-md-4" id="discoFiltersWrap">
+                    <div class="disco-filter-group flex-shrink-0">
+                      <span class="disco-filter-label d-block mb-1">Depot</span>
+                      <div id="discoDepotChips" class="disco-chips d-flex flex-wrap gap-2" role="group" aria-label="Filter by depot"></div>
                     </div>
-                    <div class="disco-filter-group">
-                      <span class="disco-filter-label">Loop</span>
-                      <div id="discoLoopChips" class="disco-chips" role="group" aria-label="Filtrar por loop"></div>
+                    <div class="disco-filter-group flex-shrink-0">
+                      <span class="disco-filter-label d-block mb-1">Loop</span>
+                      <div id="discoLoopChips" class="disco-chips d-flex flex-wrap gap-2" role="group" aria-label="Filter by loop"></div>
                     </div>
                   </div>
                   <div class="dashboard-block-content">
@@ -144,22 +110,26 @@
                     <div class="disco-summary-block" id="discoSummaryBlock">
                       <div class="disco-summary-card">
                         <div class="disco-summary-card-header">
-                          <h3 class="disco-summary-title">Resumo geral</h3>
+                          <h3 class="disco-summary-title">Summary</h3>
                         </div>
                         <div class="disco-summary-card-body">
                           <div class="disco-summary-grid" id="discoSummaryGrid"></div>
                         </div>
                       </div>
                     </div>
-                    <!-- Resumo por loop (depot selecionado, loop não) – mesmo estilo dos blocos de rotas -->
+                    <!-- Cards por depot (Depot = Todos): um card por depot com Pre-12, ASR e DSR -->
+                    <div class="disco-depot-blocks-wrap hidden" id="discoDepotBlocksWrap">
+                      <div class="disco-route-blocks disco-depot-blocks" id="discoDepotBlocks"></div>
+                    </div>
+                    <!-- Blocos por loop (depot selecionado, loop = Todos): um card por loop com Pre-12, ASR e DSR -->
                     <div class="disco-loop-summary-block hidden" id="discoLoopSummaryBlock">
-                      <h3 class="disco-loop-summary-title" id="discoLoopSummaryTitle">Loops do depot</h3>
+                      <h3 class="disco-loop-summary-title" id="discoLoopSummaryTitle">Depot loops</h3>
                       <div class="disco-route-blocks" id="discoLoopSummaryGrid"></div>
                     </div>
                     <!-- Blocos resumidos das rotas (depot + loop selecionados) -->
                     <div id="discoRouteBlocks" class="disco-route-blocks"></div>
                     <div id="discoNoData" class="disco-no-data alert alert-warning mb-0 hidden">
-                      <i class="bi bi-info-circle me-2"></i>Nenhum dado do Disco disponível. Execute o script com o ficheiro Excel para gerar <code>assets/disco-data.js</code>.
+                      <i class="bi bi-info-circle me-2"></i>No Disco data available. Run the script with the Excel file to generate <code>assets/disco-data.js</code>.
                     </div>
                   </div>
                 </div>
@@ -177,12 +147,12 @@
                     <ul class="nav nav-tabs card-header-tabs sp-folder-tabs-bootstrap ms-auto" role="tablist" id="folderTabsList">
                       <li class="nav-item" role="presentation">
                         <button type="button" class="nav-link active" role="tab" aria-selected="true" data-folder="lastday" id="folderLastDay" aria-controls="folder-panel-lastday">
-                          <i class="bi bi-calendar-check me-1"></i> Daily Operations
+                          <i class="bi bi-calendar-check me-1"></i> Daily OPMS
                         </button>
                       </li>
                       <li class="nav-item" role="presentation">
                         <button type="button" class="nav-link" role="tab" aria-selected="false" data-folder="spms" id="folderSpms" aria-controls="folder-panel-spms">
-                          <i class="bi bi-currency-pound me-1"></i> Financials
+                          <i class="bi bi-currency-pound me-1"></i> Daily SPMS
                         </button>
                       </li>
                     </ul>
@@ -282,70 +252,58 @@
                   </div>
                   <div class="card-body tab-content pt-3" id="spFolderContent">
                     <div id="folder-panel-lastday" class="tab-pane fade show active sp-folder-panel opms-panel" role="tabpanel" aria-labelledby="folderLastDay">
-                      <header class="opms-lastday-header opms-lastday-header-with-nav mb-3">
-                        <h3 class="h6 mb-2"><i class="bi bi-calendar-day text-primary"></i> Last Day Operations</h3>
-                        <div class="opms-lastday-date-block" role="group" aria-label="Navegar por data">
-                          <button type="button" class="opms-date-edge-btn" id="lastDayDatePrev" aria-label="Data anterior" title="Data anterior"><i class="bi bi-chevron-left"></i></button>
-                          <button type="button" class="opms-date-center" id="lastDayDatePicker" aria-label="Selecionar data" aria-haspopup="listbox" aria-expanded="false">
-                            <span id="lastDayViewingDate" class="opms-viewing-date" aria-live="polite"></span>
-                            <i class="bi bi-calendar3 opms-date-picker-icon"></i>
-                          </button>
-                          <div id="lastDayDateDropdown" class="opms-date-dropdown hidden" role="listbox" aria-label="Datas disponíveis"></div>
-                          <button type="button" class="opms-date-edge-btn" id="lastDayDateNext" aria-label="Data seguinte" title="Data seguinte"><i class="bi bi-chevron-right"></i></button>
-                        </div>
-                        <p class="opms-subtitle text-muted mb-0 mt-1 small">Performance (SPOH-R, SPR, STOPS, Time Window, AFD) e lista de entregas do dia anterior.</p>
-                      </header>
-                      <div class="opms-lastday-layout">
+                      <div class="opms-lastday-layout opms-lastday-layout--routes-first">
                         <aside class="opms-lastday-left">
-                          <p class="small fw-semibold text-muted mb-2 opms-nav-label">Routes · Loops · Depots</p>
+                          <p class="small fw-semibold text-muted mb-2 opms-nav-label">Loops · Depots</p>
                           <div id="lastDayTreeWrap" class="opms-tree-wrap">
-                            <ul id="lastDayTree" class="opms-tree" role="tree" aria-label="Routes, Loops e Depots"></ul>
+                            <ul id="lastDayTree" class="opms-tree" role="tree" aria-label="Loops and Depots"></ul>
                           </div>
                         </aside>
-                        <section class="opms-lastday-right opms-performance-block" id="opmsPerformanceSection" aria-labelledby="opms-performance-heading">
-                          <div class="opms-performance-card">
-                            <header class="opms-performance-header">
-                              <div class="opms-performance-header-icon"><i class="bi bi-graph-up-arrow" aria-hidden="true"></i></div>
-                              <div>
-                                <h4 id="opms-performance-heading" class="opms-performance-title">Performance</h4>
-                                <p class="opms-performance-subtitle">Time Window e AFD por rota, loop ou depot</p>
-                              </div>
-                            </header>
+                        <aside class="opms-lastday-filters">
+                          <p class="small fw-semibold text-muted mb-2 opms-nav-label">Date</p>
+                          <div class="opms-lastday-date-block" role="group" aria-label="Navigate by date">
+                            <button type="button" class="opms-date-edge-btn" id="lastDayDatePrev" aria-label="Previous date" title="Previous date"><i class="bi bi-chevron-left"></i></button>
+                            <button type="button" class="opms-date-center" id="lastDayDatePicker" aria-label="Select date" aria-haspopup="listbox" aria-expanded="false">
+                              <span id="lastDayViewingDate" class="opms-viewing-date" aria-live="polite"></span>
+                              <i class="bi bi-calendar3 opms-date-picker-icon"></i>
+                            </button>
+                            <div id="lastDayDateDropdown" class="opms-date-dropdown hidden" role="listbox" aria-label="Available dates"></div>
+                            <button type="button" class="opms-date-edge-btn" id="lastDayDateNext" aria-label="Next date" title="Next date"><i class="bi bi-chevron-right"></i></button>
                           </div>
-                        </section>
+                        </aside>
                       </div>
                       <div class="mt-4">
-                        <h4 class="h6 mb-2"><i class="bi bi-list-ul text-primary"></i> Lista de entregas do dia anterior</h4>
+                        <h4 class="h6 mb-2"><i class="bi bi-list-ul text-primary"></i> Previous day delivery list</h4>
                         <div class="table-responsive">
-                          <table class="table table-hover table-sm align-middle mb-0" id="lastDayDeliveriesTable" aria-label="Entregas do dia anterior">
+                          <table class="table table-hover table-sm align-middle mb-0" id="lastDayDeliveriesTable" aria-label="Previous day deliveries">
                             <thead class="table-light">
-                              <tr><th>Depot</th><th>Loop</th><th>Rota</th><th class="text-end">DEL</th><th class="text-end">PU</th><th class="text-end">HN</th><th class="text-end">STOPS</th></tr>
+                              <tr><th>Depot</th><th>Loop</th><th>Route</th><th class="text-end">DEL</th><th class="text-end">PU</th><th class="text-end">HN</th><th class="text-end">STOPS</th></tr>
                             </thead>
                             <tbody id="lastDayDeliveriesBody"></tbody>
                           </table>
                         </div>
-                        <p id="lastDayDeliveriesEmpty" class="text-muted small text-center py-3 mb-0 hidden">Selecione uma data para ver as entregas.</p>
+                        <p id="lastDayDeliveriesEmpty" class="text-muted small text-center py-3 mb-0 hidden">Select a date to view deliveries.</p>
                       </div>
                     </div>
                     <div id="folder-panel-spms" class="tab-pane fade sp-folder-panel opms-panel" role="tabpanel" aria-labelledby="folderSpms" aria-hidden="true">
                       <header class="opms-lastday-header opms-lastday-header-with-nav mb-3">
                         <h3 class="h6 mb-2"><i class="bi bi-speedometer2 text-primary"></i> SPMS</h3>
-                        <p class="opms-subtitle text-muted mb-0 mt-1 small">Performance e Income por data e rota.</p>
-                        <div class="opms-lastday-date-block" role="group" aria-label="Navegar por data">
-                          <button type="button" class="opms-date-edge-btn" id="spmsDatePrev" aria-label="Data anterior" title="Data anterior"><i class="bi bi-chevron-left"></i></button>
-                          <button type="button" class="opms-date-center" id="spmsDatePicker" aria-label="Selecionar data" aria-haspopup="listbox" aria-expanded="false">
+                        <p class="opms-subtitle text-muted mb-0 mt-1 small">Performance and Income by date and route.</p>
+                        <div class="opms-lastday-date-block" role="group" aria-label="Navigate by date">
+                          <button type="button" class="opms-date-edge-btn" id="spmsDatePrev" aria-label="Previous date" title="Previous date"><i class="bi bi-chevron-left"></i></button>
+                          <button type="button" class="opms-date-center" id="spmsDatePicker" aria-label="Select date" aria-haspopup="listbox" aria-expanded="false">
                             <span id="spmsViewingDate" class="opms-viewing-date" aria-live="polite"></span>
                             <i class="bi bi-calendar3 opms-date-picker-icon"></i>
                           </button>
-                          <div id="spmsDateDropdown" class="opms-date-dropdown hidden" role="listbox" aria-label="Datas disponíveis"></div>
-                          <button type="button" class="opms-date-edge-btn" id="spmsDateNext" aria-label="Data seguinte" title="Data seguinte"><i class="bi bi-chevron-right"></i></button>
+                          <div id="spmsDateDropdown" class="opms-date-dropdown hidden" role="listbox" aria-label="Available dates"></div>
+                          <button type="button" class="opms-date-edge-btn" id="spmsDateNext" aria-label="Next date" title="Next date"><i class="bi bi-chevron-right"></i></button>
                         </div>
                       </header>
                       <div class="opms-lastday-layout">
                         <aside class="opms-lastday-left">
                           <p class="small fw-semibold text-muted mb-2 opms-nav-label">Routes · Loops · Depots</p>
                           <div id="spmsTreeWrap" class="opms-tree-wrap">
-                            <ul id="spmsTree" class="opms-tree" role="tree" aria-label="Routes, Loops e Depots"></ul>
+                            <ul id="spmsTree" class="opms-tree" role="tree" aria-label="Routes, Loops and Depots"></ul>
                           </div>
                         </aside>
                         <section class="opms-lastday-right opms-performance-block" id="spmsPerformanceSection" aria-labelledby="spms-performance-heading">
@@ -354,7 +312,7 @@
                               <div class="opms-performance-header-icon"><i class="bi bi-graph-up-arrow" aria-hidden="true"></i></div>
                               <div>
                                 <h4 id="spms-performance-heading" class="opms-performance-title">Performance &amp; Income</h4>
-                                <p class="opms-performance-subtitle">Métricas do dia por rota, loop ou depot</p>
+                                <p class="opms-performance-subtitle">Day metrics by route, loop or depot</p>
                               </div>
                             </header>
                           </div>
@@ -386,15 +344,15 @@
                             </div>
                           </div>
                           <div class="spms-dashboard-block mt-4">
-                            <h4 class="spms-overview-title"><i class="bi bi-table text-primary"></i> Dados por rota (importados)</h4>
-                            <h4 class="spms-overview-title mt-4"><i class="bi bi-table text-primary"></i> Dados por rota (importados)</h4>
+                            <h4 class="spms-overview-title"><i class="bi bi-table text-primary"></i> Data by route (imported)</h4>
+                            <h4 class="spms-overview-title mt-4"><i class="bi bi-table text-primary"></i> Data by route (imported)</h4>
                             <div class="spms-table-wrap" id="spmsTableWrap">
-                              <table class="spms-overview-table table table-striped mb-0" id="spmsOverviewTable" aria-label="Dados SPMS por rota">
+                              <table class="spms-overview-table table table-striped mb-0" id="spmsOverviewTable" aria-label="SPMS data by route">
                                 <thead>
                                   <tr>
                                     <th>Depot</th>
                                     <th>Loop</th>
-                                    <th>Rota</th>
+                                    <th>Route</th>
                                     <th class="text-end">DEL</th>
                                     <th class="text-end">PU</th>
                                     <th class="text-end">HN</th>
@@ -406,7 +364,7 @@
                                 <tfoot class="spms-overview-tfoot" id="spmsOverviewTfoot"></tfoot>
                               </table>
                             </div>
-                            <p id="spmsDashboardEmpty" class="spms-dashboard-empty text-muted small mt-2 hidden">Nenhum dado importado para esta data. Use o upload OPMS ou importe os ficheiros Excel.</p>
+                            <p id="spmsDashboardEmpty" class="spms-dashboard-empty text-muted small mt-2 hidden">No data imported for this date. Use OPMS upload or import the Excel files.</p>
                           </div>
                         </section>
                       </div>
@@ -606,19 +564,36 @@
     <strong>Service Provider not set.</strong> Open this portal from the main app with <code>?sp=YourCompany</code> or <a href="../../service-providers/index.html">choose a Service Provider</a>.
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-  <script src="../../dhl-mock-data.js"></script>
-  <script src="../../dhl-embedded-data.js"></script>
-  <script src="../../assets/disco-data.js"></script>
-  <script src="../../dhl-lastday-pdf-data.js"></script>
-  <script src="../../beam-sidebar.js"></script>
-  <script src="../dashboard.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      if (window.AOS) AOS.init({ duration: 500, offset: 50, once: true, easing: 'ease-out-cubic' });
-    });
-  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" defer></script>
+  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js" defer></script>
+  <script src="../../dhl-mock-data.js" defer></script>
+  <script src="../../dhl-embedded-data.js" defer></script>
+  <script src="../../assets/disco-data.js" defer></script>
+  <script src="../../dhl-lastday-pdf-data.js" defer></script>
+  <script src="../../beam-sidebar.js" defer></script>
+  <script src="dashboard.js" defer></script>
+
+  <!-- Notifications: tab na borda + sidebar (fora do layout para position:fixed ao viewport) -->
+  <button type="button" class="sp-notif-tab" id="spNotifTab" aria-label="Open notifications" aria-expanded="false" title="Notifications">
+    <i class="bi bi-bell-fill"></i>
+    <span class="sp-notif-tab-badge hidden" id="spNotifTabBadge">0</span>
+  </button>
+  <div class="sp-notif-sidebar" id="spNotifSidebar" aria-label="Notifications panel" aria-hidden="true">
+    <div class="sp-notif-sidebar-backdrop" id="spNotifSidebarBackdrop" aria-hidden="true"></div>
+    <div class="sp-notif-sidebar-panel">
+      <div class="sp-notif-sidebar-header">
+        <h2 class="sp-notif-sidebar-title"><i class="bi bi-bell-fill"></i> Notifications</h2>
+        <button type="button" class="sp-notif-sidebar-close" id="spNotifSidebarClose" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sp-notif-sidebar-body">
+        <div class="sp-notif-list" id="spNotifList" role="list"></div>
+        <div id="spNotifEmpty" class="sp-notif-empty hidden">
+          <i class="bi bi-inbox"></i>
+          <p>No notifications at the moment.</p>
+        </div>
+      </div>
+    </div>
+  </div>
 
 </body>
 </html>

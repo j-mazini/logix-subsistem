@@ -65,6 +65,14 @@ Incluir em novas páginas HTML antes do script da aplicação:
 
 Depois usar, por exemplo: `window.DHL_MOCK_DATA.vendors`, `window.DHL_MOCK_DATA.vehicles` ou `window.DHL_MOCK_DATA.contracts`.
 
+## Performance e páginas leves
+
+As páginas do subsistema foram otimizadas para ficarem **leves e dinâmicas**, prontas para animações (ex.: AOS no dashboard SP):
+
+- **Dashboard Service Provider:** removido Tailwind CDN (não utilizado; layout com Bootstrap). Scripts no final da página com `defer` para não bloquear o parsing. Fontes com `preconnect` e variantes reduzidas (400, 600, 700) onde aplicável.
+- **Todas as páginas do SP** (dashboard, profile, drivers, vehicles, contracts, sop-feed, select, login): scripts com `defer`, `preconnect` para Google Fonts quando usado.
+- **Regra para novas páginas:** não adicionar Tailwind a menos que a página use classes Tailwind; colocar todos os scripts no final do `<body>` com `defer`, mantendo a ordem de dependências (dados → beam-sidebar → app); usar apenas as variantes de fonte necessárias.
+
 ## Regra
 
 Todas as modificações e criações do subsistema DHL devem ser feitas **apenas** dentro de `DHL-Subsystem`. O repositório `logix-sphere-frontend-nextjs` não é alterado por este subsistema.
