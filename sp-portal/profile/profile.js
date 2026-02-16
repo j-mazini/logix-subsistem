@@ -1,6 +1,8 @@
     (function () {
       'use strict';
       var SP_STORAGE_KEY = 'dhl_sp_portal_current_sp';
+      var COVER_STORAGE_KEY = 'dhl_sp_profile_cover';
+      var AVATAR_STORAGE_KEY = 'dhl_sp_profile_avatar';
 
       function getCurrentSp() {
         var params = new URLSearchParams(window.location.search);
@@ -35,6 +37,99 @@
         return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
       }
 
+      function getStoredCover() {
+        try {
+          var raw = localStorage.getItem(COVER_STORAGE_KEY);
+          if (!raw) return null;
+          var data = JSON.parse(raw);
+          return data[getCurrentSp()] || null;
+        } catch (e) { return null; }
+      }
+
+      function setStoredCover(dataUrl) {
+        try {
+          var raw = localStorage.getItem(COVER_STORAGE_KEY);
+          var all = raw ? JSON.parse(raw) : {};
+          all[getCurrentSp()] = dataUrl;
+          localStorage.setItem(COVER_STORAGE_KEY, JSON.stringify(all));
+        } catch (e) {}
+      }
+
+      function getStoredAvatar() {
+        try {
+          var raw = localStorage.getItem(AVATAR_STORAGE_KEY);
+          if (!raw) return null;
+          var data = JSON.parse(raw);
+          return data[getCurrentSp()] || null;
+        } catch (e) { return null; }
+      }
+
+      function setStoredAvatar(dataUrl) {
+        try {
+          var raw = localStorage.getItem(AVATAR_STORAGE_KEY);
+          var all = raw ? JSON.parse(raw) : {};
+          all[getCurrentSp()] = dataUrl;
+          localStorage.setItem(AVATAR_STORAGE_KEY, JSON.stringify(all));
+        } catch (e) {}
+      }
+
+      function initCoverUpload() {
+        var input = document.getElementById('profileCoverInput');
+        var wrap = input && input.closest('.sp-profile-cover-wrap');
+        var preview = document.getElementById('profileCoverPreview');
+        if (!input || !preview) return;
+
+        var stored = getStoredCover();
+        if (stored) {
+          preview.style.backgroundImage = 'url(' + stored + ')';
+          preview.style.backgroundSize = 'cover';
+          preview.style.backgroundPosition = 'center';
+          wrap.classList.add('has-image');
+        }
+
+        input.addEventListener('change', function () {
+          var file = input.files && input.files[0];
+          if (!file || !file.type.match(/^image\//)) return;
+          var reader = new FileReader();
+          reader.onload = function (e) {
+            var dataUrl = e.target.result;
+            preview.style.backgroundImage = 'url(' + dataUrl + ')';
+            preview.style.backgroundSize = 'cover';
+            preview.style.backgroundPosition = 'center';
+            wrap.classList.add('has-image');
+            setStoredCover(dataUrl);
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+
+      function initAvatarUpload() {
+        var input = document.getElementById('profileAvatarInput');
+        var preview = document.getElementById('profileAvatarPreview');
+        var img = document.getElementById('profileAvatarImg');
+        var initials = document.getElementById('profileAvatarInitials');
+        if (!input || !preview) return;
+
+        var stored = getStoredAvatar();
+        if (stored) {
+          if (img) { img.src = stored; img.classList.remove('d-none'); }
+          if (initials) initials.style.display = 'none';
+        }
+
+        input.addEventListener('change', function () {
+          var file = input.files && input.files[0];
+          if (!file || !file.type.match(/^image\//)) return;
+          var reader = new FileReader();
+          reader.onload = function (e) {
+            var dataUrl = e.target.result;
+            if (img) { img.src = dataUrl; img.classList.remove('d-none'); }
+            if (initials) initials.style.display = 'none';
+            setStoredAvatar(dataUrl);
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+
       var spName = getCurrentSp();
       if (!spName) {
         document.getElementById('spNotFound').classList.remove('hidden');
@@ -59,9 +154,18 @@
           }
         }
         appendSpToLinks();
+
+        document.getElementById('profileForm').classList.remove('hidden');
+
         var meta = getSpMeta(spName);
+        var displayName = document.getElementById('profileDisplayName');
+        var tagline = document.getElementById('profileTagline');
+        var initialsEl = document.getElementById('profileAvatarInitials');
+        if (displayName) displayName.textContent = meta.name || spName;
+        if (tagline) tagline.textContent = meta.owner ? 'Director: ' + meta.owner : (meta.description ? meta.description.substring(0, 80) + (meta.description.length > 80 ? '…' : '') : '—');
+        if (initialsEl) initialsEl.textContent = (spName || '').split(' ').map(function (w) { return w[0]; }).join('').slice(0, 2).toUpperCase() || '—';
+
         if (meta) {
-          document.getElementById('profileForm').classList.remove('hidden');
           document.getElementById('profileName').value = meta.name || '';
           document.getElementById('profileOwner').value = meta.owner || '';
           document.getElementById('profileDescription').value = meta.description || '';
@@ -91,17 +195,34 @@
                 );
               }).join('');
         }
+
+        initCoverUpload();
+        initAvatarUpload();
+
+        var avatarImg = document.getElementById('profileAvatarImg');
+        var storedAvatar = getStoredAvatar();
+        if (storedAvatar) {
+          if (avatarImg) { avatarImg.src = storedAvatar; avatarImg.classList.remove('d-none'); }
+          if (initialsEl) initialsEl.style.display = 'none';
+        } else if (logoMap[spName] && avatarImg) {
+          avatarImg.onerror = function () { if (initialsEl) initialsEl.style.display = 'flex'; };
+          avatarImg.src = '../../assets/' + logoMap[spName];
+          avatarImg.alt = spName;
+          avatarImg.classList.remove('d-none');
+          if (initialsEl) initialsEl.style.display = 'none';
+        }
       }
 
-      document.getElementById('profileForm').addEventListener('submit', function (e) {
-        e.preventDefault();
-        var toast = document.getElementById('profileToast');
-        var toastText = document.getElementById('profileToastText');
-        if (toast && toastText) {
-          toastText.textContent = 'Profile saved successfully.';
-          toast.removeAttribute('hidden');
-          setTimeout(function () { toast.setAttribute('hidden', ''); }, 3000);
-        }
-      });
-
+      var saveBtn = document.getElementById('profileSaveBtn');
+      if (saveBtn) {
+        saveBtn.addEventListener('click', function () {
+          var toast = document.getElementById('profileToast');
+          var toastText = document.getElementById('profileToastText');
+          if (toast && toastText) {
+            toastText.textContent = 'Profile saved successfully.';
+            toast.removeAttribute('hidden');
+            setTimeout(function () { toast.setAttribute('hidden', ''); }, 3000);
+          }
+        });
+      }
     })();

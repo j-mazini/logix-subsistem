@@ -147,12 +147,17 @@
                     <ul class="nav nav-tabs card-header-tabs sp-folder-tabs-bootstrap ms-auto" role="tablist" id="folderTabsList">
                       <li class="nav-item" role="presentation">
                         <button type="button" class="nav-link active" role="tab" aria-selected="true" data-folder="lastday" id="folderLastDay" aria-controls="folder-panel-lastday">
-                          <i class="bi bi-calendar-check me-1"></i> Daily OPMS
+                          <i class="bi bi-calendar-check me-1"></i> Daily Operations
                         </button>
                       </li>
                       <li class="nav-item" role="presentation">
                         <button type="button" class="nav-link" role="tab" aria-selected="false" data-folder="spms" id="folderSpms" aria-controls="folder-panel-spms">
-                          <i class="bi bi-currency-pound me-1"></i> Daily SPMS
+                          <i class="bi bi-currency-pound me-1"></i> Financials
+                        </button>
+                      </li>
+                      <li class="nav-item" role="presentation">
+                        <button type="button" class="nav-link" role="tab" aria-selected="false" data-folder="ld" id="folderLd" aria-controls="folder-panel-ld">
+                          <i class="bi bi-exclamation-triangle me-1"></i> Liquidation Damages
                         </button>
                       </li>
                     </ul>
@@ -164,7 +169,7 @@
                         <div class="dashboard-kpi-icon-wrap kpi-spr" aria-hidden="true"><i class="bi bi-graph-up-arrow"></i></div>
                         <div class="dashboard-kpi-content">
                           <span class="dashboard-kpi-value-wrap"><span class="dashboard-kpi-value" id="spFolderKpiSprFixed">0</span></span>
-                          <span class="dashboard-kpi-label">SPR</span>
+                          <span class="dashboard-kpi-label" id="spFolderKpiFirstLabel">SPR</span>
                         </div>
                       </div>
                       <div class="hidden" id="spFolderKpiLastDay1">
@@ -248,41 +253,62 @@
                           </div>
                         </div>
                       </div>
+                      <div class="hidden" id="spFolderKpiLd2">
+                        <div class="dashboard-kpi-card" data-animate="3">
+                          <div class="dashboard-kpi-icon-wrap kpi-vendors" aria-hidden="true"><i class="bi bi-clock-history"></i></div>
+                          <div class="dashboard-kpi-content">
+                            <span class="dashboard-kpi-value-wrap"><span class="dashboard-kpi-value" id="spFolderKpiLdPending">—</span></span>
+                            <span class="dashboard-kpi-label">Pending</span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                   <div class="card-body tab-content pt-3" id="spFolderContent">
                     <div id="folder-panel-lastday" class="tab-pane fade show active sp-folder-panel opms-panel" role="tabpanel" aria-labelledby="folderLastDay">
-                      <div class="opms-lastday-layout opms-lastday-layout--routes-first">
-                        <aside class="opms-lastday-left">
-                          <p class="small fw-semibold text-muted mb-2 opms-nav-label">Loops · Depots</p>
-                          <div id="lastDayTreeWrap" class="opms-tree-wrap">
-                            <ul id="lastDayTree" class="opms-tree" role="tree" aria-label="Loops and Depots"></ul>
-                          </div>
-                        </aside>
-                        <aside class="opms-lastday-filters">
-                          <p class="small fw-semibold text-muted mb-2 opms-nav-label">Date</p>
-                          <div class="opms-lastday-date-block" role="group" aria-label="Navigate by date">
-                            <button type="button" class="opms-date-edge-btn" id="lastDayDatePrev" aria-label="Previous date" title="Previous date"><i class="bi bi-chevron-left"></i></button>
-                            <button type="button" class="opms-date-center" id="lastDayDatePicker" aria-label="Select date" aria-haspopup="listbox" aria-expanded="false">
-                              <span id="lastDayViewingDate" class="opms-viewing-date" aria-live="polite"></span>
-                              <i class="bi bi-calendar3 opms-date-picker-icon"></i>
-                            </button>
-                            <div id="lastDayDateDropdown" class="opms-date-dropdown hidden" role="listbox" aria-label="Available dates"></div>
-                            <button type="button" class="opms-date-edge-btn" id="lastDayDateNext" aria-label="Next date" title="Next date"><i class="bi bi-chevron-right"></i></button>
-                          </div>
-                        </aside>
-                      </div>
-                      <div class="mt-4">
-                        <h4 class="h6 mb-2"><i class="bi bi-list-ul text-primary"></i> Previous day delivery list</h4>
-                        <div class="table-responsive">
-                          <table class="table table-hover table-sm align-middle mb-0" id="lastDayDeliveriesTable" aria-label="Previous day deliveries">
-                            <thead class="table-light">
-                              <tr><th>Depot</th><th>Loop</th><th>Route</th><th class="text-end">DEL</th><th class="text-end">PU</th><th class="text-end">HN</th><th class="text-end">STOPS</th></tr>
-                            </thead>
-                            <tbody id="lastDayDeliveriesBody"></tbody>
-                          </table>
+                      <header class="opms-lastday-header opms-lastday-header-with-nav mb-3">
+                        <h3 class="h6 mb-2"><i class="bi bi-calendar-day text-primary"></i> Last Day Operations</h3>
+                        <div class="opms-lastday-date-block" role="group" aria-label="Navigate by date">
+                          <button type="button" class="opms-date-edge-btn" id="lastDayDatePrev" aria-label="Previous date" title="Previous date"><i class="bi bi-chevron-left"></i></button>
+                          <button type="button" class="opms-date-center" id="lastDayDatePicker" aria-label="Select date" aria-haspopup="listbox" aria-expanded="false">
+                            <span id="lastDayViewingDate" class="opms-viewing-date" aria-live="polite"></span>
+                            <i class="bi bi-calendar3 opms-date-picker-icon"></i>
+                          </button>
+                          <div id="lastDayDateDropdown" class="opms-date-dropdown hidden" role="listbox" aria-label="Available dates"></div>
+                          <button type="button" class="opms-date-edge-btn" id="lastDayDateNext" aria-label="Next date" title="Next date"><i class="bi bi-chevron-right"></i></button>
                         </div>
-                        <p id="lastDayDeliveriesEmpty" class="text-muted small text-center py-3 mb-0 hidden">Select a date to view deliveries.</p>
+                        <p class="opms-subtitle text-muted mb-0 mt-1 small">Performance (SPOH-R, SPR, STOPS, Time Window, AFD) and previous day delivery list.</p>
+                      </header>
+                      <div class="opms-lastday-layout">
+                        <aside class="opms-lastday-left">
+                          <p class="small fw-semibold text-muted mb-2 opms-nav-label">Routes · Loops · Depots</p>
+                          <div id="lastDayTreeWrap" class="opms-tree-wrap">
+                            <ul id="lastDayTree" class="opms-tree" role="tree" aria-label="Routes, Loops and Depots"></ul>
+                          </div>
+                        </aside>
+                        <section class="opms-lastday-right opms-performance-block" id="opmsPerformanceSection" aria-labelledby="opms-performance-heading">
+                          <div class="opms-performance-card">
+                            <header class="opms-performance-header">
+                              <div class="opms-performance-header-icon"><i class="bi bi-graph-up-arrow" aria-hidden="true"></i></div>
+                              <div>
+                                <h4 id="opms-performance-heading" class="opms-performance-title">Performance</h4>
+                                <p class="opms-performance-subtitle">Time Window and AFD by route, loop or depot</p>
+                              </div>
+                            </header>
+                            <div class="opms-performance-body mt-4">
+                              <h4 class="h6 mb-2"><i class="bi bi-list-ul text-primary"></i> Previous day delivery list</h4>
+                              <div class="table-responsive">
+                                <table class="table table-hover table-sm align-middle mb-0" id="lastDayDeliveriesTable" aria-label="Previous day deliveries">
+                                  <thead class="table-light">
+                                    <tr><th>Route</th><th class="text-end">DEL</th><th class="text-end">PU</th><th class="text-end">HN</th><th class="text-end">AFD</th><th class="text-end">STOPS</th></tr>
+                                  </thead>
+                                  <tbody id="lastDayDeliveriesBody"></tbody>
+                                </table>
+                              </div>
+                              <p id="lastDayDeliveriesEmpty" class="text-muted small text-center py-3 mb-0 hidden">Select a date to view deliveries.</p>
+                            </div>
+                          </div>
+                        </section>
                       </div>
                     </div>
                     <div id="folder-panel-spms" class="tab-pane fade sp-folder-panel opms-panel" role="tabpanel" aria-labelledby="folderSpms" aria-hidden="true">
@@ -307,65 +333,85 @@
                           </div>
                         </aside>
                         <section class="opms-lastday-right opms-performance-block" id="spmsPerformanceSection" aria-labelledby="spms-performance-heading">
-                          <div class="opms-performance-card">
-                            <header class="opms-performance-header">
-                              <div class="opms-performance-header-icon"><i class="bi bi-graph-up-arrow" aria-hidden="true"></i></div>
-                              <div>
-                                <h4 id="spms-performance-heading" class="opms-performance-title">Performance &amp; Income</h4>
-                                <p class="opms-performance-subtitle">Day metrics by route, loop or depot</p>
+                          <div class="spms-bento" id="spmsBentoGrid">
+                            <div class="spms-bento-card spms-bento-income">
+                              <div class="spms-card-icon"><i class="bi bi-currency-pound"></i></div>
+                              <div class="spms-card-content">
+                                <span class="spms-card-label">Income</span>
+                                <span class="spms-card-value" id="spmsKpiIncome">—</span>
                               </div>
-                            </header>
-                          </div>
-                          <!-- Financials: DEL, PU, HN, TOTAL + Income / Avg (conforme esboço) -->
-                          <div class="spms-financials-block mt-4">
-                            <h4 class="spms-overview-title"><i class="bi bi-currency-pound text-primary"></i> Financials</h4>
-                            <div class="spms-financials-row d-flex flex-wrap align-items-stretch gap-3">
-                              <div class="spms-financials-circle-wrap">
-                                <div class="spms-financials-circle" id="spmsFinancialsCircle" aria-hidden="true">
-                                  <span class="spms-fc-item spms-fc-del">DEL</span>
-                                  <span class="spms-fc-item spms-fc-pu">PU</span>
-                                  <span class="spms-fc-item spms-fc-hn">HN</span>
-                                  <span class="spms-fc-item spms-fc-total">TOTAL</span>
-                                </div>
-                                <div class="spms-financials-currency mt-2"><span class="spms-kpi-value" id="spmsKpiIncome">—</span> <small class="text-muted">Income</small></div>
+                            </div>
+                            <div class="spms-bento-card spms-bento-kpi">
+                              <span class="spms-card-label">DEL</span>
+                              <span class="spms-card-value" id="spmsKpiDel">—</span>
+                            </div>
+                            <div class="spms-bento-card spms-bento-kpi">
+                              <span class="spms-card-label">PU</span>
+                              <span class="spms-card-value" id="spmsKpiPu">—</span>
+                            </div>
+                            <div class="spms-bento-card spms-bento-kpi">
+                              <span class="spms-card-label">HN</span>
+                              <span class="spms-card-value" id="spmsKpiHn">—</span>
+                            </div>
+                            <div class="spms-bento-card spms-bento-kpi">
+                              <span class="spms-card-label">% vs target</span>
+                              <span class="spms-card-value" id="spmsKpiPct">—</span>
+                            </div>
+                            <div class="spms-bento-card spms-bento-performance" id="spmsGoalsWrap">
+                              <div class="last-day-goals-wrap"></div>
+                            </div>
+                            <div class="spms-bento-card spms-bento-avg">
+                              <div class="spms-card-icon"><i class="bi bi-graph-up"></i></div>
+                              <div class="spms-card-content">
+                                <span class="spms-card-label">Avg Income</span>
+                                <span class="spms-card-value" id="spmsAvgIncome">—</span>
                               </div>
-                              <div class="spms-financials-stack d-flex flex-column justify-content-center gap-2">
-                                <div class="spms-kpi-card compact"><span class="spms-kpi-value" id="spmsKpiDel">—</span><span class="spms-kpi-label">DEL</span></div>
-                                <div class="spms-kpi-card compact"><span class="spms-kpi-value" id="spmsKpiPu">—</span><span class="spms-kpi-label">PU</span></div>
-                                <div class="spms-kpi-card compact"><span class="spms-kpi-value" id="spmsKpiHn">—</span><span class="spms-kpi-label">HN</span></div>
-                                <div class="spms-kpi-card compact"><span class="spms-kpi-value" id="spmsKpiPct">—</span><span class="spms-kpi-label">% vs target</span></div>
-                              </div>
-                              <div class="spms-avg-block d-flex flex-column justify-content-center">
-                                <div class="small text-muted mb-1">Avg Income</div>
-                                <div class="sp-folder-kpi-value" id="spmsAvgIncome">—</div>
-                                <div class="small text-muted mt-2 mb-1">Avg Route</div>
-                                <div class="sp-folder-kpi-value" id="spmsAvgRoute">—</div>
+                            </div>
+                            <div class="spms-bento-card spms-bento-avg">
+                              <div class="spms-card-icon"><i class="bi bi-signpost-2"></i></div>
+                              <div class="spms-card-content">
+                                <span class="spms-card-label">Avg Route</span>
+                                <span class="spms-card-value" id="spmsAvgRoute">—</span>
                               </div>
                             </div>
                           </div>
-                          <div class="spms-dashboard-block mt-4">
-                            <h4 class="spms-overview-title"><i class="bi bi-table text-primary"></i> Data by route (imported)</h4>
-                            <h4 class="spms-overview-title mt-4"><i class="bi bi-table text-primary"></i> Data by route (imported)</h4>
-                            <div class="spms-table-wrap" id="spmsTableWrap">
-                              <table class="spms-overview-table table table-striped mb-0" id="spmsOverviewTable" aria-label="SPMS data by route">
-                                <thead>
-                                  <tr>
-                                    <th>Depot</th>
-                                    <th>Loop</th>
-                                    <th>Route</th>
-                                    <th class="text-end">DEL</th>
-                                    <th class="text-end">PU</th>
-                                    <th class="text-end">HN</th>
-                                    <th class="text-end">Income</th>
-                                    <th class="text-end">%</th>
-                                  </tr>
-                                </thead>
-                                <tbody id="spmsOverviewTbody"></tbody>
-                                <tfoot class="spms-overview-tfoot" id="spmsOverviewTfoot"></tfoot>
-                              </table>
-                            </div>
-                            <p id="spmsDashboardEmpty" class="spms-dashboard-empty text-muted small mt-2 hidden">No data imported for this date. Use OPMS upload or import the Excel files.</p>
+                        </section>
+                      </div>
+                    </div>
+                    <div id="folder-panel-ld" class="tab-pane fade sp-folder-panel opms-panel" role="tabpanel" aria-labelledby="folderLd" aria-hidden="true">
+                      <header class="opms-lastday-header opms-lastday-header-with-nav mb-3">
+                        <h3 class="h6 mb-2"><i class="bi bi-exclamation-triangle text-primary"></i> Liquidation Damages</h3>
+                        <div class="opms-lastday-date-block d-flex align-items-center gap-3 flex-wrap" role="group" aria-label="Current month and totals">
+                          <span id="ldViewingMonth" class="opms-viewing-date" aria-live="polite"></span>
+                          <span class="ld-count-kpi"><strong>Deductions:</strong> <span id="ldCount" class="ld-count-value">0</span></span>
+                          <span class="ld-total-kpi"><strong>Total:</strong> <span id="ldTotalAmount" class="ld-total-value">£0.00</span></span>
+                        </div>
+                      </header>
+                      <div class="opms-lastday-layout">
+                        <aside class="opms-lastday-left">
+                          <p class="small fw-semibold text-muted mb-2 opms-nav-label">Routes · Loops · Depots</p>
+                          <div id="ldTreeWrap" class="opms-tree-wrap">
+                            <ul id="ldTree" class="opms-tree" role="tree" aria-label="Routes, Loops and Depots"></ul>
                           </div>
+                        </aside>
+                        <section class="opms-lastday-right opms-performance-block" id="ldTableSection" aria-labelledby="ld-table-heading">
+                          <h4 id="ld-table-heading" class="h6 mb-2"><i class="bi bi-list-ul text-primary"></i> Liquidation Damages</h4>
+                          <div class="table-responsive">
+                            <table class="table table-hover table-sm align-middle mb-0" id="ldTable" aria-label="Liquidation Damages">
+                              <thead class="table-light">
+                                <tr>
+                                  <th>AWB</th>
+                                  <th>Route</th>
+                                  <th>Issue Date</th>
+                                  <th>Issue Description</th>
+                                  <th class="text-end">Amount</th>
+                                  <th>Status</th>
+                                </tr>
+                              </thead>
+                              <tbody id="ldTableBody"></tbody>
+                            </table>
+                          </div>
+                          <p id="ldTableEmpty" class="text-muted small text-center py-3 mb-0 hidden">No liquidation damages for the selected filters.</p>
                         </section>
                       </div>
                     </div>

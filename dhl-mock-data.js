@@ -346,12 +346,25 @@
     }
   });
 
+  /* SOP Feed posts – partilhados entre DHL e SP Portal. Paths relativos: assets/ → resolver com ../../assets/ em cada contexto. */
+  var SOP_POSTS = [
+    { id: 0, author: 'DHL Uk', authorAvatar: 'assets/dhl-uk-logo.png', timeAgo: '1 hour ago', type: 'tutorial', title: 'DHL Training Video', content: 'Watch the DHL training video directly on the platform. Stay up to date with procedures and best practices.', video: 'assets/videos/dhl-training-1.mp4', image: null, youtubeVideoId: null, likes: 15, comments: 3, liked: false, commentList: [
+      { author: 'James T.', company: 'BA Express', authorAvatar: 'assets/ba-express-logo.png', text: 'Really clear video, thanks for sharing.', timeAgo: '50 min ago' }
+    ]},
+    { id: 1, author: 'DHL Uk', authorAvatar: 'assets/dhl-uk-logo.png', timeAgo: '2 hours ago', type: 'tutorial', title: 'Safe Loading Procedures – Step by Step', content: 'Updated tutorial for safe loading and unloading of parcels. Key points: secure cargo with straps, check weight distribution, use PPE.', image: 'assets/sop-dhl-truck-london.png', video: null, youtubeVideoId: null, likes: 24, comments: 8, liked: false, commentList: [
+      { author: 'Tom W.', company: 'Swift Haul Solutions', authorAvatar: 'assets/swift-haul-logo.png', text: 'Love the photo. Is the strap configuration the same for all vehicle types?', timeAgo: '1 hour ago' }
+    ]},
+    { id: 2, author: 'DHL Uk', authorAvatar: 'assets/dhl-uk-logo.png', timeAgo: '1 day ago', type: 'update', title: 'New Depot Hours – MSE & LCY', content: 'Effective from next Monday, MSE and LCY depots will operate extended hours during peak season.', image: null, video: null, youtubeVideoId: null, likes: 42, comments: 12, liked: false, commentList: [] },
+    { id: 3, author: 'DHL Uk', authorAvatar: 'assets/dhl-uk-logo.png', timeAgo: '3 days ago', type: 'info', title: 'Time Window (TW) Compliance Reminder', content: 'Please ensure all deliveries are completed within the agreed time windows.', image: null, video: null, youtubeVideoId: null, likes: 67, comments: 5, liked: true, commentList: [] }
+  ];
+
   global.DHL_MOCK_DATA = {
     vendors: MOCK_VENDORS,
     vehicles: MOCK_VEHICLES,
     contracts: MOCK_CONTRACTS,
     digressiveBands: DIGRESSIVE_BANDS,
     serviceProviders: SERVICE_PROVIDERS,
+    sopPosts: SOP_POSTS,
     period: { start: '2025-11-01', end: '2026-01-31' },
     dashboardSummary: {
       spr: 94.2,

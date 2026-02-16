@@ -47,17 +47,30 @@
     (function () {
       'use strict';
       var sel = document.getElementById('spSelect');
-      var list = (window.DHL_MOCK_DATA && window.DHL_MOCK_DATA.serviceProviders) ? window.DHL_MOCK_DATA.serviceProviders : [];
+      var form = document.getElementById('selectSpForm');
+      if (!sel || !form) return;
+
+      var list = (window.DHL_MOCK_DATA && window.DHL_MOCK_DATA.serviceProviders && Array.isArray(window.DHL_MOCK_DATA.serviceProviders))
+        ? window.DHL_MOCK_DATA.serviceProviders
+        : [
+            { id: 'ba-express', name: 'BA Express' },
+            { id: 'premier-logistics', name: 'Premier Logistics Ltd' },
+            { id: 'swift-haul', name: 'Swift Haul Solutions' },
+            { id: 'metro-freight', name: 'Metro Freight Partners' },
+            { id: 'atlas-transport', name: 'Atlas Transport Services' }
+          ];
       list.forEach(function (sp) {
+        var name = (sp && sp.name) ? sp.name : (typeof sp === 'string' ? sp : '—');
+        if (!name) return;
         var opt = document.createElement('option');
-        opt.value = sp.name || '';
-        opt.textContent = sp.name || '—';
+        opt.value = name;
+        opt.textContent = name;
         sel.appendChild(opt);
       });
 
-      document.getElementById('selectSpForm').addEventListener('submit', function (e) {
+      form.addEventListener('submit', function (e) {
         e.preventDefault();
-        var sp = sel.value;
+        var sp = sel.value.trim();
         if (!sp) return;
         try { sessionStorage.setItem('dhl_sp_portal_current_sp', sp); } catch (err) {}
         window.location.href = '../dashboard/index.html?sp=' + encodeURIComponent(sp);

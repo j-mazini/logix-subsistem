@@ -4918,6 +4918,18 @@ body.sp-portal .page-inner {
   border-radius: 0.75rem 0.75rem 0 0;
 }
 
+.sp-portal #complianceGrid .compliance-vendor-list.list-group-flush .list-group-item {
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.5) !important;
+  border-radius: 0 !important;
+  padding: 0.4rem 0.75rem;
+}
+
+.sp-portal #complianceGrid .compliance-vendor-list.list-group-flush .list-group-item:last-child {
+  border-bottom: none !important;
+}
+
 /* Vehicles: card e tabela */
 .sp-portal .card.sp-dashboard-card .table-responsive {
   border-radius: 0 0 1rem 1rem;

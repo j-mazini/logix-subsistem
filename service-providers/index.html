@@ -50,10 +50,6 @@
           <i class="bi bi-journal-bookmark-fill beam-plate-icon"></i>
           <span>SOP Feed</span>
         </a>
-        <a href="../dhl/access-select/index.html" class="beam-plate beam-plate--switch">
-          <i class="bi bi-arrow-left-right beam-plate-icon"></i>
-          <span>Select access</span>
-        </a>
       </div>
     </nav>
 
@@ -136,21 +132,16 @@
             : escapeHtml(initials);
           var avatarClass = 'sp-provider-card-avatar' + (hasCustomBranding ? ' sp-provider-card-avatar--logo' : '');
           var avatarStyle = hasCustomBranding ? 'background: #fff;' : 'background: ' + (sp.color || '#3498db') + '; color: #fff;';
-          var portalUrl = '../sp-portal/dashboard/index.html?sp=' + encodeURIComponent(name);
           return (
-            '<div class="sp-provider-card">' +
+            '<a href="' + url + '" class="sp-provider-card sp-provider-card-link">' +
               '<div class="sp-provider-card-cover" style="' + coverStyle + '"></div>' +
               '<div class="' + avatarClass + '" style="' + avatarStyle + '">' +
                 avatarContent +
               '</div>' +
               '<div class="sp-provider-card-body">' +
                 '<strong>' + escapeHtml(name) + '</strong>' +
-                '<div class="sp-provider-card-actions">' +
-                  '<a href="' + url + '" class="sp-provider-card-link">View profile</a>' +
-                  '<a href="' + portalUrl + '" class="sp-provider-card-link sp-provider-card-link--portal">Open portal</a>' +
-                '</div>' +
               '</div>' +
-            '</div>'
+            '</a>'
           );
         }).join('');
       }

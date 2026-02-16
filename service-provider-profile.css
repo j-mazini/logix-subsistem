@@ -191,6 +191,10 @@
   transform: translateY(-3px);
 }
 
+.sp-profile-card--vendor-clickable {
+  cursor: pointer;
+}
+
 .sp-profile-card-icon {
   width: 56px;
   height: 56px;
@@ -493,9 +497,6 @@
 }
 .sp-provider-card-link:hover {
   text-decoration: underline;
-}
-.sp-provider-card-link--portal {
-  font-weight: 500;
 }
 
 @media (max-width: 991px) {

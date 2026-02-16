@@ -11,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../../vendor-admin-view.css" />
   <link rel="stylesheet" href="../../sidebar-beam.css" />
-  <link rel="stylesheet" href="../../sop-feed.css" />
+  <link rel="stylesheet" href="../../sp-portal/sop-feed/sop-feed.css" />
   <link rel="stylesheet" href="../../liquid-glass.css" />
   <link rel="stylesheet" href="../../modern-ui.css" />
 </head>
@@ -146,10 +146,18 @@
     </div>
   </div>
 
+  <script src="../../dhl-mock-data.js"></script>
   <script src="../../beam-sidebar.js"></script>
   <script>
     (function () {
       'use strict';
+
+      var SOP_CACHE_KEY = 'dhl_sop_feed_comments';
+
+      /** Resolve paths assets/ para ../../assets/ (contexto dhl/standard-operating-procedures/) */
+      function asset(path) {
+        return path ? path.replace(/^assets\//, '../../assets/') : '';
+      }
 
       /** Extrai o ID do vídeo de uma URL do YouTube (watch ou youtu.be). */
       function parseYoutubeVideoId(url) {
@@ -159,7 +167,14 @@
         return m ? m[1] : null;
       }
 
-      var MOCK_POSTS = [
+      var MOCK_POSTS = (function () {
+        var base = (window.DHL_MOCK_DATA && window.DHL_MOCK_DATA.sopPosts && window.DHL_MOCK_DATA.sopPosts.length)
+          ? window.DHL_MOCK_DATA.sopPosts.map(function (p) {
+              var c = { id: p.id, author: p.author, authorAvatar: p.authorAvatar, timeAgo: p.timeAgo, type: p.type, title: p.title, content: p.content, video: p.video, image: p.image, youtubeVideoId: p.youtubeVideoId, likes: p.likes || 0, comments: p.comments || 0, liked: !!p.liked };
+              c.commentList = (p.commentList || []).map(function (x) { return { author: x.author, company: x.company, authorAvatar: x.authorAvatar, text: x.text, timeAgo: x.timeAgo }; });
+              return c;
+            })
+          : [
         {
           id: 0,
           author: 'DHL Uk',
@@ -174,9 +189,9 @@
           comments: 3,
           liked: false,
           commentList: [
-            { author: 'James T.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Really clear video, thanks for sharing. The section on PPE was especially helpful.', timeAgo: '50 min ago' },
-            { author: 'Sarah M.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Do we have a PDF version of the checklist mentioned at the end?', timeAgo: '35 min ago' },
-            { author: 'Mike R.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Watched it with the team this morning. Everyone found it useful.', timeAgo: '20 min ago' }
+            { author: 'James T.', company: 'BA Express', authorAvatar: 'assets/ba-express-logo.png', text: 'Really clear video, thanks for sharing. The section on PPE was especially helpful.', timeAgo: '50 min ago' },
+            { author: 'Sarah M.', company: 'Premier Logistics Ltd', authorAvatar: 'assets/premier-logistics-logo.png', text: 'Do we have a PDF version of the checklist mentioned at the end?', timeAgo: '35 min ago' },
+            { author: 'Mike R.', company: 'Swift Haul Solutions', authorAvatar: 'assets/swift-haul-logo.png', text: 'Watched it with the team this morning. Everyone found it useful.', timeAgo: '20 min ago' }
           ]
         },
         {
@@ -193,8 +208,8 @@
           comments: 2,
           liked: false,
           commentList: [
-            { author: 'Lisa K.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Great refresher on delivery best practices. The examples were spot on.', timeAgo: '30 min ago' },
-            { author: 'Depot Team', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Can this be shared with new joiners as part of onboarding?', timeAgo: '15 min ago' }
+            { author: 'Lisa K.', company: 'Premier Logistics Ltd', authorAvatar: 'assets/premier-logistics-logo.png', text: 'Great refresher on delivery best practices. The examples were spot on.', timeAgo: '30 min ago' },
+            { author: 'Depot Team', company: 'BA Express', authorAvatar: 'assets/ba-express-logo.png', text: 'Can this be shared with new joiners as part of onboarding?', timeAgo: '15 min ago' }
           ]
         },
         {
@@ -210,7 +225,7 @@
           comments: 8,
           liked: false,
           commentList: [
-            { author: 'Tom W.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Love the photo. Is the strap configuration in the guide the same for all vehicle types?', timeAgo: '1 hour ago' },
+            { author: 'Tom W.', company: 'Swift Haul Solutions', authorAvatar: 'assets/swift-haul-logo.png', text: 'Love the photo. Is the strap configuration in the guide the same for all vehicle types?', timeAgo: '1 hour ago' },
             { author: 'Rachel P.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Straps and PPE – we’ve had a few near misses. This reminder is timely.', timeAgo: '55 min ago' },
             { author: 'Chris N.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Reviewed with my route partner. Weight distribution point is key.', timeAgo: '40 min ago' },
             { author: 'Emma L.', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Can we get laminated cards for the cab with the main steps?', timeAgo: '25 min ago' },
@@ -334,6 +349,37 @@
           ]
         }
       ];
+        return base;
+      })();
+
+      function loadCachedComments() {
+        try {
+          var raw = localStorage.getItem(SOP_CACHE_KEY);
+          if (!raw) return;
+          var cached = JSON.parse(raw);
+          if (!cached || typeof cached !== 'object') return;
+          Object.keys(cached).forEach(function (postIdStr) {
+            var postId = parseInt(postIdStr, 10);
+            var post = MOCK_POSTS.find(function (p) { return p.id === postId; });
+            if (post && Array.isArray(cached[postIdStr])) {
+              post.commentList = (post.commentList || []).concat(cached[postIdStr]);
+              post.comments = (post.commentList || []).length;
+            }
+          });
+        } catch (e) {}
+      }
+      function saveCommentToCache(postId, comment) {
+        try {
+          var raw = localStorage.getItem(SOP_CACHE_KEY);
+          var cached = raw ? JSON.parse(raw) : {};
+          if (typeof cached !== 'object') cached = {};
+          var key = String(postId);
+          if (!cached[key]) cached[key] = [];
+          cached[key].push(comment);
+          localStorage.setItem(SOP_CACHE_KEY, JSON.stringify(cached));
+        } catch (e) {}
+      }
+      loadCachedComments();
 
       function escapeHtml(s) {
         if (s == null) return '';
@@ -356,15 +402,15 @@
             '<span class="sop-youtube-label">Watch on YouTube</span>' +
             '</a>';
         } else if (p.video) {
-          mediaHtml = '<div class="sop-post-media sop-post-media--video"><video controls preload="metadata"><source src="' + escapeHtml(p.video) + '" type="video/mp4">Your browser does not support the video tag.</video></div>';
+          mediaHtml = '<div class="sop-post-media sop-post-media--video"><video controls preload="metadata"><source src="' + escapeHtml(asset(p.video)) + '" type="video/mp4">Your browser does not support the video tag.</video></div>';
         } else if (p.image) {
-          mediaHtml = '<div class="sop-post-media sop-post-media--image"><img src="' + escapeHtml(p.image) + '" alt="" /></div>';
+          mediaHtml = '<div class="sop-post-media sop-post-media--image"><img src="' + escapeHtml(asset(p.image)) + '" alt="" /></div>';
         }
         return (
           '<article class="sop-post" data-id="' + p.id + '">' +
             '<div class="sop-post-header">' +
               '<div class="sop-post-avatar">' +
-                '<img src="' + escapeHtml(p.authorAvatar) + '" alt="" width="40" height="40" />' +
+                '<img src="' + escapeHtml(asset(p.authorAvatar)) + '" alt="" width="40" height="40" />' +
               '</div>' +
               '<div class="sop-post-meta">' +
                 '<strong class="sop-post-author">' + escapeHtml(p.author) + '</strong>' +
@@ -406,12 +452,12 @@
             '<span class="sop-youtube-label">Watch on YouTube</span>' +
             '</a>';
         } else if (p.video) {
-          mediaHtml = '<div class="sop-post-media sop-post-media--video"><video controls preload="metadata"><source src="' + escapeHtml(p.video) + '" type="video/mp4">Your browser does not support the video tag.</video></div>';
+          mediaHtml = '<div class="sop-post-media sop-post-media--video"><video controls preload="metadata"><source src="' + escapeHtml(asset(p.video)) + '" type="video/mp4">Your browser does not support the video tag.</video></div>';
         } else if (p.image) {
-          mediaHtml = '<div class="sop-post-media sop-post-media--image"><img src="' + escapeHtml(p.image) + '" alt="" /></div>';
+          mediaHtml = '<div class="sop-post-media sop-post-media--image"><img src="' + escapeHtml(asset(p.image)) + '" alt="" /></div>';
         }
         return '<div class="sop-post-header">' +
-          '<div class="sop-post-avatar"><img src="' + escapeHtml(p.authorAvatar) + '" alt="" width="40" height="40" /></div>' +
+          '<div class="sop-post-avatar"><img src="' + escapeHtml(asset(p.authorAvatar)) + '" alt="" width="40" height="40" /></div>' +
           '<div class="sop-post-meta">' +
             '<strong class="sop-post-author">' + escapeHtml(p.author) + '</strong>' +
             '<span class="sop-post-badge sop-post-badge--' + p.type + '">' + escapeHtml(typeLabel) + '</span>' +
@@ -436,10 +482,11 @@
       function getCommentsHtml(p) {
         var list = p.commentList || [];
         var items = list.map(function (c) {
+          var authorDisplay = (c.author || 'DHL Uk') + (c.company ? ' (' + c.company + ')' : '');
           return '<div class="sop-comment">' +
-            '<div class="sop-comment-avatar"><img src="' + escapeHtml(c.authorAvatar || 'assets/dhl-uk-logo.png') + '" alt="" width="32" height="32" /></div>' +
+            '<div class="sop-comment-avatar"><img src="' + escapeHtml(asset(c.authorAvatar || 'assets/dhl-uk-logo.png')) + '" alt="" width="32" height="32" /></div>' +
             '<div class="sop-comment-body">' +
-              '<strong class="sop-comment-author">' + escapeHtml(c.author || 'DHL Uk') + '</strong> ' +
+              '<strong class="sop-comment-author">' + escapeHtml(authorDisplay) + '</strong> ' +
               '<span class="sop-comment-time">' + escapeHtml(c.timeAgo || '') + '</span>' +
               '<p class="sop-comment-text">' + escapeHtml(c.text) + '</p>' +
             '</div>' +
@@ -450,7 +497,7 @@
           '<div class="sop-comments-list">' + items + '</div>' +
           '<form class="sop-comments-form" data-post-id="' + p.id + '">' +
             '<div class="sop-comments-input-wrap">' +
-              '<img src="../../assets/dhl-uk-logo.png" alt="" class="sop-comment-input-avatar" width="32" height="32" />' +
+              '<img src="' + escapeHtml(asset('assets/dhl-uk-logo.png')) + '" alt="" class="sop-comment-input-avatar" width="32" height="32" />' +
               '<input type="text" class="sop-comments-input" placeholder="Write a comment..." maxlength="500" />' +
             '</div>' +
             '<button type="submit" class="sop-comments-submit">Comment</button>' +
@@ -469,10 +516,10 @@
         } else if (p.video) {
           thumbHtml = '<span class="sop-post-preview-thumb sop-post-preview-thumb--video"><i class="bi bi-play-fill"></i></span>';
         } else if (p.image) {
-          thumbHtml = '<span class="sop-post-preview-thumb sop-post-preview-thumb--image" style="background-image:url(\'' + escapeHtml(p.image) + '\')"></span>';
+          thumbHtml = '<span class="sop-post-preview-thumb sop-post-preview-thumb--image" style="background-image:url(\'' + escapeHtml(asset(p.image)) + '\')"></span>';
         }
         return '<div class="sop-post-header">' +
-          '<div class="sop-post-avatar"><img src="' + escapeHtml(p.authorAvatar) + '" alt="" width="40" height="40" /></div>' +
+          '<div class="sop-post-avatar"><img src="' + escapeHtml(asset(p.authorAvatar)) + '" alt="" width="40" height="40" /></div>' +
           '<div class="sop-post-meta">' +
             '<strong class="sop-post-author">' + escapeHtml(p.author) + '</strong>' +
             '<span class="sop-post-badge sop-post-badge--' + p.type + '">' + escapeHtml(typeLabel) + '</span>' +
@@ -729,11 +776,11 @@
           e.stopPropagation();
           post.liked = !post.liked;
           post.likes += post.liked ? 1 : -1;
-          render();
-          if (openPostId === id) {
-            var content = document.getElementById('sopPostDetailContent');
-            if (content) content.innerHTML = '<article class="sop-post sop-post--detail" data-id="' + post.id + '">' + getPostHtml(post) + '</article>';
+          var content = document.getElementById('sopPostDetailContent');
+          if (openPostId === id && content) {
+            content.innerHTML = '<article class="sop-post sop-post--detail" data-id="' + post.id + '">' + getPostHtml(post) + '</article>';
           }
+          requestAnimationFrame(function () { render(); });
         });
       }
 
@@ -749,20 +796,26 @@
           if (!text) return;
           var post = MOCK_POSTS.find(function (p) { return p.id === postId; });
           if (!post) return;
-          post.commentList = post.commentList || [];
-          post.commentList.push({
+          var newComment = {
             author: 'DHL Uk',
+            company: 'DHL Administration',
             authorAvatar: 'assets/dhl-uk-logo.png',
             text: text,
             timeAgo: 'Just now'
-          });
+          };
+          post.commentList = post.commentList || [];
+          post.commentList.push(newComment);
           post.comments = (post.comments || 0) + 1;
+          saveCommentToCache(postId, newComment);
           input.value = '';
-          if (openPostId === postId) {
-            var content = document.getElementById('sopPostDetailContent');
-            if (content) content.innerHTML = '<article class="sop-post sop-post--detail" data-id="' + post.id + '">' + getPostHtml(post) + '</article>';
-          }
-          render();
+          var content = document.getElementById('sopPostDetailContent');
+          var openId = openPostId;
+          requestAnimationFrame(function () {
+            if (openId === postId && content) {
+              content.innerHTML = '<article class="sop-post sop-post--detail" data-id="' + post.id + '">' + getPostHtml(post) + '</article>';
+            }
+            requestAnimationFrame(function () { render(); });
+          });
         });
       }
 

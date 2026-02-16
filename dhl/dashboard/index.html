@@ -134,105 +134,6 @@
               </div>
             </header>
 
-            <!-- KPIs -->
-            <section class="dashboard-section dashboard-block" aria-labelledby="kpis-heading">
-              <div class="dashboard-block-header">
-                <h2 id="kpis-heading" class="dashboard-block-title">
-                  <i class="bi bi-graph-up-arrow"></i>
-                  <span>KPIs</span>
-                </h2>
-                <p class="dashboard-block-desc">Key performance indicators: SPR, Time Window (TW), SPOH-R, Total Stops, Active Vendors and Active Loops</p>
-              </div>
-              <div class="dashboard-block-content">
-              <div class="dashboard-kpi-grid" id="kpiGrid" data-loading="true">
-                <div class="dashboard-kpi-card" data-animate="1">
-                  <div class="dashboard-kpi-icon-wrap kpi-spr" aria-hidden="true">
-                    <i class="bi bi-graph-up-arrow"></i>
-                  </div>
-                  <div class="dashboard-kpi-content">
-                    <span class="dashboard-kpi-value-wrap">
-                      <span class="dashboard-kpi-loading-spinner" aria-hidden="true"></span>
-                      <span class="dashboard-kpi-value" id="kpiSpr">0</span>
-                    </span>
-                    <span class="dashboard-kpi-label">SPR</span>
-                  </div>
-                </div>
-                <div class="dashboard-kpi-card" data-animate="2">
-                  <div class="dashboard-kpi-icon-wrap kpi-tw" aria-hidden="true">
-                    <i class="bi bi-clock-history"></i>
-                  </div>
-                  <div class="dashboard-kpi-content">
-                    <span class="dashboard-kpi-value-wrap">
-                      <span class="dashboard-kpi-loading-spinner" aria-hidden="true"></span>
-                      <span class="dashboard-kpi-value" id="kpiTw">0</span>
-                    </span>
-                    <span class="dashboard-kpi-label">Time Window (TW)</span>
-                  </div>
-                </div>
-                <div class="dashboard-kpi-card" data-animate="3">
-                  <div class="dashboard-kpi-icon-wrap kpi-spohr" aria-hidden="true">
-                    <i class="bi bi-speedometer2"></i>
-                  </div>
-                  <div class="dashboard-kpi-content">
-                    <span class="dashboard-kpi-value-wrap">
-                      <span class="dashboard-kpi-loading-spinner" aria-hidden="true"></span>
-                      <span class="dashboard-kpi-value" id="kpiSpohr">0</span>
-                    </span>
-                    <span class="dashboard-kpi-label">SPOH-R</span>
-                  </div>
-                </div>
-                <div class="dashboard-kpi-card" data-animate="4">
-                  <div class="dashboard-kpi-icon-wrap kpi-routes" aria-hidden="true">
-                    <i class="bi bi-signpost-2-fill"></i>
-                  </div>
-                  <div class="dashboard-kpi-content">
-                    <span class="dashboard-kpi-value-wrap">
-                      <span class="dashboard-kpi-loading-spinner" aria-hidden="true"></span>
-                      <span class="dashboard-kpi-value" id="kpiTotalRoutes">0</span>
-                    </span>
-                    <span class="dashboard-kpi-label">TOTAL ROUTES</span>
-                  </div>
-                </div>
-                <div class="dashboard-kpi-card" data-animate="5">
-                  <div class="dashboard-kpi-icon-wrap kpi-stops" aria-hidden="true">
-                    <i class="bi bi-geo-alt-fill"></i>
-                  </div>
-                  <div class="dashboard-kpi-content">
-                    <span class="dashboard-kpi-value-wrap">
-                      <span class="dashboard-kpi-loading-spinner" aria-hidden="true"></span>
-                      <span class="dashboard-kpi-value" id="kpiTotalStops">0</span>
-                    </span>
-                    <span class="dashboard-kpi-label">TOTAL STOPS</span>
-                  </div>
-                </div>
-                <div class="dashboard-kpi-card" data-animate="6">
-                  <div class="dashboard-kpi-icon-wrap kpi-vendors" aria-hidden="true">
-                    <i class="bi bi-people-fill"></i>
-                  </div>
-                  <div class="dashboard-kpi-content">
-                    <span class="dashboard-kpi-value-wrap">
-                      <span class="dashboard-kpi-loading-spinner" aria-hidden="true"></span>
-                      <span class="dashboard-kpi-value" id="kpiVendors">0</span>
-                    </span>
-                    <span class="dashboard-kpi-label">ACTIVE VENDORS</span>
-                  </div>
-                </div>
-                <div class="dashboard-kpi-card" data-animate="7">
-                  <div class="dashboard-kpi-icon-wrap kpi-loops" aria-hidden="true">
-                    <i class="bi bi-arrow-repeat"></i>
-                  </div>
-                  <div class="dashboard-kpi-content">
-                    <span class="dashboard-kpi-value-wrap">
-                      <span class="dashboard-kpi-loading-spinner" aria-hidden="true"></span>
-                      <span class="dashboard-kpi-value" id="kpiLoops">0</span>
-                    </span>
-                    <span class="dashboard-kpi-label">ACTIVE LOOPS</span>
-                  </div>
-                </div>
-              </div>
-              </div>
-            </section>
-
             <!-- Compliance -->
             <section class="dashboard-section dashboard-block" aria-labelledby="compliance-heading">
               <div class="dashboard-block-header">
@@ -452,6 +353,11 @@
         dailyOperationsNotifications: []
       };
 
+      var data = window.DHL_MOCK_DATA;
+      if (!data || typeof data !== 'object') {
+        data = FALLBACK;
+        console.warn('Dashboard: using inline fallback data (dhl-mock-data.js may not have loaded).');
+      }
       if (!data.dailyOperationsNotifications) data.dailyOperationsNotifications = [];
 
       // DHL Header notifications (strip + modal)
@@ -589,11 +495,6 @@
         'All': ['MSE', 'LCY', 'LSE']
       };
 
-      var data = window.DHL_MOCK_DATA;
-      if (!data || typeof data !== 'object') {
-        data = FALLBACK;
-        console.warn('Dashboard: using inline fallback data (dhl-mock-data.js may not have loaded).');
-      }
       var vendors = (data && data.vendors) ? data.vendors : [];
       var vehicles = (data && data.vehicles) ? data.vehicles : [];
       var contracts = (data && data.contracts) ? data.contracts : [];
@@ -797,91 +698,7 @@
         return { loops: totalLoops, routes: totalRoutes, totalStops: totalStops };
       }
 
-      function animateKpiValue(el, target, opts) {
-        if (!el) return;
-        opts = opts || {};
-        var suffix = opts.suffix || '';
-        var decimals = opts.decimals != null ? opts.decimals : 0;
-        var duration = opts.duration || 1200;
-        var delay = opts.delay || 0;
-        var start = 0;
-        var currentText = (el.textContent || '').replace(/[^\d.-]/g, '');
-        if (currentText) {
-          var parsed = parseFloat(currentText);
-          if (!isNaN(parsed)) start = parsed;
-        }
-        var startTime = null;
-
-        var prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        if (prefersReduced) {
-          var display = decimals > 0 ? target.toFixed(decimals) : Math.round(target);
-          el.textContent = display + suffix;
-          return;
-        }
-
-        function easeOutQuart(t) {
-          return 1 - Math.pow(1 - t, 4);
-        }
-
-        function step(timestamp) {
-          if (!startTime) startTime = timestamp;
-          var elapsed = timestamp - startTime - delay;
-          if (elapsed < 0) {
-            requestAnimationFrame(step);
-            return;
-          }
-          var progress = Math.min(elapsed / duration, 1);
-          var eased = easeOutQuart(progress);
-          var current = start + (target - start) * eased;
-          var display = decimals > 0 ? current.toFixed(decimals) : Math.round(current);
-          el.textContent = display + suffix;
-          if (progress < 1) requestAnimationFrame(step);
-        }
-        requestAnimationFrame(step);
-      }
-
-      function updateKPIs() {
-        var grid = document.getElementById('kpiGrid');
-        if (grid && grid.getAttribute('data-loading') === 'true') {
-          setTimeout(function () {
-            if (grid) grid.setAttribute('data-loading', 'false');
-            doUpdateKPIs();
-          }, 500);
-          return;
-        }
-        doUpdateKPIs();
-      }
-
-      function doUpdateKPIs() {
-        var filteredVendors = filterVendors();
-        var agg = aggregateContracts();
-        var totals = getTotalAggregates();
-        var summary = (data && data.dashboardSummary) ? data.dashboardSummary : { timeWindow: 98.5, spohR: 12.4 };
-
-        var sprVal = parseInt(agg.totalDeliveries || 0, 10);
-        var routeFactor = (totals.routes > 0 && agg.routes > 0) ? agg.routes / totals.routes : 1;
-        var twVal = summary.timeWindow != null ? Math.round(summary.timeWindow * routeFactor * 10) / 10 : 0;
-        var spohrVal = summary.spohR != null ? Math.round(summary.spohR * routeFactor * 10) / 10 : 0;
-
-        var kpiSpr = document.getElementById('kpiSpr');
-        var kpiTw = document.getElementById('kpiTw');
-        var kpiSpohr = document.getElementById('kpiSpohr');
-        var kpiTotalRoutes = document.getElementById('kpiTotalRoutes');
-        var kpiTotalStops = document.getElementById('kpiTotalStops');
-        var kpiVendors = document.getElementById('kpiVendors');
-        var kpiLoops = document.getElementById('kpiLoops');
-
-        var baseDelay = 200;
-        var stagger = 60;
-
-        animateKpiValue(kpiSpr, sprVal, { duration: 1000, delay: baseDelay });
-        animateKpiValue(kpiTw, twVal, { suffix: '%', decimals: 1, duration: 1000, delay: baseDelay + stagger });
-        animateKpiValue(kpiSpohr, spohrVal, { decimals: 1, duration: 1000, delay: baseDelay + stagger * 2 });
-        animateKpiValue(kpiTotalRoutes, agg.routes || 0, { duration: 1000, delay: baseDelay + stagger * 3 });
-        animateKpiValue(kpiTotalStops, agg.totalStops || 0, { duration: 1000, delay: baseDelay + stagger * 4 });
-        animateKpiValue(kpiVendors, filteredVendors.length, { duration: 1000, delay: baseDelay + stagger * 5 });
-        animateKpiValue(kpiLoops, agg.loops || 0, { duration: 1000, delay: baseDelay + stagger * 6 });
-      }
+      function updateKPIs() {}
 
       function getValidityStatus(dateStr, monthsValidity) {
         if (!dateStr) return 'expired';

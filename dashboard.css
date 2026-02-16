@@ -6,17 +6,10 @@
   box-sizing: border-box;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .dashboard-main {
-    scroll-behavior: smooth;
-  }
-}
 
 /* Preencher mais a tela: largura total e altura */
 .sidebar-inset:has(.dashboard-main) {
   min-height: 100vh;
-  /* Performance: isolamento de conteúdo */
-  contain: layout style;
 }
 
 .page-container:has(.dashboard-main) {
@@ -37,12 +30,6 @@
   min-width: 0;
   max-width: 100%;
   overflow-x: hidden;
-  /* Performance: isolamento de layout e renderização */
-  contain: layout style;
-  will-change: contents;
-  /* Scroll otimizado */
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
 }
 
 @media (min-width: 768px) {
@@ -67,10 +54,6 @@
   padding: 1.25rem 1.5rem;
   margin-bottom: 1.25rem;
   box-shadow: 0 4px 24px -4px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(255,255,255,0.5) inset;
-  /* Performance: animação GPU-accelerated */
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  contain: layout style paint;
   animation: dashboardSlideDown 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 

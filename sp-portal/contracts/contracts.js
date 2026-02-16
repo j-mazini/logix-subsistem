@@ -159,19 +159,39 @@
             for (var L = 0; L < dep.loops.length; L++) {
               var loop = dep.loops[L];
               var loopId = nextId('loop');
+              var rateVal = (loop.deliveryRate != null && !isNaN(loop.deliveryRate)) ? loop.deliveryRate : 0;
+              var rateStr = rateVal > 0 ? '£' + rateVal.toFixed(2) : '—';
+              var totalTarget = 0;
+              for (var t = 0; t < loop.routes.length; t++) {
+                var rt = loop.routes[t];
+                totalTarget += (rt.target != null ? rt.target : (rt.targetDel != null ? rt.targetDel : 0));
+              }
+              var digressiveBands = (window.DHL_MOCK_DATA && window.DHL_MOCK_DATA.digressiveBands) ? window.DHL_MOCK_DATA.digressiveBands[loop.name] : null;
+              var bandsHtml = '';
+              if (digressiveBands && digressiveBands.length) {
+                bandsHtml = digressiveBands.map(function (b, i) {
+                  var range = b.max != null ? (b.min + '–' + b.max) : (b.min + '+');
+                  return 'Band ' + (i + 1) + ': ' + range + ' (£' + (b.price ? b.price.toFixed(2) : '—') + ')';
+                }).join(' · ');
+              } else {
+                bandsHtml = 'Band 1–4 (rate: ' + rateStr + ')';
+              }
               html += '<div class="accordion accordion-flush mb-2">';
               html += '<div class="accordion-item">';
               html += '<h3 class="accordion-header">';
               html += '<button class="accordion-button collapsed py-2" type="button" data-bs-toggle="collapse" data-bs-target="#' + loopId + '"><i class="bi bi-arrow-repeat me-2 text-secondary"></i> ' + escapeHtml(loop.name) + '</button></h3>';
               html += '<div id="' + loopId + '" class="accordion-collapse collapse">';
               html += '<div class="accordion-body contract-block-inner">';
-              html += '<div class="contract-rates-box"><p><strong class="text-dark">Child Rates:</strong> <span class="text-muted">Band 1–4</span></p><p><strong class="text-dark">Flex Rates:</strong> <span class="text-muted">Band 1–4</span></p></div>';
+              html += '<div class="contract-rates-box">';
+              html += '<p><strong class="text-dark">Bands (per loop):</strong> <span class="text-muted">' + escapeHtml(bandsHtml) + '</span></p>';
+              html += '<p><strong class="text-dark">Rate (Band 1):</strong> <span class="text-dark">' + rateStr + '</span></p>';
+              html += '<p><strong class="text-dark">Total Target:</strong> <span class="text-dark">' + totalTarget + '</span></p>';
+              html += '</div>';
 
               for (var r = 0; r < loop.routes.length; r++) {
                 var route = loop.routes[r];
                 var routeId = nextId('route');
                 var subpostcodes = postcodesToSubpostcodes(route.postcodes);
-                var targetVal = route.target != null ? route.target : (route.targetDel != null ? route.targetDel : 0);
                 var typeClass = (route.type || 'Child') === 'Flex' ? 'contract-route-type-flex' : 'contract-route-type-child';
                 html += '<div class="accordion accordion-flush mb-2">';
                 html += '<div class="accordion-item">';
@@ -181,10 +201,6 @@
                 html += '<div class="contract-route-meta">';
                 html += '<span>Type: <strong><span class="' + typeClass + '">' + (route.type || 'Child') + '</span></strong></span>';
                 if (route.driver) html += '<span>Driver: <strong>' + escapeHtml(route.driver) + '</strong></span>';
-                html += '<span>Target: <strong>' + targetVal + '</strong></span>';
-                var rateVal = (loop.deliveryRate != null && !isNaN(loop.deliveryRate)) ? loop.deliveryRate : 0;
-                var rateStr = rateVal > 0 ? '£' + rateVal.toFixed(2) : '—';
-                html += '<span>Rate: <strong>' + rateStr + '</strong> <span class="text-muted small">(Band 1)</span></span>';
                 html += '</div><p class="small text-muted mb-2"><span class="contract-badge contract-badge-sub">Subpostcode</span></p>';
                 html += '<div class="contract-subpostcodes">';
                 for (var s = 0; s < subpostcodes.length; s++) html += '<span class="contract-subpostcode">' + escapeHtml(subpostcodes[s]) + '</span>';

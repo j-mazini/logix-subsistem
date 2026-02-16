@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="../sidebar-beam.css" />
   <link rel="stylesheet" href="../dashboard.css" />
   <link rel="stylesheet" href="../service-provider-profile.css" />
+  <link rel="stylesheet" href="../sp-portal/drivers/drivers.css" />
   <link rel="stylesheet" href="../liquid-glass.css" />
   <link rel="stylesheet" href="../modern-ui.css" />
 </head>
@@ -50,10 +51,6 @@
         <a href="../dhl/standard-operating-procedures/index.html" class="beam-plate">
           <i class="bi bi-journal-bookmark-fill beam-plate-icon"></i>
           <span>SOP Feed</span>
-        </a>
-        <a href="../dhl/access-select/index.html" class="beam-plate beam-plate--switch">
-          <i class="bi bi-arrow-left-right beam-plate-icon"></i>
-          <span>Select access</span>
         </a>
       </div>
     </nav>
@@ -260,6 +257,25 @@
     </div>
   </div>
 
+  <!-- Driver Modal – mesma estrutura que Vendors (Personal, Depot, Training Matrix, Trainings, Documents) -->
+  <div id="driverModalBackdrop" class="modal-backdrop hidden" aria-hidden="true"></div>
+  <div id="driverModalWrap" class="modal-dialog-wrap hidden" role="dialog" aria-modal="true" aria-labelledby="driverModalTitle">
+    <div class="driver-modal" id="driverModalDialog">
+      <div class="driver-modal-header">
+        <div class="driver-modal-header-content">
+          <span class="driver-modal-badge">Driver</span>
+          <h2 id="driverModalTitle" class="driver-modal-title">—</h2>
+        </div>
+        <button type="button" class="driver-modal-close" id="driverModalClose" aria-label="Fechar">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      <div class="driver-modal-body" id="driverModalBody">
+        <!-- Conteúdo gerado por JS: Personal, Depot, Training Matrix, Trainings, Documents -->
+      </div>
+    </div>
+  </div>
+
   <script src="../dhl-mock-data.js"></script>
   <script src="../beam-sidebar.js"></script>
   <script>
@@ -398,6 +414,36 @@
           var dt = new Date(d);
           return isNaN(dt.getTime()) ? '—' : dt.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
         } catch (e) { return '—'; }
+      }
+
+      function formatDateForDisplay(dateStr) {
+        if (!dateStr) return '—';
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+          var parts = dateStr.split('-');
+          return parts[2] + '/' + parts[1] + '/' + parts[0];
+        }
+        var d = new Date(dateStr);
+        if (isNaN(d.getTime())) return dateStr;
+        var day = String(d.getDate()).padStart(2, '0');
+        var m = String(d.getMonth() + 1).padStart(2, '0');
+        var y = d.getFullYear();
+        return day + '/' + m + '/' + y;
+      }
+
+      function getValidityClass(dateStr, validityMonths) {
+        if (!dateStr) return '';
+        var start = new Date(dateStr);
+        if (isNaN(start.getTime())) return '';
+        var expiry = new Date(start);
+        expiry.setMonth(expiry.getMonth() + validityMonths);
+        var today = new Date();
+        today.setHours(0, 0, 0, 0);
+        var inThreeMonths = new Date(today);
+        inThreeMonths.setMonth(inThreeMonths.getMonth() + 3);
+        expiry.setHours(0, 0, 0, 0);
+        if (expiry < today) return 'validity-expired';
+        if (expiry <= inThreeMonths) return 'validity-warning';
+        return '';
       }
 
       function updateSpProfileFilters(spName) {
@@ -615,7 +661,7 @@
               var fullName = (v.firstName || '') + ' ' + (v.lastName || '');
               var avatarUrl = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(fullName.trim() || 'V') + '&size=112&background=e8f0f5&color=2c3e50';
               return (
-                '<a href="../dhl/vendor-admin-view/index.html?sp=' + encodeURIComponent(spName) + '" class="sp-profile-card sp-profile-card--vendor">' +
+                '<div class="sp-profile-card sp-profile-card--vendor sp-profile-card--vendor-clickable" role="button" tabindex="0" data-vendor-id="' + escapeAttr(v.id) + '" title="Ver detalhes do driver">' +
                   '<div class="sp-profile-card-avatar">' +
                     '<img src="' + avatarUrl + '" alt="" width="56" height="56" loading="lazy" />' +
                   '</div>' +
@@ -624,7 +670,7 @@
                     '<span>' + escapeHtml(v.email || '—') + '</span>' +
                     '<small>Depot: ' + escapeHtml(v.depot || '—') + ' · DHL: ' + escapeHtml(v.dhlTrainingNumber || '—') + '</small>' +
                   '</div>' +
-                '</a>'
+                '</div>'
               );
             }).join('');
       }
@@ -641,6 +687,145 @@
       if (spLoopFilterEl) {
         spLoopFilterEl.addEventListener('change', function () {
           render();
+        });
+      }
+
+      function openDriverModal(vendor, highlightDocumentId) {
+        var titleEl = document.getElementById('driverModalTitle');
+        var bodyEl = document.getElementById('driverModalBody');
+        if (!titleEl || !bodyEl) return;
+
+        titleEl.textContent = (vendor.firstName || '') + ' ' + (vendor.lastName || '');
+
+        var trainingMatrixValue = vendor.depot || '—';
+        var depotValue = vendor.depot || '—';
+        var trainings = [
+          { documentId: 'cargoTraining', name: 'Cargo Training', date: vendor.cargoTrainingDate ? formatDateForDisplay(vendor.cargoTrainingDate) : '—', dateStr: vendor.cargoTrainingDate, validityMonths: 24 },
+          { documentId: 'dangerousGoodsTraining', name: 'Dangerous Goods Training', date: vendor.dangerousGoodsTrainingDate ? formatDateForDisplay(vendor.dangerousGoodsTrainingDate) : '—', dateStr: vendor.dangerousGoodsTrainingDate, validityMonths: 24 },
+          { documentId: 'manualHandlingTraining', name: 'Manual Handling Training', date: vendor.manualHandlingTrainingDate ? formatDateForDisplay(vendor.manualHandlingTrainingDate) : '—', dateStr: vendor.manualHandlingTrainingDate, validityMonths: 24 }
+        ];
+
+        var personalRows = [
+          { label: 'Name', value: ((vendor.firstName || '') + ' ' + (vendor.lastName || '')).trim() || '—' },
+          { label: 'Service provider', value: vendor.serviceProvider || '—' },
+          { label: 'Email', value: vendor.email || '—' },
+          { label: 'Phone', value: vendor.phone || '—' },
+          { label: 'Date of birth', value: vendor.dob ? formatDateForDisplay(vendor.dob) : '—' }
+        ];
+
+        var dvlaDateDisplay = vendor.dvlaCheckDate ? formatDateForDisplay(vendor.dvlaCheckDate) : '—';
+        var dvlaValidityClass = getValidityClass(vendor.dvlaCheckDate, 6);
+
+        var documentRows = [
+          { documentId: 'dhlTrainingNumber', label: 'DHL Training Number', value: vendor.dhlTrainingNumber || '—' },
+          { documentId: 'dbsDate', label: 'DBS Date', value: vendor.criminalRecordDate ? formatDateForDisplay(vendor.criminalRecordDate) : '—' },
+          { documentId: 'dbsNumber', label: 'DBS Number', value: vendor.dbsNumber || '—' },
+          { documentId: 'dvla', label: 'DVLA', value: dvlaDateDisplay, valueClass: dvlaValidityClass },
+          { documentId: 'visaValidity', label: 'Visa validity', value: vendor.visaValidity ? formatDateForDisplay(vendor.visaValidity) : '—' },
+          { documentId: 'driverLicenceExpiring', label: 'Driver Licence Expiring', value: vendor.licenceExpiringDate ? formatDateForDisplay(vendor.licenceExpiringDate) : '—' },
+          { documentId: 'passportExpiring', label: 'Passport Expiring', value: vendor.passportExpiringDate ? formatDateForDisplay(vendor.passportExpiringDate) : '—' }
+        ];
+
+        var html =
+          '<div class="driver-modal-grid">' +
+            '<section class="driver-modal-section">' +
+              '<h3 class="driver-modal-section-title">Personal</h3>' +
+              personalRows.map(function (r) {
+                return '<div class="driver-modal-row"><span class="driver-modal-label">' + escapeHtml(r.label) + '</span><span class="driver-modal-value">' + escapeHtml(r.value) + '</span></div>';
+              }).join('') +
+            '</section>' +
+            '<section class="driver-modal-section driver-modal-section-matrix">' +
+              '<h3 class="driver-modal-section-title">Depot</h3>' +
+              '<div class="driver-modal-matrix-value">' + escapeHtml(depotValue) + '</div>' +
+            '</section>' +
+            '<section class="driver-modal-section driver-modal-section-matrix">' +
+              '<h3 class="driver-modal-section-title">Training Matrix</h3>' +
+              '<div class="driver-modal-matrix-value">' + escapeHtml(trainingMatrixValue) + '</div>' +
+            '</section>' +
+            '<section class="driver-modal-section">' +
+              '<h3 class="driver-modal-section-title">Trainings</h3>' +
+              trainings.map(function (t) {
+                var dateCls = getValidityClass(t.dateStr, t.validityMonths);
+                var dateSpanClass = dateCls ? ' driver-modal-training-date ' + dateCls : ' driver-modal-training-date';
+                var docId = t.documentId ? ' data-document-id="' + escapeAttr(t.documentId) + '"' : '';
+                return '<div class="driver-modal-training-row"' + docId + '>' +
+                  '<span class="driver-modal-training-name">' + escapeHtml(t.name) + '</span>' +
+                  '<span class="' + dateSpanClass.trim() + '">' + escapeHtml(t.date) + '</span>' +
+                '</div>';
+              }).join('') +
+            '</section>' +
+            '<section class="driver-modal-section driver-modal-section-full">' +
+              '<h3 class="driver-modal-section-title">Documents</h3>' +
+              documentRows.map(function (r) {
+                var valueCls = r.valueClass ? ' driver-modal-value ' + r.valueClass : ' driver-modal-value';
+                var docId = r.documentId ? ' data-document-id="' + escapeAttr(r.documentId) + '"' : '';
+                return '<div class="driver-modal-row"' + docId + '><span class="driver-modal-label">' + escapeHtml(r.label) + '</span><span class="' + valueCls.trim() + '">' + escapeHtml(r.value) + '</span></div>';
+              }).join('') +
+            '</section>' +
+          '</div>';
+
+        bodyEl.innerHTML = html;
+
+        if (highlightDocumentId) {
+          var target = bodyEl.querySelector('[data-document-id="' + highlightDocumentId + '"]');
+          if (target) {
+            target.classList.add('document-highlight');
+            target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            setTimeout(function () { target.classList.remove('document-highlight'); }, 2500);
+          }
+        }
+
+        document.getElementById('driverModalBackdrop').classList.remove('hidden');
+        document.getElementById('driverModalWrap').classList.remove('hidden');
+      }
+
+      function closeDriverModal() {
+        var backdrop = document.getElementById('driverModalBackdrop');
+        var wrap = document.getElementById('driverModalWrap');
+        if (backdrop) backdrop.classList.add('hidden');
+        if (wrap) wrap.classList.add('hidden');
+      }
+
+      function initDriverModal() {
+        var list = document.getElementById('spVendorsList');
+        if (list) {
+          list.addEventListener('click', function (e) {
+            var card = e.target.closest('.sp-profile-card--vendor-clickable');
+            if (!card) return;
+            e.preventDefault();
+            var vid = card.getAttribute('data-vendor-id');
+            var spName = getParam('sp');
+            if (vid) {
+              var vendors = getVendorsForSp(spName);
+              var v = vendors.filter(function (x) { return String(x.id) === String(vid); })[0];
+              if (v) openDriverModal(v, null);
+            }
+          });
+          list.addEventListener('keydown', function (e) {
+            var card = e.target.closest('.sp-profile-card--vendor-clickable');
+            if (!card || (e.key !== 'Enter' && e.key !== ' ')) return;
+            e.preventDefault();
+            var vid = card.getAttribute('data-vendor-id');
+            var spName = getParam('sp');
+            if (vid) {
+              var vendors = getVendorsForSp(spName);
+              var v = vendors.filter(function (x) { return String(x.id) === String(vid); })[0];
+              if (v) openDriverModal(v, null);
+            }
+          });
+        }
+        var closeBtn = document.getElementById('driverModalClose');
+        var backdrop = document.getElementById('driverModalBackdrop');
+        var wrap = document.getElementById('driverModalWrap');
+        var dialog = document.getElementById('driverModalDialog');
+        if (closeBtn) closeBtn.addEventListener('click', closeDriverModal);
+        if (backdrop) backdrop.addEventListener('click', closeDriverModal);
+        if (wrap) wrap.addEventListener('click', function (e) {
+          if (e.target === wrap) closeDriverModal();
+        });
+        if (dialog) dialog.addEventListener('click', function (e) { e.stopPropagation(); });
+        document.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape' && wrap && !wrap.classList.contains('hidden')) closeDriverModal();
         });
       }
 
@@ -681,10 +866,11 @@
       }
 
       if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function () { render(); initLogoViewer(); });
+        document.addEventListener('DOMContentLoaded', function () { render(); initLogoViewer(); initDriverModal(); });
       } else {
         render();
         initLogoViewer();
+        initDriverModal();
       }
     })();
   </script>
