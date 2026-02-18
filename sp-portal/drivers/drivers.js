@@ -45,7 +45,7 @@
     return d.innerHTML;
   }
 
-  /** Courier ID: máx. 7 caracteres do primeiro nome + iniciais do apelido, total 8. */
+  /** Courier ID: max 7 chars from first name + initials of surname, total 8. */
   function computeCourierId(firstName, lastName) {
     var first = (firstName || '').replace(/\s/g, '').toUpperCase().slice(0, 7);
     var need = 8 - first.length;

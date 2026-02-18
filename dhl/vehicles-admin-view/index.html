@@ -86,7 +86,7 @@
               <div class="admin-filters-row row g-2 align-items-end flex-wrap">
                 <div class="col-auto">
                   <label class="admin-filter-label form-label" for="filterServiceProvider">Service provider</label>
-                  <select id="filterServiceProvider" class="admin-filter-select form-select form-select-sm" aria-label="Filtrar por service provider">
+                  <select id="filterServiceProvider" class="admin-filter-select form-select form-select-sm" aria-label="Filter by service provider">
                     <option value="">All</option>
                   </select>
                 </div>
@@ -100,7 +100,7 @@
                 </div>
                 <div class="col-auto">
                   <label class="admin-filter-label form-label" for="filterVehicleType">Vehicle Type</label>
-                  <select id="filterVehicleType" class="admin-filter-select form-select form-select-sm" aria-label="Filtrar por tipo de veículo">
+                  <select id="filterVehicleType" class="admin-filter-select form-select form-select-sm" aria-label="Filter by vehicle type">
                     <option value="">All</option>
                   </select>
                 </div>
@@ -146,7 +146,7 @@
             <span class="driver-modal-badge">Vehicle</span>
             <h2 id="vehicleModalTitle" class="driver-modal-title">—</h2>
           </div>
-          <button type="button" class="driver-modal-close" id="vehicleModalClose" aria-label="Fechar">
+          <button type="button" class="driver-modal-close" id="vehicleModalClose" aria-label="Close">
             <i class="bi bi-x-lg"></i>
           </button>
         </div>
@@ -301,7 +301,7 @@
           var rowClass = index % 2 === 0 ? '' : ' style="background:#f8f9fa;"';
           var vehicleJson = encodeURIComponent(JSON.stringify(vehicle));
           return (
-            '<tr class="vendor-row-clickable" data-vehicle="' + vehicleJson + '" data-vehicle-id="' + vehicle.id + '" role="button" tabindex="0" title="Ver detalhes do veículo"' + rowClass + '>' +
+            '<tr class="vendor-row-clickable" data-vehicle="' + vehicleJson + '" data-vehicle-id="' + vehicle.id + '" role="button" tabindex="0" title="View vehicle details"' + rowClass + '>' +
               '<td class="text-center"><strong>' + escapeHtml(vehicle.vrn || '—') + '</strong></td>' +
               '<td class="text-center">' + escapeHtml(vehicle.brand || '—') + '</td>' +
               '<td class="text-center">' + escapeHtml(vehicle.model || '—') + '</td>' +

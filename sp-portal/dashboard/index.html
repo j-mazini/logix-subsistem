@@ -15,8 +15,11 @@
   <link rel="stylesheet" href="../sp-portal.css" />
   <link rel="stylesheet" href="../../liquid-glass.css" />
   <link rel="stylesheet" href="../../modern-ui.css" />
-  <link rel="stylesheet" href="disco.css" />
-  <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" />
+  <link rel="stylesheet" href="base.css" />
+  <link rel="stylesheet" href="disco-block.css" />
+  <link rel="stylesheet" href="operations.css" />
+  <link rel="stylesheet" href="financials.css" />
+  <link rel="stylesheet" href="sidebar.css" />
   <script src="../sp-portal-responsive.js" defer></script>
 </head>
 <body class="has-beam-sidebar sp-portal">
@@ -67,13 +70,9 @@
         <div class="page-inner">
           <main class="vendor-admin-main dashboard-main">
             <div class="container-fluid px-0">
-              <header class="dashboard-header mb-4" data-aos="fade-down" data-aos-duration="600" data-aos-once="true">
+              <header class="dashboard-header mb-2">
                 <div class="dashboard-header-top">
-                  <div class="dashboard-welcome">
-                    <h1 class="dashboard-title">Dashboard</h1>
-                    <p class="dashboard-welcome-msg" id="welcomeMsg">Your operations summary.</p>
-                  </div>
-                  <div class="admin-header-user-pill d-flex align-items-center" id="spHeaderPill" title="">
+                  <div class="admin-header-user-pill d-flex align-items-center ms-auto" id="spHeaderPill" title="">
                     <span id="spHeaderAvatarFallback" class="admin-header-user-avatar admin-header-user-avatar-fallback" style="display:none;"></span>
                     <img id="spHeaderAvatar" src="" alt="" class="admin-header-user-avatar admin-header-user-avatar--img" style="display:none;" />
                     <span class="admin-header-user-name" id="spHeaderName">—</span>
@@ -82,12 +81,12 @@
               </header>
 
               <!-- Bloco: Disco (dados do Excel DISCO_RouteData) -->
-              <section class="dashboard-section dashboard-block mb-4" id="spDiscoBlock" aria-label="Disco" data-aos="fade-up" data-aos-duration="500" data-aos-delay="80">
+              <section class="dashboard-section dashboard-block mb-2" id="spDiscoBlock" aria-label="Disco">
                 <div class="card sp-dashboard-module-card overflow-hidden">
                   <div class="dashboard-block-header d-flex flex-wrap align-items-center justify-content-between gap-3">
                     <div>
-                      <h2 class="dashboard-block-title mb-1"><i class="bi bi-truck me-2" aria-hidden="true"></i>Disco</h2>
-                      <p class="dashboard-block-desc mb-0">Route data by loop. Source: DISCO_RouteData Excel file.</p>
+                      <h2 class="dashboard-block-title mb-1"><i class="bi bi-truck me-2" aria-hidden="true"></i>My deliveries</h2>
+                      <p class="dashboard-block-desc mb-0">These are your operations today! We already organised it for you!</p>
                     </div>
                     <div class="disco-header-stops-kpi rounded-3 px-3 py-2 d-flex flex-column align-items-center justify-content-center" id="discoHeaderStopsKpi" aria-label="Total stops">
                       <span class="disco-header-stops-label small text-uppercase fw-semibold text-muted">Stops</span>
@@ -136,23 +135,19 @@
               </section>
 
               <!-- Bloco: Last Day Operations + SPMS (Financials) -->
-              <section class="dashboard-section dashboard-block mb-4" id="spDashboardFoldersBlock" aria-label="Last Day Operations / Financials" data-aos="fade-up" data-aos-duration="500" data-aos-delay="100">
+              <section class="dashboard-section dashboard-block mb-2" id="spDashboardFoldersBlock" aria-label="Last Day Operations / Financials">
                 <div class="card sp-dashboard-module-card sp-dashboard-module-card--operations overflow-hidden">
-                  <div class="card-header sp-module-card-header">
-                    <div class="sp-module-card-header-icon sp-module-card-header-icon--operations"><i class="bi bi-calendar-day-fill" aria-hidden="true"></i></div>
-                    <div>
-                      <h2 class="h5 mb-2">Last Day Operations / Financials</h2>
-                      <p class="text-muted small mb-0 mt-1">Performance (SPOH-R, Time Window, AFD) e Financials por data.</p>
-                    </div>
-                    <ul class="nav nav-tabs card-header-tabs sp-folder-tabs-bootstrap ms-auto" role="tablist" id="folderTabsList">
+                  <!-- Section select no topo -->
+                  <div class="card-header-tabs-wrap border-bottom opms-section-tabs-top">
+                    <ul class="nav nav-tabs card-header-tabs sp-folder-tabs-bootstrap" role="tablist" id="folderTabsList">
                       <li class="nav-item" role="presentation">
                         <button type="button" class="nav-link active" role="tab" aria-selected="true" data-folder="lastday" id="folderLastDay" aria-controls="folder-panel-lastday">
-                          <i class="bi bi-calendar-check me-1"></i> Daily Operations
+                          <i class="bi bi-calendar-check me-1"></i> My Last Operations
                         </button>
                       </li>
                       <li class="nav-item" role="presentation">
                         <button type="button" class="nav-link" role="tab" aria-selected="false" data-folder="spms" id="folderSpms" aria-controls="folder-panel-spms">
-                          <i class="bi bi-currency-pound me-1"></i> Financials
+                          <i class="bi bi-currency-pound me-1"></i> My Financial Performance
                         </button>
                       </li>
                       <li class="nav-item" role="presentation">
@@ -162,14 +157,42 @@
                       </li>
                     </ul>
                   </div>
-                  <!-- KPIs em blocos (estilo dashboard) – Last Day e SPMS -->
-                  <div class="card-body sp-folder-strip-wrap py-3 border-bottom" id="spFolderDashboardStrip">
+                  <!-- Filtros Date + Depot, Loop, Route -->
+                  <div class="disco-filters disco-filters--top d-flex flex-wrap align-items-end gap-3 gap-md-4" id="opmsFiltersWrap">
+                    <div class="disco-filter-group flex-shrink-0" id="opmsDateFilterWrap">
+                      <span class="disco-filter-label d-block mb-1">Date</span>
+                      <div class="opms-date-block d-flex align-items-center gap-1" role="group" aria-label="Navigate by date">
+                        <button type="button" class="disco-chip opms-date-btn" id="opmsDatePrev" aria-label="Previous date" title="Previous date"><i class="bi bi-chevron-left"></i></button>
+                        <button type="button" class="disco-chip opms-date-center flex-grow-1" id="opmsDatePicker" aria-label="Select date" aria-haspopup="listbox" aria-expanded="false">
+                          <span id="opmsViewingDate" class="opms-viewing-date" aria-live="polite">—</span>
+                          <i class="bi bi-calendar3 ms-1"></i>
+                        </button>
+                        <div id="opmsDateDropdown" class="opms-date-dropdown hidden" role="listbox" aria-label="Available dates"></div>
+                        <button type="button" class="disco-chip opms-date-btn" id="opmsDateNext" aria-label="Next date" title="Next date"><i class="bi bi-chevron-right"></i></button>
+                      </div>
+                    </div>
+                    <div class="disco-filter-group flex-shrink-0">
+                      <span class="disco-filter-label d-block mb-1">Depot</span>
+                      <div id="opmsDepotChips" class="disco-chips d-flex flex-wrap gap-2" role="group" aria-label="Filter by depot"></div>
+                    </div>
+                    <div class="disco-filter-group flex-shrink-0">
+                      <span class="disco-filter-label d-block mb-1">Loop</span>
+                      <div id="opmsLoopChips" class="disco-chips d-flex flex-wrap gap-2" role="group" aria-label="Filter by loop"></div>
+                    </div>
+                    <div class="disco-filter-group flex-shrink-0" id="opmsRouteFilterWrap">
+                      <span class="disco-filter-label d-block mb-1">Route</span>
+                      <div id="opmsRouteChips" class="disco-chips d-flex flex-wrap gap-2" role="group" aria-label="Filter by route"></div>
+                    </div>
+                  </div>
+                  <div class="dashboard-block-content">
+                  <!-- KPIs: Total Deliveries primeiro, depois os demais – próximo do conteúdo -->
+                  <div class="sp-folder-strip-wrap opms-kpi-strip-compact" id="spFolderDashboardStrip">
                     <div class="dashboard-kpi-grid" id="spFolderDashboardKpis">
-                      <div class="dashboard-kpi-card" data-animate="1">
-                        <div class="dashboard-kpi-icon-wrap kpi-spr" aria-hidden="true"><i class="bi bi-graph-up-arrow"></i></div>
+                      <div class="dashboard-kpi-card dashboard-kpi-card-total" data-animate="1">
+                        <div class="dashboard-kpi-icon-wrap kpi-spr" aria-hidden="true"><i class="bi bi-box-seam-fill"></i></div>
                         <div class="dashboard-kpi-content">
                           <span class="dashboard-kpi-value-wrap"><span class="dashboard-kpi-value" id="spFolderKpiSprFixed">0</span></span>
-                          <span class="dashboard-kpi-label" id="spFolderKpiFirstLabel">SPR</span>
+                          <span class="dashboard-kpi-label" id="spFolderKpiFirstLabel">Total Deliveries</span>
                         </div>
                       </div>
                       <div class="hidden" id="spFolderKpiLastDay1">
@@ -253,6 +276,15 @@
                           </div>
                         </div>
                       </div>
+                      <div class="hidden" id="spFolderKpiLd1">
+                        <div class="dashboard-kpi-card" data-animate="2">
+                          <div class="dashboard-kpi-icon-wrap kpi-spr" aria-hidden="true"><i class="bi bi-list-ul"></i></div>
+                          <div class="dashboard-kpi-content">
+                            <span class="dashboard-kpi-value-wrap"><span class="dashboard-kpi-value" id="spFolderKpiLdCount">—</span></span>
+                            <span class="dashboard-kpi-label">Deductions</span>
+                          </div>
+                        </div>
+                      </div>
                       <div class="hidden" id="spFolderKpiLd2">
                         <div class="dashboard-kpi-card" data-animate="3">
                           <div class="dashboard-kpi-icon-wrap kpi-vendors" aria-hidden="true"><i class="bi bi-clock-history"></i></div>
@@ -264,141 +296,165 @@
                       </div>
                     </div>
                   </div>
-                  <div class="card-body tab-content pt-3" id="spFolderContent">
+                  <div class="tab-content pt-2" id="spFolderContent">
                     <div id="folder-panel-lastday" class="tab-pane fade show active sp-folder-panel opms-panel" role="tabpanel" aria-labelledby="folderLastDay">
-                      <header class="opms-lastday-header opms-lastday-header-with-nav mb-3">
-                        <h3 class="h6 mb-2"><i class="bi bi-calendar-day text-primary"></i> Last Day Operations</h3>
-                        <div class="opms-lastday-date-block" role="group" aria-label="Navigate by date">
-                          <button type="button" class="opms-date-edge-btn" id="lastDayDatePrev" aria-label="Previous date" title="Previous date"><i class="bi bi-chevron-left"></i></button>
-                          <button type="button" class="opms-date-center" id="lastDayDatePicker" aria-label="Select date" aria-haspopup="listbox" aria-expanded="false">
-                            <span id="lastDayViewingDate" class="opms-viewing-date" aria-live="polite"></span>
-                            <i class="bi bi-calendar3 opms-date-picker-icon"></i>
-                          </button>
-                          <div id="lastDayDateDropdown" class="opms-date-dropdown hidden" role="listbox" aria-label="Available dates"></div>
-                          <button type="button" class="opms-date-edge-btn" id="lastDayDateNext" aria-label="Next date" title="Next date"><i class="bi bi-chevron-right"></i></button>
-                        </div>
-                        <p class="opms-subtitle text-muted mb-0 mt-1 small">Performance (SPOH-R, SPR, STOPS, Time Window, AFD) and previous day delivery list.</p>
-                      </header>
-                      <div class="opms-lastday-layout">
-                        <aside class="opms-lastday-left">
-                          <p class="small fw-semibold text-muted mb-2 opms-nav-label">Routes · Loops · Depots</p>
-                          <div id="lastDayTreeWrap" class="opms-tree-wrap">
-                            <ul id="lastDayTree" class="opms-tree" role="tree" aria-label="Routes, Loops and Depots"></ul>
-                          </div>
-                        </aside>
-                        <section class="opms-lastday-right opms-performance-block" id="opmsPerformanceSection" aria-labelledby="opms-performance-heading">
-                          <div class="opms-performance-card">
-                            <header class="opms-performance-header">
-                              <div class="opms-performance-header-icon"><i class="bi bi-graph-up-arrow" aria-hidden="true"></i></div>
-                              <div>
-                                <h4 id="opms-performance-heading" class="opms-performance-title">Performance</h4>
-                                <p class="opms-performance-subtitle">Time Window and AFD by route, loop or depot</p>
-                              </div>
-                            </header>
-                            <div class="opms-performance-body mt-4">
-                              <h4 class="h6 mb-2"><i class="bi bi-list-ul text-primary"></i> Previous day delivery list</h4>
-                              <div class="table-responsive">
-                                <table class="table table-hover table-sm align-middle mb-0" id="lastDayDeliveriesTable" aria-label="Previous day deliveries">
-                                  <thead class="table-light">
-                                    <tr><th>Route</th><th class="text-end">DEL</th><th class="text-end">PU</th><th class="text-end">HN</th><th class="text-end">AFD</th><th class="text-end">STOPS</th></tr>
-                                  </thead>
-                                  <tbody id="lastDayDeliveriesBody"></tbody>
-                                </table>
-                              </div>
-                              <p id="lastDayDeliveriesEmpty" class="text-muted small text-center py-3 mb-0 hidden">Select a date to view deliveries.</p>
+                      <div class="opms-content-full">
+                        <div class="opms-performance-card">
+                          <div class="opms-performance-body">
+                            <div class="table-responsive opms-deliveries-table-wrap">
+                              <table class="table table-hover table-sm align-middle mb-0 opms-table-disco-style" id="lastDayDeliveriesTable" aria-label="Previous day deliveries">
+                                <thead>
+                                  <tr><th>Route</th><th class="text-end">DEL</th><th class="text-end">PU</th><th class="text-end">HN</th><th class="text-end">AFD</th><th class="text-end">STOPS</th></tr>
+                                </thead>
+                                <tbody id="lastDayDeliveriesBody"></tbody>
+                              </table>
                             </div>
+                            <nav class="opms-pagination-nav d-flex align-items-center justify-content-between gap-2 mt-2" id="opmsDeliveriesPagination" aria-label="Paginação da lista">
+                              <span class="opms-pagination-info small text-muted" id="opmsPaginationInfo">—</span>
+                              <div class="opms-pagination-btns d-flex gap-1">
+                                <button type="button" class="btn btn-sm btn-outline-secondary opms-pagination-prev" id="opmsPaginationPrev" aria-label="Página anterior">« Prev</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary opms-pagination-next" id="opmsPaginationNext" aria-label="Próxima página">Next »</button>
+                              </div>
+                            </nav>
+                            <p id="lastDayDeliveriesEmpty" class="text-muted small text-center py-3 mb-0 hidden">Select a date to view deliveries.</p>
                           </div>
-                        </section>
+                        </div>
                       </div>
                     </div>
                     <div id="folder-panel-spms" class="tab-pane fade sp-folder-panel opms-panel" role="tabpanel" aria-labelledby="folderSpms" aria-hidden="true">
-                      <header class="opms-lastday-header opms-lastday-header-with-nav mb-3">
-                        <h3 class="h6 mb-2"><i class="bi bi-speedometer2 text-primary"></i> SPMS</h3>
-                        <p class="opms-subtitle text-muted mb-0 mt-1 small">Performance and Income by date and route.</p>
-                        <div class="opms-lastday-date-block" role="group" aria-label="Navigate by date">
-                          <button type="button" class="opms-date-edge-btn" id="spmsDatePrev" aria-label="Previous date" title="Previous date"><i class="bi bi-chevron-left"></i></button>
-                          <button type="button" class="opms-date-center" id="spmsDatePicker" aria-label="Select date" aria-haspopup="listbox" aria-expanded="false">
-                            <span id="spmsViewingDate" class="opms-viewing-date" aria-live="polite"></span>
-                            <i class="bi bi-calendar3 opms-date-picker-icon"></i>
-                          </button>
-                          <div id="spmsDateDropdown" class="opms-date-dropdown hidden" role="listbox" aria-label="Available dates"></div>
-                          <button type="button" class="opms-date-edge-btn" id="spmsDateNext" aria-label="Next date" title="Next date"><i class="bi bi-chevron-right"></i></button>
+                      <div class="opms-content-full">
+                        <div class="sfb-grid">
+
+                          <!-- INCOME: 1 col, row 1 (compacto) -->
+                          <div class="sfb-card sfb-income" aria-label="Income">
+                            <span class="sfb-label"><i class="bi bi-currency-pound"></i> Income</span>
+                            <span class="sfb-income-val" id="spmsKpiIncome">—</span>
+                            <div class="sfb-income-meta">
+                              <span class="sfb-badge-tag">vs target</span>
+                              <span class="sfb-badge-pct" id="spmsKpiPct">—</span>
+                            </div>
+                            <svg class="sfb-arc-svg" viewBox="0 0 120 30" aria-hidden="true">
+                              <path class="sfb-arc-track" d="M4,24 A100,100 0 0,1 116,24"/>
+                              <path class="sfb-arc-fill" id="spmsIncomeArc" d="M4,24 A100,100 0 0,1 116,24" style="stroke-dasharray:0 119"/>
+                              <path class="sfb-arc-over" id="spmsIncomeArcOver" d="M4,24 A100,100 0 0,1 116,24" style="stroke-dasharray:0 119;opacity:0"/>
+                            </svg>
+                          </div>
+
+                          <!-- AFD SPEEDOMETER: 1 col, row 1 (maior conteúdo) -->
+                          <div class="sfb-card sfb-afd" id="sfbAfdCard" aria-label="AFD">
+                            <span class="sfb-label">AFD %</span>
+                            <svg class="sfb-spd-svg" viewBox="0 0 120 85" aria-hidden="true">
+                              <path class="sfb-spd-track" d="M6,74 A54,54 0 0,1 114,74"/>
+                              <path class="sfb-spd-zone sfb-spd-zone--ok"  d="M6,74 A54,54 0 0,1 114,74" stroke-dasharray="85 85"/>
+                              <path class="sfb-spd-zone sfb-spd-zone--bad" d="M6,74 A54,54 0 0,1 114,74" stroke-dasharray="85 85" stroke-dashoffset="85"/>
+                              <g id="spmsAfdNeedle">
+                                <line x1="60" y1="74" x2="60" y2="24" class="sfb-needle"/>
+                              </g>
+                              <circle cx="60" cy="74" r="6" class="sfb-needle-cap"/>
+                              <text x="8"  y="84" class="sfb-spd-lbl">0%</text>
+                              <text x="47" y="16" class="sfb-spd-lbl">4%</text>
+                              <text x="97" y="84" class="sfb-spd-lbl">8%+</text>
+                            </svg>
+                            <span class="sfb-spd-val" id="spmsKpiAfd">—</span>
+                            <span class="sfb-afd-status" id="sfbAfdStatus">—</span>
+                          </div>
+
+                          <!-- PERFORMANCE: 2 cols, row 1 (maior, com breakdown) -->
+                          <div class="sfb-card sfb-perf" aria-label="Performance">
+                            <span class="sfb-label">Performance vs Target</span>
+                            <div class="sfb-perf-body">
+                              <div class="sfb-ring-wrap">
+                                <svg viewBox="0 0 100 100" aria-hidden="true">
+                                  <circle class="sfb-ring-bg" cx="50" cy="50" r="40" fill="none" stroke-width="8"/>
+                                  <circle class="sfb-ring-fg" id="spmsPerfRing" cx="50" cy="50" r="40" fill="none" stroke-width="8" style="stroke-dasharray:0 251" transform="rotate(-90 50 50)"/>
+                                  <circle class="sfb-ring-over" id="spmsPerfRingOver" cx="50" cy="50" r="40" fill="none" stroke-width="8" style="stroke-dasharray:0 251;opacity:0" transform="rotate(-90 50 50)"/>
+                                </svg>
+                                <div class="sfb-ring-inner">
+                                  <span class="sfb-ring-val" id="spmsPerfRingVal">—</span>
+                                  <span class="sfb-ring-sub">of target</span>
+                                </div>
+                              </div>
+                              <div class="sfb-perf-breakdown">
+                                <div class="sfb-pb-row">
+                                  <span class="sfb-pb-dot sfb-pb-dot--del"></span>
+                                  <span class="sfb-pb-lbl">DEL</span>
+                                  <span class="sfb-pb-val" id="sfbPerfDel">—</span>
+                                </div>
+                                <div class="sfb-pb-row">
+                                  <span class="sfb-pb-dot sfb-pb-dot--pu"></span>
+                                  <span class="sfb-pb-lbl">PU</span>
+                                  <span class="sfb-pb-val" id="sfbPerfPu">—</span>
+                                </div>
+                                <div class="sfb-pb-row">
+                                  <span class="sfb-pb-dot sfb-pb-dot--hn"></span>
+                                  <span class="sfb-pb-lbl">Handover</span>
+                                  <span class="sfb-pb-val" id="sfbPerfHn">—</span>
+                                </div>
+                                <div class="sfb-pb-sep"></div>
+                                <div class="sfb-pb-row sfb-pb-row--total">
+                                  <span class="sfb-pb-dot sfb-pb-dot--tot"></span>
+                                  <span class="sfb-pb-lbl">Total</span>
+                                  <span class="sfb-pb-val" id="sfbPerfTotal">—</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <!-- DEL: row 2 (maior) -->
+                          <div class="sfb-card sfb-stat sfb-del" aria-label="DEL">
+                            <i class="bi bi-box-seam sfb-stat-ico"></i>
+                            <span class="sfb-stat-val" id="spmsKpiDel">—</span>
+                            <span class="sfb-stat-lbl">Deliveries</span>
+                          </div>
+
+                          <!-- PU: row 2 (maior) -->
+                          <div class="sfb-card sfb-stat sfb-pu" aria-label="PU">
+                            <i class="bi bi-arrow-up-circle sfb-stat-ico"></i>
+                            <span class="sfb-stat-val" id="spmsKpiPu">—</span>
+                            <span class="sfb-stat-lbl">Pick Up</span>
+                          </div>
+
+                          <!-- HN: row 2 (maior) -->
+                          <div class="sfb-card sfb-stat sfb-hn" aria-label="HN">
+                            <i class="bi bi-truck sfb-stat-ico"></i>
+                            <span class="sfb-stat-val" id="spmsKpiHn">—</span>
+                            <span class="sfb-stat-lbl">Handover</span>
+                          </div>
+
+                          <!-- AVG: row 2 (maior) -->
+                          <div class="sfb-card sfb-avg" aria-label="Averages">
+                            <span class="sfb-label"><i class="bi bi-calculator"></i> Médias</span>
+                            <div class="sfb-avg-item">
+                              <div class="sfb-avg-ico-wrap sfb-avg-ico--income"><i class="bi bi-currency-pound"></i></div>
+                              <div>
+                                <span class="sfb-avg-lbl">Avg Income</span>
+                                <span class="sfb-avg-val" id="spmsAvgIncome">—</span>
+                              </div>
+                            </div>
+                            <div class="sfb-avg-sep"></div>
+                            <div class="sfb-avg-item">
+                              <div class="sfb-avg-ico-wrap sfb-avg-ico--route"><i class="bi bi-signpost-2"></i></div>
+                              <div>
+                                <span class="sfb-avg-lbl">Avg / Route</span>
+                                <span class="sfb-avg-val" id="spmsAvgRoute">—</span>
+                              </div>
+                            </div>
+                          </div>
+
                         </div>
-                      </header>
-                      <div class="opms-lastday-layout">
-                        <aside class="opms-lastday-left">
-                          <p class="small fw-semibold text-muted mb-2 opms-nav-label">Routes · Loops · Depots</p>
-                          <div id="spmsTreeWrap" class="opms-tree-wrap">
-                            <ul id="spmsTree" class="opms-tree" role="tree" aria-label="Routes, Loops and Depots"></ul>
-                          </div>
-                        </aside>
-                        <section class="opms-lastday-right opms-performance-block" id="spmsPerformanceSection" aria-labelledby="spms-performance-heading">
-                          <div class="spms-bento" id="spmsBentoGrid">
-                            <div class="spms-bento-card spms-bento-income">
-                              <div class="spms-card-icon"><i class="bi bi-currency-pound"></i></div>
-                              <div class="spms-card-content">
-                                <span class="spms-card-label">Income</span>
-                                <span class="spms-card-value" id="spmsKpiIncome">—</span>
-                              </div>
-                            </div>
-                            <div class="spms-bento-card spms-bento-kpi">
-                              <span class="spms-card-label">DEL</span>
-                              <span class="spms-card-value" id="spmsKpiDel">—</span>
-                            </div>
-                            <div class="spms-bento-card spms-bento-kpi">
-                              <span class="spms-card-label">PU</span>
-                              <span class="spms-card-value" id="spmsKpiPu">—</span>
-                            </div>
-                            <div class="spms-bento-card spms-bento-kpi">
-                              <span class="spms-card-label">HN</span>
-                              <span class="spms-card-value" id="spmsKpiHn">—</span>
-                            </div>
-                            <div class="spms-bento-card spms-bento-kpi">
-                              <span class="spms-card-label">% vs target</span>
-                              <span class="spms-card-value" id="spmsKpiPct">—</span>
-                            </div>
-                            <div class="spms-bento-card spms-bento-performance" id="spmsGoalsWrap">
-                              <div class="last-day-goals-wrap"></div>
-                            </div>
-                            <div class="spms-bento-card spms-bento-avg">
-                              <div class="spms-card-icon"><i class="bi bi-graph-up"></i></div>
-                              <div class="spms-card-content">
-                                <span class="spms-card-label">Avg Income</span>
-                                <span class="spms-card-value" id="spmsAvgIncome">—</span>
-                              </div>
-                            </div>
-                            <div class="spms-bento-card spms-bento-avg">
-                              <div class="spms-card-icon"><i class="bi bi-signpost-2"></i></div>
-                              <div class="spms-card-content">
-                                <span class="spms-card-label">Avg Route</span>
-                                <span class="spms-card-value" id="spmsAvgRoute">—</span>
-                              </div>
-                            </div>
-                          </div>
-                        </section>
+                        <!-- GoalsWrap oculto: mantido para compatibilidade com JS -->
+                        <div id="spmsGoalsWrap" style="display:none" aria-hidden="true"></div>
                       </div>
                     </div>
                     <div id="folder-panel-ld" class="tab-pane fade sp-folder-panel opms-panel" role="tabpanel" aria-labelledby="folderLd" aria-hidden="true">
-                      <header class="opms-lastday-header opms-lastday-header-with-nav mb-3">
-                        <h3 class="h6 mb-2"><i class="bi bi-exclamation-triangle text-primary"></i> Liquidation Damages</h3>
-                        <div class="opms-lastday-date-block d-flex align-items-center gap-3 flex-wrap" role="group" aria-label="Current month and totals">
-                          <span id="ldViewingMonth" class="opms-viewing-date" aria-live="polite"></span>
-                          <span class="ld-count-kpi"><strong>Deductions:</strong> <span id="ldCount" class="ld-count-value">0</span></span>
-                          <span class="ld-total-kpi"><strong>Total:</strong> <span id="ldTotalAmount" class="ld-total-value">£0.00</span></span>
+                      <div class="opms-content-full">
+                        <div class="ld-header-kpi d-flex align-items-center mb-3">
+                          <span id="ldViewingMonth" class="ld-viewing-month-badge" aria-live="polite"></span>
                         </div>
-                      </header>
-                      <div class="opms-lastday-layout">
-                        <aside class="opms-lastday-left">
-                          <p class="small fw-semibold text-muted mb-2 opms-nav-label">Routes · Loops · Depots</p>
-                          <div id="ldTreeWrap" class="opms-tree-wrap">
-                            <ul id="ldTree" class="opms-tree" role="tree" aria-label="Routes, Loops and Depots"></ul>
-                          </div>
-                        </aside>
-                        <section class="opms-lastday-right opms-performance-block" id="ldTableSection" aria-labelledby="ld-table-heading">
-                          <h4 id="ld-table-heading" class="h6 mb-2"><i class="bi bi-list-ul text-primary"></i> Liquidation Damages</h4>
-                          <div class="table-responsive">
-                            <table class="table table-hover table-sm align-middle mb-0" id="ldTable" aria-label="Liquidation Damages">
-                              <thead class="table-light">
+                        <section class="opms-performance-block" id="ldTableSection" aria-label="Liquidation Damages table">
+                          <div class="table-responsive opms-deliveries-table-wrap">
+                            <table class="table table-hover table-sm align-middle mb-0 opms-table-disco-style" id="ldTable" aria-label="Liquidation Damages">
+                              <thead>
                                 <tr>
                                   <th>AWB</th>
                                   <th>Route</th>
@@ -411,16 +467,24 @@
                               <tbody id="ldTableBody"></tbody>
                             </table>
                           </div>
+                          <nav class="opms-pagination-nav d-flex align-items-center justify-content-between gap-2 mt-2" id="ldPagination" aria-label="Paginação LD">
+                            <span class="opms-pagination-info small text-muted" id="ldPaginationInfo">—</span>
+                            <div class="opms-pagination-btns d-flex gap-1">
+                              <button type="button" class="btn btn-sm btn-outline-secondary" id="ldPaginationPrev" aria-label="Página anterior">« Prev</button>
+                              <button type="button" class="btn btn-sm btn-outline-secondary" id="ldPaginationNext" aria-label="Próxima página">Next »</button>
+                            </div>
+                          </nav>
                           <p id="ldTableEmpty" class="text-muted small text-center py-3 mb-0 hidden">No liquidation damages for the selected filters.</p>
                         </section>
                       </div>
                     </div>
                   </div>
+                  </div>
                 </div>
               </section>
 
               <!-- Compliance + Vehicles -->
-              <section class="dashboard-section dashboard-block mb-4" aria-label="Compliance and Vehicles" data-aos="fade-up" data-aos-duration="500" data-aos-delay="200">
+              <section class="dashboard-section dashboard-block mb-4" aria-label="Compliance and Vehicles">
                 <div class="row g-4">
                   <div class="col-12 col-lg-6">
                     <div class="card sp-dashboard-module-card h-100 overflow-hidden">
@@ -502,8 +566,8 @@
                       </div>
                       <div class="card-body pt-0">
                         <div class="table-responsive">
-                          <table class="table table-hover align-middle table-sm mb-0">
-                            <thead class="table-light">
+                          <table class="table table-hover table-sm align-middle mb-0 opms-table-disco-style">
+                            <thead>
                               <tr>
                                 <th>VRN</th>
                                 <th>Brand</th>
@@ -560,7 +624,7 @@
                     <section class="sp-full-dashboard-modal-slide" data-modal-slide="2" aria-labelledby="modal-drivers-heading">
                       <h3 id="modal-drivers-heading" class="dashboard-block-title"><i class="bi bi-file-earmark-medical"></i> Drivers with expiring or expired documents</h3>
                       <div class="table-responsive">
-                        <table class="table table-hover align-middle dashboard-vehicles-table">
+                        <table class="table table-hover table-sm align-middle mb-0 opms-table-disco-style dashboard-vehicles-table">
                           <thead>
                             <tr>
                               <th>Driver</th>
@@ -578,7 +642,7 @@
                     <section class="sp-full-dashboard-modal-slide" data-modal-slide="3" aria-labelledby="modal-vehicles-heading">
                       <h3 id="modal-vehicles-heading" class="dashboard-block-title">Vehicles requiring attention</h3>
                       <div class="table-responsive">
-                        <table class="table table-hover align-middle dashboard-vehicles-table">
+                        <table class="table table-hover table-sm align-middle mb-0 opms-table-disco-style dashboard-vehicles-table">
                           <thead>
                             <tr>
                               <th>VRN</th>
@@ -611,7 +675,6 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" defer></script>
-  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js" defer></script>
   <script src="../../dhl-mock-data.js" defer></script>
   <script src="../../dhl-embedded-data.js" defer></script>
   <script src="../../assets/disco-data.js" defer></script>
@@ -637,6 +700,20 @@
           <i class="bi bi-inbox"></i>
           <p>No notifications at the moment.</p>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal do Disco: fora do layout para position:fixed ao viewport (fica fixa mesmo com filtros) -->
+  <div id="discoRouteModal" class="disco-route-modal hidden" aria-modal="true" aria-labelledby="discoRouteModalTitle" role="dialog">
+    <div class="disco-route-modal-backdrop" id="discoRouteModalBackdrop" aria-hidden="true"></div>
+    <div class="disco-route-modal-dialog">
+      <div class="disco-route-modal-content">
+        <div class="disco-route-modal-header">
+          <h3 class="disco-route-modal-title" id="discoRouteModalTitle">Route detail</h3>
+          <button type="button" class="disco-route-modal-close" id="discoRouteModalClose" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="disco-route-modal-body" id="discoRouteModalBody"></div>
       </div>
     </div>
   </div>

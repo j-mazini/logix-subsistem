@@ -505,7 +505,7 @@
         '</div>';
       }
 
-      /** Preview reduzido para o feed (sem mídia completa, texto truncado). */
+      /** Reduced preview for the feed (no full media, truncated text). */
       function getPostPreviewHtml(p) {
         var typeLabel = p.type === 'tutorial' ? 'Tutorial' : p.type === 'update' ? 'Update' : 'Info';
         var contentPreview = (p.content || '').length > 90 ? (p.content.substring(0, 90) + '…') : (p.content || '');
@@ -578,9 +578,9 @@
       var pendingMedia = { image: null, video: null, doc: null, youtubeVideoId: null };
 
       /**
-       * Cria um novo post e adiciona ao feed.
+       * Creates a new post and adds it to the feed.
        * @param {Object} data - { title, content, type, image, video, youtubeVideoId, doc }
-       * @returns {Object} O post criado
+       * @returns {Object} The created post
        */
       function createNewPost(data) {
         var id = Date.now();

@@ -145,7 +145,11 @@
         return loopName;
       }
 
-      /** Income digressivo: Band 1 com um valor, Band 2 = (entregas no intervalo Band 2) × preço Band 2, etc. Retorna total em GBP. */
+      /**
+       * Income digressivo por loop: aplica as bands cadastradas no Contract Management
+       * ao total de stops do loop (não por rota individualmente).
+       * Band 1: stops 1..max1 × price1, Band 2: stops (max1+1)..max2 × price2, etc.
+       */
       function calculateDigressiveIncome(deliveries, loopName) {
         var bands = (window.DHL_MOCK_DATA && window.DHL_MOCK_DATA.digressiveBands) ? window.DHL_MOCK_DATA.digressiveBands[loopName] : null;
         if (!bands || !bands.length) return 0;
@@ -160,6 +164,33 @@
           d -= inBand;
         }
         return total;
+      }
+
+      /**
+       * Calcula income agregando stops por loop e aplicando as bands do Contract
+       * Management ao total do loop (comportamento digressivo correcto).
+       * getStops(rec) → número de stops para aquela rota.
+       */
+      function calcIncomeForLoops(detailsList, getStops, registeredSet, routeNamesInLoop, routeNamesInDepot) {
+        var stopsByLoop = {};
+        var rateByLoop  = {};
+        detailsList.forEach(function (rec) {
+          if (!registeredSet[rec.route]) return;
+          if (routeNamesInLoop  && !routeNamesInLoop[rec.route])  return;
+          if (routeNamesInDepot && !routeNamesInDepot[rec.route]) return;
+          var stops = getStops(rec);
+          if (!(stops > 0)) return;
+          var ln = rec.loop || '__noloop__';
+          stopsByLoop[ln] = (stopsByLoop[ln] || 0) + stops;
+          if (!rateByLoop[ln]) rateByLoop[ln] = rec.deliveryRate || 2.90;
+        });
+        var income = 0;
+        Object.keys(stopsByLoop).forEach(function (ln) {
+          var stops = stopsByLoop[ln];
+          var bands = window.DHL_MOCK_DATA && window.DHL_MOCK_DATA.digressiveBands && window.DHL_MOCK_DATA.digressiveBands[ln];
+          income += (bands && bands.length) ? calculateDigressiveIncome(stops, ln) : stops * (rateByLoop[ln] || 2.90);
+        });
+        return income;
       }
 
       /** Returns target (meta de entregas) for a given depot and route for current SP. Usa o valor cadastrado no Contract Management (localStorage) se existir; senão o do contrato. */
@@ -328,7 +359,8 @@
         var fw = document.getElementById('spDashboardFoldersBlock');
         if (fw) fw.style.display = 'none';
       } else {
-        document.getElementById('welcomeMsg').textContent = 'Welcome, ' + spName + '. Here is your operations summary.';
+        var welcomeEl = document.getElementById('welcomeMsg');
+        if (welcomeEl) welcomeEl.textContent = 'Welcome, ' + spName + '. Here is your operations summary.';
         document.getElementById('spHeaderName').textContent = spName;
         document.getElementById('spHeaderPill').setAttribute('title', spName);
         var logoMap = { 'BA Express': 'ba-express-logo.png', 'Premier Logistics Ltd': 'premier-logistics-logo.png', 'Swift Haul Solutions': 'swift-haul-logo.png', 'Metro Freight Partners': 'metro-freight-logo.png', 'Atlas Transport Services': 'atlas-transport-logo.png' };
@@ -575,9 +607,22 @@
           }
           if (tab) { tab.classList.toggle('active', isActive); tab.setAttribute('aria-selected', isActive ? 'true' : 'false'); }
         });
-        if (folderId === 'lastday') updateLastDaySection();
+        if (folderId === 'lastday') {
+          opmsDeliveriesPageIndex = 0;
+          var s = lastDayState.selected;
+          if (s && s !== 'all' && s.indexOf('|') === -1 && getDepotsForSp().indexOf(s) === -1) {
+            var rec = getRegisteredRoutesWithDetails().filter(function (r) { return r.route === s; })[0];
+            if (rec) setOpmsFilter(rec.depot + '|' + rec.loop);
+          }
+          updateOpmsFilterChips();
+          updateLastDaySection();
+        }
         if (folderId === 'spms') updateSpmsSection();
-        if (folderId === 'ld') updateLiquidationDamagesSection();
+        if (folderId === 'ld') { ldTablePageIndex = 0; updateLiquidationDamagesSection(); }
+        var dateFilterWrap = document.getElementById('opmsDateFilterWrap');
+        if (dateFilterWrap) dateFilterWrap.classList.toggle('hidden', folderId === 'ld');
+        var stripEl = document.getElementById('spFolderDashboardStrip');
+        if (stripEl) stripEl.classList.toggle('sfb-strip-hidden', folderId === 'spms');
         updateSpFolderDashboardStrip(folderId);
       }
 
@@ -678,19 +723,22 @@
         var spr = metrics.deliveries + metrics.afd;  /* SPR = Del + PU + HN + AFD */
         var income = 0;
         var detailsList = getRegisteredRoutesWithDetails();
+        var regSetStrip = getRegisteredRouteNamesSet();
         if (routeFilter) {
-          var depotForRate = ''; for (var key in (data && data.byRoute) || {}) { if (data.byRoute[key].route === routeFilter) { depotForRate = data.byRoute[key].depot || ''; break; } }
-          var loopName = getLoopNameForDepotRoute(depotForRate, routeFilter);
-          income = (window.DHL_MOCK_DATA && window.DHL_MOCK_DATA.digressiveBands && window.DHL_MOCK_DATA.digressiveBands[loopName]) ? calculateDigressiveIncome(delOk + delPu + delHn, loopName) : (delOk + delPu + delHn) * 2.90;
+          var depotForRate = '';
+          for (var key in (data && data.byRoute) || {}) {
+            if (data.byRoute[key].route === routeFilter) { depotForRate = data.byRoute[key].depot || ''; break; }
+          }
+          var loopForStrip = getLoopNameForDepotRoute(depotForRate, routeFilter);
+          var bandsStrip = window.DHL_MOCK_DATA && window.DHL_MOCK_DATA.digressiveBands && window.DHL_MOCK_DATA.digressiveBands[loopForStrip];
+          income = bandsStrip ? calculateDigressiveIncome(delOk + delPu + delHn, loopForStrip) : (delOk + delPu + delHn) * 2.90;
         } else if (data && data.byRoute && detailsList.length) {
-          Object.keys(data.byRoute).forEach(function (key) {
-            var rd = data.byRoute[key]; var r = rd.route; var depot = rd.depot;
-            if (!getRegisteredRouteNamesSet()[r]) return;
-            if (loopFilter && details.filter(function (x) { return x.loop === loopFilter; }).every(function (x) { return x.route !== r; })) return;
-            if (depotFilter && depot !== depotFilter) return;
-            var m = getOpmsDeliveriesAndAfd(rd.counts || {}); var loopName = getLoopNameForDepotRoute(depot, r);
-            income += (window.DHL_MOCK_DATA && window.DHL_MOCK_DATA.digressiveBands && window.DHL_MOCK_DATA.digressiveBands[loopName]) ? calculateDigressiveIncome(m.deliveries, loopName) : m.deliveries * 2.90;
-          });
+          // Agregar stops por loop e aplicar bands ao total do loop
+          var rniLoop = routeNamesInLoop; var rniDepot = routeNamesInDepot;
+          income = calcIncomeForLoops(detailsList, function (rec) {
+            var rd = data.byRoute[rec.depot + '|' + rec.route];
+            return rd && rd.counts ? getOpmsDeliveriesAndAfd(rd.counts).deliveries : 0;
+          }, regSetStrip, rniLoop, rniDepot);
         }
         var incomeStr = '£' + (income.toFixed(2)).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
         var totalTarget = 0; detailsList.forEach(function (rec) {
@@ -704,18 +752,18 @@
         return { del: delOk, pu: delPu, hn: delHn, spr: spr, income: incomeStr, pct: pctStr };
       }
 
-      /** Atualiza a strip de KPIs do bloco Operations (Last Day | SPMS | LD). SPR é sempre o bloco fixo. */
+      /** Atualiza a strip de KPIs do bloco Operations (Last Day | SPMS | LD). Total Deliveries/Income/Total primeiro. */
       function updateSpFolderDashboardStrip(folderId) {
-        var agg = aggregateContracts();
         var elSprFixed = document.getElementById('spFolderKpiSprFixed');
+        var elFirstLabel = document.getElementById('spFolderKpiFirstLabel');
         var lastdayIds = ['spFolderKpiLastDay1', 'spFolderKpiLastDay2', 'spFolderKpiLastDay3', 'spFolderKpiLastDay4'];
         var spmsIds = ['spFolderKpiSpms1', 'spFolderKpiSpms2', 'spFolderKpiSpms3', 'spFolderKpiSpms4', 'spFolderKpiSpms5'];
-        var ldIds = ['spFolderKpiLd2'];
+        var ldIds = ['spFolderKpiLd1', 'spFolderKpiLd2'];
         lastdayIds.forEach(function (id) { var el = document.getElementById(id); if (el) el.classList.add('hidden'); });
         spmsIds.forEach(function (id) { var el = document.getElementById(id); if (el) el.classList.add('hidden'); });
         ldIds.forEach(function (id) { var el = document.getElementById(id); if (el) el.classList.add('hidden'); });
         if (folderId === 'lastday') {
-          restoreSprLabel();
+          if (elFirstLabel) elFirstLabel.textContent = 'Total Deliveries';
           var d = getLastDayStripData();
           if (elSprFixed) elSprFixed.textContent = d.spr != null ? d.spr : '—';
           lastdayIds.forEach(function (id) { var el = document.getElementById(id); if (el) el.classList.remove('hidden'); });
@@ -728,9 +776,9 @@
           if (elTw) elTw.textContent = d.tw != null ? d.tw : '—';
           if (elAfd) elAfd.textContent = d.afd != null ? d.afd : '—';
         } else if (folderId === 'spms') {
-          restoreSprLabel();
+          if (elFirstLabel) elFirstLabel.textContent = 'Income';
           var s = getSpmsStripData();
-          if (elSprFixed) elSprFixed.textContent = s.spr != null ? s.spr : '—';
+          if (elSprFixed) elSprFixed.textContent = s.income != null ? s.income : '—';
           spmsIds.forEach(function (id) { var el = document.getElementById(id); if (el) el.classList.remove('hidden'); });
           var elDel = document.getElementById('spFolderKpiDel');
           var elPu = document.getElementById('spFolderKpiPu');
@@ -744,19 +792,16 @@
           if (elPct) elPct.textContent = s.pct != null ? s.pct : '—';
         } else if (folderId === 'ld') {
           var ld = getLdStripData();
-          var elFirstLabel = document.getElementById('spFolderKpiFirstLabel');
-          if (elSprFixed) elSprFixed.textContent = ld.total != null ? ld.total : '—';
           if (elFirstLabel) elFirstLabel.textContent = 'Total Deductions';
+          if (elSprFixed) elSprFixed.textContent = ld.total != null ? ld.total : '—';
           ldIds.forEach(function (id) { var el = document.getElementById(id); if (el) el.classList.remove('hidden'); });
+          var elLdCount = document.getElementById('spFolderKpiLdCount');
           var elLdPending = document.getElementById('spFolderKpiLdPending');
+          if (elLdCount) elLdCount.textContent = ld.count != null ? ld.count : '—';
           if (elLdPending) elLdPending.textContent = ld.pending != null ? ld.pending : '—';
         }
       }
 
-      function restoreSprLabel() {
-        var el = document.getElementById('spFolderKpiFirstLabel');
-        if (el) el.textContent = 'SPR';
-      }
 
       var carouselIndex = 0;
       var carouselTotal = 3;
@@ -918,6 +963,10 @@
       };
       var spmsState = { selected: 'all', expanded: { all: true } };
       var ldState = { selected: 'all', expanded: { all: true } };
+      var opmsDeliveriesPageIndex = 0;
+      var ldTablePageIndex = 0;
+      var OPMS_PAGE_SIZE = 10;
+      var LD_PAGE_SIZE = 8;
 
       /** Mock liquidation damages data. Keys: date string (YYYY-MM-DD). Values: array of { awb, route, depot, loop, issueDate, issueDescription, amount, status }. */
       function getLiquidationDamagesData() {
@@ -970,6 +1019,141 @@
         return d.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
       }
 
+      function setOpmsFilter(value) {
+        lastDayState.selected = value;
+        spmsState.selected = value;
+        ldState.selected = value;
+      }
+
+      function updateOpmsFilterChips() {
+        var depotChipsEl = document.getElementById('opmsDepotChips');
+        var loopChipsEl = document.getElementById('opmsLoopChips');
+        var routeChipsEl = document.getElementById('opmsRouteChips');
+        if (!depotChipsEl) return;
+        var details = getRegisteredRoutesWithDetails();
+        var loopsWithDepots = getLoopsWithDepotsForSp();
+        var depotNames = [];
+        var seenDepot = {};
+        loopsWithDepots.forEach(function (x) {
+          if (!seenDepot[x.depot]) { seenDepot[x.depot] = true; depotNames.push(x.depot); }
+        });
+        depotNames.sort();
+        var selected = lastDayState.selected;
+        var depotFilter = null;
+        var loopFilter = null;
+        var routeFilter = null;
+        if (selected === 'all') { depotFilter = null; loopFilter = null; routeFilter = null; }
+        else if (selected.indexOf('|') !== -1) {
+          depotFilter = selected.split('|')[0] || null;
+          loopFilter = selected.split('|')[1] || null;
+          routeFilter = null;
+        } else if (depotNames.indexOf(selected) !== -1) {
+          depotFilter = selected;
+          loopFilter = null;
+          routeFilter = null;
+        } else {
+          routeFilter = selected;
+          var rec = details.filter(function (r) { return r.route === selected; })[0];
+          depotFilter = rec ? rec.depot : null;
+          loopFilter = rec ? rec.loop : null;
+        }
+        if (currentFolderTab === 'lastday') {
+          if (routeFilter) {
+            setOpmsFilter(depotFilter && loopFilter ? depotFilter + '|' + loopFilter : (depotFilter || 'all'));
+            selected = lastDayState.selected;
+            depotFilter = selected === 'all' ? null : (selected.indexOf('|') !== -1 ? selected.split('|')[0] : (depotNames.indexOf(selected) !== -1 ? selected : null));
+            loopFilter = selected.indexOf('|') !== -1 ? selected.split('|')[1] || null : null;
+            routeFilter = null;
+          }
+        } else if (currentFolderTab !== 'lastday' && !loopFilter) {
+          if (routeFilter) {
+            setOpmsFilter(depotFilter || 'all');
+            selected = lastDayState.selected;
+            depotFilter = selected === 'all' ? null : selected;
+            loopFilter = null;
+            routeFilter = null;
+          }
+        }
+        depotChipsEl.innerHTML = '<button type="button" class="disco-chip' + (!depotFilter ? ' active' : '') + '" data-opms-depot="">All</button>' +
+          depotNames.map(function (d) {
+            return '<button type="button" class="disco-chip' + (depotFilter === d ? ' active' : '') + '" data-opms-depot="' + escapeHtml(d) + '">' + escapeHtml(d) + '</button>';
+          }).join('');
+        var loopsForDepot = depotFilter ? loopsWithDepots.filter(function (x) { return x.depot === depotFilter; }) : loopsWithDepots;
+        var uniqueLoops = [];
+        var seenLoop = {};
+        loopsForDepot.forEach(function (x) {
+          var key = x.depot + '|' + x.loop;
+          if (!seenLoop[key]) { seenLoop[key] = true; uniqueLoops.push(x); }
+        });
+        uniqueLoops.sort(function (a, b) { return (a.depot + a.loop).localeCompare(b.depot + b.loop); });
+        loopChipsEl.innerHTML = '<button type="button" class="disco-chip' + (!loopFilter ? ' active' : '') + '" data-opms-loop="">All</button>' +
+          uniqueLoops.map(function (x) {
+            var loopKey = x.depot + '|' + x.loop;
+            var isActive = loopFilter && depotFilter && loopFilter === x.loop && depotFilter === x.depot;
+            return '<button type="button" class="disco-chip' + (isActive ? ' active' : '') + '" data-opms-loop="' + escapeHtml(loopKey) + '">' + escapeHtml(x.loop) + '</button>';
+          }).join('');
+        var routesForFilter = details;
+        if (loopFilter && depotFilter) {
+          routesForFilter = details.filter(function (r) { return r.depot === depotFilter && r.loop === loopFilter; });
+        } else if (depotFilter) {
+          routesForFilter = details.filter(function (r) { return r.depot === depotFilter; });
+        }
+        var showRouteChips = (currentFolderTab !== 'lastday') && (loopFilter && depotFilter);
+        var routeFilterWrap = document.getElementById('opmsRouteFilterWrap');
+        if (routeFilterWrap) routeFilterWrap.classList.toggle('hidden', !showRouteChips);
+        var routeNames = [];
+        var seenRoute = {};
+        if (showRouteChips && loopFilter && depotFilter) {
+          routesForFilter = details.filter(function (r) { return r.depot === depotFilter && r.loop === loopFilter; });
+          routesForFilter.forEach(function (r) {
+            if (!seenRoute[r.route]) { seenRoute[r.route] = true; routeNames.push(r.route); }
+          });
+          routeNames.sort();
+        }
+        if (routeChipsEl) {
+          if (showRouteChips) {
+            routeChipsEl.innerHTML = '<button type="button" class="disco-chip' + (!routeFilter ? ' active' : '') + '" data-opms-route="">All</button>' +
+              routeNames.map(function (r) {
+                return '<button type="button" class="disco-chip' + (routeFilter === r ? ' active' : '') + '" data-opms-route="' + escapeHtml(r) + '">' + escapeHtml(r) + '</button>';
+              }).join('');
+          } else {
+            routeChipsEl.innerHTML = '';
+          }
+        }
+        depotChipsEl.querySelectorAll('.disco-chip').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            var depot = (btn.getAttribute('data-opms-depot') || '').trim();
+            setOpmsFilter(depot || 'all');
+            updateOpmsFilterChips();
+            if (currentFolderTab === 'lastday') { opmsDeliveriesPageIndex = 0; updateLastDaySection(); updateSpFolderDashboardStrip('lastday'); }
+            else if (currentFolderTab === 'spms') { updateSpmsSection(); updateSpFolderDashboardStrip('spms'); }
+            else { ldTablePageIndex = 0; updateLiquidationDamagesSection(); updateSpFolderDashboardStrip('ld'); }
+          });
+        });
+        loopChipsEl.querySelectorAll('.disco-chip').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            var loopKey = (btn.getAttribute('data-opms-loop') || '').trim();
+            setOpmsFilter(loopKey || (depotFilter || 'all'));
+            updateOpmsFilterChips();
+            if (currentFolderTab === 'lastday') { opmsDeliveriesPageIndex = 0; updateLastDaySection(); updateSpFolderDashboardStrip('lastday'); }
+            else if (currentFolderTab === 'spms') { updateSpmsSection(); updateSpFolderDashboardStrip('spms'); }
+            else { ldTablePageIndex = 0; updateLiquidationDamagesSection(); updateSpFolderDashboardStrip('ld'); }
+          });
+        });
+        if (routeChipsEl) {
+          routeChipsEl.querySelectorAll('.disco-chip').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+              var route = (btn.getAttribute('data-opms-route') || '').trim();
+              setOpmsFilter(route || (loopFilter && depotFilter ? depotFilter + '|' + loopFilter : depotFilter || 'all'));
+              updateOpmsFilterChips();
+              if (currentFolderTab === 'lastday') { opmsDeliveriesPageIndex = 0; updateLastDaySection(); updateSpFolderDashboardStrip('lastday'); }
+              else if (currentFolderTab === 'spms') { updateSpmsSection(); updateSpFolderDashboardStrip('spms'); }
+              else { ldTablePageIndex = 0; updateLiquidationDamagesSection(); updateSpFolderDashboardStrip('ld'); }
+            });
+          });
+        }
+      }
+
       function getLdStripData() {
         var rows = getLiquidationDamagesRowsForCurrentMonth();
         var routeFilter = ''; var loopFilter = null; var depotFilter = null;
@@ -988,116 +1172,14 @@
           total += Number(r.amount) || 0;
           if (String(r.status || '').toLowerCase() === 'pending') pending++;
         });
-        return { total: total ? '£' + total.toFixed(2) : '—', pending: pending };
+        return { total: total ? '£' + total.toFixed(2) : '—', pending: pending, count: filtered.length };
       }
 
       function updateLiquidationDamagesSection() {
         if (!spName) return;
         var ldViewingEl = document.getElementById('ldViewingMonth');
         if (ldViewingEl) ldViewingEl.textContent = formatMonthDisplay();
-        var treeEl = document.getElementById('ldTree');
-        var details = getRegisteredRoutesWithDetails();
-        var loopsWithDepots = getLoopsWithDepotsForSp();
-        var depotNames = [];
-        var seenDepot = {};
-        loopsWithDepots.forEach(function (x) {
-          if (!seenDepot[x.depot]) { seenDepot[x.depot] = true; depotNames.push(x.depot); }
-        });
-        depotNames.sort();
-        if (treeEl) {
-          treeEl.innerHTML = '';
-          var allLi = document.createElement('li');
-          allLi.setAttribute('role', 'treeitem');
-          allLi.setAttribute('aria-expanded', ldState.expanded.all ? 'true' : 'false');
-          allLi.setAttribute('data-id', 'all');
-          allLi.className = 'opms-tree-item opms-tree-item-all' + (ldState.selected === 'all' ? ' selected' : '');
-          var allLabel = document.createElement('span');
-          allLabel.className = 'opms-tree-label';
-          allLabel.innerHTML = (ldState.expanded.all ? '<i class="bi bi-chevron-down opms-tree-icon"></i>' : '<i class="bi bi-chevron-right opms-tree-icon"></i>') + '<span>All</span>';
-          allLi.appendChild(allLabel);
-          allLi.addEventListener('click', function (e) {
-            e.stopPropagation();
-            ldState.expanded.all = !ldState.expanded.all;
-            ldState.selected = 'all';
-            updateLiquidationDamagesSection();
-          });
-          treeEl.appendChild(allLi);
-          if (ldState.expanded.all && depotNames.length) {
-            var depotsUl = document.createElement('ul');
-            depotsUl.setAttribute('role', 'group');
-            depotsUl.className = 'opms-tree-children';
-            depotNames.forEach(function (depotName) {
-              var depotExpanded = !!ldState.expanded[depotName];
-              var depotLoops = loopsWithDepots.filter(function (x) { return x.depot === depotName; });
-              var depotLi = document.createElement('li');
-              depotLi.setAttribute('role', 'treeitem');
-              depotLi.setAttribute('aria-expanded', depotExpanded ? 'true' : 'false');
-              depotLi.setAttribute('data-id', depotName);
-              depotLi.className = 'opms-tree-item opms-tree-item-depot' + (ldState.selected === depotName ? ' selected' : '');
-              var depotLabel = document.createElement('span');
-              depotLabel.className = 'opms-tree-label';
-              depotLabel.innerHTML = (depotExpanded ? '<i class="bi bi-chevron-down opms-tree-icon"></i>' : '<i class="bi bi-chevron-right opms-tree-icon"></i>') + '<span>' + escapeHtml(depotName) + '</span>';
-              depotLi.appendChild(depotLabel);
-              depotLi.addEventListener('click', function (e) {
-                e.stopPropagation();
-                ldState.expanded[depotName] = !ldState.expanded[depotName];
-                ldState.selected = depotName;
-                updateLiquidationDamagesSection();
-              });
-              depotsUl.appendChild(depotLi);
-              if (depotExpanded && depotLoops.length) {
-                var loopsUl = document.createElement('ul');
-                loopsUl.setAttribute('role', 'group');
-                loopsUl.className = 'opms-tree-children';
-                depotLoops.forEach(function (x) {
-                  var loopKey = x.depot + '|' + x.loop;
-                  var loopExpanded = !!ldState.expanded[loopKey];
-                  var loopRoutes = details.filter(function (rec) { return rec.depot === x.depot && rec.loop === x.loop; }).map(function (r) { return r.route; }).sort();
-                  var loopLi = document.createElement('li');
-                  loopLi.setAttribute('role', 'treeitem');
-                  loopLi.setAttribute('aria-expanded', loopExpanded ? 'true' : 'false');
-                  loopLi.setAttribute('data-id', loopKey);
-                  loopLi.className = 'opms-tree-item opms-tree-item-loop' + (ldState.selected === loopKey ? ' selected' : '');
-                  var loopLabel = document.createElement('span');
-                  loopLabel.className = 'opms-tree-label';
-                  loopLabel.innerHTML = (loopExpanded ? '<i class="bi bi-chevron-down opms-tree-icon"></i>' : '<i class="bi bi-chevron-right opms-tree-icon"></i>') + '<span>' + escapeHtml(x.loop) + '</span>';
-                  loopLi.appendChild(loopLabel);
-                  loopLi.addEventListener('click', function (e) {
-                    e.stopPropagation();
-                    ldState.expanded[loopKey] = !ldState.expanded[loopKey];
-                    ldState.selected = loopKey;
-                    updateLiquidationDamagesSection();
-                  });
-                  loopsUl.appendChild(loopLi);
-                  if (loopExpanded && loopRoutes.length) {
-                    var routesUl = document.createElement('ul');
-                    routesUl.setAttribute('role', 'group');
-                    routesUl.className = 'opms-tree-children opms-tree-routes';
-                    loopRoutes.forEach(function (routeName) {
-                      var routeLi = document.createElement('li');
-                      routeLi.setAttribute('role', 'treeitem');
-                      routeLi.setAttribute('data-route', routeName);
-                      routeLi.className = 'opms-tree-item opms-tree-item-route' + (ldState.selected === routeName ? ' selected' : '');
-                      var routeLabel = document.createElement('span');
-                      routeLabel.className = 'opms-tree-label';
-                      routeLabel.innerHTML = '<span class="opms-tree-route-name">' + escapeHtml(routeName) + '</span>';
-                      routeLi.appendChild(routeLabel);
-                      routeLi.addEventListener('click', function (e) {
-                        e.stopPropagation();
-                        ldState.selected = routeName;
-                        updateLiquidationDamagesSection();
-                      });
-                      routesUl.appendChild(routeLi);
-                    });
-                    loopLi.appendChild(routesUl);
-                  }
-                });
-                depotLi.appendChild(loopsUl);
-              }
-            });
-            allLi.appendChild(depotsUl);
-          }
-        }
+        var depotNames = getDepotsForSp();
         var routeFilter = ''; var loopFilter = null; var depotFilter = null;
         if (ldState.selected === 'all') { routeFilter = ''; loopFilter = null; depotFilter = null; }
         else if (ldState.selected.indexOf('|') !== -1) { loopFilter = ldState.selected.split('|')[1] || null; depotFilter = ldState.selected.split('|')[0] || null; }
@@ -1110,21 +1192,39 @@
           if (depotFilter && r.depot !== depotFilter) return false;
           return true;
         });
-        var tbody = document.getElementById('ldTableBody');
-        var emptyEl = document.getElementById('ldTableEmpty');
-        if (tbody) {
-          tbody.innerHTML = filtered.map(function (r) {
-            var routeDisplay = r.route || '—';
-            var statusClass = String(r.status || '').toLowerCase() === 'pending' ? 'text-warning' : 'text-success';
-            return '<tr><td><strong>' + escapeHtml(r.awb || '—') + '</strong></td><td>' + escapeHtml(routeDisplay) + '</td><td>' + escapeHtml(r.issueDate ? formatDate(r.issueDate) : '—') + '</td><td>' + escapeHtml(r.issueDescription || '—') + '</td><td class="text-end">£' + (Number(r.amount) || 0).toFixed(2) + '</td><td><span class="' + statusClass + '">' + escapeHtml(r.status || '—') + '</span></td></tr>';
-          }).join('');
-        }
         var totalAmount = filtered.reduce(function (sum, r) { return sum + (Number(r.amount) || 0); }, 0);
         var totalEl = document.getElementById('ldTotalAmount');
         if (totalEl) totalEl.textContent = '£' + totalAmount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
         var countEl = document.getElementById('ldCount');
         if (countEl) countEl.textContent = String(filtered.length);
+        var totalPages = Math.max(1, Math.ceil(filtered.length / LD_PAGE_SIZE));
+        if (ldTablePageIndex >= totalPages) ldTablePageIndex = Math.max(0, totalPages - 1);
+        var start = ldTablePageIndex * LD_PAGE_SIZE;
+        var pageRows = filtered.slice(start, start + LD_PAGE_SIZE);
+        var tbody = document.getElementById('ldTableBody');
+        var emptyEl = document.getElementById('ldTableEmpty');
+        var paginationNav = document.getElementById('ldPagination');
+        var paginationInfo = document.getElementById('ldPaginationInfo');
+        var paginationPrev = document.getElementById('ldPaginationPrev');
+        var paginationNext = document.getElementById('ldPaginationNext');
+        if (tbody) {
+          tbody.innerHTML = pageRows.map(function (r) {
+            var routeDisplay = r.route || '—';
+            var statusClass = String(r.status || '').toLowerCase() === 'pending' ? 'text-warning' : 'text-success';
+            return '<tr><td><strong>' + escapeHtml(r.awb || '—') + '</strong></td><td>' + escapeHtml(routeDisplay) + '</td><td>' + escapeHtml(r.issueDate ? formatDate(r.issueDate) : '—') + '</td><td>' + escapeHtml(r.issueDescription || '—') + '</td><td class="text-end">£' + (Number(r.amount) || 0).toFixed(2) + '</td><td><span class="' + statusClass + '">' + escapeHtml(r.status || '—') + '</span></td></tr>';
+          }).join('');
+        }
         if (emptyEl) emptyEl.classList.toggle('hidden', filtered.length > 0);
+        if (paginationNav) paginationNav.classList.toggle('hidden', filtered.length <= LD_PAGE_SIZE);
+        if (paginationInfo) paginationInfo.textContent = filtered.length > LD_PAGE_SIZE ? (start + 1) + '–' + Math.min(start + LD_PAGE_SIZE, filtered.length) + ' of ' + filtered.length : (filtered.length ? '1–' + filtered.length + ' of ' + filtered.length : '—');
+        if (paginationPrev) {
+          paginationPrev.disabled = ldTablePageIndex <= 0;
+          paginationPrev.onclick = function () { if (ldTablePageIndex > 0) { ldTablePageIndex--; updateLiquidationDamagesSection(); } };
+        }
+        if (paginationNext) {
+          paginationNext.disabled = ldTablePageIndex >= totalPages - 1;
+          paginationNext.onclick = function () { if (ldTablePageIndex < totalPages - 1) { ldTablePageIndex++; updateLiquidationDamagesSection(); } };
+        }
       }
 
       function initLiquidationDamages() {
@@ -1150,9 +1250,9 @@
         if (lastDayState.dateIndex >= lastDayState.dates.length) lastDayState.dateIndex = Math.max(0, lastDayState.dates.length - 1);
         if (prevDatesLen === 0 && lastDayState.dates.length > 0) lastDayState.dateIndex = lastDayState.dates.length - 1;
         var selDate = getCurrentViewDate();
-        var viewingDateEl = document.getElementById('lastDayViewingDate');
-        var datePrevBtn = document.getElementById('lastDayDatePrev');
-        var dateNextBtn = document.getElementById('lastDayDateNext');
+        var viewingDateEl = document.getElementById('opmsViewingDate');
+        var datePrevBtn = document.getElementById('opmsDatePrev');
+        var dateNextBtn = document.getElementById('opmsDateNext');
         if (viewingDateEl) viewingDateEl.textContent = selDate ? formatDate(selDate) : '—';
         if (datePrevBtn) {
           datePrevBtn.disabled = lastDayState.dates.length === 0 || lastDayState.dateIndex <= 0;
@@ -1162,7 +1262,6 @@
           dateNextBtn.disabled = lastDayState.dates.length === 0 || lastDayState.dateIndex >= lastDayState.dates.length - 1;
           dateNextBtn.setAttribute('aria-disabled', dateNextBtn.disabled ? 'true' : 'false');
         }
-        var treeEl = document.getElementById('lastDayTree');
         var details = getRegisteredRoutesWithDetails();
         var loopsWithDepots = getLoopsWithDepotsForSp();
         var depotNames = [];
@@ -1171,79 +1270,6 @@
           if (!seenDepot[x.depot]) { seenDepot[x.depot] = true; depotNames.push(x.depot); }
         });
         depotNames.sort();
-        if (treeEl) {
-          treeEl.innerHTML = '';
-          var allLi = document.createElement('li');
-          allLi.setAttribute('role', 'treeitem');
-          allLi.setAttribute('aria-expanded', lastDayState.expanded.all ? 'true' : 'false');
-          allLi.setAttribute('data-id', 'all');
-          allLi.className = 'opms-tree-item opms-tree-item-all' + (lastDayState.selected === 'all' ? ' selected' : '');
-          var allLabel = document.createElement('span');
-          allLabel.className = 'opms-tree-label';
-          allLabel.innerHTML = (lastDayState.expanded.all ? '<i class="bi bi-chevron-down opms-tree-icon"></i>' : '<i class="bi bi-chevron-right opms-tree-icon"></i>') + '<span>All</span>';
-          allLi.appendChild(allLabel);
-          allLi.addEventListener('click', function (e) {
-            e.stopPropagation();
-            lastDayState.expanded.all = !lastDayState.expanded.all;
-            lastDayState.selected = 'all';
-            updateLastDaySection();
-          });
-          treeEl.appendChild(allLi);
-          if (lastDayState.expanded.all && depotNames.length) {
-            var depotsUl = document.createElement('ul');
-            depotsUl.setAttribute('role', 'group');
-            depotsUl.className = 'opms-tree-children';
-            depotNames.forEach(function (depotName) {
-              var depotExpanded = !!lastDayState.expanded[depotName];
-              var depotLoops = loopsWithDepots.filter(function (x) { return x.depot === depotName; });
-              var depotLi = document.createElement('li');
-              depotLi.setAttribute('role', 'treeitem');
-              depotLi.setAttribute('aria-expanded', depotExpanded ? 'true' : 'false');
-              depotLi.setAttribute('data-id', depotName);
-              depotLi.className = 'opms-tree-item opms-tree-item-depot' + (lastDayState.selected === depotName ? ' selected' : '');
-              var depotLabel = document.createElement('span');
-              depotLabel.className = 'opms-tree-label';
-              depotLabel.innerHTML = (depotExpanded ? '<i class="bi bi-chevron-down opms-tree-icon"></i>' : '<i class="bi bi-chevron-right opms-tree-icon"></i>') + '<span>' + escapeHtml(depotName) + '</span>';
-              depotLi.appendChild(depotLabel);
-              depotLi.addEventListener('click', function (e) {
-                e.stopPropagation();
-                lastDayState.expanded[depotName] = !lastDayState.expanded[depotName];
-                lastDayState.selected = depotName;
-                updateLastDaySection();
-              });
-              depotsUl.appendChild(depotLi);
-              if (depotExpanded && depotLoops.length) {
-                var loopsUl = document.createElement('ul');
-                loopsUl.setAttribute('role', 'group');
-                loopsUl.className = 'opms-tree-children';
-                depotLoops.forEach(function (x) {
-                  var loopKey = x.depot + '|' + x.loop;
-                  var loopExpanded = !!lastDayState.expanded[loopKey];
-                  var loopRoutes = details.filter(function (rec) { return rec.depot === x.depot && rec.loop === x.loop; }).map(function (r) { return r.route; }).sort();
-                  var loopLi = document.createElement('li');
-                  loopLi.setAttribute('role', 'treeitem');
-                  loopLi.setAttribute('aria-expanded', loopExpanded ? 'true' : 'false');
-                  loopLi.setAttribute('data-id', loopKey);
-                  loopLi.className = 'opms-tree-item opms-tree-item-loop' + (lastDayState.selected === loopKey ? ' selected' : '');
-                  var loopLabel = document.createElement('span');
-                  loopLabel.className = 'opms-tree-label';
-                  loopLabel.innerHTML = (loopExpanded ? '<i class="bi bi-chevron-down opms-tree-icon"></i>' : '<i class="bi bi-chevron-right opms-tree-icon"></i>') + '<span>' + escapeHtml(x.loop) + '</span>';
-                  loopLi.appendChild(loopLabel);
-                  loopLi.addEventListener('click', function (e) {
-                    e.stopPropagation();
-                    lastDayState.expanded[loopKey] = !lastDayState.expanded[loopKey];
-                    lastDayState.selected = loopKey;
-                    updateLastDaySection();
-                  });
-                  loopsUl.appendChild(loopLi);
-                  /* Daily OPMS: filtros apenas até Loop (sem nível Rota) */
-                });
-                depotLi.appendChild(loopsUl);
-              }
-            });
-            allLi.appendChild(depotsUl);
-          }
-        }
         var routeFilter = '';
         var loopFilter = null;
         var depotFilter = null;
@@ -1254,7 +1280,7 @@
         } else if (lastDayState.selected.indexOf('|') !== -1) {
           routeFilter = '';
           loopFilter = lastDayState.selected.split('|')[1] || null;
-          depotFilter = null;
+          depotFilter = lastDayState.selected.split('|')[0] || null;
         } else if (depotNames.indexOf(lastDayState.selected) !== -1) {
           routeFilter = '';
           loopFilter = null;
@@ -1264,6 +1290,7 @@
           loopFilter = null;
           depotFilter = null;
         }
+        opmsDeliveriesPageIndex = 0;
         renderLastDayDeliveriesTable(selDate, routeFilter, loopFilter, depotFilter);
         if (currentFolderTab === 'lastday') updateSpFolderDashboardStrip('lastday');
       }
@@ -1271,6 +1298,10 @@
       function renderLastDayDeliveriesTable(storeDate, routeFilter, loopFilter, depotFilter) {
         var tbody = document.getElementById('lastDayDeliveriesBody');
         var emptyEl = document.getElementById('lastDayDeliveriesEmpty');
+        var paginationNav = document.getElementById('opmsDeliveriesPagination');
+        var paginationInfo = document.getElementById('opmsPaginationInfo');
+        var paginationPrev = document.getElementById('opmsPaginationPrev');
+        var paginationNext = document.getElementById('opmsPaginationNext');
         if (!tbody) return;
         var data = storeDate ? opmsDataByDate[storeDate] : null;
         var registeredSet = getRegisteredRouteNamesSet();
@@ -1278,6 +1309,7 @@
         if (!data || !data.byRoute || Object.keys(data.byRoute).length === 0) {
           tbody.innerHTML = '';
           if (emptyEl) emptyEl.classList.remove('hidden');
+          if (paginationNav) paginationNav.classList.add('hidden');
           return;
         }
         var rows = [];
@@ -1303,7 +1335,11 @@
         tbody.innerHTML = rows.map(function (row) {
           return '<tr><td>' + escapeHtml(row.route) + '</td><td class="text-end">' + row.del + '</td><td class="text-end">' + row.pu + '</td><td class="text-end">' + row.hn + '</td><td class="text-end">' + row.afd + '</td><td class="text-end">' + row.stops + '</td></tr>';
         }).join('');
-        if (emptyEl) emptyEl.classList.toggle('hidden', rows.length > 0);
+        if (emptyEl) emptyEl.classList.add('hidden');
+        if (paginationNav) paginationNav.classList.remove('hidden');
+        if (paginationInfo) paginationInfo.textContent = rows.length ? '1–' + rows.length + ' of ' + rows.length : '—';
+        var pagBtns = paginationNav ? paginationNav.querySelector('.opms-pagination-btns') : null;
+        if (paginationNav && pagBtns) pagBtns.classList.add('hidden');
       }
 
       function renderLastDayGoals(storeDate, routeFilter, loopFilter, depotFilter) {
@@ -1492,7 +1528,7 @@
             var colorClass = getTimeWindowColor(pct);
             var displayVal = twValForRoute <= 1 ? (Math.round(twValForRoute * 1000) / 10) : (Math.round(twValForRoute * 10) / 10);
             twByRouteHtml = '<div class="opms-tw-by-route-wrap"><h4 class="opms-tw-by-route-title"><i class="bi bi-clock-history"></i> Time Window – ' + escapeHtml(routeFilter) + '</h4>' +
-              '<div class="opms-tw-by-route-table-wrap"><table class="opms-tw-by-route-table" aria-label="Time Window % da rota">' +
+              '<div class="opms-tw-by-route-table-wrap"><table class="opms-tw-by-route-table opms-table-disco-style" aria-label="Time Window % da rota">' +
               '<thead><tr><th>Route</th><th>% TW Adh DL</th></tr></thead><tbody>' +
               '<tr><td class="opms-tw-route-name">' + escapeHtml(routeFilter) + '</td><td class="opms-tw-route-value opms-tw-route-value--' + colorClass + '">' + displayVal + '%</td></tr>' +
               '</tbody></table></div></div>';
@@ -1503,20 +1539,22 @@
       }
 
       function initLastDay() {
-        var datePrevBtn = document.getElementById('lastDayDatePrev');
-        var dateNextBtn = document.getElementById('lastDayDateNext');
-        var datePickerBtn = document.getElementById('lastDayDatePicker');
-        var dateDropdown = document.getElementById('lastDayDateDropdown');
+        var datePrevBtn = document.getElementById('opmsDatePrev');
+        var dateNextBtn = document.getElementById('opmsDateNext');
+        var datePickerBtn = document.getElementById('opmsDatePicker');
+        var dateDropdown = document.getElementById('opmsDateDropdown');
         if (datePrevBtn) datePrevBtn.addEventListener('click', function () {
           if (lastDayState.dateIndex > 0) {
             lastDayState.dateIndex--;
             updateLastDaySection();
+            updateSpmsSection();
           }
         });
         if (dateNextBtn) dateNextBtn.addEventListener('click', function () {
           if (lastDayState.dateIndex < lastDayState.dates.length - 1) {
             lastDayState.dateIndex++;
             updateLastDaySection();
+            updateSpmsSection();
           }
         });
         function openDateDropdown() {
@@ -1543,6 +1581,7 @@
                 dateDropdown.classList.add('hidden');
                 datePickerBtn.setAttribute('aria-expanded', 'false');
                 updateLastDaySection();
+                updateSpmsSection();
               });
               dateDropdown.appendChild(opt);
             });
@@ -1569,93 +1608,11 @@
             e.stopPropagation();
           });
         }
+        updateOpmsFilterChips();
       }
 
       function initSpms() {
-        var spmsPrevBtn = document.getElementById('spmsDatePrev');
-        var spmsNextBtn = document.getElementById('spmsDateNext');
-        var spmsPickerBtn = document.getElementById('spmsDatePicker');
-        var spmsDropdown = document.getElementById('spmsDateDropdown');
-        if (spmsPrevBtn) spmsPrevBtn.addEventListener('click', function () {
-          if (lastDayState.dateIndex > 0) {
-            lastDayState.dateIndex--;
-            updateLastDaySection();
-            updateSpmsSection();
-          }
-        });
-        if (spmsNextBtn) spmsNextBtn.addEventListener('click', function () {
-          if (lastDayState.dateIndex < lastDayState.dates.length - 1) {
-            lastDayState.dateIndex++;
-            updateLastDaySection();
-            updateSpmsSection();
-          }
-        });
-        function openSpmsDateDropdown() {
-          if (!spmsDropdown || !spmsPickerBtn) return;
-          lastDayState.dates = getLastDayDates();
-          spmsDropdown.innerHTML = '';
-          if (lastDayState.dates.length === 0) {
-            var empty = document.createElement('div');
-            empty.className = 'opms-date-dropdown-option';
-            empty.textContent = 'No date available';
-            empty.style.pointerEvents = 'none';
-            empty.style.opacity = '0.7';
-            spmsDropdown.appendChild(empty);
-          } else {
-            lastDayState.dates.forEach(function (d, i) {
-              var opt = document.createElement('button');
-              opt.type = 'button';
-              opt.className = 'opms-date-dropdown-option' + (i === lastDayState.dateIndex ? ' current' : '');
-              opt.textContent = formatDate(d);
-              opt.setAttribute('role', 'option');
-              opt.setAttribute('data-index', String(i));
-              opt.addEventListener('click', function () {
-                lastDayState.dateIndex = i;
-                spmsDropdown.classList.add('hidden');
-                spmsPickerBtn.setAttribute('aria-expanded', 'false');
-                updateLastDaySection();
-                updateSpmsSection();
-              });
-              spmsDropdown.appendChild(opt);
-            });
-          }
-          spmsDropdown.classList.remove('hidden');
-          spmsPickerBtn.setAttribute('aria-expanded', 'true');
-        }
-        function closeSpmsDateDropdown() {
-          if (spmsDropdown) spmsDropdown.classList.add('hidden');
-          if (spmsPickerBtn) spmsPickerBtn.setAttribute('aria-expanded', 'false');
-        }
-        if (spmsPickerBtn && spmsDropdown) {
-          spmsPickerBtn.addEventListener('click', function (e) {
-            e.stopPropagation();
-            if (spmsDropdown.classList.contains('hidden')) openSpmsDateDropdown();
-            else closeSpmsDateDropdown();
-          });
-        }
-        if (spmsDropdown) spmsDropdown.addEventListener('click', function (e) { e.stopPropagation(); });
-        var spmsFilterToggle = document.getElementById('spmsFilterToggle');
-        var spmsTreeWrap = document.getElementById('spmsTreeWrap');
-        if (spmsFilterToggle && spmsTreeWrap) {
-          spmsFilterToggle.addEventListener('click', function (e) {
-            e.stopPropagation();
-            var isHidden = spmsTreeWrap.classList.contains('hidden');
-            if (isHidden) {
-              spmsTreeWrap.classList.remove('hidden');
-              spmsTreeWrap.setAttribute('aria-hidden', 'false');
-            } else {
-              spmsTreeWrap.classList.add('hidden');
-              spmsTreeWrap.setAttribute('aria-hidden', 'true');
-            }
-          });
-          document.addEventListener('click', function () {
-            if (!spmsTreeWrap.classList.contains('hidden')) {
-              spmsTreeWrap.classList.add('hidden');
-              spmsTreeWrap.setAttribute('aria-hidden', 'true');
-            }
-          });
-          spmsTreeWrap.addEventListener('click', function (e) { e.stopPropagation(); });
-        }
+        /* Date e filtros agora são unificados no topo do bloco (opmsDatePrev, opmsDepotChips, etc.) */
       }
 
       /** Parse SPMS service item string: extrai HN (Handover), OK (Deliveries), PU (Pickups). DD e PD são somados ao OK. */
@@ -1683,24 +1640,90 @@
         return s || '—';
       }
 
+      function updateSpmsFinancialVisuals(v) {
+        var ARC_LEN  = 119;  // arco plano r=100, semi-chord=56 → arc length ≈ 119
+        var RING_LEN = 251;  // 2π × 40 ≈ 251.3 (perf ring r=40)
+
+        // --- Income arc gauge (com suporte a overflow neon > 100%) ---
+        var incomeArc     = document.getElementById('spmsIncomeArc');
+        var incomeArcOver = document.getElementById('spmsIncomeArcOver');
+        var ipRaw = Math.max(v.incomePct || 0, 0);
+        var ipBase = Math.min(ipRaw, 100);
+        if (incomeArc) {
+          incomeArc.style.strokeDasharray = (ipBase / 100 * ARC_LEN).toFixed(1) + ' ' + ARC_LEN;
+          incomeArc.style.stroke = ipBase >= 95 ? '#22c55e' : ipBase >= 75 ? '#f59e0b' : '#ef4444';
+        }
+        if (incomeArcOver) {
+          if (ipRaw > 100) {
+            var ipOver = (ipRaw - 100) / 100 * ARC_LEN;
+            incomeArcOver.style.strokeDasharray = ipOver.toFixed(1) + ' ' + ARC_LEN;
+            incomeArcOver.style.opacity = '1';
+          } else {
+            incomeArcOver.style.strokeDasharray = '0 ' + ARC_LEN;
+            incomeArcOver.style.opacity = '0';
+          }
+        }
+
+        // --- AFD speedometer needle: -90° (0%) → 0° (4%) → +90° (8%+) ---
+        var needle  = document.getElementById('spmsAfdNeedle');
+        var afdCard = document.getElementById('sfbAfdCard');
+        var afdStatus = document.getElementById('sfbAfdStatus');
+        var afdPct = v.afdPct || 0;
+        if (needle) {
+          var afdAngle = -90 + Math.min(afdPct / 8, 1) * 180;
+          needle.style.transform = 'rotate(' + afdAngle.toFixed(1) + 'deg)';
+        }
+        if (afdCard) {
+          afdCard.classList.toggle('sfb-afd--ok',  afdPct <= 4);
+          afdCard.classList.toggle('sfb-afd--bad', afdPct >  4);
+        }
+        if (afdStatus) {
+          afdStatus.textContent = afdPct <= 0 ? '—' : afdPct <= 4 ? 'Within target' : 'Over threshold';
+        }
+
+        // --- Performance ring (com suporte a overflow neon > 100%) ---
+        var ring     = document.getElementById('spmsPerfRing');
+        var ringOver = document.getElementById('spmsPerfRingOver');
+        var ringVal  = document.getElementById('spmsPerfRingVal');
+        var ppRaw  = Math.max(v.delPctRaw || 0, 0);
+        var ppBase = Math.min(ppRaw, 100);
+        if (ring) {
+          ring.style.strokeDasharray = (ppBase / 100 * RING_LEN).toFixed(1) + ' ' + RING_LEN;
+          ring.style.stroke = ppBase >= 95 ? '#22c55e' : ppBase >= 80 ? '#f59e0b' : '#ef4444';
+        }
+        if (ringOver) {
+          if (ppRaw > 100) {
+            var ppOver = (ppRaw - 100) / 100 * RING_LEN;
+            ringOver.style.strokeDasharray = ppOver.toFixed(1) + ' ' + RING_LEN;
+            ringOver.style.opacity = '1';
+          } else {
+            ringOver.style.strokeDasharray = '0 ' + RING_LEN;
+            ringOver.style.opacity = '0';
+          }
+        }
+        if (ringVal) {
+          ringVal.textContent = (ppRaw > 0) ? (Math.round(ppRaw * 10) / 10) + '%' : '—';
+        }
+
+        // --- Performance breakdown (DEL / PU / HN / Total) ---
+        var total = (v.delOk || 0) + (v.delPu || 0) + (v.delHn || 0);
+        var perfDel   = document.getElementById('sfbPerfDel');
+        var perfPu    = document.getElementById('sfbPerfPu');
+        var perfHn    = document.getElementById('sfbPerfHn');
+        var perfTotal = document.getElementById('sfbPerfTotal');
+        if (perfDel)   perfDel.textContent   = total > 0 ? v.delOk : '—';
+        if (perfPu)    perfPu.textContent    = total > 0 ? v.delPu : '—';
+        if (perfHn)    perfHn.textContent    = total > 0 ? v.delHn : '—';
+        if (perfTotal) perfTotal.textContent = total > 0 ? total   : '—';
+
+      }
+
       function updateSpmsSection() {
         if (!spName) return;
+        try {
         lastDayState.dates = getLastDayDates();
         if (lastDayState.dateIndex >= lastDayState.dates.length) lastDayState.dateIndex = Math.max(0, lastDayState.dates.length - 1);
         var selDate = getCurrentViewDate();
-        var spmsViewingEl = document.getElementById('spmsViewingDate');
-        var spmsPrevBtn = document.getElementById('spmsDatePrev');
-        var spmsNextBtn = document.getElementById('spmsDateNext');
-        if (spmsViewingEl) spmsViewingEl.textContent = selDate ? formatDate(selDate) : '—';
-        if (spmsPrevBtn) {
-          spmsPrevBtn.disabled = lastDayState.dates.length === 0 || lastDayState.dateIndex <= 0;
-          spmsPrevBtn.setAttribute('aria-disabled', spmsPrevBtn.disabled ? 'true' : 'false');
-        }
-        if (spmsNextBtn) {
-          spmsNextBtn.disabled = lastDayState.dates.length === 0 || lastDayState.dateIndex >= lastDayState.dates.length - 1;
-          spmsNextBtn.setAttribute('aria-disabled', spmsNextBtn.disabled ? 'true' : 'false');
-        }
-        var treeEl = document.getElementById('spmsTree');
         var details = getRegisteredRoutesWithDetails();
         var loopsWithDepots = getLoopsWithDepotsForSp();
         var depotNames = [];
@@ -1709,148 +1732,6 @@
           if (!seenDepot[x.depot]) { seenDepot[x.depot] = true; depotNames.push(x.depot); }
         });
         depotNames.sort();
-        if (treeEl) {
-          treeEl.innerHTML = '';
-          var allLi = document.createElement('li');
-          allLi.setAttribute('role', 'treeitem');
-          allLi.setAttribute('aria-expanded', spmsState.expanded.all ? 'true' : 'false');
-          allLi.setAttribute('data-id', 'all');
-          allLi.className = 'opms-tree-item opms-tree-item-all' + (spmsState.selected === 'all' ? ' selected' : '');
-          var allLabel = document.createElement('span');
-          allLabel.className = 'opms-tree-label';
-          allLabel.innerHTML = (spmsState.expanded.all ? '<i class="bi bi-chevron-down opms-tree-icon"></i>' : '<i class="bi bi-chevron-right opms-tree-icon"></i>') + '<span>All</span>';
-          allLi.appendChild(allLabel);
-          allLi.addEventListener('click', function (e) {
-            e.stopPropagation();
-            spmsState.expanded.all = !spmsState.expanded.all;
-            spmsState.selected = 'all';
-            updateSpmsSection();
-          });
-          treeEl.appendChild(allLi);
-          if (spmsState.expanded.all && depotNames.length) {
-            var depotsUl = document.createElement('ul');
-            depotsUl.setAttribute('role', 'group');
-            depotsUl.className = 'opms-tree-children';
-            depotNames.forEach(function (depotName) {
-              var depotExpanded = !!spmsState.expanded[depotName];
-              var depotLoops = loopsWithDepots.filter(function (x) { return x.depot === depotName; });
-              var depotLi = document.createElement('li');
-              depotLi.setAttribute('role', 'treeitem');
-              depotLi.setAttribute('aria-expanded', depotExpanded ? 'true' : 'false');
-              depotLi.setAttribute('data-id', depotName);
-              depotLi.className = 'opms-tree-item opms-tree-item-depot' + (spmsState.selected === depotName ? ' selected' : '');
-              var depotLabel = document.createElement('span');
-              depotLabel.className = 'opms-tree-label';
-              depotLabel.innerHTML = (depotExpanded ? '<i class="bi bi-chevron-down opms-tree-icon"></i>' : '<i class="bi bi-chevron-right opms-tree-icon"></i>') + '<span>' + escapeHtml(depotName) + '</span>';
-              depotLi.appendChild(depotLabel);
-              depotLi.addEventListener('click', function (e) {
-                e.stopPropagation();
-                spmsState.expanded[depotName] = !spmsState.expanded[depotName];
-                spmsState.selected = depotName;
-                updateSpmsSection();
-              });
-              depotsUl.appendChild(depotLi);
-              if (depotExpanded && depotLoops.length) {
-                var loopsUl = document.createElement('ul');
-                loopsUl.setAttribute('role', 'group');
-                loopsUl.className = 'opms-tree-children';
-                depotLoops.forEach(function (x) {
-                  var loopKey = x.depot + '|' + x.loop;
-                  var loopExpanded = !!spmsState.expanded[loopKey];
-                  var loopRoutes = details.filter(function (rec) { return rec.depot === x.depot && rec.loop === x.loop; }).map(function (r) { return r.route; }).sort();
-                  var loopLi = document.createElement('li');
-                  loopLi.setAttribute('role', 'treeitem');
-                  loopLi.setAttribute('aria-expanded', loopExpanded ? 'true' : 'false');
-                  loopLi.setAttribute('data-id', loopKey);
-                  loopLi.className = 'opms-tree-item opms-tree-item-loop' + (spmsState.selected === loopKey ? ' selected' : '');
-                  var loopLabel = document.createElement('span');
-                  loopLabel.className = 'opms-tree-label';
-                  loopLabel.innerHTML = (loopExpanded ? '<i class="bi bi-chevron-down opms-tree-icon"></i>' : '<i class="bi bi-chevron-right opms-tree-icon"></i>') + '<span>' + escapeHtml(x.loop) + '</span>';
-                  loopLi.appendChild(loopLabel);
-                  loopLi.addEventListener('click', function (e) {
-                    e.stopPropagation();
-                    spmsState.expanded[loopKey] = !spmsState.expanded[loopKey];
-                    spmsState.selected = loopKey;
-                    updateSpmsSection();
-                  });
-                  loopsUl.appendChild(loopLi);
-                  if (loopExpanded && loopRoutes.length) {
-                    var routesUl = document.createElement('ul');
-                    routesUl.setAttribute('role', 'group');
-                    routesUl.className = 'opms-tree-children opms-tree-routes';
-                    loopRoutes.forEach(function (routeName) {
-                      var routeLi = document.createElement('li');
-                      routeLi.setAttribute('role', 'treeitem');
-                      routeLi.setAttribute('data-route', routeName);
-                      routeLi.className = 'opms-tree-item opms-tree-item-route' + (spmsState.selected === routeName ? ' selected' : '');
-                      var routeLabel = document.createElement('span');
-                      routeLabel.className = 'opms-tree-label';
-                      routeLabel.innerHTML = '<span class="opms-tree-route-name">' + escapeHtml(routeName) + '</span>';
-                      routeLi.appendChild(routeLabel);
-                      routeLi.addEventListener('click', function (e) {
-                        e.stopPropagation();
-                        spmsState.selected = routeName;
-                        updateSpmsSection();
-                      });
-                      routesUl.appendChild(routeLi);
-                    });
-                    loopLi.appendChild(routesUl);
-                  }
-                });
-                depotLi.appendChild(loopsUl);
-              }
-            });
-            allLi.appendChild(depotsUl);
-          }
-        }
-        var depotChipsEl = document.getElementById('spmsDepotChips');
-        var loopChipsEl = document.getElementById('spmsLoopChips');
-        if (depotChipsEl) {
-          depotChipsEl.innerHTML = '<button type="button" class="spms-chip' + (spmsState.selected === 'all' ? ' active' : '') + '" data-spms-depot="">All</button>' +
-            depotNames.map(function (d) {
-              var active = spmsState.selected === d || (spmsState.selected.indexOf('|') !== -1 && spmsState.selected.split('|')[0] === d);
-              return '<button type="button" class="spms-chip' + (active ? ' active' : '') + '" data-spms-depot="' + escapeHtml(d) + '">' + escapeHtml(d) + '</button>';
-            }).join('');
-          depotChipsEl.querySelectorAll('.spms-chip').forEach(function (btn) {
-            btn.addEventListener('click', function () {
-              var depot = (btn.getAttribute('data-spms-depot') || '').trim();
-              if (depot) {
-                spmsState.selected = depot;
-                spmsState.expanded[depot] = true;
-              } else {
-                spmsState.selected = 'all';
-              }
-              updateSpmsSection();
-            });
-          });
-        }
-        if (loopChipsEl) {
-          var currentDepot = spmsState.selected === 'all' ? null : (spmsState.selected.indexOf('|') !== -1 ? spmsState.selected.split('|')[0] : (depotNames.indexOf(spmsState.selected) !== -1 ? spmsState.selected : null));
-          var loopsForDepot = currentDepot ? loopsWithDepots.filter(function (x) { return x.depot === currentDepot; }) : [];
-          var currentLoop = spmsState.selected.indexOf('|') !== -1 ? spmsState.selected.split('|')[1] || null : null;
-          loopChipsEl.innerHTML = '<button type="button" class="spms-chip' + (!currentLoop ? ' active' : '') + '" data-spms-loop="">All</button>' +
-            loopsForDepot.map(function (x) {
-              var loopKey = x.depot + '|' + x.loop;
-              var active = spmsState.selected === loopKey;
-              return '<button type="button" class="spms-chip' + (active ? ' active' : '') + '" data-spms-loop="' + escapeHtml(loopKey) + '">' + escapeHtml(x.loop) + '</button>';
-            }).join('');
-          loopChipsEl.querySelectorAll('.spms-chip').forEach(function (btn) {
-            btn.addEventListener('click', function () {
-              var loopKey = (btn.getAttribute('data-spms-loop') || '').trim();
-              if (loopKey) {
-                spmsState.selected = loopKey;
-                var parts = loopKey.split('|');
-                if (parts[0]) spmsState.expanded[parts[0]] = true;
-                spmsState.expanded[loopKey] = true;
-              } else if (currentDepot) {
-                spmsState.selected = currentDepot;
-              } else {
-                spmsState.selected = 'all';
-              }
-              updateSpmsSection();
-            });
-          });
-        }
         var routeFilter = '';
         var loopFilter = null;
         var depotFilter = null;
@@ -1875,16 +1756,39 @@
         var spmsKpiHnEl = document.getElementById('spmsKpiHn');
         var spmsKpiIncomeEl = document.getElementById('spmsKpiIncome');
         var spmsKpiPctEl = document.getElementById('spmsKpiPct');
+        var spmsKpiAfdEl = document.getElementById('spmsKpiAfd');
         function setSpmsDashboardEmpty() {
           if (spmsKpiDelEl) spmsKpiDelEl.textContent = '—';
           if (spmsKpiPuEl) spmsKpiPuEl.textContent = '—';
           if (spmsKpiHnEl) spmsKpiHnEl.textContent = '—';
           if (spmsKpiIncomeEl) spmsKpiIncomeEl.textContent = '—';
           if (spmsKpiPctEl) spmsKpiPctEl.textContent = '—';
+          if (spmsKpiAfdEl) spmsKpiAfdEl.textContent = '—';
           var sa = document.getElementById('spmsAvgIncome');
           var sr = document.getElementById('spmsAvgRoute');
           if (sa) sa.textContent = '—';
           if (sr) sr.textContent = '—';
+          ['sfbPerfDel','sfbPerfPu','sfbPerfHn','sfbPerfTotal'].forEach(function(id){ var el=document.getElementById(id); if(el) el.textContent='—'; });
+          var sfbAfdStatus = document.getElementById('sfbAfdStatus'); if(sfbAfdStatus) sfbAfdStatus.textContent='—';
+          // Reset imediato (sem transição)
+          var incArc = document.getElementById('spmsIncomeArc');
+          var perfRing = document.getElementById('spmsPerfRing');
+          var afdNeedle = document.getElementById('spmsAfdNeedle');
+          if(incArc)  { incArc.style.transition='none';  incArc.style.strokeDasharray='0 119'; }
+          var incArcOver2 = document.getElementById('spmsIncomeArcOver');
+          if(incArcOver2) { incArcOver2.style.transition='none'; incArcOver2.style.strokeDasharray='0 119'; incArcOver2.style.opacity='0'; }
+          if(perfRing){ perfRing.style.transition='none'; perfRing.style.strokeDasharray='0 251'; }
+          var perfRingOver2 = document.getElementById('spmsPerfRingOver');
+          if(perfRingOver2) { perfRingOver2.style.transition='none'; perfRingOver2.style.strokeDasharray='0 251'; perfRingOver2.style.opacity='0'; }
+          if(afdNeedle){ afdNeedle.style.transition='none'; afdNeedle.style.transform='rotate(-90deg)'; }
+          // Restaurar transições no próximo frame
+          requestAnimationFrame(function(){
+            if(incArc)  incArc.style.transition='';
+            if(incArcOver2) incArcOver2.style.transition='';
+            if(perfRing) perfRing.style.transition='';
+            if(perfRingOver2) perfRingOver2.style.transition='';
+            if(afdNeedle) afdNeedle.style.transition='';
+          });
         }
         if (!data || !hasCounts) {
           if (wrap) wrap.innerHTML = '<div class="last-day-goals-wrap"></div>';
@@ -1907,22 +1811,25 @@
           var preferredKey = detailsForRoute ? (detailsForRoute.depot + '|' + routeFilter) : null;
           var fallbackCounts = null;
           for (var k in data.byRoute) {
-            if (data.byRoute[k].route !== routeFilter || !registeredSet[routeFilter]) continue;
-            var routeCounts = data.byRoute[k].counts || {};
-            if (preferredKey && k === preferredKey) { counts = routeCounts; depotForRate = data.byRoute[k].depot || ''; break; }
+            var brItem = data.byRoute[k];
+            if (!brItem || brItem.route !== routeFilter || !registeredSet[routeFilter]) continue;
+            var routeCounts = brItem.counts || {};
+            if (preferredKey && k === preferredKey) { counts = routeCounts; depotForRate = brItem.depot || ''; break; }
             if (!fallbackCounts) fallbackCounts = routeCounts;
-            depotForRate = data.byRoute[k].depot || '';
+            depotForRate = brItem.depot || '';
           }
           if (counts === data.counts && fallbackCounts) counts = fallbackCounts;
           if (routeFilter && !fallbackCounts && preferredKey && !data.byRoute[preferredKey]) counts = {};
         } else if (data.byRoute && Object.keys(registeredSet).length > 0) {
           var agg = { OK: 0, PU: 0, HN: 0 };
           Object.keys(data.byRoute).forEach(function (k) {
-            var r = data.byRoute[k].route;
-            if (!r || !registeredSet[r]) return;
+            var routeRec = data.byRoute[k];
+            if (!routeRec || !routeRec.route) return;
+            var r = routeRec.route;
+            if (!registeredSet[r]) return;
             if (routeNamesInLoop && !routeNamesInLoop[r]) return;
             if (routeNamesInDepot && !routeNamesInDepot[r]) return;
-            var routeCounts = data.byRoute[k].counts || {};
+            var routeCounts = routeRec.counts || {};
             Object.keys(routeCounts).forEach(function (c) { agg[c] = (agg[c] || 0) + (routeCounts[c] || 0); });
           });
           counts = agg;
@@ -1932,8 +1839,9 @@
         var rate = depotForRate ? getLoopDeliveryRateForDepotRoute(depotForRate, routeFilter || '') : 0;
         if (!rate && routeFilter && data.byRoute) {
           for (var key in data.byRoute) {
-            if (data.byRoute[key].route === routeFilter) {
-              rate = getLoopDeliveryRateForDepotRoute(data.byRoute[key].depot, routeFilter);
+            var br = data.byRoute[key];
+            if (br && br.route === routeFilter) {
+              rate = getLoopDeliveryRateForDepotRoute(br.depot || '', routeFilter);
               break;
             }
           }
@@ -1942,8 +1850,9 @@
         var targetDel = depotForRate && routeFilter ? getTargetDelForDepotRoute(depotForRate, routeFilter) : 0;
         if (!targetDel && routeFilter && data.byRoute) {
           for (var key in data.byRoute) {
-            if (data.byRoute[key].route === routeFilter) {
-              targetDel = getTargetDelForDepotRoute(data.byRoute[key].depot, routeFilter);
+            var br2 = data.byRoute[key];
+            if (br2 && br2.route === routeFilter) {
+              targetDel = getTargetDelForDepotRoute(br2.depot || '', routeFilter);
               break;
             }
           }
@@ -1978,82 +1887,65 @@
           '<span class="opms-circle-rate-row opms-circle-rate-total"><strong>Total</strong> ' + delTotal + '</span>' +
           '</div></div>' +
           '<span class="opms-circle-label">Performance (' + (totalTarget ? Math.round(delPctRaw * 10) / 10 + '%' : '—') + ')</span></div></div>';
-        var loopForIncome = routeFilter && depotForRate ? getLoopNameForDepotRoute(depotForRate, routeFilter) : '';
-        var calculatedIncome = (window.DHL_MOCK_DATA && window.DHL_MOCK_DATA.digressiveBands && window.DHL_MOCK_DATA.digressiveBands[loopForIncome])
-          ? calculateDigressiveIncome(metrics.deliveries, loopForIncome)
-          : (metrics.deliveries * rate);
+        // ── Income calculado: stops por loop × bands do Contract Management ──
+        var calculatedIncome = 0;
+        if (routeFilter) {
+          // Vista de rota única: stops da rota × band do loop ao qual pertence
+          var loopForIncome = depotForRate ? getLoopNameForDepotRoute(depotForRate, routeFilter) : '';
+          var bandsForRoute = window.DHL_MOCK_DATA && window.DHL_MOCK_DATA.digressiveBands && window.DHL_MOCK_DATA.digressiveBands[loopForIncome];
+          calculatedIncome = bandsForRoute ? calculateDigressiveIncome(metrics.deliveries, loopForIncome) : metrics.deliveries * rate;
+        } else if (data.byRoute && details.length > 0) {
+          // Vista de loop/depot/all: agregar stops POR LOOP e aplicar bands ao total do loop
+          calculatedIncome = calcIncomeForLoops(details, function (rec) {
+            var key = rec.depot + '|' + rec.route;
+            var routeData = data.byRoute[key];
+            return routeData && routeData.counts ? getOpmsDeliveriesAndAfd(routeData.counts).deliveries : 0;
+          }, registeredSet, routeNamesInLoop, routeNamesInDepot);
+        }
+
+        // ── Income esperado (target): baseado em targets por loop × bands ──
         var excelIncome = 0;
         if (routeFilter && data.incomeByRouteFromExcel && data.incomeByRouteFromExcel[routeFilter] != null) {
           excelIncome = Number(data.incomeByRouteFromExcel[routeFilter]) || 0;
         } else if (data.incomeByRouteFromExcel && details.length > 0) {
           details.forEach(function (rec) {
-            if (routeNamesInLoop && !routeNamesInLoop[rec.route]) return;
+            if (routeNamesInLoop  && !routeNamesInLoop[rec.route])  return;
             if (routeNamesInDepot && !routeNamesInDepot[rec.route]) return;
             if (!registeredSet[rec.route]) return;
             var v = data.incomeByRouteFromExcel[rec.route];
             if (v != null) excelIncome += Number(v) || 0;
           });
         }
-        if (!routeFilter && data.byRoute && details.length > 0) {
-          calculatedIncome = 0;
-          details.forEach(function (rec) {
-            if (routeNamesInLoop && !routeNamesInLoop[rec.route]) return;
-            if (routeNamesInDepot && !routeNamesInDepot[rec.route]) return;
-            if (!registeredSet[rec.route]) return;
-            var key = rec.depot + '|' + rec.route;
-            var routeData = data.byRoute[key];
-            if (routeData && routeData.counts) {
-              var m = getOpmsDeliveriesAndAfd(routeData.counts);
-              var loopName = rec.loop || '';
-              if (window.DHL_MOCK_DATA && window.DHL_MOCK_DATA.digressiveBands && window.DHL_MOCK_DATA.digressiveBands[loopName]) {
-                calculatedIncome += calculateDigressiveIncome(m.deliveries, loopName);
-              } else {
-                calculatedIncome += m.deliveries * (rec.deliveryRate || 2.90);
-              }
-            }
-          });
-        }
         var expectedIncome = excelIncome;
         if (expectedIncome <= 0 && details.length > 0) {
-          expectedIncome = 0;
-          details.forEach(function (rec) {
-            if (routeNamesInLoop && !routeNamesInLoop[rec.route]) return;
-            if (routeNamesInDepot && !routeNamesInDepot[rec.route]) return;
-            if (!registeredSet[rec.route]) return;
-            var td = rec.targetDel || 0;
-            var loopName = rec.loop || '';
-            if (window.DHL_MOCK_DATA && window.DHL_MOCK_DATA.digressiveBands && window.DHL_MOCK_DATA.digressiveBands[loopName]) {
-              expectedIncome += calculateDigressiveIncome(td, loopName);
-            } else {
-              expectedIncome += td * (rec.deliveryRate || 2.90);
-            }
-          });
+          // Target income: agregar targets POR LOOP × bands (mesmo critério que calculatedIncome)
+          expectedIncome = calcIncomeForLoops(details, function (rec) {
+            return rec.targetDel || 0;
+          }, registeredSet, routeNamesInLoop, routeNamesInDepot);
         }
         var incomePct = expectedIncome > 0 ? (calculatedIncome / expectedIncome) * 100 : 100;
         var incomeFormatted = '£' + (calculatedIncome.toFixed(2)).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
         var incomePctDisplay = (Math.round(incomePct * 10) / 10) + '%';
-        var twRaw = getWeightedTwAverage(data, routeNamesInLoop || routeNamesInDepot || null);
-        var twForCircle = (twRaw != null && twRaw <= 1) ? twRaw * 100 : (twRaw != null ? twRaw : 0);
-        var twColor = getTimeWindowColor(twForCircle);
-        var twStroke = twColor === 'green' ? '#22c55e' : twColor === 'yellow' ? '#eab308' : '#ef4444';
-        var twTrack = twColor === 'green' ? 'rgba(34,197,94,0.2)' : twColor === 'yellow' ? 'rgba(234,179,8,0.2)' : 'rgba(239,68,68,0.2)';
-        var twHtml = '<div class="opms-circle-item"><div class="opms-circle opms-progress-circle-wrap">' +
-          '<div class="opms-progress-circle-inner">' +
-          opmsProgressCircleSvg(twForCircle, { progressColor: twStroke, trackColor: twTrack, maxForOneLap: 100 }) +
-          '<span class="opms-circle-value">' + (twRaw != null ? (Math.round(twForCircle * 10) / 10) + '%' : '—') + '</span></div>' +
-          '<span class="opms-circle-label">Time Window (%)</span></div></div>';
         var afdHtml = '<div class="opms-circle-item"><div class="opms-circle ' + afdClass + ' opms-progress-circle-wrap">' +
           '<div class="opms-progress-circle-inner">' +
           opmsProgressCircleSvg(afdPct, { progressColor: afdColor, trackColor: afdTrack, maxForOneLap: 6 }) +
           '<span class="opms-circle-value">' + (Math.round(afdPct * 10) / 10) + '%</span></div>' +
           '<span class="opms-circle-label">AFD (%)</span></div></div>';
-        var goalsCirclesHtml = '<div class="last-day-goals-wrap opms-goals-visible"><div class="last-day-goals-circles-wrap">' + performanceHtml + twHtml + afdHtml + '</div></div>';
+        var goalsCirclesHtml = '<div class="last-day-goals-wrap opms-goals-visible"><div class="last-day-goals-circles-wrap">' + performanceHtml + afdHtml + '</div></div>';
         if (wrap) wrap.innerHTML = goalsCirclesHtml;
         if (spmsKpiDelEl) spmsKpiDelEl.textContent = delOk;
         if (spmsKpiPuEl) spmsKpiPuEl.textContent = delPu;
         if (spmsKpiHnEl) spmsKpiHnEl.textContent = delHn;
         if (spmsKpiIncomeEl) spmsKpiIncomeEl.textContent = incomeFormatted;
         if (spmsKpiPctEl) spmsKpiPctEl.textContent = totalTarget ? (Math.round(delPctRaw * 10) / 10) + '%' : '—';
+        if (spmsKpiAfdEl) spmsKpiAfdEl.textContent = (Math.round(afdPct * 10) / 10) + '%';
+        // Defer visual animations: garantir que o browser pintou o estado inicial (stroke-dasharray: 0) antes de transicionar
+        var _vis = { incomePct: incomePct, delPctRaw: delPctRaw, afdPct: afdPct, delOk: delOk, delPu: delPu, delHn: delHn };
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () {
+            updateSpmsFinancialVisuals(_vis);
+          });
+        });
         var routeCount = 0;
         if (data.byRoute && details.length > 0) {
           details.forEach(function (rec) {
@@ -2074,6 +1966,12 @@
         if (spmsAvgIncomeEl) spmsAvgIncomeEl.textContent = routeCount > 0 ? '£' + (avgIncome.toFixed(2)).replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '—';
         if (spmsAvgRouteEl) spmsAvgRouteEl.textContent = routeCount > 0 ? (Math.round(avgRouteDel * 10) / 10) : '—';
         if (currentFolderTab === 'spms') updateSpFolderDashboardStrip('spms');
+        } catch (e) {
+          console.warn('updateSpmsSection error:', e);
+          var wrapErr = document.getElementById('spmsGoalsWrap');
+          if (wrapErr) wrapErr.innerHTML = '<div class="last-day-goals-wrap"></div>';
+          setSpmsDashboardEmpty();
+        }
       }
 
       var dailyOpsFilteredList = [];
@@ -2474,6 +2372,41 @@
         };
       }
 
+      /** Resumo calculado sobre os dados já filtrados por depot/loop activos. */
+      function getFilteredDiscoSummary() {
+        var list = getFilteredDiscoDeliveries();
+        var totalDeliveries = list.length;
+        var routes = {};
+        var depots = {};
+        var loops = {};
+        var pre12 = 0, asr = 0, dsr = 0;
+        list.forEach(function (d) {
+          var r = (d.route || '').trim();
+          if (r) routes[r] = true;
+          var dep = (d.depot || '').trim();
+          if (dep) depots[dep] = true;
+          var lp = (d.loop || '').trim();
+          if (lp) loops[lp] = true;
+          if (d.pre12 === true) pre12 += 1;
+          if (d.asr === true) asr += 1;
+          if (d.dsr === true) dsr += 1;
+        });
+        var totalRoutes = Object.keys(routes).length;
+        var spr = totalRoutes > 0 ? totalDeliveries / totalRoutes : 0;
+        var sporH = totalRoutes > 0 ? (totalDeliveries / totalRoutes) / 8 : 0;
+        return {
+          totalDeliveries: totalDeliveries,
+          totalRoutes: totalRoutes,
+          depotsCount: Object.keys(depots).length,
+          loopsCount: Object.keys(loops).length,
+          pre12: pre12,
+          asr: asr,
+          dsr: dsr,
+          spr: spr,
+          sporH: sporH
+        };
+      }
+
       /** Resumo por loop para um depot: array de { loop, totalDeliveries, totalRoutes, pre12, asr, dsr }. */
       function getDiscoLoopSummary(depot) {
         var list = getDiscoDeliveries();
@@ -2539,53 +2472,78 @@
         var filtered = getFilteredDiscoDeliveries();
         var routesWithSummary = getRoutesWithSummary(filtered);
 
-        /* Resumo geral: só quando nenhum depot nem loop está selecionado */
+        /* Resumo KPI: sempre visível, actualiza com os filtros activos */
         if (summaryBlock) {
-          if (!hasDepot && !hasLoop) {
-            summaryBlock.classList.remove('hidden');
-            var summary = getDiscoGeneralSummary();
-            var grid = document.getElementById('discoSummaryGrid');
-            if (grid) {
-              grid.innerHTML =
-                '<div class="disco-summary-item">' +
-                  '<span class="disco-summary-value">' + summary.totalDeliveries + '</span>' +
-                  '<span class="disco-summary-label">Total deliveries</span>' +
-                '</div>' +
-                '<div class="disco-summary-item">' +
-                  '<span class="disco-summary-value">' + summary.totalRoutes + '</span>' +
-                  '<span class="disco-summary-label">Routes</span>' +
-                '</div>' +
-                '<div class="disco-summary-item disco-summary-item--kpi">' +
-                  '<span class="disco-summary-value">' + (summary.totalRoutes ? summary.spr.toFixed(1) : '—') + '</span>' +
-                  '<span class="disco-summary-label">SPR (Stops per Route)</span>' +
-                '</div>' +
-                '<div class="disco-summary-item disco-summary-item--kpi">' +
-                  '<span class="disco-summary-value">' + (summary.totalRoutes ? summary.sporH.toFixed(1) : '—') + '</span>' +
-                  '<span class="disco-summary-label">SPOR-H (÷8h)</span>' +
-                '</div>' +
+          summaryBlock.classList.remove('hidden');
+          var summary = getFilteredDiscoSummary();
+          var grid = document.getElementById('discoSummaryGrid');
+
+          /* Título dinâmico com badges de contexto */
+          var summaryTitle = summaryBlock.querySelector('.disco-summary-title');
+          if (summaryTitle) {
+            var badges = '';
+            if (hasDepot) badges += '<span class="disco-summary-filter-badge">' + escapeHtml(discoState.depot) + '</span>';
+            if (hasLoop) badges += '<span class="disco-summary-filter-badge disco-summary-filter-badge--loop">' + escapeHtml(discoState.loop) + '</span>';
+            summaryTitle.innerHTML = 'Summary' + (badges ? '<span class="disco-summary-filter-ctx">' + badges + '</span>' : '');
+          }
+
+          /* Marcar card como "filtrado" visualmente */
+          var summaryCard = summaryBlock.querySelector('.disco-summary-card');
+          if (summaryCard) summaryCard.classList.toggle('disco-summary-card--filtered', hasDepot || hasLoop);
+
+          if (grid) {
+            var items = '';
+            items +=
+              '<div class="disco-summary-item">' +
+                '<span class="disco-summary-value">' + summary.totalDeliveries + '</span>' +
+                '<span class="disco-summary-label">Total deliveries</span>' +
+              '</div>' +
+              '<div class="disco-summary-item">' +
+                '<span class="disco-summary-value">' + summary.totalRoutes + '</span>' +
+                '<span class="disco-summary-label">Routes</span>' +
+              '</div>' +
+              '<div class="disco-summary-item disco-summary-item--kpi">' +
+                '<span class="disco-summary-value">' + (summary.totalRoutes ? summary.spr.toFixed(1) : '—') + '</span>' +
+                '<span class="disco-summary-label">SPR (Stops/Route)</span>' +
+              '</div>' +
+              '<div class="disco-summary-item disco-summary-item--kpi">' +
+                '<span class="disco-summary-value">' + (summary.totalRoutes ? summary.sporH.toFixed(1) : '—') + '</span>' +
+                '<span class="disco-summary-label">SPOR-H (÷8h)</span>' +
+              '</div>';
+
+            /* Mostrar Depots apenas quando não está filtrado por depot específico */
+            if (!hasDepot) {
+              items +=
                 '<div class="disco-summary-item">' +
                   '<span class="disco-summary-value">' + summary.depotsCount + '</span>' +
                   '<span class="disco-summary-label">Depots</span>' +
-                '</div>' +
+                '</div>';
+            }
+
+            /* Mostrar Loops apenas quando não está filtrado por loop específico */
+            if (!hasLoop) {
+              items +=
                 '<div class="disco-summary-item">' +
                   '<span class="disco-summary-value">' + summary.loopsCount + '</span>' +
                   '<span class="disco-summary-label">Loops</span>' +
-                '</div>' +
-                '<div class="disco-summary-item">' +
-                  '<span class="disco-summary-value">' + summary.pre12 + '</span>' +
-                  '<span class="disco-summary-label">Pre-12</span>' +
-                '</div>' +
-                '<div class="disco-summary-item">' +
-                  '<span class="disco-summary-value">' + summary.asr + '</span>' +
-                  '<span class="disco-summary-label">ASR</span>' +
-                '</div>' +
-                '<div class="disco-summary-item">' +
-                  '<span class="disco-summary-value">' + summary.dsr + '</span>' +
-                  '<span class="disco-summary-label">DSR</span>' +
                 '</div>';
             }
-          } else {
-            summaryBlock.classList.add('hidden');
+
+            items +=
+              '<div class="disco-summary-item">' +
+                '<span class="disco-summary-value">' + summary.pre12 + '</span>' +
+                '<span class="disco-summary-label">Pre-12</span>' +
+              '</div>' +
+              '<div class="disco-summary-item">' +
+                '<span class="disco-summary-value">' + summary.asr + '</span>' +
+                '<span class="disco-summary-label">ASR</span>' +
+              '</div>' +
+              '<div class="disco-summary-item">' +
+                '<span class="disco-summary-value">' + summary.dsr + '</span>' +
+                '<span class="disco-summary-label">DSR</span>' +
+              '</div>';
+
+            grid.innerHTML = items;
           }
         }
 
@@ -2726,6 +2684,56 @@
         updateDiscoSection();
       }
 
+      /** Modal do Disco: fixa no body para permanecer visível mesmo quando filtros são aplicados */
+      function initDiscoModal() {
+        var modal = document.getElementById('discoRouteModal');
+        var modalTitle = document.getElementById('discoRouteModalTitle');
+        var modalBody = document.getElementById('discoRouteModalBody');
+        var backdrop = document.getElementById('discoRouteModalBackdrop');
+        var closeBtn = document.getElementById('discoRouteModalClose');
+        if (!modal || !modalBody) return;
+
+        function closeDiscoModal() {
+          modal.classList.add('hidden');
+          modal.setAttribute('aria-hidden', 'true');
+        }
+
+        function openDiscoModal(title, contentHtml) {
+          if (modalTitle) modalTitle.textContent = title;
+          if (modalBody) modalBody.innerHTML = contentHtml;
+          modal.classList.remove('hidden');
+          modal.setAttribute('aria-hidden', 'false');
+        }
+
+        document.addEventListener('click', function (e) {
+          if (e.target.closest('.disco-chip')) return;
+          var block = e.target.closest('.disco-route-block');
+          if (!block) return;
+          var route = block.getAttribute('data-route');
+          var depot = block.getAttribute('data-depot');
+          var loop = block.getAttribute('data-loop');
+          var title = '';
+          var content = '';
+          if (route) {
+            title = 'Route: ' + (route || '');
+            content = getRoutePre12AsrDsrTableHtml(route);
+          } else if (depot) {
+            title = 'Depot: ' + (depot || '');
+            content = getDepotPre12AsrDsrTableHtml(depot);
+          } else if (loop) {
+            title = 'Loop: ' + (loop || '');
+            content = getLoopPre12AsrDsrTableHtml(loop);
+          }
+          if (content) openDiscoModal(title, content);
+        });
+
+        if (backdrop) backdrop.addEventListener('click', closeDiscoModal);
+        if (closeBtn) closeBtn.addEventListener('click', closeDiscoModal);
+        document.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape' && modal && !modal.classList.contains('hidden')) closeDiscoModal();
+        });
+      }
+
       if (spName) {
         render();
         var tabLastDay = document.getElementById('folderLastDay');
@@ -2743,6 +2751,7 @@
         if (document.getElementById('openFullDashboardBtn')) initFullDashboardModal();
       }
       initDisco();
+      initDiscoModal();
 
       /* Subpostcodes a partir de postcodes (igual contracts.js): remove últimos 2 caracteres por código. */
       function postcodesToSubpostcodes(postcodes) {
@@ -2758,6 +2767,5 @@
       }
 
       document.addEventListener('DOMContentLoaded', function () {
-        if (window.AOS) AOS.init({ duration: 500, offset: 50, once: true, easing: 'ease-out-cubic' });
       });
     })();

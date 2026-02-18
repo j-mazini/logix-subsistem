@@ -86,13 +86,26 @@
         var typeLabel = p.type === 'tutorial' ? 'Tutorial' : p.type === 'update' ? 'Update' : 'Info';
         var likeClass = p.liked ? 'sop-action-btn sop-action-btn--active' : 'sop-action-btn';
         var mediaHtml = '';
-        if (p.video) mediaHtml = '<div class="sop-post-media sop-post-media--video"><video controls preload="metadata"><source src="' + ASSET(p.video) + '" type="video/mp4"></video></div>';
+        if (p.youtubeVideoId) {
+          var vid = escapeHtml(p.youtubeVideoId);
+          mediaHtml = '<a href="https://www.youtube.com/watch?v=' + vid + '" target="_blank" rel="noopener noreferrer" class="sop-post-media sop-post-media--youtube sop-youtube-link" title="Watch on YouTube"><span class="sop-youtube-thumb" style="background-image:url(\'https://img.youtube.com/vi/' + vid + '/hqdefault.jpg\')"></span><span class="sop-youtube-play"><i class="bi bi-play-circle-fill"></i></span><span class="sop-youtube-label">Watch on YouTube</span></a>';
+        } else if (p.video) mediaHtml = '<div class="sop-post-media sop-post-media--video"><video controls preload="metadata"><source src="' + ASSET(p.video) + '" type="video/mp4"></video></div>';
         else if (p.image) mediaHtml = '<div class="sop-post-media sop-post-media--image"><img src="' + ASSET(p.image) + '" alt="" /></div>';
         var commentsHtml = (p.commentList || []).map(function (c) {
           return '<div class="sop-comment"><div class="sop-comment-avatar"><img src="' + ASSET(c.authorAvatar) + '" alt="" width="32" height="32" /></div>' +
-            '<div class="sop-comment-body"><strong class="sop-comment-author">' + escapeHtml(c.author) + '</strong> <span class="sop-comment-time">' + escapeHtml(c.timeAgo) + '</span>' +
+            '<div class="sop-comment-body"><strong class="sop-comment-author">' + escapeHtml(getCommentAuthorDisplay(c)) + '</strong> <span class="sop-comment-time">' + escapeHtml(c.timeAgo) + '</span>' +
             '<p class="sop-comment-text">' + escapeHtml(c.text) + '</p></div></div>';
         }).join('');
+        var logoMap = { 'BA Express': 'ba-express-logo.png', 'Premier Logistics Ltd': 'premier-logistics-logo.png', 'Swift Haul Solutions': 'swift-haul-logo.png', 'Metro Freight Partners': 'metro-freight-logo.png', 'Atlas Transport Services': 'atlas-transport-logo.png' };
+        var spName = getCurrentSp();
+        var avatarSrc = (spName && logoMap[spName]) ? ASSET('assets/' + logoMap[spName]) : ASSET('assets/dhl-uk-logo.png');
+        var commentFormHtml = '<form class="sop-comments-form" data-post-id="' + p.id + '">' +
+          '<div class="sop-comments-input-wrap">' +
+          '<img src="' + avatarSrc + '" alt="" class="sop-comment-input-avatar" width="32" height="32" />' +
+          '<input type="text" class="sop-comments-input" placeholder="Write a comment..." maxlength="500" />' +
+          '</div>' +
+          '<button type="submit" class="sop-comments-submit">Comment</button>' +
+          '</form>';
         return '<div class="sop-post-header">' +
           '<div class="sop-post-avatar"><img src="' + ASSET(p.authorAvatar) + '" alt="" width="40" height="40" /></div>' +
           '<div class="sop-post-meta"><strong class="sop-post-author">' + escapeHtml(p.author) + '</strong>' +
@@ -190,6 +203,26 @@
           var post = MOCK_POSTS.find(function (p) { return p.id === id; });
           if (post) { post.liked = !post.liked; post.likes += post.liked ? 1 : -1; openPost(id); }
         }
+      });
+      document.getElementById('sopPostDetailContent').addEventListener('submit', function (e) {
+        var form = e.target.closest('.sop-comments-form');
+        if (!form) return;
+        e.preventDefault();
+        var input = form.querySelector('.sop-comments-input');
+        var text = (input && input.value) ? input.value.trim() : '';
+        if (!text) return;
+        var postId = parseInt(form.dataset.postId, 10);
+        var post = MOCK_POSTS.find(function (p) { return p.id === postId; });
+        if (!post) return;
+        var spInfo = getSpOwnerAndCompany();
+        var logoMap = { 'BA Express': 'ba-express-logo.png', 'Premier Logistics Ltd': 'premier-logistics-logo.png', 'Swift Haul Solutions': 'swift-haul-logo.png', 'Metro Freight Partners': 'metro-freight-logo.png', 'Atlas Transport Services': 'atlas-transport-logo.png' };
+        var spName = getCurrentSp();
+        var avatar = (spName && logoMap[spName]) ? 'assets/' + logoMap[spName] : 'assets/dhl-uk-logo.png';
+        if (!post.commentList) post.commentList = [];
+        post.commentList.push({ author: spInfo.owner, company: spInfo.company, authorAvatar: avatar, text: text, timeAgo: 'Just now' });
+        post.comments = (post.commentList || []).length;
+        input.value = '';
+        openPost(postId);
       });
 
     })();

@@ -1,14 +1,22 @@
 /**
  * Estilização da aba Disco e da aba Last Day Operations / Financials.
- * Otimizado para performance com GPU acceleration e isolamento de layout.
+ * Otimizado para performance – estilos leves para evitar travamentos.
  */
+
+/* ========== PERFORMANCE: fundo mais leve (sem animação/blur pesado) ========== */
+.sp-portal .liquid-glass-page-bg::before {
+  display: none !important;
+}
+.sp-portal .liquid-glass-page-bg {
+  background: #f1f5f9 !important;
+}
 
 /* Espaçamento entre blocos do dashboard */
 .sp-portal .dashboard-section.dashboard-block {
-  margin-bottom: 2rem !important;
+  margin-bottom: 1rem !important;
 }
 .sp-portal .dashboard-header {
-  margin-bottom: 1.75rem !important;
+  margin-bottom: 0.5rem !important;
 }
 .sp-portal .container-fluid > .dashboard-section + .dashboard-section {
   margin-top: 0.5rem;
@@ -16,14 +24,6 @@
 
 /* Scroll suave apenas em navegação (evita travamento no scroll contínuo) */
 
-/* Força aceleração por GPU em elementos animados */
-.dashboard-kpi-card,
-.disco-chip,
-.disco-route-block,
-.disco-summary-item {
-  transform: translateZ(0);
-  backface-visibility: hidden;
-}
 
 /* ========== KPI STRIP NO TOPO DA PAGE (SPR) ========== */
 .dashboard-kpi-strip {
@@ -42,12 +42,10 @@
   padding: 1rem 1.25rem;
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
   min-width: 180px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .dashboard-kpi-card:hover {
-  transform: translateZ(0) translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
 .dashboard-kpi-card--spr {
@@ -94,31 +92,29 @@
 
 /* ========== DISCO (#spDiscoBlock) ========== */
 #spDiscoBlock {
-  background: linear-gradient(135deg, rgba(255,255,255,0.97) 0%, rgba(248,250,252,0.98) 100%);
+  background: #fff;
   border: 1px solid rgba(59, 130, 246, 0.2);
   border-radius: 1.25rem;
-  box-shadow: 0 4px 24px -4px rgba(59, 130, 246, 0.08), 0 0 0 1px rgba(255,255,255,0.8) inset;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
   overflow: hidden;
 }
 
 #spDiscoBlock .dashboard-block-header {
-  background: linear-gradient(90deg, rgba(59, 130, 246, 0.08) 0%, transparent 100%);
+  background: rgba(59, 130, 246, 0.04);
   border-bottom: 1px solid rgba(59, 130, 246, 0.12);
   padding: 1.25rem 1.5rem;
 }
 
 /* KPI Total Stops no header do bloco Disco */
 #spDiscoBlock .disco-header-stops-kpi {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.1) 100%);
+  background: rgba(59, 130, 246, 0.08);
   border: 1px solid rgba(59, 130, 246, 0.3);
   min-width: 4.5rem;
   flex-shrink: 0;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 #spDiscoBlock .disco-header-stops-kpi:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+  background: rgba(59, 130, 246, 0.12);
 }
 
 #spDiscoBlock .disco-header-stops-value {
@@ -163,19 +159,19 @@
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   grid-template-rows: auto auto;
-  gap: 0.75rem;
+  gap: 0.5rem;
   grid-template-areas:
     "spr pre12 pre12"
     "asr asr dsr";
 }
 
 #spDiscoBlock .disco-bento-cell {
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: 1rem;
-  padding: 1rem;
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 0.6rem;
+  padding: 0.65rem 0.85rem;
   box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-  min-height: 100px;
+  min-height: 80px;
   overflow: hidden;
 }
 
@@ -186,31 +182,48 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 0.6rem 0.5rem;
+  padding: 0.5rem 0.5rem;
   min-height: 0;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.04) 100%);
+  border-color: rgba(59, 130, 246, 0.2);
 }
 
-#spDiscoBlock .disco-bento-pre12 { grid-area: pre12; }
-#spDiscoBlock .disco-bento-asr { grid-area: asr; }
-#spDiscoBlock .disco-bento-dsr { grid-area: dsr; }
+#spDiscoBlock .disco-bento-pre12 {
+  grid-area: pre12;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(5, 150, 105, 0.03) 100%);
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+#spDiscoBlock .disco-bento-asr {
+  grid-area: asr;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.06) 0%, rgba(217, 119, 6, 0.02) 100%);
+  border-color: rgba(245, 158, 11, 0.2);
+}
+
+#spDiscoBlock .disco-bento-dsr {
+  grid-area: dsr;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.06) 0%, rgba(124, 58, 237, 0.02) 100%);
+  border-color: rgba(139, 92, 246, 0.2);
+}
+
 
 #spDiscoBlock .disco-kpi-label {
-  font-size: 0.7rem;
+  font-size: 0.6rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: #64748b;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.15rem;
 }
 
 #spDiscoBlock .disco-bento-spr .disco-kpi-value {
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: #1e40af;
 }
 #spDiscoBlock .disco-bento-spr .disco-kpi-label {
-  font-size: 0.65rem;
-  margin-bottom: 0.15rem;
+  font-size: 0.58rem;
+  margin-bottom: 0.1rem;
 }
 #spDiscoBlock .disco-bento-spr .disco-kpi-sublabel {
   font-size: 0.6rem;
@@ -222,7 +235,7 @@
 }
 
 #spDiscoBlock .disco-kpi-list {
-  max-height: 180px;
+  max-height: 140px;
   overflow-y: auto;
   font-size: 0.8rem;
   color: #334155;
@@ -381,7 +394,6 @@
 #spDiscoBlock .disco-summary-item:hover {
   border-color: rgba(59, 130, 246, 0.35);
   background: #eff6ff;
-  transform: translateZ(0) translateY(-2px);
   box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
 }
 
@@ -486,16 +498,13 @@
   /* Performance: animações GPU-accelerated */
   transform: translateZ(0);
   backface-visibility: hidden;
-  will-change: transform, box-shadow;
   contain: layout style;
-  transition: box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
 }
 
 #spDiscoBlock .disco-route-block:hover {
   border-color: rgba(59, 130, 246, 0.4);
-  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.15);
-  background: rgba(248, 250, 252, 0.95);
-  transform: translateZ(0) translateY(-2px);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+  background: rgba(248, 250, 252, 0.98);
 }
 
 #spDiscoBlock .disco-route-block-head {
@@ -900,7 +909,6 @@
 
 .disco-route-modal-close:hover {
   background: rgba(255, 255, 255, 0.3);
-  transform: scale(1.05);
 }
 
 .disco-route-modal-close:active {
@@ -1027,8 +1035,7 @@
 
 .disco-route-detail-content .disco-route-detail-list-block:hover {
   border-color: rgba(59, 130, 246, 0.4);
-  box-shadow: 0 3px 12px rgba(59, 130, 246, 0.12);
-  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
 }
 
 .disco-route-detail-content .disco-route-detail-list-title {
@@ -1205,12 +1212,12 @@
   flex-direction: column;
 }
 
-/* ========== LAST DAY OPERATIONS / FINANCIALS (#spDashboardFoldersBlock) ========== */
+/* ========== LAST DAY OPERATIONS / FINANCIALS (#spDashboardFoldersBlock) – estilo Disco ========== */
 #spDashboardFoldersBlock {
-  background: linear-gradient(135deg, rgba(255,255,255,0.97) 0%, rgba(248,250,252,0.98) 100%);
-  border: 1px solid rgba(99, 102, 241, 0.15);
+  background: #fff;
+  border: 1px solid rgba(59, 130, 246, 0.2);
   border-radius: 1.25rem;
-  box-shadow: 0 4px 24px -4px rgba(99, 102, 241, 0.06), 0 0 0 1px rgba(255,255,255,0.8) inset;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
   overflow: hidden;
 }
 
@@ -1220,55 +1227,386 @@
   border-radius: 0;
 }
 
-#spDashboardFoldersBlock .sp-module-card-header {
-  background: linear-gradient(90deg, rgba(99, 102, 241, 0.06) 0%, transparent 100%) !important;
-  border-bottom: 1px solid rgba(99, 102, 241, 0.1);
-  padding: 1rem 1.5rem;
-  flex-wrap: wrap;
-  gap: 0.75rem;
+#spDashboardFoldersBlock .dashboard-block-header {
+  background: rgba(59, 130, 246, 0.04);
+  border-bottom: 1px solid rgba(59, 130, 246, 0.12);
+  padding: 0.5rem 1rem;
 }
 
-#spDashboardFoldersBlock .sp-module-card-header h2.h5 {
-  color: #1e293b !important;
+#spDashboardFoldersBlock .dashboard-block-title {
+  color: #1e40af !important;
   font-weight: 700;
   font-size: 1.15rem;
 }
 
-#spDashboardFoldersBlock .sp-module-card-header .text-muted {
+#spDashboardFoldersBlock .dashboard-block-title i {
+  color: #3b82f6;
+}
+
+#spDashboardFoldersBlock .dashboard-block-desc {
   color: #64748b !important;
+  font-size: 0.875rem;
 }
 
-#spDashboardFoldersBlock .sp-module-card-header-icon--operations i,
-#spDiscoBlock .sp-module-card-header-icon--disco i {
-  color: #fff !important;
+#spDashboardFoldersBlock .disco-header-stops-kpi {
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  min-width: 4.5rem;
+  flex-shrink: 0;
 }
 
-/* Tabs Daily Operations | Financials */
+#spDashboardFoldersBlock .disco-header-stops-kpi:hover {
+  background: rgba(59, 130, 246, 0.12);
+}
+
+#spDashboardFoldersBlock .disco-header-stops-value {
+  color: #1e40af !important;
+}
+
+/* Chips Depot, Loop, Route e Date (estilo Disco) */
+#spDashboardFoldersBlock .disco-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: flex-end;
+}
+
+#spDashboardFoldersBlock .disco-filters--top {
+  padding: 0.4rem 1rem;
+  border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+  background: rgba(248, 250, 252, 0.6);
+}
+
+#spDashboardFoldersBlock .disco-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+#spDashboardFoldersBlock .disco-filter-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+#spDashboardFoldersBlock .disco-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+#spDashboardFoldersBlock .disco-chip {
+  padding: 0.3rem 0.6rem;
+  border-radius: 2rem;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  font-size: 0.8rem;
+  color: #475569;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+#spDashboardFoldersBlock .disco-chip:hover {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.3);
+  color: #1e40af;
+}
+
+#spDashboardFoldersBlock .disco-chip.active {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  border-color: transparent;
+  color: #fff;
+}
+
+/* Tabs como chips (estilo Disco) */
+#spDashboardFoldersBlock #folderTabsList.disco-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+#spDashboardFoldersBlock #folderTabsList .disco-chip {
+  font-family: inherit;
+  padding: 0.4rem 0.75rem;
+  margin: 0;
+  border-radius: 2rem;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  font-size: 0.85rem;
+  color: #475569;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+}
+
+#spDashboardFoldersBlock #folderTabsList .disco-chip:hover {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.3);
+  color: #1e40af;
+}
+
+#spDashboardFoldersBlock #folderTabsList .disco-chip.active {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  border-color: transparent;
+  color: #fff;
+}
+
+/* Tabs de seção (nav-tabs) – compactas */
+#spDashboardFoldersBlock .card-header-tabs-wrap {
+  padding: 0.25rem 1rem;
+  background: rgba(248, 250, 252, 0.5);
+  border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+}
+
 #spDashboardFoldersBlock .sp-folder-tabs-bootstrap .nav-link {
-  border-radius: 0.5rem;
+  border-radius: 0.4rem 0.4rem 0 0;
   font-weight: 500;
-  padding: 0.5rem 1rem;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.8rem;
   color: #64748b;
   border: 1px solid transparent;
+  margin-bottom: -1px;
   transition: background 0.2s, color 0.2s, border-color 0.2s;
 }
 
 #spDashboardFoldersBlock .sp-folder-tabs-bootstrap .nav-link:hover {
-  color: #4f46e5;
-  background: rgba(99, 102, 241, 0.06);
+  color: #2563eb;
+  background: rgba(59, 130, 246, 0.06);
 }
 
 #spDashboardFoldersBlock .sp-folder-tabs-bootstrap .nav-link.active {
-  background: linear-gradient(135deg, #6366f1, #4f46e5) !important;
-  color: #fff !important;
-  border-color: transparent;
+  background: #fff !important;
+  color: #1e40af !important;
+  border-color: rgba(59, 130, 246, 0.2) rgba(59, 130, 246, 0.2) #fff;
 }
 
-/* Strip de KPIs (Last Day / Financials) – padronizado: mesmo tamanho e estilização */
-#spDashboardFoldersBlock .sp-folder-strip-wrap {
-  background: rgba(255, 255, 255, 0.6) !important;
-  border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+/* Date block no topo - posicionamento do dropdown */
+#spDashboardFoldersBlock .opms-date-block {
+  position: relative;
+  min-width: 180px;
+}
+
+#spDashboardFoldersBlock .opms-date-btn,
+#spDashboardFoldersBlock .opms-date-center {
+  padding: 0.4rem 0.6rem;
+  font-size: 0.875rem;
+}
+
+/* Section tabs no topo */
+#spDashboardFoldersBlock .opms-section-tabs-top {
+  padding: 0.25rem 0.75rem;
+  border-radius: 0;
+}
+
+/* KPIs compactos, mais perto do conteúdo */
+#spDashboardFoldersBlock .opms-kpi-strip-compact {
+  padding: 0.35rem 0.75rem !important;
+  border-bottom: 1px solid rgba(59, 130, 246, 0.08);
+  background: rgba(248, 250, 252, 0.5) !important;
+}
+
+#spDashboardFoldersBlock .opms-kpi-strip-compact .dashboard-kpi-grid {
+  gap: 0.3rem;
+}
+
+#spDashboardFoldersBlock .opms-kpi-strip-compact .dashboard-kpi-card {
+  min-height: 40px !important;
+  padding: 0.25rem 0.4rem !important;
+}
+
+#spDashboardFoldersBlock .opms-kpi-strip-compact .dashboard-kpi-value {
+  font-size: 0.85rem !important;
+}
+
+#spDashboardFoldersBlock .opms-kpi-strip-compact .dashboard-kpi-label {
+  font-size: 0.55rem !important;
+}
+
+#spDashboardFoldersBlock .opms-kpi-strip-compact .dashboard-kpi-icon-wrap {
+  width: 1.2rem !important;
+  height: 1.2rem !important;
+  font-size: 0.65rem !important;
+}
+
+#spDashboardFoldersBlock .opms-kpi-strip-compact .dashboard-kpi-card-total {
+  border-color: rgba(59, 130, 246, 0.25);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0.04) 100%) !important;
+}
+
+/* Header mais compacto */
+#spDashboardFoldersBlock .dashboard-block-header {
+  padding: 0.4rem 0.75rem;
+}
+
+#spDashboardFoldersBlock .dashboard-block-title {
+  font-size: 0.9rem !important;
+}
+
+#spDashboardFoldersBlock .dashboard-block-desc {
+  font-size: 0.75rem !important;
+}
+
+/* Tabelas com altura reduzida + scroll – linhas compactas */
+#spDashboardFoldersBlock .opms-deliveries-table-wrap {
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+#spDashboardFoldersBlock .opms-deliveries-table-wrap .table {
+  font-size: 0.7rem;
+}
+
+#spDashboardFoldersBlock .opms-deliveries-table-wrap .opms-table-disco-style thead th {
+  padding: 0.25rem 0.5rem !important;
+  font-size: 0.65rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.03em !important;
+  background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%) !important;
+  color: #fff !important;
+  border-color: #1e40af !important;
+}
+
+#spDashboardFoldersBlock .opms-deliveries-table-wrap .opms-table-disco-style tbody td {
+  padding: 0.2rem 0.5rem !important;
+  vertical-align: middle !important;
+}
+
+#spDashboardFoldersBlock .opms-deliveries-table-wrap .opms-table-disco-style tbody tr:nth-child(odd) {
+  background: #dbeafe !important;
+}
+
+#spDashboardFoldersBlock .opms-deliveries-table-wrap .opms-table-disco-style tbody tr:nth-child(even) {
+  background: #eff6ff !important;
+}
+
+#spDashboardFoldersBlock .opms-deliveries-table-wrap .opms-table-disco-style tbody tr {
+  transition: none !important;
+}
+#spDashboardFoldersBlock .opms-deliveries-table-wrap .opms-table-disco-style tbody tr:hover {
+  background: rgba(59, 130, 246, 0.25) !important;
+}
+
+/* Paginação: evitar corte do total (1–23 of 23) */
+#spDashboardFoldersBlock .opms-pagination-nav {
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding-bottom: 0.25rem;
+  min-height: 2rem;
+}
+
+#spDashboardFoldersBlock .opms-pagination-info {
+  white-space: nowrap;
+  flex-shrink: 0;
+  min-width: max-content;
+  overflow: visible;
+}
+
+#spDashboardFoldersBlock .opms-pagination-btns {
+  flex-shrink: 0;
+}
+
+#spDashboardFoldersBlock #ldTableSection {
+  padding-bottom: 0.5rem;
+}
+
+/* Estilo Disco em qualquer tabela (vehicles, modal, etc.) */
+.opms-table-disco-style thead th {
+  padding: 0.25rem 0.5rem !important;
+  font-size: 0.65rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.03em !important;
+  background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%) !important;
+  color: #fff !important;
+  border-color: #1e40af !important;
+}
+
+.opms-table-disco-style tbody td {
+  padding: 0.2rem 0.5rem !important;
+  vertical-align: middle !important;
+}
+
+.opms-table-disco-style tbody tr:nth-child(odd) {
+  background: #dbeafe !important;
+}
+
+.opms-table-disco-style tbody tr:nth-child(even) {
+  background: #eff6ff !important;
+}
+
+.opms-table-disco-style tbody tr {
+  transition: none !important;
+}
+
+.opms-table-disco-style tbody tr:hover {
+  background: rgba(59, 130, 246, 0.25) !important;
+}
+
+/* Listas estilo Disco: cores alternadas (compliance, etc.) */
+.compliance-vendor-list .list-group-item:nth-child(odd) {
+  background: #dbeafe !important;
+}
+
+.compliance-vendor-list .list-group-item:nth-child(even) {
+  background: #eff6ff !important;
+}
+
+.compliance-vendor-list .list-group-item:hover {
+  background: rgba(59, 130, 246, 0.25) !important;
+}
+
+.compliance-vendor-list .list-group-item.none,
+.compliance-vendor-list .list-group-item.text-muted {
+  background: #f8fafc !important;
+  font-style: italic;
+}
+
+/* Blocos de conteúdo mais compactos */
+#spDashboardFoldersBlock .opms-performance-card,
+#spDashboardFoldersBlock .opms-performance-block {
+  padding: 0;
+}
+
+#spDashboardFoldersBlock .opms-performance-header {
+  padding: 0.5rem 0;
+}
+
+#spDashboardFoldersBlock .opms-performance-body {
+  margin-top: 0.75rem !important;
+  padding-bottom: 0.5rem;
+}
+
+#spDashboardFoldersBlock .opms-performance-body .h6 {
+  margin-bottom: 0.5rem !important;
+}
+
+#spDashboardFoldersBlock .ld-header-kpi {
+  margin-bottom: 0.75rem !important;
+}
+
+#spDashboardFoldersBlock .ld-viewing-month-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.4rem 1rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  border-radius: 2rem;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+}
+
+#spDashboardFoldersBlock .tab-content {
   padding: 0.5rem 1rem !important;
+}
+
+/* Strip de KPIs (Last Day / Financials) – estilo Disco */
+#spDashboardFoldersBlock .sp-folder-strip-wrap {
+  padding: 0.4rem 0.75rem !important;
+  border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+  background: rgba(248, 250, 252, 0.6) !important;
 }
 
 #spDashboardFoldersBlock .dashboard-kpi-grid {
@@ -1285,15 +1623,20 @@
 }
 
 /* Todos os itens da grelha com a mesma altura e aspecto */
+#spDashboardFoldersBlock .opms-kpi-strip-compact .dashboard-kpi-grid > *,
+#spDashboardFoldersBlock .opms-kpi-strip-compact .dashboard-kpi-grid > * > .dashboard-kpi-card {
+  min-height: 36px !important;
+}
+
 #spDashboardFoldersBlock .dashboard-kpi-grid > * {
-  min-height: 64px;
+  min-height: 44px;
   display: flex;
 }
 
 #spDashboardFoldersBlock .dashboard-kpi-grid > * > .dashboard-kpi-card {
   flex: 1;
   width: 100%;
-  min-height: 64px;
+  min-height: 44px;
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -1304,16 +1647,14 @@
 #spDashboardFoldersBlock .dashboard-kpi-card {
   background: #fff !important;
   border: 1px solid #e2e8f0;
-  border-radius: 0.625rem;
-  padding: 0.35rem 0.3rem;
-  min-height: 64px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border-radius: 0.5rem;
+  padding: 0.25rem 0.25rem;
+  min-height: 44px;
 }
 
 #spDashboardFoldersBlock .dashboard-kpi-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px -4px rgba(99, 102, 241, 0.12);
-  border-color: rgba(99, 102, 241, 0.2);
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.12);
+  border-color: rgba(59, 130, 246, 0.2);
 }
 
 #spDashboardFoldersBlock .dashboard-kpi-icon-wrap {
@@ -1322,7 +1663,7 @@
 }
 
 #spDashboardFoldersBlock .dashboard-kpi-value {
-  color: #1e293b !important;
+  color: #1e40af !important;
   font-weight: 700;
 }
 
@@ -1355,9 +1696,13 @@
   font-size: 0.85rem;
 }
 
-/* Conteúdo das tabs: Last Day – blocos alinhados e do mesmo tamanho */
-#spDashboardFoldersBlock .card-body.tab-content {
-  padding: 1.25rem 1.5rem !important;
+/* Conteúdo das tabs (estilo Disco dashboard-block-content) */
+#spDashboardFoldersBlock .dashboard-block-content {
+  padding: 0;
+}
+
+#spDashboardFoldersBlock .tab-content {
+  padding: 0.5rem 1rem !important;
 }
 
 #spDashboardFoldersBlock .opms-lastday-layout {
@@ -1430,9 +1775,9 @@
 }
 
 #spDashboardFoldersBlock #folder-panel-spms .spms-filter-btn:hover {
-  border-color: #6366f1;
-  background: rgba(99, 102, 241, 0.05);
-  color: #4f46e5;
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.05);
+  color: #2563eb;
 }
 
 #spDashboardFoldersBlock #folder-panel-spms .spms-filter-dropdown {
@@ -1498,184 +1843,397 @@
 }
 
 #spDashboardFoldersBlock #folder-panel-spms .spms-chip:hover {
-  background: rgba(99, 102, 241, 0.08);
-  border-color: rgba(99, 102, 241, 0.3);
-  color: #4f46e5;
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.3);
+  color: #2563eb;
 }
 
 #spDashboardFoldersBlock #folder-panel-spms .spms-chip.active {
-  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   border-color: transparent;
   color: #fff;
 }
 
-#spDashboardFoldersBlock #folder-panel-spms .spms-bento {
+/* ===== Financials Bento Grid ===== */
+#spDashboardFoldersBlock #folder-panel-spms .opms-content-full {
+  padding: 0.55rem;
+}
+
+/* Grid: income(1) afd(1) perf(2) | del(1) pu(1) hn(1) avg(1) */
+.sfb-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  grid-auto-rows: minmax(120px, auto);
-  gap: 1.25rem;
+  grid-template-rows: 175px 155px;
+  grid-template-areas:
+    "income afd perf perf"
+    "del    pu  hn   avg";
+  gap: 0.55rem;
 }
 
-#spDashboardFoldersBlock #folder-panel-spms .spms-bento-card {
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: 1rem;
-  padding: 1.25rem;
+/* ── Base card ── */
+.sfb-card {
+  background: linear-gradient(145deg, #fff 0%, #f8fafc 100%);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 0.8rem;
+  padding: 0.65rem 0.8rem;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: flex-start;
-  min-height: 100px;
-  transition: box-shadow 0.2s ease, border-color 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+  position: relative;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+  animation: sfb-fadein 0.45s ease-out both;
+}
+.sfb-card:hover {
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.08);
+  border-color: rgba(99, 102, 241, 0.28);
+  transform: translateY(-2px);
+}
+@keyframes sfb-fadein {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-#spDashboardFoldersBlock #folder-panel-spms .spms-bento-card:hover {
-  border-color: rgba(99, 102, 241, 0.25);
-  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.08);
-}
+.sfb-income { grid-area: income; animation-delay: 0.04s; }
+.sfb-afd    { grid-area: afd;    animation-delay: 0.09s; align-items: center; text-align: center; }
+.sfb-perf   { grid-area: perf;   animation-delay: 0.14s; }
+.sfb-del    { grid-area: del;    animation-delay: 0.19s; }
+.sfb-pu     { grid-area: pu;     animation-delay: 0.23s; }
+.sfb-hn     { grid-area: hn;     animation-delay: 0.27s; }
+.sfb-avg    { grid-area: avg;    animation-delay: 0.31s; justify-content: center; gap: 0.45rem; }
 
-#spDashboardFoldersBlock #folder-panel-spms .spms-bento-income {
-  grid-column: span 2;
-  grid-row: span 1;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.06) 0%, rgba(99, 102, 241, 0.02) 100%);
-  border-color: rgba(99, 102, 241, 0.2);
-}
-
-#spDashboardFoldersBlock #folder-panel-spms .spms-bento-income .spms-card-content {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-#spDashboardFoldersBlock #folder-panel-spms .spms-bento-income .spms-card-value {
-  font-size: 2rem;
-  font-weight: 800;
-  color: #4f46e5;
-  margin-top: 0.35rem;
-}
-
-#spDashboardFoldersBlock #folder-panel-spms .spms-bento-performance {
-  grid-column: span 2;
-  grid-row: span 2;
-  min-height: 200px;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-}
-
-#spDashboardFoldersBlock #folder-panel-spms .spms-bento-performance .last-day-goals-wrap {
-  width: 100%;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  justify-content: center;
-  align-items: center;
-}
-
-#spDashboardFoldersBlock #folder-panel-spms .spms-bento-performance .last-day-goals-circles-wrap {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.5rem;
-  justify-content: center;
-  align-items: center;
-}
-
-#spDashboardFoldersBlock #folder-panel-spms .spms-bento-kpi {
-  grid-column: span 1;
-}
-
-#spDashboardFoldersBlock #folder-panel-spms .spms-bento-kpi .spms-card-label {
-  font-size: 0.75rem;
-  font-weight: 600;
+.sfb-label {
+  display: block;
+  font-size: 0.5rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: #64748b;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
   margin-bottom: 0.35rem;
 }
 
-#spDashboardFoldersBlock #folder-panel-spms .spms-bento-kpi .spms-card-value {
-  font-size: 1.5rem;
+/* ── INCOME card (compacto, 1 coluna) ── */
+.sfb-income {
+  background: linear-gradient(145deg, rgba(59, 130, 246, 0.07) 0%, #fff 70%);
+  border-color: rgba(59, 130, 246, 0.2);
+}
+.sfb-income-val {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #1e40af;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+.sfb-income-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.25rem;
+}
+.sfb-badge-tag {
+  font-size: 0.45rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #cbd5e1;
+  white-space: nowrap;
+}
+.sfb-badge-pct {
+  font-size: 0.8rem;
   font-weight: 700;
-  color: #1e293b;
+  color: #334155;
+  line-height: 1;
+}
+.sfb-arc-svg {
+  display: block;
+  width: 100%;
+  margin-top: auto;
+}
+.sfb-arc-track {
+  fill: none;
+  stroke: #e2e8f0;
+  stroke-width: 6;
+  stroke-linecap: round;
+}
+.sfb-arc-fill {
+  fill: none;
+  stroke: #3b82f6;
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-dasharray: 0 151;
+  transition: stroke-dasharray 0.9s cubic-bezier(0.4, 0, 0.2, 1) 0.15s, stroke 0.4s ease;
 }
 
-#spDashboardFoldersBlock #folder-panel-spms .spms-bento-avg {
-  flex-direction: row;
-  align-items: center;
-  gap: 1rem;
+/* ── AFD speedometer (1 coluna, maior conteúdo) ── */
+.sfb-afd {
+  background: linear-gradient(145deg, rgba(245, 158, 11, 0.07) 0%, #fff 70%);
+  border-color: rgba(245, 158, 11, 0.2);
+  transition: background 0.4s ease, border-color 0.4s ease, box-shadow 0.2s ease, transform 0.15s ease;
 }
-
-#spDashboardFoldersBlock #folder-panel-spms .spms-bento-avg .spms-card-content {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+.sfb-afd--ok  {
+  background: linear-gradient(145deg, rgba(34, 197, 94, 0.09) 0%, #fff 70%) !important;
+  border-color: rgba(34, 197, 94, 0.3) !important;
 }
-
-#spDashboardFoldersBlock #folder-panel-spms .spms-bento-avg .spms-card-value {
-  margin-top: 0.35rem;
+.sfb-afd--bad {
+  background: linear-gradient(145deg, rgba(239, 68, 68, 0.09) 0%, #fff 70%) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
 }
-
-#spDashboardFoldersBlock #folder-panel-spms .spms-bento-avg .spms-card-icon {
-  width: 2.5rem;
-  height: 2.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(99, 102, 241, 0.1);
-  color: #6366f1;
-  border-radius: 0.75rem;
-  font-size: 1.25rem;
+.sfb-spd-svg {
+  display: block;
+  width: 100%;
+  max-width: 120px;
   flex-shrink: 0;
 }
-
-#spDashboardFoldersBlock #folder-panel-spms .spms-bento-card .spms-card-label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: #64748b;
-  margin-bottom: 0.25rem;
+.sfb-spd-track {
+  fill: none;
+  stroke: #e2e8f0;
+  stroke-width: 6;
+  stroke-linecap: round;
 }
-
-#spDashboardFoldersBlock #folder-panel-spms .spms-bento-card .spms-card-value {
+.sfb-spd-zone {
+  fill: none;
+  stroke-width: 6;
+  stroke-linecap: butt;
+  opacity: 0.28;
+}
+.sfb-spd-zone--ok  { stroke: #22c55e; }
+.sfb-spd-zone--bad { stroke: #ef4444; }
+.sfb-needle {
+  stroke: #1e293b;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+#spmsAfdNeedle {
+  transform-origin: 60px 74px;
+  transform: rotate(-90deg);
+  transition: transform 0.9s cubic-bezier(0.4, 0, 0.2, 1) 0.15s;
+}
+.sfb-needle-cap { fill: #1e293b; }
+.sfb-spd-lbl {
+  font-size: 7px;
+  fill: #94a3b8;
+  font-family: inherit;
+}
+.sfb-spd-val {
   font-size: 1.35rem;
+  font-weight: 800;
+  color: #1e293b;
+  line-height: 1;
+  margin-top: 0.1rem;
+}
+.sfb-afd-status {
+  display: inline-block;
+  font-size: 0.48rem;
   font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  padding: 0.15rem 0.5rem;
+  border-radius: 99px;
+  margin-top: 0.2rem;
+  background: rgba(148, 163, 184, 0.15);
+  color: #64748b;
+  transition: background 0.4s ease, color 0.4s ease;
+}
+.sfb-afd--ok  .sfb-afd-status { background: rgba(34, 197, 94, 0.15); color: #15803d; }
+.sfb-afd--bad .sfb-afd-status { background: rgba(239, 68, 68, 0.15); color: #dc2626; }
+
+/* ── Performance ring (2 colunas, maior) ── */
+.sfb-perf {
+  background: linear-gradient(145deg, rgba(99, 102, 241, 0.07) 0%, #fff 70%);
+  border-color: rgba(99, 102, 241, 0.2);
+}
+.sfb-perf-body {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+  min-height: 0;
+}
+.sfb-ring-wrap {
+  position: relative;
+  width: 110px;
+  height: 110px;
+  flex-shrink: 0;
+}
+.sfb-ring-wrap svg { width: 100%; height: 100%; }
+.sfb-ring-bg { stroke: #e2e8f0; }
+.sfb-ring-fg {
+  stroke: #6366f1;
+  stroke-linecap: round;
+  stroke-dasharray: 0 251;
+  transition: stroke-dasharray 0.9s cubic-bezier(0.4, 0, 0.2, 1) 0.15s, stroke 0.4s ease;
+}
+.sfb-ring-inner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.sfb-ring-val {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #1e293b;
+  line-height: 1;
+}
+.sfb-ring-sub {
+  font-size: 0.42rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+  margin-top: 0.1rem;
+}
+/* Breakdown DEL/PU/HN/Total */
+.sfb-perf-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  flex: 1;
+}
+.sfb-pb-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.sfb-pb-row--total { margin-top: 0.1rem; }
+.sfb-pb-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.sfb-pb-dot--del { background: #22c55e; }
+.sfb-pb-dot--pu  { background: #6366f1; }
+.sfb-pb-dot--hn  { background: #f59e0b; }
+.sfb-pb-dot--tot { background: #1e293b; }
+.sfb-pb-lbl {
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: #64748b;
+  flex: 1;
+}
+.sfb-pb-val {
+  font-size: 0.85rem;
+  font-weight: 800;
   color: #1e293b;
 }
+.sfb-pb-row--total .sfb-pb-lbl { color: #334155; font-weight: 700; }
+.sfb-pb-row--total .sfb-pb-val { font-size: 0.95rem; color: #0f172a; }
+.sfb-pb-sep {
+  height: 1px;
+  background: rgba(226, 232, 240, 0.9);
+  margin: 0.1rem 0;
+}
 
-#spDashboardFoldersBlock #folder-panel-spms .spms-bento-income .spms-card-icon {
-  width: 2.5rem;
-  height: 2.5rem;
+/* ── Stat cards DEL / PU / HN (maiores) ── */
+.sfb-stat { gap: 0.1rem; }
+.sfb-stat-ico {
+  font-size: 1.2rem;
+  margin-bottom: 0.1rem;
+}
+.sfb-stat-val {
+  font-size: 1.9rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+.sfb-stat-lbl {
+  font-size: 0.52rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #94a3b8;
+}
+.sfb-bar {
+  height: 5px;
+  background: #e2e8f0;
+  border-radius: 3px;
+  margin-top: auto;
+  overflow: hidden;
+}
+.sfb-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  width: 0%;
+  transition: width 0.9s cubic-bezier(0.4, 0, 0.2, 1) 0.25s;
+}
+.sfb-del {
+  border-color: rgba(34, 197, 94, 0.3);
+  background: linear-gradient(145deg, rgba(34, 197, 94, 0.08) 0%, #fff 65%);
+}
+.sfb-del .sfb-stat-ico { color: #22c55e; }
+.sfb-del .sfb-stat-val { color: #15803d; }
+.sfb-bar-del { background: linear-gradient(90deg, #16a34a, #4ade80); }
+
+.sfb-pu {
+  border-color: rgba(99, 102, 241, 0.3);
+  background: linear-gradient(145deg, rgba(99, 102, 241, 0.08) 0%, #fff 65%);
+}
+.sfb-pu .sfb-stat-ico { color: #6366f1; }
+.sfb-pu .sfb-stat-val { color: #4338ca; }
+.sfb-bar-pu { background: linear-gradient(90deg, #4f46e5, #818cf8); }
+
+.sfb-hn {
+  border-color: rgba(245, 158, 11, 0.3);
+  background: linear-gradient(145deg, rgba(245, 158, 11, 0.08) 0%, #fff 65%);
+}
+.sfb-hn .sfb-stat-ico { color: #f59e0b; }
+.sfb-hn .sfb-stat-val { color: #b45309; }
+.sfb-bar-hn { background: linear-gradient(90deg, #d97706, #fbbf24); }
+
+/* ── Avg card (maior) ── */
+.sfb-avg {
+  border-color: rgba(148, 163, 184, 0.3);
+  background: linear-gradient(145deg, rgba(148, 163, 184, 0.07) 0%, #fff 70%);
+}
+.sfb-avg-item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+.sfb-avg-ico-wrap {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-  color: #fff;
-  border-radius: 0.75rem;
-  font-size: 1.25rem;
-  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+.sfb-avg-ico--income { background: rgba(59, 130, 246, 0.12); color: #2563eb; }
+.sfb-avg-ico--route  { background: rgba(99, 102, 241, 0.12); color: #6366f1; }
+.sfb-avg-lbl {
+  font-size: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+  font-weight: 600;
+  display: block;
+}
+.sfb-avg-val {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #1e293b;
+  line-height: 1.2;
+  display: block;
+}
+.sfb-avg-sep {
+  height: 1px;
+  background: rgba(226, 232, 240, 0.9);
 }
 
-@media (max-width: 992px) {
-  #spDashboardFoldersBlock #folder-panel-spms .spms-bento {
+/* ── Header strip: oculto quando SPMS está activo ── */
+.sfb-strip-hidden { display: none !important; }
+
+@media (max-width: 768px) {
+  .sfb-grid {
     grid-template-columns: repeat(2, 1fr);
-  }
-  #spDashboardFoldersBlock #folder-panel-spms .spms-bento-income {
-    grid-column: span 2;
-  }
-  #spDashboardFoldersBlock #folder-panel-spms .spms-bento-performance {
-    grid-column: span 2;
-  }
-}
-
-@media (max-width: 576px) {
-  #spDashboardFoldersBlock #folder-panel-spms .spms-bento {
-    grid-template-columns: 1fr;
-  }
-  #spDashboardFoldersBlock #folder-panel-spms .spms-bento-income,
-  #spDashboardFoldersBlock #folder-panel-spms .spms-bento-performance {
-    grid-column: span 1;
+    grid-template-rows: auto auto auto auto;
+    grid-template-areas:
+      "income afd"
+      "perf   perf"
+      "del    pu"
+      "hn     avg";
   }
 }
 
@@ -1702,10 +2260,10 @@
   display: flex;
   flex-direction: column;
   background: linear-gradient(180deg, #ffffff 0%, #fafbff 100%);
-  border: 1px solid rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.12);
   border-radius: 1rem;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.06),
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.06),
               0 0 0 1px rgba(255, 255, 255, 0.8) inset;
 }
 
@@ -1715,8 +2273,8 @@
   align-items: center;
   gap: 1rem;
   padding: 1.25rem 1.25rem 1rem;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(99, 102, 241, 0.02) 100%);
-  border-bottom: 1px solid rgba(99, 102, 241, 0.08);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0.02) 100%);
+  border-bottom: 1px solid rgba(59, 130, 246, 0.08);
 }
 
 #spDashboardFoldersBlock .opms-filters-sidebar-icon {
@@ -1725,11 +2283,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   color: #fff;
   border-radius: 0.75rem;
   font-size: 1.1rem;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 #spDashboardFoldersBlock .opms-filters-sidebar-title {
@@ -1794,7 +2352,7 @@
   list-style: none;
   padding-left: 0;
   margin: 0.6rem 0 0 1rem;
-  border-left: 2px solid rgba(99, 102, 241, 0.2);
+  border-left: 2px solid rgba(59, 130, 246, 0.2);
   margin-left: 0.6rem;
   display: flex;
   flex-direction: column;
@@ -1817,16 +2375,16 @@
 
 #spDashboardFoldersBlock .opms-tree--sidebar .opms-tree-item:hover .opms-tree-label {
   background: #f1f5f9;
-  border-color: rgba(99, 102, 241, 0.15);
-  color: #4f46e5;
+  border-color: rgba(59, 130, 246, 0.15);
+  color: #2563eb;
 }
 
 #spDashboardFoldersBlock .opms-tree--sidebar .opms-tree-item.selected .opms-tree-label {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(99, 102, 241, 0.06) 100%);
-  color: #4f46e5;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(59, 130, 246, 0.06) 100%);
+  color: #2563eb;
   font-weight: 600;
-  border-color: rgba(99, 102, 241, 0.25);
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15);
+  border-color: rgba(59, 130, 246, 0.25);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
 }
 
 #spDashboardFoldersBlock .opms-tree--sidebar .opms-tree-icon {
@@ -1836,16 +2394,16 @@
 }
 
 #spDashboardFoldersBlock .opms-tree--sidebar .opms-tree-item.selected .opms-tree-icon {
-  color: #6366f1;
+  color: #3b82f6;
 }
 
 #spDashboardFoldersBlock .opms-tree--sidebar .opms-tree-item-all .opms-tree-label {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.06) 0%, rgba(99, 102, 241, 0.02) 100%);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.06) 0%, rgba(59, 130, 246, 0.02) 100%);
   font-weight: 600;
 }
 
 #spDashboardFoldersBlock .opms-tree--sidebar .opms-tree-item-all.selected .opms-tree-label {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.14) 0%, rgba(99, 102, 241, 0.08) 100%);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.14) 0%, rgba(59, 130, 246, 0.08) 100%);
 }
 
 #spDashboardFoldersBlock .opms-delivery-list-inner {
@@ -1922,7 +2480,7 @@
 }
 
 #spDashboardFoldersBlock .opms-lastday-header h3.h6 .text-primary {
-  color: #6366f1 !important;
+  color: #3b82f6 !important;
 }
 
 #spDashboardFoldersBlock .opms-date-edge-btn,
@@ -1936,8 +2494,8 @@
 
 #spDashboardFoldersBlock .opms-date-edge-btn:hover,
 #spDashboardFoldersBlock .opms-date-center:hover {
-  border-color: #6366f1;
-  background: rgba(99, 102, 241, 0.05);
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.05);
 }
 
 #spDashboardFoldersBlock .opms-viewing-date {
@@ -1955,8 +2513,8 @@
 }
 
 #spDashboardFoldersBlock .opms-tree-item.selected {
-  background: rgba(99, 102, 241, 0.08);
-  color: #4f46e5;
+  background: rgba(59, 130, 246, 0.08);
+  color: #2563eb;
   font-weight: 600;
 }
 
@@ -1973,19 +2531,9 @@
 }
 
 #spDashboardFoldersBlock #folder-panel-spms .card-header {
-  background: rgba(99, 102, 241, 0.04) !important;
+  background: rgba(59, 130, 246, 0.04) !important;
   border-bottom: 1px solid #e2e8f0;
   color: #1e293b;
 }
 
 /* Liquidation Damages – KPI Total e Count no header */
-#spDashboardFoldersBlock #folder-panel-ld .ld-count-kpi,
-#spDashboardFoldersBlock #folder-panel-ld .ld-total-kpi {
-  font-size: 0.9rem;
-  color: #475569;
-}
-#spDashboardFoldersBlock #folder-panel-ld .ld-count-value,
-#spDashboardFoldersBlock #folder-panel-ld .ld-total-value {
-  color: #1e293b;
-  font-weight: 700;
-}
