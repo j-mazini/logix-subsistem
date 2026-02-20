@@ -1130,3 +1130,144 @@
     transform: translateY(0);
   }
 }
+
+/* Avisos – botão e modal de gestão (DHL) */
+.avisos-count-badge {
+  display: inline-block;
+  min-width: 1.25rem;
+  padding: 0.15rem 0.4rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #fff;
+  background: #6366f1;
+  border-radius: 999px;
+  margin-left: 0.35rem;
+}
+.avisos-count-badge.hidden {
+  display: none !important;
+}
+.avisos-manage-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 20rem;
+  overflow-y: auto;
+}
+.avisos-manage-empty {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: #64748b;
+}
+.avisos-manage-empty i {
+  font-size: 2rem;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+.avisos-manage-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+.avisos-manage-item-content {
+  flex: 1;
+  min-width: 0;
+}
+.avisos-manage-item-title {
+  display: block;
+  font-size: 0.9375rem;
+  color: #0f172a;
+  margin-bottom: 0.25rem;
+}
+.avisos-manage-item-msg {
+  font-size: 0.8125rem;
+  color: #64748b;
+  margin: 0 0 0.35rem 0;
+  line-height: 1.4;
+}
+.avisos-manage-item-expire {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+.avisos-manage-delete {
+  flex-shrink: 0;
+}
+
+.avisos-manage-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.avisos-manage-tabs {
+  display: inline-flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.avisos-manage-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: #334155;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.avisos-manage-tab:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.avisos-manage-tab.active {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(139, 92, 246, 0.12) 100%);
+  border-color: rgba(99, 102, 241, 0.35);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.12);
+}
+
+.avisos-manage-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.35rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 999px;
+  background: #0f172a;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.avisos-history-btn.hidden {
+  display: none !important;
+}
+
+.avisos-history-btn.active {
+  border-color: rgba(99, 102, 241, 0.4) !important;
+  color: #4f46e5 !important;
+  background: rgba(99, 102, 241, 0.08) !important;
+}
+
+.avisos-manage-panel.hidden {
+  display: none !important;
+}
+
+.avisos-manage-item--history {
+  opacity: 0.85;
+}
+
+.avisos-manage-item--notif .avisos-manage-item-title i {
+  font-size: 1rem;
+}

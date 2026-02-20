@@ -16,6 +16,9 @@
   <link rel="stylesheet" href="../../liquid-glass.css" />
   <link rel="stylesheet" href="../../modern-ui.css" />
   <link rel="stylesheet" href="base.css" />
+  <link rel="stylesheet" href="header.css" />
+  <link rel="stylesheet" href="network-delays.css" />
+  <link rel="stylesheet" href="modals.css" />
   <link rel="stylesheet" href="disco-block.css" />
   <link rel="stylesheet" href="operations.css" />
   <link rel="stylesheet" href="financials.css" />
@@ -72,6 +75,37 @@
             <div class="container-fluid px-0">
               <header class="dashboard-header mb-2">
                 <div class="dashboard-header-top">
+                  <div class="sp-dash-title-wrap me-3">
+                    <div class="sp-dash-title-icon" aria-hidden="true">
+                      <i class="bi bi-grid-1x2-fill"></i>
+                    </div>
+                    <div class="sp-dash-title-text-group">
+                      <h1 class="sp-dash-title">Dashboard</h1>
+                      <span class="sp-dash-title-sub">Service Provider Portal</span>
+                    </div>
+                  </div>
+                  <!-- Box: Announcements no header (centrado) -->
+                  <div class="dashboard-header-center">
+                  <div id="spAnnouncementBoxWrap" class="sp-announcement-header-box">
+                    <div class="sp-announcement-header-card">
+                      <div class="sp-announcement-header-head">
+                        <h3 class="sp-announcement-header-title"><i class="bi bi-megaphone-fill" aria-hidden="true"></i> Announcements</h3>
+                        <p class="sp-announcement-header-desc small text-muted mb-0">Announcements from DHL appear here.</p>
+                      </div>
+                      <div class="sp-announcement-header-body">
+                        <button type="button" id="spAnnouncementBox" class="sp-announcement-box-trigger" aria-label="View announcements" aria-expanded="false">
+                          <span class="sp-announcement-box-text" id="spAnnouncementBoxText">No announcements yet.</span>
+                          <span class="sp-announcement-box-pages" id="spAnnouncementBoxPages"></span>
+                        </button>
+                        <p id="spAnnouncementEmpty" class="sp-announcement-empty small text-muted mb-0 hidden">No announcements.</p>
+                      </div>
+                    </div>
+                  </div>
+                  </div>
+                  <button type="button" class="sp-create-trigger" id="spCreateTrigger" aria-label="Create notification" title="Create notification">
+                    <i class="bi bi-plus-lg"></i>
+                    <span>Create</span>
+                  </button>
                   <div class="admin-header-user-pill d-flex align-items-center ms-auto" id="spHeaderPill" title="">
                     <span id="spHeaderAvatarFallback" class="admin-header-user-avatar admin-header-user-avatar-fallback" style="display:none;"></span>
                     <img id="spHeaderAvatar" src="" alt="" class="admin-header-user-avatar admin-header-user-avatar--img" style="display:none;" />
@@ -88,9 +122,15 @@
                       <h2 class="dashboard-block-title mb-1"><i class="bi bi-truck me-2" aria-hidden="true"></i>My deliveries</h2>
                       <p class="dashboard-block-desc mb-0">These are your operations today! We already organised it for you!</p>
                     </div>
-                    <div class="disco-header-stops-kpi rounded-3 px-3 py-2 d-flex flex-column align-items-center justify-content-center" id="discoHeaderStopsKpi" aria-label="Total stops">
-                      <span class="disco-header-stops-label small text-uppercase fw-semibold text-muted">Stops</span>
-                      <span class="disco-header-stops-value fs-4 fw-bold text-primary" id="dashboardStopsValue">—</span>
+                    <div class="disco-header-stops-and-switch d-flex align-items-center gap-2">
+                      <div class="disco-header-stops-kpi rounded-3 px-3 py-2 d-flex flex-column align-items-center justify-content-center" id="discoHeaderStopsKpi" aria-label="Total stops">
+                        <span class="disco-header-stops-label small text-uppercase fw-semibold text-muted">Stops</span>
+                        <span class="disco-header-stops-value fs-4 fw-bold text-primary" id="dashboardStopsValue">—</span>
+                      </div>
+                      <div class="disco-am-pm-switch disco-am-pm-switch--vertical" role="group" aria-label="Morning or Afternoon">
+                        <button type="button" class="disco-gravura disco-gravura-am disco-gravura-on" id="discoGravuraAm" title="Morning (AM)" aria-pressed="true">AM</button>
+                        <button type="button" class="disco-gravura disco-gravura-pm" id="discoGravuraPm" title="Afternoon (PM)" aria-pressed="false">PM</button>
+                      </div>
                     </div>
                   </div>
                   <!-- Filtros no topo do bloco (Bootstrap flex + gap) -->
@@ -105,14 +145,29 @@
                     </div>
                   </div>
                   <div class="dashboard-block-content">
-                    <!-- Resumo geral (nenhum depot selecionado) -->
+                    <!-- Resumo geral (Summary) – inclui Network & Delays dentro -->
                     <div class="disco-summary-block" id="discoSummaryBlock">
                       <div class="disco-summary-card">
                         <div class="disco-summary-card-header">
                           <h3 class="disco-summary-title">Summary</h3>
                         </div>
                         <div class="disco-summary-card-body">
-                          <div class="disco-summary-grid" id="discoSummaryGrid"></div>
+                          <div class="disco-summary-kpi-row">
+                            <div class="disco-summary-grid" id="discoSummaryGrid"></div>
+                            <div id="spNetworkDelayWrap" class="sp-network-delay-box disco-summary-network-delays">
+                              <div class="sp-network-delay-card-inner">
+                                <div class="sp-network-delay-card-header">
+                                  <span class="sp-network-delay-card-title"><i class="bi bi-wifi"></i> Network &amp; Delays</span>
+                                </div>
+                                <div class="sp-network-delay-card-body">
+                                  <ul class="list-group list-group-flush sp-network-delay-list" id="spNetworkDelayList" role="list"></ul>
+                                  <div id="spNetworkDelayEmpty" class="sp-network-delay-empty" role="status">
+                                    <span>No notifications yet.</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -157,7 +212,7 @@
                       </li>
                     </ul>
                   </div>
-                  <!-- Filtros Date + Depot, Loop, Route -->
+                  <!-- Filtros: Date, Organization (Depot + Loop), Time window, Route -->
                   <div class="disco-filters disco-filters--top d-flex flex-wrap align-items-end gap-3 gap-md-4" id="opmsFiltersWrap">
                     <div class="disco-filter-group flex-shrink-0" id="opmsDateFilterWrap">
                       <span class="disco-filter-label d-block mb-1">Date</span>
@@ -171,13 +226,25 @@
                         <button type="button" class="disco-chip opms-date-btn" id="opmsDateNext" aria-label="Next date" title="Next date"><i class="bi bi-chevron-right"></i></button>
                       </div>
                     </div>
-                    <div class="disco-filter-group flex-shrink-0">
-                      <span class="disco-filter-label d-block mb-1">Depot</span>
-                      <div id="opmsDepotChips" class="disco-chips d-flex flex-wrap gap-2" role="group" aria-label="Filter by depot"></div>
+                    <div class="opms-filter-organization flex-shrink-0 d-flex flex-wrap align-items-end gap-3 gap-md-4">
+                      <span class="disco-filter-label d-block mb-1 w-100 opms-filter-organization-title"></span>
+                      <div class="disco-filter-group flex-shrink-0">
+                        <span class="disco-filter-label d-block mb-1 small text-muted">Depot</span>
+                        <div id="opmsDepotChips" class="disco-chips d-flex flex-wrap gap-2" role="group" aria-label="Filter by depot"></div>
+                      </div>
+                      <div class="disco-filter-group flex-shrink-0">
+                        <span class="disco-filter-label d-block mb-1 small text-muted">Loop</span>
+                        <div id="opmsLoopChips" class="disco-chips d-flex flex-wrap gap-2" role="group" aria-label="Filter by loop"></div>
+                      </div>
                     </div>
-                    <div class="disco-filter-group flex-shrink-0">
-                      <span class="disco-filter-label d-block mb-1">Loop</span>
-                      <div id="opmsLoopChips" class="disco-chips d-flex flex-wrap gap-2" role="group" aria-label="Filter by loop"></div>
+                    <div class="disco-filter-group flex-shrink-0" id="opmsTimeWindowFilterWrap">
+                      <span class="disco-filter-label d-block mb-1">Time window</span>
+                      <div id="opmsTimeWindowChips" class="disco-chips d-flex flex-wrap gap-2" role="group" aria-label="Filter by time window">
+                        <button type="button" class="disco-chip active" data-opms-tw="all">All</button>
+                        <button type="button" class="disco-chip" data-opms-tw="green" title="≥90%">On Target</button>
+                        <button type="button" class="disco-chip" data-opms-tw="yellow" title="80–90%">Needs Improvement</button>
+                        <button type="button" class="disco-chip" data-opms-tw="red" title="&lt;80%">Off Target</button>
+                      </div>
                     </div>
                     <div class="disco-filter-group flex-shrink-0" id="opmsRouteFilterWrap">
                       <span class="disco-filter-label d-block mb-1">Route</span>
@@ -304,16 +371,16 @@
                             <div class="table-responsive opms-deliveries-table-wrap">
                               <table class="table table-hover table-sm align-middle mb-0 opms-table-disco-style" id="lastDayDeliveriesTable" aria-label="Previous day deliveries">
                                 <thead>
-                                  <tr><th>Route</th><th class="text-end">DEL</th><th class="text-end">PU</th><th class="text-end">HN</th><th class="text-end">AFD</th><th class="text-end">STOPS</th></tr>
+                                  <tr><th>Route</th><th class="text-end">SPR</th><th class="text-end">TW</th><th class="text-end">DEL</th><th class="text-end">PU</th><th class="text-end">HN</th><th class="text-end">AFD</th></tr>
                                 </thead>
                                 <tbody id="lastDayDeliveriesBody"></tbody>
                               </table>
                             </div>
-                            <nav class="opms-pagination-nav d-flex align-items-center justify-content-between gap-2 mt-2" id="opmsDeliveriesPagination" aria-label="Paginação da lista">
+                            <nav class="opms-pagination-nav d-flex align-items-center justify-content-between gap-2 mt-2" id="opmsDeliveriesPagination" aria-label="List pagination">
                               <span class="opms-pagination-info small text-muted" id="opmsPaginationInfo">—</span>
                               <div class="opms-pagination-btns d-flex gap-1">
-                                <button type="button" class="btn btn-sm btn-outline-secondary opms-pagination-prev" id="opmsPaginationPrev" aria-label="Página anterior">« Prev</button>
-                                <button type="button" class="btn btn-sm btn-outline-secondary opms-pagination-next" id="opmsPaginationNext" aria-label="Próxima página">Next »</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary opms-pagination-prev" id="opmsPaginationPrev" aria-label="Previous page">« Prev</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary opms-pagination-next" id="opmsPaginationNext" aria-label="Next page">Next »</button>
                               </div>
                             </nav>
                             <p id="lastDayDeliveriesEmpty" class="text-muted small text-center py-3 mb-0 hidden">Select a date to view deliveries.</p>
@@ -423,7 +490,7 @@
 
                           <!-- AVG: row 2 (maior) -->
                           <div class="sfb-card sfb-avg" aria-label="Averages">
-                            <span class="sfb-label"><i class="bi bi-calculator"></i> Médias</span>
+                            <span class="sfb-label"><i class="bi bi-calculator"></i> Averages</span>
                             <div class="sfb-avg-item">
                               <div class="sfb-avg-ico-wrap sfb-avg-ico--income"><i class="bi bi-currency-pound"></i></div>
                               <div>
@@ -437,6 +504,14 @@
                               <div>
                                 <span class="sfb-avg-lbl">Avg / Route</span>
                                 <span class="sfb-avg-val" id="spmsAvgRoute">—</span>
+                              </div>
+                            </div>
+                            <div class="sfb-avg-sep"></div>
+                            <div class="sfb-avg-item">
+                              <div class="sfb-avg-ico-wrap sfb-avg-ico--route"><i class="bi bi-map"></i></div>
+                              <div>
+                                <span class="sfb-avg-lbl">Total open routes</span>
+                                <span class="sfb-avg-val" id="spmsTotalRotasAbertas">—</span>
                               </div>
                             </div>
                           </div>
@@ -467,11 +542,11 @@
                               <tbody id="ldTableBody"></tbody>
                             </table>
                           </div>
-                          <nav class="opms-pagination-nav d-flex align-items-center justify-content-between gap-2 mt-2" id="ldPagination" aria-label="Paginação LD">
+                          <nav class="opms-pagination-nav d-flex align-items-center justify-content-between gap-2 mt-2" id="ldPagination" aria-label="LD pagination">
                             <span class="opms-pagination-info small text-muted" id="ldPaginationInfo">—</span>
                             <div class="opms-pagination-btns d-flex gap-1">
-                              <button type="button" class="btn btn-sm btn-outline-secondary" id="ldPaginationPrev" aria-label="Página anterior">« Prev</button>
-                              <button type="button" class="btn btn-sm btn-outline-secondary" id="ldPaginationNext" aria-label="Próxima página">Next »</button>
+                              <button type="button" class="btn btn-sm btn-outline-secondary" id="ldPaginationPrev" aria-label="Previous page">« Prev</button>
+                              <button type="button" class="btn btn-sm btn-outline-secondary" id="ldPaginationNext" aria-label="Next page">Next »</button>
                             </div>
                           </nav>
                           <p id="ldTableEmpty" class="text-muted small text-center py-3 mb-0 hidden">No liquidation damages for the selected filters.</p>
@@ -675,12 +750,127 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" defer></script>
+  <script src="../../avisos-storage.js" defer></script>
   <script src="../../dhl-mock-data.js" defer></script>
   <script src="../../dhl-embedded-data.js" defer></script>
   <script src="../../assets/disco-data.js" defer></script>
   <script src="../../dhl-lastday-pdf-data.js" defer></script>
   <script src="../../beam-sidebar.js" defer></script>
   <script src="dashboard.js" defer></script>
+
+  <!-- Snackbar: preview quando chega uma nova Notificação -->
+  <div id="spNotifSnackbar" class="sp-notif-snackbar" role="status" aria-live="polite" hidden>
+    <i class="bi bi-bell-fill sp-notif-snackbar-icon"></i>
+    <span id="spNotifSnackbarText" class="sp-notif-snackbar-text"></span>
+  </div>
+
+  <!-- Modal: DHL Notices — 3 categorias -->
+  <div id="spAvisosModal" class="sp-avisos-modal" role="dialog" aria-modal="true" aria-labelledby="spAvisosModalTitle" hidden>
+    <div class="sp-avisos-modal-backdrop" id="spAvisosModalBackdrop"></div>
+    <div class="sp-avisos-modal-dialog">
+      <div class="sp-avisos-modal-content">
+        <div class="sp-avisos-modal-header">
+          <h2 id="spAvisosModalTitle" class="sp-avisos-modal-title"><i class="bi bi-pin-angle-fill"></i> DHL Notices</h2>
+          <button type="button" class="sp-avisos-modal-close" id="spAvisosModalClose" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <!-- Tabs das 3 categorias -->
+        <div class="sp-avisos-modal-tabs" role="tablist" aria-label="Notice categories">
+          <button type="button" class="sp-avisos-modal-tab active" data-avisos-tab="announcements" role="tab" aria-selected="true">
+            <i class="bi bi-megaphone-fill"></i> Announcements
+          </button>
+          <button type="button" class="sp-avisos-modal-tab" data-avisos-tab="network" role="tab" aria-selected="false">
+            <i class="bi bi-wifi"></i> Network &amp; Delays
+          </button>
+          <button type="button" class="sp-avisos-modal-tab" data-avisos-tab="notifications" role="tab" aria-selected="false">
+            <i class="bi bi-bell-fill"></i> Notifications
+          </button>
+        </div>
+        <div class="sp-avisos-modal-body">
+          <!-- Painel: Announcements -->
+          <div class="sp-avisos-modal-panel" id="spAvisosPanel_announcements" role="tabpanel">
+            <div class="sp-avisos-modal-pages" id="spAvisosModalPages"></div>
+            <div class="sp-avisos-modal-nav" id="spAvisosModalNav">
+              <button type="button" class="sp-avisos-modal-prev" id="spAvisosModalPrev" aria-label="Previous"><i class="bi bi-chevron-left"></i></button>
+              <span class="sp-avisos-modal-pagenum" id="spAvisosModalPagenum">1 / 1</span>
+              <button type="button" class="sp-avisos-modal-next" id="spAvisosModalNext" aria-label="Next"><i class="bi bi-chevron-right"></i></button>
+            </div>
+            <div class="sp-avisos-modal-dots" id="spAvisosModalDots" role="tablist"></div>
+          </div>
+          <!-- Painel: Network & Delays -->
+          <div class="sp-avisos-modal-panel hidden" id="spAvisosPanel_network" role="tabpanel">
+            <ul class="sp-avisos-list" id="spAvisosNetworkList"></ul>
+            <div class="sp-avisos-empty hidden" id="spAvisosNetworkEmpty"><i class="bi bi-check-circle"></i><p>No network or delay notifications.</p></div>
+          </div>
+          <!-- Painel: Notifications -->
+          <div class="sp-avisos-modal-panel hidden" id="spAvisosPanel_notifications" role="tabpanel">
+            <ul class="sp-avisos-list" id="spAvisosNotifList"></ul>
+            <div class="sp-avisos-empty hidden" id="spAvisosNotifEmpty"><i class="bi bi-inbox"></i><p>No notifications yet.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Create Notification/Alert -->
+  <div id="spCreateTypeModal" class="sp-create-type-modal" role="dialog" aria-modal="true" aria-labelledby="spCreateTypeModalTitle" hidden>
+    <div class="sp-create-type-modal-backdrop" id="spCreateTypeModalBackdrop"></div>
+    <div class="sp-create-type-modal-dialog">
+      <div class="sp-create-type-modal-header">
+        <h2 id="spCreateTypeModalTitle" class="sp-create-type-modal-title"><i class="bi bi-send-fill"></i> Create Notification</h2>
+        <button type="button" class="sp-create-type-modal-close" id="spCreateTypeModalClose" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sp-create-type-modal-body">
+        <p class="sp-create-type-intro">Select where the notification should appear:</p>
+        <!-- 3 opções — radio (só uma pode ser seleccionada) -->
+        <div class="sp-create-type-options" role="radiogroup" aria-label="Notification type">
+          <label class="sp-create-type-option" for="spCreateRadioNotif">
+            <input type="radio" class="sp-create-type-radio" name="spCreateType" id="spCreateRadioNotif" value="notification">
+            <div class="sp-create-type-option-inner">
+              <span class="sp-create-type-option-icon sp-create-icon--notif"><i class="bi bi-bell-fill"></i></span>
+              <div>
+                <span class="sp-create-type-option-label">Notification</span>
+                <span class="sp-create-type-option-desc">Appears in the notifications sidebar</span>
+              </div>
+            </div>
+            <span class="sp-create-type-option-check"><i class="bi bi-check-lg"></i></span>
+          </label>
+          <label class="sp-create-type-option" for="spCreateRadioAnnounce">
+            <input type="radio" class="sp-create-type-radio" name="spCreateType" id="spCreateRadioAnnounce" value="announcement">
+            <div class="sp-create-type-option-inner">
+              <span class="sp-create-type-option-icon sp-create-icon--announce"><i class="bi bi-megaphone-fill"></i></span>
+              <div>
+                <span class="sp-create-type-option-label">Announcement</span>
+                <span class="sp-create-type-option-desc">Shown in the header banner</span>
+              </div>
+            </div>
+            <span class="sp-create-type-option-check"><i class="bi bi-check-lg"></i></span>
+          </label>
+          <label class="sp-create-type-option" for="spCreateRadioNd">
+            <input type="radio" class="sp-create-type-radio" name="spCreateType" id="spCreateRadioNd" value="network_delay">
+            <div class="sp-create-type-option-inner">
+              <span class="sp-create-type-option-icon sp-create-icon--nd"><i class="bi bi-wifi"></i></span>
+              <div>
+                <span class="sp-create-type-option-label">Network &amp; Delay</span>
+                <span class="sp-create-type-option-desc">Shown in the Dashboard Summary block</span>
+              </div>
+            </div>
+            <span class="sp-create-type-option-check"><i class="bi bi-check-lg"></i></span>
+          </label>
+        </div>
+        <!-- Preview: onde vai aparecer -->
+        <div class="sp-create-type-preview hidden" id="spCreateTypePreview">
+          <p class="sp-create-type-preview-label"><i class="bi bi-eye me-1"></i>Where it will appear:</p>
+          <div class="sp-create-type-preview-box" id="spCreateTypePreviewBox"></div>
+        </div>
+      </div>
+      <div class="sp-create-type-modal-footer">
+        <button type="button" class="sp-create-type-cancel" id="spCreateTypeCancel">Cancel</button>
+        <button type="button" class="sp-create-type-submit" id="spCreateTypeSubmit" disabled>
+          <i class="bi bi-send me-1"></i> Create
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- Notifications: tab na borda + sidebar (fora do layout para position:fixed ao viewport) -->
   <button type="button" class="sp-notif-tab" id="spNotifTab" aria-label="Open notifications" aria-expanded="false" title="Notifications">
@@ -691,7 +881,10 @@
     <div class="sp-notif-sidebar-backdrop" id="spNotifSidebarBackdrop" aria-hidden="true"></div>
     <div class="sp-notif-sidebar-panel">
       <div class="sp-notif-sidebar-header">
-        <h2 class="sp-notif-sidebar-title"><i class="bi bi-bell-fill"></i> Notifications</h2>
+        <div class="sp-notif-sidebar-title-wrap">
+          <h2 class="sp-notif-sidebar-title"><i class="bi bi-bell-fill"></i> Notifications</h2>
+          <span class="sp-notif-sidebar-sp" id="spNotifSidebarSp" aria-label="Service Provider"></span>
+        </div>
         <button type="button" class="sp-notif-sidebar-close" id="spNotifSidebarClose" aria-label="Close"><i class="bi bi-x-lg"></i></button>
       </div>
       <div class="sp-notif-sidebar-body">

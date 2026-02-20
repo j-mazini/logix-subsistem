@@ -10,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../../vendor-admin-view.css" />
+  <link rel="stylesheet" href="../../shared-pages.css" />
   <link rel="stylesheet" href="../../contract-management.css" />
   <link rel="stylesheet" href="../../sidebar-beam.css" />
   <link rel="stylesheet" href="../../liquid-glass.css" />
@@ -433,10 +434,7 @@
                 var rateStr = rateVal > 0 ? '£' + rateVal.toFixed(2) : '—';
                 html += '<span>Rate: <strong>' + rateStr + '</strong> <span class="text-muted small">(Band 1)</span></span>';
                 html += '</div>';
-                html += '<div class="contract-route-target-edit mt-2 mb-2">';
-                html += '<label class="form-label small mb-1">Target — parâmetro para comparação e % de aproveitamento</label>';
-                html += '<input type="number" min="0" step="1" class="form-control form-control-sm contract-route-target-input" value="' + targetVal + '" data-sp="' + spEsc + '" data-depot="' + depEsc + '" data-route="' + routeEsc + '" placeholder="Target" aria-label="Target da rota" />';
-                html += '</div>';
+                /* Apenas o Service Provider pode alterar o target; na vista DHL o target é só leitura */
                 html += '<p class="small text-muted mb-2"><span class="contract-badge contract-badge-sub">Subpostcode</span></p>';
                 html += '<div class="contract-subpostcodes">';
                 for (var s = 0; s < subpostcodes.length; s++) {
@@ -499,24 +497,7 @@
         run();
       });
 
-      document.getElementById('contractTree').addEventListener('input', function (e) {
-        var input = e.target.closest('.contract-route-target-input');
-        if (!input) return;
-        var sp = input.getAttribute('data-sp');
-        var depot = input.getAttribute('data-depot');
-        var route = input.getAttribute('data-route');
-        if (!sp || !route) return;
-        var val = input.value.trim();
-        var num = val === '' ? null : parseInt(val, 10);
-        setStoredTarget(sp, depot, route, num);
-        var display = input.closest('.accordion-body');
-        if (display) {
-          var targetDisplay = display.querySelector('.js-route-target-display');
-          var t = isNaN(num) || num == null ? 0 : num;
-          if (targetDisplay) targetDisplay.textContent = t;
-        }
-      });
-
+      /* Edição de target apenas na tela Contracts do Service Provider; aqui (DHL) é só leitura */
       run();
     })();
   </script>

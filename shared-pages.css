@@ -1,0 +1,181 @@
+/**
+ * Shared Pages – Estilização global para as páginas partilhadas entre perfis
+ * Vendors, Vehicles, Contract Management, SOP Feed.
+ * Reutiliza a estilização da versão DHL (apenas layout/header da página; modais ficam nos respetivos CSS).
+ * Carregar depois de vendor-admin-view.css.
+ */
+
+/* ========== Page header com métricas (estilo DHL) ========== */
+.shared-page-header,
+.vendor-page-header {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.25rem;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transition: box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.shared-page-header:hover,
+.vendor-page-header:hover {
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+  border-color: #cbd5e1;
+}
+
+.shared-page-header-inner,
+.vendor-page-header-inner {
+  position: relative;
+  z-index: 1;
+}
+
+.shared-page-header-row,
+.vendor-page-header-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.shared-page-title,
+.vendor-page-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+}
+
+.shared-page-subtitle,
+.vendor-page-subtitle {
+  margin: 0.25rem 0 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.shared-page-metrics,
+.vendor-page-metrics {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  flex-wrap: wrap;
+  overflow-x: auto;
+  padding-bottom: 0;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.shared-page-metrics::-webkit-scrollbar,
+.vendor-page-metrics::-webkit-scrollbar {
+  display: none;
+}
+
+.shared-page-metric,
+.vendor-page-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 100px;
+  padding: 0.5rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.shared-page-metric-label,
+.vendor-page-metric-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+}
+
+.shared-page-metric-value,
+.vendor-page-metric-value {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.shared-page-header-user,
+.vendor-page-header-user {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Aliases para Contracts (SP) – mesma estrutura que vendor-page-* */
+.contracts-page-header {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.25rem;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.contracts-page-header-inner { position: relative; z-index: 1; }
+.contracts-page-header-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.contracts-page-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+}
+.contracts-page-subtitle {
+  margin: 0.25rem 0 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #64748b;
+}
+.contracts-page-metrics {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  flex-wrap: wrap;
+}
+.contracts-page-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 100px;
+  padding: 0.5rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+.contracts-page-metric-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+}
+.contracts-page-metric-value {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+.contracts-page-header-user {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}

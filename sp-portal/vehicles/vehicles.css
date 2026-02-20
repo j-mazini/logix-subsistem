@@ -1,119 +1,14 @@
 /**
- * SP Portal – Vehicles page (exact copy of Next.js Vehicles styles)
- * Header, filters bar, table, VehicleModal, DeleteVehicleModal.
+ * SP Portal – Vehicles page
+ * Estilização da página (header, filters, table-wrap) vem de vendor-admin-view.css + shared-pages.css.
+ * Aqui: apenas estilos específicos da tabela (sort), VRN plate, botões de ação, empty state e modais.
  */
 
-/* Header reuses vendor-page-* from vendor-page.css when both loaded; vehicles-specific overrides below */
-.vehicles-page-header {
-  position: relative;
-  overflow: hidden;
-  border-radius: 1rem;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(24px);
-  padding: 1rem 1.25rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-.vehicles-page-title {
-  margin: 0;
-  font-size: 1.875rem;
-  font-weight: 600;
-  letter-spacing: -0.025em;
-  background: linear-gradient(to bottom right, #0f172a, #4f46e5);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-.vehicles-page-subtitle { margin: 0.25rem 0 0; font-size: 0.875rem; font-weight: 500; color: #64748b; }
-.vehicles-page-metrics { display: flex; gap: 0.5rem; margin-top: 0.75rem; overflow-x: auto; padding-bottom: 0; -ms-overflow-style: none; scrollbar-width: none; }
-.vehicles-page-metrics::-webkit-scrollbar { display: none; }
-.vehicles-page-metric { display: flex; flex-direction: column; gap: 0.125rem; min-width: 150px; padding: 0.5rem 0.75rem; border-radius: 0.5rem; border: 1px solid rgba(0,0,0,0.06); background: rgba(255,255,255,0.55); backdrop-filter: blur(12px); box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
-.vehicles-page-metric-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; }
-.vehicles-page-metric-value { font-size: 1.125rem; font-weight: 700; color: #0f172a; }
-
-/* VehicleFilters – nav gradient, rounded-t-lg */
-.vehicles-filters-bar {
-  background: linear-gradient(to bottom right, #fff, #f8f9fa);
-  border-radius: 0.5rem 0.5rem 0 0;
-  border: 1px solid #e9ecef;
-  border-bottom: none;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-}
-
-.vehicles-filters-inner {
-  padding: 1.5rem;
-  border-bottom: 1px solid #e9ecef;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.vehicles-filters-search {
-  padding: 0.5rem 1rem;
-  font-size: 0.9rem;
-  border: 1px solid #e9ecef;
-  border-radius: 0.375rem;
-  background: #fff;
-  max-width: 350px;
-  width: 100%;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.vehicles-filters-search:focus {
-  outline: none;
-  border-color: #0d6efd;
-  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
-}
-
-.vehicles-filters-select {
-  padding: 0.5rem 1rem;
-  font-size: 0.9rem;
-  border: 1px solid #e9ecef;
-  border-radius: 0.375rem;
-  background: #fff;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.vehicles-filters-select:focus {
-  outline: none;
-  border-color: #0d6efd;
-  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
-}
-
-.vehicles-filters-actions { margin-left: auto; display: flex; gap: 0.75rem; align-items: center; }
-
-/* VehicleTable – rounded-b-lg, same as Next */
-.vehicles-table-wrap {
-  width: 100%;
-  overflow-x: auto;
-  background: #fff;
-  border: 1px solid #e9ecef;
-  border-top: none;
-  border-radius: 0 0 0.5rem 0.5rem;
-}
-
-.vehicles-table { width: 100%; margin: 0; border-collapse: collapse; table-layout: fixed; }
-.vehicles-table th {
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  color: #8491a1;
-  border-bottom: 1px solid #e9ecef;
-  padding: 0.625rem 0.5rem;
-  background: rgba(247, 248, 250, 0.8);
-  cursor: pointer;
-  transition: background 0.2s;
-  text-align: center;
-}
-
-.vehicles-table th:hover { background: rgba(247, 248, 250, 1); }
-.vehicles-table th.vehicles-th-actions { cursor: default; }
-.vehicles-table th.vehicles-th-sort.asc::after { opacity: 1; transform: rotate(135deg); }
-.vehicles-table th.vehicles-th-sort.desc::after { opacity: 1; transform: rotate(-45deg); }
-.vehicles-table th.vehicles-th-sort::after {
+/* Sort arrows na tabela (complementa .table-wrap de vendor-admin-view.css) */
+.table-wrap .vehicles-table th.vehicles-th-actions { cursor: default; }
+.table-wrap .vehicles-table th.vehicles-th-sort.asc::after { opacity: 1; transform: rotate(135deg); }
+.table-wrap .vehicles-table th.vehicles-th-sort.desc::after { opacity: 1; transform: rotate(-45deg); }
+.table-wrap .vehicles-table th.vehicles-th-sort::after {
   content: '';
   display: inline-block;
   margin-left: 0.25rem;
@@ -125,35 +20,37 @@
   opacity: 0.4;
 }
 
-.vehicles-table tbody tr { transition: background 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
-.vehicles-table tbody tr:nth-child(even) { background: #f8f9fa; }
-.vehicles-table tbody tr:nth-child(odd) { background: #fff; }
-.vehicles-table tbody tr:hover { background: #e9ecef !important; }
-.vehicles-table tbody td {
-  padding: 0.625rem 0.5rem;
-  font-size: 0.85rem;
-  vertical-align: middle;
-  text-align: center;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
+/* UK-style number plate: faixa azul (normal) ou verde (elétrico) à esquerda, fundo branco, texto preto */
 .vehicles-vrn-plate {
-  display: inline-block;
-  padding: 0.25em 0.6em;
+  display: inline-flex;
+  align-items: stretch;
+  min-height: 1.75em;
+  padding: 0.2em 0.5em 0.2em 0.35em;
   font-size: 0.8rem;
   font-weight: 700;
-  font-family: ui-monospace, monospace;
-  letter-spacing: 0.05em;
-  background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
-  color: #fff;
-  border-radius: 6px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  font-family: "UK Number Plate", "Charles Wright", "Franklin Gothic Condensed", "Impact", sans-serif;
+  letter-spacing: 0.12em;
+  color: #000;
+  background: #fff;
+  border: 1px solid #333;
+  border-radius: 2px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15), inset 0 0 0 1px rgba(0,0,0,0.06);
+  overflow: hidden;
 }
 
-.vehicles-vrn-plate.vehicles-vrn-electric {
-  background: linear-gradient(135deg, #15803d 0%, #16a34a 100%);
+/* Faixa esquerda azul (UK standard) */
+.vehicles-vrn-plate::before {
+  content: '';
+  width: 0.5em;
+  min-width: 8px;
+  margin-right: 0.25em;
+  background: linear-gradient(180deg, #003399 0%, #002266 100%);
+  flex-shrink: 0;
+}
+
+/* Faixa verde para elétrico (zero-emission) */
+.vehicles-vrn-plate.vehicles-vrn-electric::before {
+  background: linear-gradient(180deg, #008750 0%, #006b40 100%);
 }
 
 .vehicles-action-btn {

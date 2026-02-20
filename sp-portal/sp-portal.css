@@ -1528,6 +1528,12 @@ body.sp-portal .sp-notif-sidebar.is-open,
   background: linear-gradient(145deg, #fafbff 0%, #f1f5f9 100%);
   border-radius: 0.5rem 0 0 0;
 }
+.sp-portal .sp-notif-sidebar-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
 .sp-portal .sp-notif-sidebar-title {
   margin: 0;
   font-size: 1.125rem;
@@ -1539,6 +1545,12 @@ body.sp-portal .sp-notif-sidebar.is-open,
 }
 .sp-portal .sp-notif-sidebar-title i {
   color: #3b82f6;
+}
+.sp-portal .sp-notif-sidebar-sp {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #64748b;
+  display: block;
 }
 .sp-portal .sp-notif-sidebar-close {
   width: 2.25rem;
@@ -1609,6 +1621,15 @@ body.sp-portal .sp-notif-sidebar.is-open,
 .sp-portal .sp-notif-item-body {
   min-width: 0;
 }
+.sp-portal .sp-notif-item-type {
+  display: inline-block;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+  margin-bottom: 0.2rem;
+}
 .sp-portal .sp-notif-item-msg {
   margin: 0;
   font-size: 0.9375rem;
@@ -1648,6 +1669,97 @@ body.sp-portal .sp-notif-sidebar.is-open,
 .sp-portal .sp-notif-empty.hidden {
   display: none !important;
 }
+
+/* ========== Snackbar: preview quando chega uma nova Notificação ========== */
+.sp-notif-snackbar {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 10050;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 22rem;
+  padding: 0.75rem 1rem;
+  background: #0f172a;
+  color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+  font-size: 0.875rem;
+  animation: spNotifSnackbarIn 0.3s ease;
+}
+.sp-notif-snackbar[hidden] {
+  display: none !important;
+}
+.sp-notif-snackbar-icon {
+  font-size: 1.25rem;
+  color: #93c5fd;
+  flex-shrink: 0;
+}
+.sp-notif-snackbar-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@keyframes spNotifSnackbarIn {
+  from { opacity: 0; transform: translateY(1rem); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ========== Avisos: strip no header da homepage (lembrete até DHL excluir ou Expire) ========== */
+.sp-avisos-strip-wrap {
+  flex: 1;
+  min-width: 0;
+  max-width: 36rem;
+  margin-right: 1rem;
+}
+.sp-avisos-strip-wrap.hidden {
+  display: none !important;
+}
+.sp-avisos-strip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #92400e;
+  font-size: 0.875rem;
+  text-align: left;
+  cursor: pointer;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+.sp-avisos-strip:hover {
+  border-color: #f59e0b;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2);
+}
+.sp-avisos-strip-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+.sp-avisos-strip-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sp-avisos-strip-pages {
+  font-size: 0.75rem;
+  opacity: 0.9;
+}
+
+/* Announcements header box → dashboard/header.css */
+
+/* Create modal + trigger → dashboard/modals.css */
+
+/* Network & Delays card → dashboard/network-delays.css */
+
+/* Modal Avisos → dashboard/header.css */
 
 /* ========== Notificações no header – card remodelado (legado, mantido para referência) ========== */
 .sp-portal .dashboard-header-notifications {
@@ -3505,6 +3617,82 @@ body.sp-portal .sp-notif-sidebar.is-open,
 }
 .opms-tw-route-value--red {
   color: #dc2626;
+}
+
+.opms-deliveries-table-wrap .opms-tw-cell {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.opms-deliveries-table-wrap .opms-tw-cell--grey {
+  color: #94a3b8;
+}
+
+.opms-deliveries-table-wrap .opms-route-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.opms-deliveries-table-wrap .opms-route-name {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.opms-tw-flag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 1.25rem;
+  padding: 0 0.45rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+  border: 1px solid transparent;
+  flex-shrink: 0;
+}
+
+.opms-tw-flag--grey {
+  color: #64748b;
+  background: rgba(148, 163, 184, 0.16);
+  border-color: rgba(148, 163, 184, 0.28);
+}
+
+.opms-tw-flag--green {
+  color: #15803d;
+  background: rgba(34, 197, 94, 0.14);
+  border-color: rgba(34, 197, 94, 0.28);
+}
+
+.opms-tw-flag--yellow {
+  color: #a16207;
+  background: rgba(234, 179, 8, 0.16);
+  border-color: rgba(234, 179, 8, 0.3);
+}
+
+.opms-tw-flag--red {
+  color: #b91c1c;
+  background: rgba(239, 68, 68, 0.14);
+  border-color: rgba(239, 68, 68, 0.28);
+}
+
+.opms-spr-flag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.75rem;
+  height: 1.25rem;
+  padding: 0 0.4rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #475569;
+  background: rgba(71, 85, 105, 0.1);
+  border: 1px solid rgba(71, 85, 105, 0.2);
+  flex-shrink: 0;
 }
 
 .last-day-goal-circle {

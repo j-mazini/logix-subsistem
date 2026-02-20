@@ -168,6 +168,53 @@
   border-color: rgba(59, 130, 246, 0.2) rgba(59, 130, 246, 0.2) #fff;
 }
 
+/* Filtro Organization (Depot + Loop) */
+#spDashboardFoldersBlock .opms-filter-organization {
+  gap: 0.5rem 1rem;
+}
+#spDashboardFoldersBlock .opms-filter-organization-title {
+  font-weight: 600;
+  color: #1e40af;
+  font-size: 0.875rem;
+}
+
+/* Filtro Time window – cores por estado: não selecionado = verde/amarelo/vermelho; selecionado = azul (padrão) */
+#spDashboardFoldersBlock #opmsTimeWindowFilterWrap .disco-chip[data-opms-tw="green"] {
+  border-color: rgba(34, 197, 94, 0.6);
+  background: rgba(34, 197, 94, 0.12);
+  color: #15803d;
+}
+#spDashboardFoldersBlock #opmsTimeWindowFilterWrap .disco-chip[data-opms-tw="green"]:hover {
+  background: rgba(34, 197, 94, 0.2);
+  border-color: rgba(34, 197, 94, 0.8);
+}
+#spDashboardFoldersBlock #opmsTimeWindowFilterWrap .disco-chip[data-opms-tw="yellow"] {
+  border-color: rgba(234, 179, 8, 0.6);
+  background: rgba(234, 179, 8, 0.12);
+  color: #a16207;
+}
+#spDashboardFoldersBlock #opmsTimeWindowFilterWrap .disco-chip[data-opms-tw="yellow"]:hover {
+  background: rgba(234, 179, 8, 0.2);
+  border-color: rgba(234, 179, 8, 0.8);
+}
+#spDashboardFoldersBlock #opmsTimeWindowFilterWrap .disco-chip[data-opms-tw="red"] {
+  border-color: rgba(239, 68, 68, 0.6);
+  background: rgba(239, 68, 68, 0.12);
+  color: #b91c1c;
+}
+#spDashboardFoldersBlock #opmsTimeWindowFilterWrap .disco-chip[data-opms-tw="red"]:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.8);
+}
+/* Selecionado: todos em azul (padrão) */
+#spDashboardFoldersBlock #opmsTimeWindowFilterWrap .disco-chip[data-opms-tw="green"].active,
+#spDashboardFoldersBlock #opmsTimeWindowFilterWrap .disco-chip[data-opms-tw="yellow"].active,
+#spDashboardFoldersBlock #opmsTimeWindowFilterWrap .disco-chip[data-opms-tw="red"].active {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  border-color: transparent;
+  color: #fff;
+}
+
 /* Date block no topo - posicionamento do dropdown */
 #spDashboardFoldersBlock .opms-date-block {
   position: relative;

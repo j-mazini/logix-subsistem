@@ -14,6 +14,12 @@
   padding: 1.25rem 1.5rem;
 }
 
+/* Stops + switch: juntos, bem próximos */
+#spDiscoBlock .disco-header-stops-and-switch {
+  flex-shrink: 0;
+  gap: 0.5rem;
+}
+
 /* KPI Total Stops no header do bloco Disco */
 #spDiscoBlock .disco-header-stops-kpi {
   background: rgba(59, 130, 246, 0.08);
@@ -28,6 +34,75 @@
 
 #spDiscoBlock .disco-header-stops-value {
   color: #1e40af !important;
+}
+
+/* AM/PM switch vertical: estilo lâmpada (um “interruptor” na vertical, AM em cima / PM em baixo) */
+#spDiscoBlock .disco-am-pm-switch {
+  background: rgba(59, 130, 246, 0.06);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+}
+
+/* Modificador vertical: coluna, aspecto de interruptor de lâmpada */
+#spDiscoBlock .disco-am-pm-switch--vertical {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  padding: 0.2rem;
+  border-radius: 0.5rem;
+  min-width: 2.5rem;
+  background: linear-gradient(180deg, rgba(59, 130, 246, 0.12) 0%, rgba(59, 130, 246, 0.06) 100%);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+#spDiscoBlock .disco-am-pm-switch--vertical .disco-gravura {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 0.4rem 0.5rem;
+  border: none;
+  border-radius: 0.35rem;
+  cursor: pointer;
+  transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+  background: rgba(0, 0, 0, 0.04);
+  color: #64748b;
+  min-height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#spDiscoBlock .disco-am-pm-switch--vertical .disco-gravura-am {
+  color: #15803d;
+  border-radius: 0.35rem 0.35rem 0 0;
+}
+
+#spDiscoBlock .disco-am-pm-switch--vertical .disco-gravura-pm {
+  color: #a16207;
+  border-radius: 0 0 0.35rem 0.35rem;
+}
+
+#spDiscoBlock .disco-am-pm-switch--vertical .disco-gravura:hover {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+#spDiscoBlock .disco-am-pm-switch--vertical .disco-gravura.disco-gravura-on {
+  background: rgba(59, 130, 246, 0.2);
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.5), 0 1px 3px rgba(0, 0, 0, 0.12);
+  color: #0f172a;
+}
+
+#spDiscoBlock .disco-am-pm-switch--vertical .disco-gravura-am.disco-gravura-on {
+  background: linear-gradient(180deg, rgba(34, 197, 94, 0.45) 0%, rgba(34, 197, 94, 0.25) 100%);
+  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.5), 0 1px 3px rgba(0, 0, 0, 0.1);
+  color: #14532d;
+}
+
+#spDiscoBlock .disco-am-pm-switch--vertical .disco-gravura-pm.disco-gravura-on {
+  background: linear-gradient(180deg, rgba(234, 179, 8, 0.35) 0%, rgba(234, 179, 8, 0.2) 100%);
+  box-shadow: 0 0 0 1px rgba(234, 179, 8, 0.5), 0 1px 3px rgba(0, 0, 0, 0.1);
+  color: #713f12;
 }
 
 #spDiscoBlock .dashboard-block-title {
@@ -330,10 +405,26 @@
   padding: 1rem 1.25rem;
 }
 
+/* Linha que agrupa KPIs e card N&D lado a lado com a mesma altura */
+#spDiscoBlock .disco-summary-kpi-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0.75rem;
+}
+
 #spDiscoBlock .disco-summary-grid {
+  flex: 2 1 0;
+  min-width: 0;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
   gap: 0.75rem;
+}
+
+/* N&D: ocupa ~1/3 do espaço total, preenche até ao fim do bloco */
+#spDiscoBlock .disco-summary-kpi-row .sp-network-delay-box.disco-summary-network-delays {
+  flex: 1 1 0;
+  min-width: 220px;
+  margin: 0;
 }
 
 #spDiscoBlock .disco-summary-item {

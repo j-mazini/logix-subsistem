@@ -50,6 +50,18 @@
         } catch (e) { return null; }
       }
 
+      function setStoredTarget(spName, depotName, routeName, value) {
+        try {
+          var raw = localStorage.getItem(ROUTE_TARGETS_STORAGE_KEY);
+          var data = raw ? JSON.parse(raw) : {};
+          if (!data[spName]) data[spName] = {};
+          var key = (depotName || '') + '|' + (routeName || '');
+          if (value === '' || value == null || isNaN(Number(value))) delete data[spName][key];
+          else data[spName][key] = Number(value);
+          localStorage.setItem(ROUTE_TARGETS_STORAGE_KEY, JSON.stringify(data));
+        } catch (e) {}
+      }
+
       function getFilteredData() {
         if (!spName) return [];
         for (var i = 0; i < contractData.length; i++) {
@@ -193,6 +205,10 @@
                 var routeId = nextId('route');
                 var subpostcodes = postcodesToSubpostcodes(route.postcodes);
                 var typeClass = (route.type || 'Child') === 'Flex' ? 'contract-route-type-flex' : 'contract-route-type-child';
+                var targetVal = route.target != null ? route.target : (route.targetDel != null ? route.targetDel : 0);
+                var spEsc = (escapeHtml(prov.serviceProvider) || '').replace(/'/g, '&#39;');
+                var depEsc = (escapeHtml(dep.name) || '').replace(/'/g, '&#39;');
+                var routeEsc = (escapeHtml(route.name) || '').replace(/'/g, '&#39;');
                 html += '<div class="accordion accordion-flush mb-2">';
                 html += '<div class="accordion-item">';
                 html += '<h3 class="accordion-header">';
@@ -201,7 +217,13 @@
                 html += '<div class="contract-route-meta">';
                 html += '<span>Type: <strong><span class="' + typeClass + '">' + (route.type || 'Child') + '</span></strong></span>';
                 if (route.driver) html += '<span>Driver: <strong>' + escapeHtml(route.driver) + '</strong></span>';
-                html += '</div><p class="small text-muted mb-2"><span class="contract-badge contract-badge-sub">Subpostcode</span></p>';
+                html += '<span>Target: <strong class="js-route-target-display">' + targetVal + '</strong></span>';
+                html += '</div>';
+                html += '<div class="contract-route-target-edit mt-2 mb-2">';
+                html += '<label class="form-label small mb-1">Target — used for comparison and utilisation rate</label>';
+                html += '<input type="number" min="0" step="1" class="form-control form-control-sm contract-route-target-input" value="' + targetVal + '" data-sp="' + spEsc + '" data-depot="' + depEsc + '" data-route="' + routeEsc + '" placeholder="Target" aria-label="Route target" />';
+                html += '</div>';
+                html += '<p class="small text-muted mb-2"><span class="contract-badge contract-badge-sub">Subpostcode</span></p>';
                 html += '<div class="contract-subpostcodes">';
                 for (var s = 0; s < subpostcodes.length; s++) html += '<span class="contract-subpostcode">' + escapeHtml(subpostcodes[s]) + '</span>';
                 html += '</div></div></div></div></div>';
@@ -216,5 +238,24 @@
       }
 
       renderTree();
+
+      /* Apenas o Service Provider pode alterar o target das rotas */
+      document.getElementById('contractTree').addEventListener('input', function (e) {
+        var input = e.target && e.target.closest && e.target.closest('.contract-route-target-input');
+        if (!input) return;
+        var sp = input.getAttribute('data-sp');
+        var depot = input.getAttribute('data-depot');
+        var route = input.getAttribute('data-route');
+        if (!sp || !route) return;
+        var val = input.value.trim();
+        var num = val === '' ? null : parseInt(val, 10);
+        setStoredTarget(sp, depot, route, num);
+        var display = input.closest('.accordion-body');
+        if (display) {
+          var targetDisplay = display.querySelector('.js-route-target-display');
+          var t = isNaN(num) || num == null ? 0 : num;
+          if (targetDisplay) targetDisplay.textContent = t;
+        }
+      });
 
     })();

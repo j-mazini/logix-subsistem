@@ -291,7 +291,10 @@
     { type: 'problem', severity: 'danger', icon: 'exclamation-triangle', msg: 'Issue reported on route {{route}}: {{detail}}.', route: true },
     { type: 'route_change', severity: 'info', icon: 'signpost-2', msg: 'Change to route {{route}} – new time window.', route: true },
     { type: 'vehicle_issue', severity: 'warning', icon: 'truck', msg: 'Vehicle on route {{route}} under review.', route: true },
-    { type: 'driver_alert', severity: 'info', icon: 'person', msg: 'Driver on route {{route}} – status update.', route: true }
+    { type: 'driver_alert', severity: 'info', icon: 'person', msg: 'Driver on route {{route}} – status update.', route: true },
+    { type: 'alert', severity: 'warning', icon: 'megaphone-fill', msg: 'Alert: {{detail}}.', route: false },
+    { type: 'info', severity: 'info', icon: 'info-circle', msg: 'Information update: {{detail}}.', route: false },
+    { type: 'network_delay', severity: 'warning', icon: 'wifi', msg: 'Network or delay reported – {{detail}}.', route: false }
   ];
   var DAILY_OPERATIONS_NOTIFICATIONS = [];
   var timeAgoPool = [2, 5, 8, 12, 18, 25, 35, 38, 45, 55, 65, 90, 105, 120, 140, 180];
@@ -307,15 +310,15 @@
       });
     });
     routes = routes.slice(0, 15);
-    /* Primeira volta: todos os templates */
+    /* Primeira volta: um exemplo de cada tipo por SP */
     DAILY_OPS_TEMPLATES.forEach(function (t, i) {
       var route = routes[i % routes.length] || 'R-' + (i + 1);
       var timeAgo = timeAgoPool[(DAILY_OPERATIONS_NOTIFICATIONS.length + i) % timeAgoPool.length];
       var msg = t.msg
-        .replace('{{route}}', route)
-        .replace('{{mins}}', String(10 + (i % 5) * 8))
-        .replace('{{stops}}', String(6 + (i % 8)))
-        .replace('{{detail}}', detailPool[i % detailPool.length]);
+        .replace(/\{\{route\}\}/g, route)
+        .replace(/\{\{mins\}\}/g, String(10 + (i % 5) * 8))
+        .replace(/\{\{stops\}\}/g, String(6 + (i % 8)))
+        .replace(/\{\{detail\}\}/g, detailPool[i % detailPool.length]);
       DAILY_OPERATIONS_NOTIFICATIONS.push({
         id: 'op-' + sp + '-' + DAILY_OPERATIONS_NOTIFICATIONS.length,
         serviceProvider: sp,

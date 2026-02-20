@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../../vendor-admin-view.css" />
+  <link rel="stylesheet" href="../../shared-pages.css" />
   <link rel="stylesheet" href="../../sidebar-beam.css" />
   <link rel="stylesheet" href="../sp-portal.css" />
   <link rel="stylesheet" href="vehicles.css" />
@@ -46,45 +47,51 @@
             <div id="spNotFound" class="alert alert-warning hidden">Service Provider not set. Open with <code>?sp=YourCompany</code>.</div>
 
             <div id="spVehicleContent" class="hidden">
-              <!-- ModernPageHeader -->
-              <div class="vehicles-page-header mb-4">
-                <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
-                  <div>
-                    <h1 class="vehicles-page-title m-0">Vehicles</h1>
-                    <p class="vehicles-page-subtitle m-0">Vehicle fleet management</p>
-                    <div class="vehicles-page-metrics">
-                      <div class="vehicles-page-metric"><span class="vehicles-page-metric-label">Total</span><span class="vehicles-page-metric-value" id="metricTotal">0</span></div>
-                      <div class="vehicles-page-metric"><span class="vehicles-page-metric-label">Active</span><span class="vehicles-page-metric-value" id="metricActive">0</span></div>
-                      <div class="vehicles-page-metric"><span class="vehicles-page-metric-label">Inactive</span><span class="vehicles-page-metric-value" id="metricInactive">0</span></div>
-                      <div class="vehicles-page-metric"><span class="vehicles-page-metric-label">Available</span><span class="vehicles-page-metric-value" id="metricAvailable">0</span></div>
-                    </div>
-                  </div>
-                  <div class="d-flex align-items-center">
-                    <span id="spHeaderAvatarFallback" class="admin-header-user-avatar admin-header-user-avatar-fallback me-2" style="display:none;"></span>
-                    <img id="spHeaderAvatar" src="" alt="" class="admin-header-user-avatar admin-header-user-avatar--img me-2" style="display:none;" />
-                    <span class="admin-header-user-name" id="spHeaderName">—</span>
-                  </div>
+              <!-- Header estilo DHL (admin-header + search + user) -->
+              <div class="admin-header d-flex flex-wrap align-items-center gap-2">
+                <h1 class="admin-header-title">Vehicles</h1>
+                <div class="admin-header-search flex-grow-1">
+                  <input type="search" id="vehicleSearch" class="form-control" placeholder="VRN, Brand, Model, Registration date..." autocomplete="off" />
+                </div>
+                <div class="admin-header-user-pill d-flex align-items-center" title="">
+                  <span id="spHeaderAvatarFallback" class="admin-header-user-avatar admin-header-user-avatar-fallback" style="display:none;"></span>
+                  <img id="spHeaderAvatar" src="" alt="" class="admin-header-user-avatar admin-header-user-avatar--img" style="display:none;" />
+                  <span class="admin-header-user-name" id="spHeaderName">—</span>
                 </div>
               </div>
+              <!-- Métricas (estilização partilhada) -->
+              <div class="vendor-page-metrics mb-3" aria-label="Vehicle counts">
+                <div class="vendor-page-metric"><span class="vendor-page-metric-label">Total</span><span class="vendor-page-metric-value" id="metricTotal">0</span></div>
+                <div class="vendor-page-metric"><span class="vendor-page-metric-label">Active</span><span class="vendor-page-metric-value" id="metricActive">0</span></div>
+                <div class="vendor-page-metric"><span class="vendor-page-metric-label">Inactive</span><span class="vendor-page-metric-value" id="metricInactive">0</span></div>
+                <div class="vendor-page-metric"><span class="vendor-page-metric-label">Available</span><span class="vendor-page-metric-value" id="metricAvailable">0</span></div>
+              </div>
 
-              <!-- VehicleFilters: gradient bar, search + status + fuel + New + Export -->
-              <nav class="vehicles-filters-bar mb-0">
-                <div class="vehicles-filters-inner">
-                  <input type="search" id="vehicleSearch" class="vehicles-filters-search" placeholder="Search by name..." />
-                  <select id="vehicleStatusFilter" class="vehicles-filters-select">
-                    <option value="all">All Statuses</option>
-                    <option value="Active">Active</option>
-                    <option value="Inactive">Inactive</option>
-                  </select>
-                  <select id="vehicleFuelFilter" class="vehicles-filters-select">
-                    <option value="all">All Fuel Types</option>
-                    <option value="Diesel">Diesel</option>
-                    <option value="Electric">Electric</option>
-                  </select>
-                  <div class="vehicles-filters-actions">
-                    <button type="button" class="btn btn-primary" id="addVehicleBtn">New</button>
+              <!-- Filtros estilo DHL (admin-filters) -->
+              <div class="admin-filters" id="adminFilters">
+                <div class="admin-filters-row row g-2 align-items-end flex-wrap">
+                  <div class="col-auto">
+                    <label class="admin-filter-label form-label" for="vehicleStatusFilter">Status</label>
+                    <select id="vehicleStatusFilter" class="admin-filter-select form-select form-select-sm" aria-label="Filter by status">
+                      <option value="all">All</option>
+                      <option value="Active">Active</option>
+                      <option value="Inactive">Inactive</option>
+                    </select>
+                  </div>
+                  <div class="col-auto">
+                    <label class="admin-filter-label form-label" for="vehicleFuelFilter">Fuel type</label>
+                    <select id="vehicleFuelFilter" class="admin-filter-select form-select form-select-sm" aria-label="Filter by fuel type">
+                      <option value="all">All</option>
+                      <option value="Diesel">Diesel</option>
+                      <option value="Electric">Electric</option>
+                    </select>
+                  </div>
+                  <div class="col-auto">
+                    <button type="button" class="btn btn-primary btn-sm" id="addVehicleBtn">New</button>
+                  </div>
+                  <div class="col-auto">
                     <div class="dropdown">
-                      <button type="button" class="btn btn-outline-secondary" id="vehicleExportBtn" data-bs-toggle="dropdown" aria-expanded="false">Export</button>
+                      <button type="button" class="admin-filter-clear btn btn-outline-secondary btn-sm" id="vehicleExportBtn" data-bs-toggle="dropdown" aria-expanded="false">Export</button>
                       <ul class="dropdown-menu dropdown-menu-end">
                         <li><a class="dropdown-item" href="#" id="vehicleExportExcel">Excel</a></li>
                         <li><a class="dropdown-item" href="#" id="vehicleExportPdf">PDF</a></li>
@@ -92,20 +99,20 @@
                     </div>
                   </div>
                 </div>
-              </nav>
+              </div>
 
-              <!-- VehicleTable -->
-              <div class="vehicles-table-wrap">
-                <table class="vehicles-table">
+              <!-- Tabela estilo DHL (table-wrap) -->
+              <div class="table-wrap table-responsive">
+                <table class="table table-hover align-middle vehicles-table">
                   <thead>
                     <tr>
-                      <th class="vehicles-th-sort" data-sort="vrn">VRN</th>
-                      <th class="vehicles-th-sort" data-sort="brand">Manufacturer</th>
-                      <th class="vehicles-th-sort" data-sort="model">Model</th>
-                      <th class="vehicles-th-sort" data-sort="registrationDate">Registration Date</th>
-                      <th class="vehicles-th-sort" data-sort="fuelType">Fuel Type</th>
-                      <th class="vehicles-th-sort" data-sort="status">Status</th>
-                      <th class="vehicles-th-actions">Actions</th>
+                      <th class="text-center vehicles-th-sort" data-sort="vrn">VRN</th>
+                      <th class="text-center vehicles-th-sort" data-sort="brand">Manufacturer</th>
+                      <th class="text-center vehicles-th-sort" data-sort="model">Model</th>
+                      <th class="text-center vehicles-th-sort" data-sort="registrationDate">Registration Date</th>
+                      <th class="text-center vehicles-th-sort" data-sort="fuelType">Fuel Type</th>
+                      <th class="text-center vehicles-th-sort" data-sort="status">Status</th>
+                      <th class="text-center vehicles-th-actions">Actions</th>
                     </tr>
                   </thead>
                   <tbody id="vehicleTableBody"></tbody>

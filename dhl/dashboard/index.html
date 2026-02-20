@@ -74,23 +74,12 @@
                   <h1 class="dashboard-title">Dashboard</h1>
                   <p class="dashboard-welcome-msg">Welcome back! Here's a summary of your operations.</p>
                 </div>
-                <div class="dashboard-header-notifications flex-grow-1 mx-3" id="dashboardHeaderNotifications" aria-label="Notifications">
-                  <div class="dhl-daily-ops-feed dhl-daily-ops-feed--header" id="dhlDailyOpsFeed">
-                    <div class="dhl-daily-ops-carousel">
-                      <button type="button" class="dhl-daily-ops-nav" id="dhlDailyOpsPrev" aria-label="Previous notification"><i class="bi bi-chevron-left"></i></button>
-                      <div class="dhl-daily-ops-slide-wrap" id="dhlDailyOpsSlideWrap" role="button" tabindex="0" aria-label="Current notification; click to view all">
-                        <div class="dhl-daily-ops-slide" id="dhlDailyOpsSlide"></div>
-                      </div>
-                      <button type="button" class="dhl-daily-ops-nav" id="dhlDailyOpsNext" aria-label="Next notification"><i class="bi bi-chevron-right"></i></button>
-                    </div>
-                    <div class="dhl-daily-ops-dots" id="dhlDailyOpsDots" role="tablist" aria-label="Navigate notifications"></div>
-                    <div id="dhlDailyOpsEmpty" class="dhl-daily-ops-empty hidden">
-                      <i class="bi bi-inbox"></i>
-                      <p>No notifications at the moment.</p>
-                    </div>
-                  </div>
-                </div>
                 <div class="dashboard-header-right d-flex align-items-center gap-2 flex-wrap">
+                  <button type="button" class="btn btn-outline-secondary btn-sm" id="manageAvisosBtn" aria-label="Manage notices" title="Active notices">
+                    <i class="bi bi-pin-angle-fill"></i>
+                    <span>Notices</span>
+                    <span class="avisos-count-badge hidden" id="avisosCountBadge">0</span>
+                  </button>
                   <button type="button" class="btn btn-primary dashboard-alert-btn" id="createAlertBtn" aria-label="Create alert for all depots and service providers">
                     <i class="bi bi-megaphone-fill"></i>
                     <span>Create Alert</span>
@@ -270,22 +259,6 @@
     </div>
   </div>
 
-  <!-- Modal: all notifications (DHL) -->
-  <div class="dhl-daily-ops-modal hidden" id="dhlDailyOpsModal" role="dialog" aria-modal="true" aria-labelledby="dhlDailyOpsModalTitle">
-    <div class="dhl-daily-ops-modal-backdrop" id="dhlDailyOpsModalBackdrop"></div>
-    <div class="dhl-daily-ops-modal-dialog">
-      <div class="dhl-daily-ops-modal-content">
-        <div class="dhl-daily-ops-modal-header">
-          <h2 id="dhlDailyOpsModalTitle" class="dhl-daily-ops-modal-title"><i class="bi bi-bell-fill"></i> All notifications</h2>
-          <button type="button" class="dhl-daily-ops-modal-close" id="dhlDailyOpsModalClose" aria-label="Close"><i class="bi bi-x-lg"></i></button>
-        </div>
-        <div class="dhl-daily-ops-modal-body">
-          <div class="dhl-daily-ops-list" id="dhlDailyOpsModalList" role="list"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <div id="alertModal" class="alert-modal" role="dialog" aria-modal="true" aria-labelledby="alertModalTitle" aria-hidden="true" hidden>
     <div class="alert-modal-backdrop"></div>
     <div class="alert-modal-content">
@@ -299,6 +272,19 @@
       <div class="alert-modal-body">
         <p class="alert-modal-desc">This alert will be sent to <strong>all depots</strong> and <strong>all service providers</strong>.</p>
         <div class="mb-3">
+          <label class="form-label d-block mb-2">Category</label>
+          <div class="d-flex flex-column gap-2">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="alertAsNotificacao" checked />
+              <label class="form-check-label" for="alertAsNotificacao">Notification (sidebar + snackbar preview)</label>
+            </div>
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="alertAsAviso" checked />
+              <label class="form-check-label" for="alertAsAviso">Notice (pinned to header until expired or removed by DHL)</label>
+            </div>
+          </div>
+        </div>
+        <div class="mb-3">
           <label for="alertTitle" class="form-label">Title</label>
           <input type="text" id="alertTitle" class="form-control" placeholder="Alert title" maxlength="100" />
         </div>
@@ -306,7 +292,7 @@
           <label for="alertMessage" class="form-label">Message</label>
           <textarea id="alertMessage" class="form-control" rows="4" placeholder="Enter your alert message..." maxlength="1000"></textarea>
         </div>
-        <div class="mb-3">
+        <div class="mb-3" id="alertExpiringWrap">
           <label for="alertExpiringDate" class="form-label">Expiring Date</label>
           <input type="date" id="alertExpiringDate" class="form-control" aria-describedby="alertExpiringHelp" />
           <div id="alertExpiringHelp" class="form-text">The notification will remain active until this date.</div>
@@ -327,6 +313,63 @@
     <span id="alertToastText"></span>
   </div>
 
+  <!-- Modal: gerir Avisos (DHL – listar e excluir) -->
+  <div id="avisosManageModal" class="alert-modal avisos-manage-modal" role="dialog" aria-labelledby="avisosManageModalTitle" aria-hidden="true" hidden>
+    <div class="alert-modal-backdrop" id="avisosManageModalBackdrop"></div>
+    <div class="alert-modal-content">
+      <div class="alert-modal-header">
+        <h2 id="avisosManageModalTitle" class="alert-modal-title"><i class="bi bi-pin-angle-fill"></i> Communications</h2>
+        <button type="button" class="alert-modal-close" id="avisosManageModalClose" aria-label="Close">&times;</button>
+      </div>
+      <div class="alert-modal-body">
+        <p class="alert-modal-desc">All items are organised by category: <strong>Notifications</strong> (sidebar) and <strong>Notices</strong> (pinned to header with expiry date).</p>
+
+        <div class="avisos-manage-topbar">
+          <div class="avisos-manage-tabs" role="tablist" aria-label="Categories">
+            <button type="button" class="avisos-manage-tab active" id="avisosTabNotificacoes" data-tab="notificacoes" role="tab" aria-selected="true">
+              <i class="bi bi-bell-fill"></i>
+              <span>Notifications</span>
+              <span class="avisos-manage-tab-badge" id="avisosNotifCount">0</span>
+            </button>
+            <button type="button" class="avisos-manage-tab" id="avisosTabAvisos" data-tab="avisos" role="tab" aria-selected="false">
+              <i class="bi bi-pin-angle-fill"></i>
+              <span>Notices</span>
+              <span class="avisos-manage-tab-badge" id="avisosAvisoCount">0</span>
+            </button>
+          </div>
+          <button type="button" class="btn btn-outline-secondary btn-sm avisos-history-btn hidden" id="avisosHistoryBtn" aria-label="Notice history">
+            <i class="bi bi-clock-history"></i>
+            <span>History</span>
+          </button>
+        </div>
+
+        <!-- Panel: Notificações -->
+        <div class="avisos-manage-panel" id="avisosPanelNotificacoes" role="tabpanel" aria-labelledby="avisosTabNotificacoes">
+          <div id="dhlNotifManageList" class="avisos-manage-list" role="list"></div>
+          <div id="dhlNotifManageEmpty" class="avisos-manage-empty hidden">
+            <i class="bi bi-inbox"></i>
+            <p>No notifications.</p>
+          </div>
+        </div>
+
+        <!-- Panel: Avisos -->
+        <div class="avisos-manage-panel hidden" id="avisosPanelAvisos" role="tabpanel" aria-labelledby="avisosTabAvisos">
+          <div id="avisosManageList" class="avisos-manage-list" role="list"></div>
+          <div id="avisosManageEmpty" class="avisos-manage-empty hidden">
+            <i class="bi bi-inbox"></i>
+            <p>No active notices.</p>
+          </div>
+          <div id="avisosManageHistoryList" class="avisos-manage-list hidden" role="list"></div>
+          <div id="avisosManageHistoryEmpty" class="avisos-manage-empty hidden">
+            <i class="bi bi-inbox"></i>
+            <p>No notice history.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../avisos-storage.js"></script>
   <script src="../../dhl-mock-data.js"></script>
   <script src="../../beam-sidebar.js"></script>
   <script>
@@ -947,14 +990,19 @@
         var closeBtn = modal && modal.querySelector('.alert-modal-close');
         var cancelBtn = document.getElementById('alertModalCancel');
         var sendBtn = document.getElementById('alertModalSend');
+        var asNotificacao = document.getElementById('alertAsNotificacao');
+        var asAviso = document.getElementById('alertAsAviso');
         var titleInput = document.getElementById('alertTitle');
         var messageInput = document.getElementById('alertMessage');
         var expiringDateInput = document.getElementById('alertExpiringDate');
+        var expiringWrap = document.getElementById('alertExpiringWrap');
         var toast = document.getElementById('alertToast');
         var toastText = document.getElementById('alertToastText');
 
         function openModal() {
           if (!modal) return;
+          if (asNotificacao) asNotificacao.checked = true;
+          if (asAviso) asAviso.checked = true;
           titleInput.value = '';
           messageInput.value = '';
           var minDate = new Date();
@@ -963,6 +1011,7 @@
           var defaultExpiring = new Date();
           defaultExpiring.setDate(defaultExpiring.getDate() + 7);
           expiringDateInput.value = defaultExpiring.toISOString().slice(0, 10);
+          if (expiringWrap) expiringWrap.style.display = '';
           modal.removeAttribute('hidden');
           modal.setAttribute('aria-hidden', 'false');
           titleInput.focus();
@@ -982,15 +1031,27 @@
           setTimeout(function () { toast.setAttribute('hidden', ''); }, 4000);
         }
 
+        function syncExpiringVisibility() {
+          var avisoOn = asAviso ? !!asAviso.checked : true;
+          if (!expiringWrap) return;
+          expiringWrap.style.display = avisoOn ? '' : 'none';
+        }
+
         function sendAlert() {
           var title = (titleInput.value || '').trim();
           var msg = (messageInput.value || '').trim();
           var expiringDate = (expiringDateInput.value || '').trim();
+          var createNotif = asNotificacao ? !!asNotificacao.checked : true;
+          var createAviso = asAviso ? !!asAviso.checked : true;
           if (!msg) {
             messageInput.focus();
             return;
           }
-          if (!expiringDate) {
+          if (!createNotif && !createAviso) {
+            showToast('Select at least one category (Notification or Notice).');
+            return;
+          }
+          if (createAviso && !expiringDate) {
             expiringDateInput.focus();
             showToast('Please select an expiring date.');
             return;
@@ -1009,20 +1070,33 @@
           if (depots.length === 0) depots = ['MSE', 'LCY', 'LSE'];
           if (sps.length === 0) sps = ['BA Express', 'Premier Logistics Ltd', 'Swift Haul Solutions', 'Metro Freight Partners', 'Atlas Transport Services'];
           closeModal();
-          var formattedDate = new Date(expiringDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-          showToast('Alert sent to ' + depots.length + ' depot(s) and ' + sps.length + ' service provider(s). Active until ' + formattedDate + '.');
-          var notifList = data.dailyOperationsNotifications || [];
-          var notifMsg = (title ? title + ' – ' : '') + msg;
-          notifList.unshift({
-            id: 'alert-' + Date.now(),
-            type: 'alert',
-            severity: 'info',
-            icon: 'megaphone-fill',
-            message: notifMsg,
-            timeAgoMinutes: 0
-          });
-          data.dailyOperationsNotifications = notifList;
-          if (typeof updateDhlDailyOpsSection === 'function') updateDhlDailyOpsSection();
+          var parts = [];
+          if (createAviso) parts.push('Notice');
+          if (createNotif) parts.push('Notification');
+          var formattedDate = createAviso ? new Date(expiringDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
+          showToast(parts.join(' + ') + ' sent to ' + depots.length + ' depot(s) and ' + sps.length + ' service provider(s).' + (createAviso ? (' Active until ' + formattedDate + '.') : ''));
+
+          if (createAviso && window.AvisosStorage) {
+            AvisosStorage.addAviso({ title: title, message: msg, expireDate: expiringDate });
+          }
+          if (createNotif) {
+            var notifList = data.dailyOperationsNotifications || [];
+            var notifMsg = (title ? title + ' – ' : '') + msg;
+            notifList.unshift({
+              id: 'alert-' + Date.now(),
+              type: 'alert',
+              severity: 'info',
+              icon: 'megaphone-fill',
+              message: notifMsg,
+              timeAgoMinutes: 0
+            });
+            data.dailyOperationsNotifications = notifList;
+          }
+
+          if (typeof updateAvisosCount === 'function') updateAvisosCount();
+          if (typeof updateAvisosManageCounts === 'function') updateAvisosManageCounts();
+          if (typeof renderNotificationsManageList === 'function') renderNotificationsManageList();
+          if (typeof renderAvisosManageActive === 'function') renderAvisosManageActive();
         }
 
         if (btn) btn.addEventListener('click', openModal);
@@ -1030,14 +1104,245 @@
         if (closeBtn) closeBtn.addEventListener('click', closeModal);
         if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
         if (sendBtn) sendBtn.addEventListener('click', sendAlert);
+        if (asAviso) asAviso.addEventListener('change', syncExpiringVisibility);
+        if (modal) syncExpiringVisibility();
         if (modal) modal.addEventListener('keydown', function (e) {
           if (e.key === 'Escape') closeModal();
         });
       }
 
-      updateDhlDailyOpsSection();
-      initDhlDailyOpsModal();
+      var loadRawAvisos = function () {
+        try {
+          var raw = localStorage.getItem('dhl_avisos');
+          return raw ? JSON.parse(raw) : [];
+        } catch (e) { return []; }
+      };
+
+      function getActiveAvisosOnly() {
+        var today = new Date().toISOString().slice(0, 10);
+        return loadRawAvisos().filter(function (a) {
+          return !a.deleted && a.expireDate && a.expireDate >= today;
+        });
+      }
+
+      function getAvisosHistoryOnly() {
+        var today = new Date().toISOString().slice(0, 10);
+        return loadRawAvisos().filter(function (a) {
+          var expired = a.expireDate && a.expireDate < today;
+          return !!a.deleted || expired;
+        });
+      }
+
+      function updateAvisosCount() {
+        var list = window.AvisosStorage ? AvisosStorage.getActiveAvisos() : getActiveAvisosOnly();
+        var badge = document.getElementById('avisosCountBadge');
+        if (badge) {
+          if (list.length === 0) {
+            badge.classList.add('hidden');
+            badge.textContent = '0';
+          } else {
+            badge.textContent = list.length > 99 ? '99+' : String(list.length);
+            badge.classList.remove('hidden');
+          }
+        }
+      }
+
+      function updateAvisosManageCounts() {
+        var notifCountEl = document.getElementById('avisosNotifCount');
+        var avisoCountEl = document.getElementById('avisosAvisoCount');
+        var data = window.DHL_MOCK_DATA || {};
+        var notifList = (data.dailyOperationsNotifications || []).slice();
+        if (notifCountEl) notifCountEl.textContent = notifList.length > 99 ? '99+' : String(notifList.length);
+        var activeAvisos = getActiveAvisosOnly();
+        if (avisoCountEl) avisoCountEl.textContent = activeAvisos.length > 99 ? '99+' : String(activeAvisos.length);
+      }
+
+      function renderAvisosManageActive() {
+        var list = getActiveAvisosOnly();
+        var listEl = document.getElementById('avisosManageList');
+        var emptyEl = document.getElementById('avisosManageEmpty');
+        if (!listEl) return;
+        if (list.length === 0) {
+          listEl.innerHTML = '';
+          if (emptyEl) emptyEl.classList.remove('hidden');
+          return;
+        }
+        if (emptyEl) emptyEl.classList.add('hidden');
+        function escapeHtml(s) {
+          if (s == null) return '';
+          var d = document.createElement('div');
+          d.textContent = s;
+          return d.innerHTML;
+        }
+        listEl.innerHTML = list.map(function (a) {
+          var expStr = a.expireDate ? new Date(a.expireDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+          return '<div class="avisos-manage-item" data-aviso-id="' + escapeHtml(a.id) + '">' +
+            '<div class="avisos-manage-item-content">' +
+            '<strong class="avisos-manage-item-title">' + escapeHtml(a.title || 'No title') + '</strong>' +
+            '<p class="avisos-manage-item-msg">' + escapeHtml((a.message || '').slice(0, 120)) + (a.message && a.message.length > 120 ? '…' : '') + '</p>' +
+            '<span class="avisos-manage-item-expire">Expires: ' + expStr + '</span>' +
+            '</div>' +
+            '<button type="button" class="btn btn-outline-danger btn-sm avisos-manage-delete" data-aviso-id="' + escapeHtml(a.id) + '" aria-label="Delete notice">Delete</button>' +
+            '</div>';
+        }).join('');
+      }
+
+      function renderAvisosManageHistory() {
+        var list = getAvisosHistoryOnly();
+        var listEl = document.getElementById('avisosManageHistoryList');
+        var emptyEl = document.getElementById('avisosManageHistoryEmpty');
+        if (!listEl) return;
+        if (list.length === 0) {
+          listEl.innerHTML = '';
+          if (emptyEl) emptyEl.classList.remove('hidden');
+          return;
+        }
+        if (emptyEl) emptyEl.classList.add('hidden');
+        function escapeHtml(s) {
+          if (s == null) return '';
+          var d = document.createElement('div');
+          d.textContent = s;
+          return d.innerHTML;
+        }
+        var today = new Date().toISOString().slice(0, 10);
+        listEl.innerHTML = list.map(function (a) {
+          var expStr = a.expireDate ? new Date(a.expireDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+          var expired = a.expireDate && a.expireDate < today;
+          var status = a.deleted ? 'Deleted' : (expired ? 'Expired' : '—');
+          return '<div class="avisos-manage-item avisos-manage-item--history" data-aviso-id="' + escapeHtml(a.id) + '">' +
+            '<div class="avisos-manage-item-content">' +
+            '<strong class="avisos-manage-item-title">' + escapeHtml(a.title || 'No title') + '</strong>' +
+            '<p class="avisos-manage-item-msg">' + escapeHtml((a.message || '').slice(0, 120)) + (a.message && a.message.length > 120 ? '…' : '') + '</p>' +
+            '<span class="avisos-manage-item-expire">' + escapeHtml(status) + ' · Expires: ' + expStr + '</span>' +
+            '</div>' +
+            '</div>';
+        }).join('');
+      }
+
+      function renderNotificationsManageList() {
+        var data = window.DHL_MOCK_DATA || {};
+        var list = (data.dailyOperationsNotifications || []).slice();
+        list.sort(function (a, b) { return (a.timeAgoMinutes || 0) - (b.timeAgoMinutes || 0); });
+        var listEl = document.getElementById('dhlNotifManageList');
+        var emptyEl = document.getElementById('dhlNotifManageEmpty');
+        if (!listEl) return;
+        if (!list.length) {
+          listEl.innerHTML = '';
+          if (emptyEl) emptyEl.classList.remove('hidden');
+          return;
+        }
+        if (emptyEl) emptyEl.classList.add('hidden');
+        function escapeHtml(s) {
+          if (s == null) return '';
+          var d = document.createElement('div');
+          d.textContent = s;
+          return d.innerHTML;
+        }
+        function getIcon(n) {
+          return n.icon ? n.icon : 'bell';
+        }
+        function timeText(n) {
+          var m = n.timeAgoMinutes || 0;
+          return m <= 60 ? m + ' min ago' : Math.floor(m / 60) + ' h ago';
+        }
+        listEl.innerHTML = list.map(function (n) {
+          var icon = getIcon(n);
+          return '<div class="avisos-manage-item avisos-manage-item--notif" role="listitem">' +
+            '<div class="avisos-manage-item-content">' +
+            '<strong class="avisos-manage-item-title"><i class="bi bi-' + escapeHtml(icon) + ' me-2 text-secondary"></i>' + escapeHtml((n.type || 'notification').toString().replace(/_/g, ' ')) + '</strong>' +
+            '<p class="avisos-manage-item-msg">' + escapeHtml(n.message || '') + '</p>' +
+            '<span class="avisos-manage-item-expire">' + escapeHtml(timeText(n)) + '</span>' +
+            '</div>' +
+            '</div>';
+        }).join('');
+      }
+
+      function initAvisosManageModal() {
+        var modal = document.getElementById('avisosManageModal');
+        var btn = document.getElementById('manageAvisosBtn');
+        var backdrop = document.getElementById('avisosManageModalBackdrop');
+        var closeBtn = document.getElementById('avisosManageModalClose');
+        var listEl = document.getElementById('avisosManageList');
+        var historyBtn = document.getElementById('avisosHistoryBtn');
+        var tabNotifs = document.getElementById('avisosTabNotificacoes');
+        var tabAvisos = document.getElementById('avisosTabAvisos');
+        var panelNotifs = document.getElementById('avisosPanelNotificacoes');
+        var panelAvisos = document.getElementById('avisosPanelAvisos');
+        var historyList = document.getElementById('avisosManageHistoryList');
+        var activeList = document.getElementById('avisosManageList');
+        var historyEmpty = document.getElementById('avisosManageHistoryEmpty');
+        var activeEmpty = document.getElementById('avisosManageEmpty');
+        var isHistory = false;
+        var currentTab = 'notificacoes';
+
+        function setTab(tab) {
+          currentTab = tab;
+          if (tabNotifs) { tabNotifs.classList.toggle('active', tab === 'notificacoes'); tabNotifs.setAttribute('aria-selected', tab === 'notificacoes' ? 'true' : 'false'); }
+          if (tabAvisos) { tabAvisos.classList.toggle('active', tab === 'avisos'); tabAvisos.setAttribute('aria-selected', tab === 'avisos' ? 'true' : 'false'); }
+          if (panelNotifs) panelNotifs.classList.toggle('hidden', tab !== 'notificacoes');
+          if (panelAvisos) panelAvisos.classList.toggle('hidden', tab !== 'avisos');
+          if (historyBtn) historyBtn.classList.toggle('hidden', tab !== 'avisos');
+          if (tab === 'notificacoes') {
+            renderNotificationsManageList();
+          } else {
+            renderAvisosManageActive();
+            renderAvisosManageHistory();
+            setHistory(false);
+          }
+        }
+
+        function setHistory(on) {
+          isHistory = !!on;
+          if (historyBtn) {
+            historyBtn.classList.toggle('active', isHistory);
+          }
+          if (activeList) activeList.classList.toggle('hidden', isHistory);
+          if (activeEmpty) activeEmpty.classList.toggle('hidden', isHistory);
+          if (historyList) historyList.classList.toggle('hidden', !isHistory);
+          if (historyEmpty) historyEmpty.classList.toggle('hidden', !isHistory);
+        }
+
+        function openModal() {
+          if (!modal) return;
+          updateAvisosManageCounts();
+          setTab('notificacoes');
+          modal.removeAttribute('hidden');
+          modal.setAttribute('aria-hidden', 'false');
+        }
+        function closeModal() {
+          if (modal) {
+            modal.setAttribute('hidden', '');
+            modal.setAttribute('aria-hidden', 'true');
+          }
+        }
+
+        if (btn) btn.addEventListener('click', openModal);
+        if (backdrop) backdrop.addEventListener('click', closeModal);
+        if (closeBtn) closeBtn.addEventListener('click', closeModal);
+        if (tabNotifs) tabNotifs.addEventListener('click', function () { setTab('notificacoes'); });
+        if (tabAvisos) tabAvisos.addEventListener('click', function () { setTab('avisos'); });
+        if (historyBtn) historyBtn.addEventListener('click', function () { setHistory(!isHistory); });
+        if (listEl) {
+          listEl.addEventListener('click', function (e) {
+            var delBtn = e.target.closest('.avisos-manage-delete');
+            if (!delBtn) return;
+            var id = delBtn.getAttribute('data-aviso-id');
+            if (!id) return;
+            if (window.AvisosStorage) AvisosStorage.deleteAviso(id);
+            updateAvisosCount();
+            updateAvisosManageCounts();
+            renderAvisosManageActive();
+            renderAvisosManageHistory();
+          });
+        }
+        if (modal) modal.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape') closeModal();
+        });
+      }
+
+      updateAvisosCount();
       initAlertModal();
+      initAvisosManageModal();
     })();
   </script>
 </body>

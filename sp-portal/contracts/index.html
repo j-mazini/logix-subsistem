@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../../vendor-admin-view.css" />
+  <link rel="stylesheet" href="../../shared-pages.css" />
   <link rel="stylesheet" href="contracts.css" />
   <link rel="stylesheet" href="../../sidebar-beam.css" />
   <link rel="stylesheet" href="../sp-portal.css" />
@@ -46,38 +47,36 @@
             <div id="spNotFound" class="alert alert-warning hidden">Service Provider not set. Open with <code>?sp=YourCompany</code>.</div>
 
             <div id="contractContent" class="hidden">
-              <div class="contracts-page-header">
-                <div class="contracts-page-header-inner">
-                  <div class="contracts-page-header-row">
-                    <div class="contracts-page-header-title-block">
-                      <h1 class="contracts-page-title">Contracts</h1>
-                      <p class="contracts-page-subtitle">Depots, loops and routes for your company (read-only)</p>
-                      <div class="contracts-page-metrics">
-                        <div class="contracts-page-metric">
-                          <span class="contracts-page-metric-label">Depots</span>
-                          <span class="contracts-page-metric-value" id="metricDepots">0</span>
-                        </div>
-                        <div class="contracts-page-metric">
-                          <span class="contracts-page-metric-label">Loops</span>
-                          <span class="contracts-page-metric-value" id="metricLoops">0</span>
-                        </div>
-                        <div class="contracts-page-metric">
-                          <span class="contracts-page-metric-label">Routes</span>
-                          <span class="contracts-page-metric-value" id="metricRoutes">0</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="contracts-page-header-user">
-                      <span id="spHeaderAvatarFallback" class="admin-header-user-avatar admin-header-user-avatar-fallback" style="display:none;"></span>
-                      <img id="spHeaderAvatar" src="" alt="" class="admin-header-user-avatar admin-header-user-avatar--img" style="display:none;" />
-                      <span class="admin-header-user-name" id="spHeaderName">—</span>
-                    </div>
-                  </div>
+              <!-- Header estilo DHL (admin-header + search + user) -->
+              <div class="admin-header d-flex flex-wrap align-items-center gap-2">
+                <h1 class="admin-header-title">Contracts</h1>
+                <div class="admin-header-search flex-grow-1">
+                  <input type="search" id="contractSearch" class="form-control" placeholder="Search depots, loops, routes..." autocomplete="off" aria-label="Search contracts" />
+                </div>
+                <div class="admin-header-user-pill d-flex align-items-center" title="">
+                  <span id="spHeaderAvatarFallback" class="admin-header-user-avatar admin-header-user-avatar-fallback" style="display:none;"></span>
+                  <img id="spHeaderAvatar" src="" alt="" class="admin-header-user-avatar admin-header-user-avatar--img" style="display:none;" />
+                  <span class="admin-header-user-name" id="spHeaderName">—</span>
                 </div>
               </div>
 
+              <!-- Métricas (estilização partilhada, igual DHL) -->
+              <div class="vendor-page-metrics mb-3" aria-label="Contract counts">
+                <div class="vendor-page-metric"><span class="vendor-page-metric-label">Depots</span><span class="vendor-page-metric-value" id="metricDepots">0</span></div>
+                <div class="vendor-page-metric"><span class="vendor-page-metric-label">Loops</span><span class="vendor-page-metric-value" id="metricLoops">0</span></div>
+                <div class="vendor-page-metric"><span class="vendor-page-metric-label">Routes</span><span class="vendor-page-metric-value" id="metricRoutes">0</span></div>
+              </div>
+
+              <!-- Secção igual à DHL Contract Management -->
+              <div class="contract-section-header">
+                <h2 class="contract-section-title">
+                  <i class="bi bi-diagram-3"></i>
+                  My active contracts
+                </h2>
+              </div>
+
               <div id="contractTree" class="contract-tree"></div>
-              <div id="emptyState" class="contracts-empty-state hidden">No contracts found.</div>
+              <div id="emptyState" class="empty-state alert alert-light hidden" role="status">No contracts found.</div>
             </div>
           </main>
         </div>

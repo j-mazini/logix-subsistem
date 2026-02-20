@@ -641,15 +641,18 @@
         var routeNamesInLoop = null; var routeNamesInDepot = null;
         if (loopFilter) { routeNamesInLoop = {}; details.forEach(function (rec) { if (rec.loop === loopFilter) routeNamesInLoop[rec.route] = true; }); }
         else if (depotFilter) { routeNamesInDepot = {}; details.forEach(function (rec) { if (rec.depot === depotFilter) routeNamesInDepot[rec.route] = true; }); }
+        var twFilter = lastDayState.twFilter || 'all';
         var counts = (data && data.counts) ? data.counts : {};
         if (data && data.byRoute && Object.keys(registeredSet).length > 0) {
           if (routeFilter && registeredSet[routeFilter]) {
-            var detailsForRoute = details.filter(function (rec) { return rec.route === routeFilter; })[0];
-            var preferredKey = detailsForRoute ? (detailsForRoute.depot + '|' + routeFilter) : null;
-            for (var k in data.byRoute) {
-              if (data.byRoute[k].route !== routeFilter) continue;
-              if (preferredKey && k === preferredKey) { counts = data.byRoute[k].counts || {}; break; }
-            }
+            if (routePassesTwFilter(data, routeFilter, twFilter)) {
+              var detailsForRoute = details.filter(function (rec) { return rec.route === routeFilter; })[0];
+              var preferredKey = detailsForRoute ? (detailsForRoute.depot + '|' + routeFilter) : null;
+              for (var k in data.byRoute) {
+                if (data.byRoute[k].route !== routeFilter) continue;
+                if (preferredKey && k === preferredKey) { counts = data.byRoute[k].counts || {}; break; }
+              }
+            } else { counts = {}; }
           } else {
             var agg = { OK: 0, PU: 0, HN: 0 };
             Object.keys(data.byRoute).forEach(function (k) {
@@ -657,6 +660,7 @@
               if (!r || !registeredSet[r]) return;
               if (routeNamesInLoop && !routeNamesInLoop[r]) return;
               if (routeNamesInDepot && !routeNamesInDepot[r]) return;
+              if (!routePassesTwFilter(data, r, twFilter)) return;
               var routeCounts = data.byRoute[k].counts || {};
               Object.keys(routeCounts).forEach(function (c) { agg[c] = (agg[c] || 0) + (routeCounts[c] || 0); });
             });
@@ -668,11 +672,30 @@
         var afdPct = (metrics.deliveries > 0) ? (metrics.afd / metrics.deliveries) * 100 : 0;
         var afdStr = (Math.round(afdPct * 10) / 10) + '%';
         var twRaw = null;
+        var routeSetForTw = routeNamesInLoop || routeNamesInDepot || null;
+        if (twFilter !== 'all' && data && data.byRoute) {
+          var twFilteredSet = {};
+          Object.keys(data.byRoute).forEach(function (k) {
+            var r = data.byRoute[k].route;
+            if (!r || !registeredSet[r]) return;
+            if (routeSetForTw && !routeSetForTw[r]) return;
+            if (routePassesTwFilter(data, r, twFilter)) twFilteredSet[r] = true;
+          });
+          routeSetForTw = Object.keys(twFilteredSet).length ? twFilteredSet : null;
+        }
         if (data && data.twByRoute && Object.keys(data.twByRoute).length) {
-          twRaw = getWeightedTwAverage(data, routeNamesInLoop || routeNamesInDepot || null);
-          if (twRaw == null) {
-            var twVals = []; Object.keys(data.twByRoute).forEach(function (k) { var v = data.twByRoute[k]; if (v != null && !isNaN(v)) twVals.push(v <= 1 ? v * 100 : v); });
+          twRaw = getWeightedTwAverage(data, routeSetForTw);
+          if (twRaw == null && routeSetForTw && Object.keys(routeSetForTw).length) {
+            var twVals = [];
+            Object.keys(routeSetForTw).forEach(function (routeName) {
+              var v = getTwForRoute(data.twByRoute, routeName);
+              if (v != null && !isNaN(v)) twVals.push(v <= 1 ? v * 100 : v);
+            });
             if (twVals.length) { var s = 0; twVals.forEach(function (v) { s += v; }); twRaw = s / twVals.length; }
+          }
+          if (twRaw == null) {
+            var twValsAll = []; Object.keys(data.twByRoute).forEach(function (k) { var v = data.twByRoute[k]; if (v != null && !isNaN(v)) twValsAll.push(v <= 1 ? v * 100 : v); });
+            if (twValsAll.length) { var s0 = 0; twValsAll.forEach(function (v) { s0 += v; }); twRaw = s0 / twValsAll.length; }
           }
         }
         var twStr = twRaw != null ? (twRaw <= 1 ? (Math.round(twRaw * 1000) / 10) : (Math.round(twRaw * 10) / 10)) + '%' : '—';
@@ -898,6 +921,15 @@
         return 'red';
       }
 
+      function routePassesTwFilter(data, routeName, twFilter) {
+        if (!twFilter || twFilter === 'all') return true;
+        if (!data || !data.twByRoute) return false;
+        var tw = getTwForRoute(data.twByRoute, routeName);
+        if (tw == null || typeof tw !== 'number' || isNaN(tw)) return false;
+        var pct = tw <= 1 ? tw * 100 : tw;
+        return getTimeWindowColor(pct) === twFilter;
+      }
+
       /** OPMS (Last Day): AFD = soma de TODOS os códigos da coluna Act Ckpt Code, exceto: OK, PU, HN, DEPAR, ARRVD. Sem outros cálculos. */
       var OPMS_AFD_EXCLUDED = ['OK', 'PU', 'HN', 'DEPAR', 'ARRVD'];
       var OPMS_DELIVERIES_CODES = ['PU', 'HN', 'OK'];
@@ -959,6 +991,7 @@
         dates: [],
         dateIndex: 0,
         selected: 'all',
+        twFilter: 'all',
         expanded: { all: true }
       };
       var spmsState = { selected: 'all', expanded: { all: true } };
@@ -1029,6 +1062,9 @@
         var depotChipsEl = document.getElementById('opmsDepotChips');
         var loopChipsEl = document.getElementById('opmsLoopChips');
         var routeChipsEl = document.getElementById('opmsRouteChips');
+        var twChipsEl = document.getElementById('opmsTimeWindowChips');
+        var twFilterWrap = document.getElementById('opmsTimeWindowFilterWrap');
+        if (twFilterWrap) twFilterWrap.classList.toggle('hidden', currentFolderTab !== 'lastday');
         if (!depotChipsEl) return;
         var details = getRegisteredRoutesWithDetails();
         var loopsWithDepots = getLoopsWithDepotsForSp();
@@ -1150,6 +1186,21 @@
               else if (currentFolderTab === 'spms') { updateSpmsSection(); updateSpFolderDashboardStrip('spms'); }
               else { ldTablePageIndex = 0; updateLiquidationDamagesSection(); updateSpFolderDashboardStrip('ld'); }
             });
+          });
+        }
+        if (twChipsEl) {
+          var twFilter = lastDayState.twFilter || 'all';
+          twChipsEl.querySelectorAll('.disco-chip[data-opms-tw]').forEach(function (btn) {
+            var val = (btn.getAttribute('data-opms-tw') || '').trim() || 'all';
+            btn.classList.toggle('active', val === twFilter);
+            if (!btn._opmsTwBound) {
+              btn._opmsTwBound = true;
+              btn.addEventListener('click', function () {
+                lastDayState.twFilter = (this.getAttribute('data-opms-tw') || '').trim() || 'all';
+                updateOpmsFilterChips();
+                if (currentFolderTab === 'lastday') { opmsDeliveriesPageIndex = 0; updateLastDaySection(); updateSpFolderDashboardStrip('lastday'); }
+              });
+            }
           });
         }
       }
@@ -1329,11 +1380,35 @@
           var hn = counts['HN'] || 0;
           var afd = (getOpmsDeliveriesAndAfd(counts).afd || 0);
           var stops = del + pu + hn;
-          rows.push({ depot: depot, route: r, del: del, pu: pu, hn: hn, afd: afd, stops: stops });
+          var twRaw = (data.twByRoute && typeof data.twByRoute === 'object') ? getTwForRoute(data.twByRoute, r) : null;
+          var twPct = null;
+          var twDisplay = '—';
+          var twColor = 'grey';
+          if (twRaw != null && typeof twRaw === 'number' && !isNaN(twRaw)) {
+            twPct = twRaw <= 1 ? twRaw * 100 : twRaw;
+            twColor = getTimeWindowColor(twPct);
+            twDisplay = (Math.round(twPct * 10) / 10) + '%';
+          }
+          rows.push({ depot: depot, route: r, del: del, pu: pu, hn: hn, afd: afd, twDisplay: twDisplay, twColor: twColor, stops: stops });
         });
+        var twFilter = lastDayState.twFilter || 'all';
+        if (twFilter !== 'all') rows = rows.filter(function (row) { return row.twColor === twFilter; });
         rows.sort(function (a, b) { return (a.depot + a.route).localeCompare(b.depot + b.route); });
         tbody.innerHTML = rows.map(function (row) {
-          return '<tr><td>' + escapeHtml(row.route) + '</td><td class="text-end">' + row.del + '</td><td class="text-end">' + row.pu + '</td><td class="text-end">' + row.hn + '</td><td class="text-end">' + row.afd + '</td><td class="text-end">' + row.stops + '</td></tr>';
+          var twClass = row.twColor === 'green' ? ' opms-tw-flag--green' : row.twColor === 'yellow' ? ' opms-tw-flag--yellow' : row.twColor === 'red' ? ' opms-tw-flag--red' : ' opms-tw-flag--grey';
+          var twCell = row.twDisplay && row.twDisplay !== '—'
+            ? ('<span class="opms-tw-flag' + twClass + '" aria-label="Time Window ' + escapeHtml(row.twDisplay) + '">' + escapeHtml(row.twDisplay) + '</span>')
+            : '—';
+          var sprVal = row.stops != null ? row.stops : '—';
+          return '<tr>' +
+            '<td class="opms-route-cell"><span class="opms-route-name">' + escapeHtml(row.route) + '</span></td>' +
+            '<td class="text-end"><span class="opms-spr-flag" aria-label="SPR ' + sprVal + '">' + escapeHtml(String(sprVal)) + '</span></td>' +
+            '<td class="text-end">' + twCell + '</td>' +
+            '<td class="text-end">' + row.del + '</td>' +
+            '<td class="text-end">' + row.pu + '</td>' +
+            '<td class="text-end">' + row.hn + '</td>' +
+            '<td class="text-end">' + row.afd + '</td>' +
+            '</tr>';
         }).join('');
         if (emptyEl) emptyEl.classList.add('hidden');
         if (paginationNav) paginationNav.classList.remove('hidden');
@@ -1483,7 +1558,7 @@
           } else {
             /* All: média do dia; rotas sem TW não entram na média */
             twRaw = getWeightedTwAverage(data, null);
-            if (twRaw != null) twLabel = 'Time Window – média do dia';
+            if (twRaw != null) twLabel = 'Time Window – daily average';
             if (twRaw == null) {
               var twValuesAll = [];
               var twKeys = Object.keys(data.twByRoute);
@@ -1495,7 +1570,7 @@
                 var sumAll = 0;
                 twValuesAll.forEach(function (v) { sumAll += v; });
                 twRaw = sumAll / twValuesAll.length;
-                twLabel = 'Time Window – média do dia';
+                twLabel = 'Time Window – daily average';
               }
             }
           }
@@ -1528,7 +1603,7 @@
             var colorClass = getTimeWindowColor(pct);
             var displayVal = twValForRoute <= 1 ? (Math.round(twValForRoute * 1000) / 10) : (Math.round(twValForRoute * 10) / 10);
             twByRouteHtml = '<div class="opms-tw-by-route-wrap"><h4 class="opms-tw-by-route-title"><i class="bi bi-clock-history"></i> Time Window – ' + escapeHtml(routeFilter) + '</h4>' +
-              '<div class="opms-tw-by-route-table-wrap"><table class="opms-tw-by-route-table opms-table-disco-style" aria-label="Time Window % da rota">' +
+              '<div class="opms-tw-by-route-table-wrap"><table class="opms-tw-by-route-table opms-table-disco-style" aria-label="Time Window % for route">' +
               '<thead><tr><th>Route</th><th>% TW Adh DL</th></tr></thead><tbody>' +
               '<tr><td class="opms-tw-route-name">' + escapeHtml(routeFilter) + '</td><td class="opms-tw-route-value opms-tw-route-value--' + colorClass + '">' + displayVal + '%</td></tr>' +
               '</tbody></table></div></div>';
@@ -1766,8 +1841,10 @@
           if (spmsKpiAfdEl) spmsKpiAfdEl.textContent = '—';
           var sa = document.getElementById('spmsAvgIncome');
           var sr = document.getElementById('spmsAvgRoute');
+          var stra = document.getElementById('spmsTotalRotasAbertas');
           if (sa) sa.textContent = '—';
           if (sr) sr.textContent = '—';
+          if (stra) stra.textContent = '—';
           ['sfbPerfDel','sfbPerfPu','sfbPerfHn','sfbPerfTotal'].forEach(function(id){ var el=document.getElementById(id); if(el) el.textContent='—'; });
           var sfbAfdStatus = document.getElementById('sfbAfdStatus'); if(sfbAfdStatus) sfbAfdStatus.textContent='—';
           // Reset imediato (sem transição)
@@ -1963,8 +2040,10 @@
         var avgRouteDel = routeCount > 0 ? (delOk + delPu + delHn) / routeCount : 0;
         var spmsAvgIncomeEl = document.getElementById('spmsAvgIncome');
         var spmsAvgRouteEl = document.getElementById('spmsAvgRoute');
+        var spmsTotalRotasAbertasEl = document.getElementById('spmsTotalRotasAbertas');
         if (spmsAvgIncomeEl) spmsAvgIncomeEl.textContent = routeCount > 0 ? '£' + (avgIncome.toFixed(2)).replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '—';
         if (spmsAvgRouteEl) spmsAvgRouteEl.textContent = routeCount > 0 ? (Math.round(avgRouteDel * 10) / 10) : '—';
+        if (spmsTotalRotasAbertasEl) spmsTotalRotasAbertasEl.textContent = routeCount;
         if (currentFolderTab === 'spms') updateSpFolderDashboardStrip('spms');
         } catch (e) {
           console.warn('updateSpmsSection error:', e);
@@ -1986,8 +2065,11 @@
           var toSave = dailyOpsFilteredList.map(function (n) {
             return { message: n.message, type: n.type, severity: n.severity || 'info', timeAgoMinutes: n.timeAgoMinutes, serviceProvider: n.serviceProvider, icon: n.icon };
           });
-          var payload = { serviceProvider: spName, notifications: toSave, updatedAt: new Date().toISOString() };
-          localStorage.setItem(DAILY_OPS_CARD_STORAGE_KEY, JSON.stringify(payload));
+          var raw = localStorage.getItem(DAILY_OPS_CARD_STORAGE_KEY);
+          var all = raw ? JSON.parse(raw) : {};
+          if (typeof all !== 'object' || Array.isArray(all)) all = {};
+          all[spName] = { serviceProvider: spName, notifications: toSave, updatedAt: new Date().toISOString() };
+          localStorage.setItem(DAILY_OPS_CARD_STORAGE_KEY, JSON.stringify(all));
         } catch (e) {}
       }
 
@@ -1996,7 +2078,8 @@
         try {
           var raw = localStorage.getItem(DAILY_OPS_CARD_STORAGE_KEY);
           if (!raw) return null;
-          var payload = JSON.parse(raw);
+          var all = JSON.parse(raw);
+          var payload = (all && typeof all === 'object' && !Array.isArray(all)) ? all[spName] : null;
           if (!payload || payload.serviceProvider !== spName || !Array.isArray(payload.notifications) || !payload.notifications.length) return null;
           return { notifications: payload.notifications };
         } catch (e) { return null; }
@@ -2010,12 +2093,28 @@
         vehicle_issue: 'truck',
         driver_alert: 'person',
         alert: 'megaphone-fill',
-        info: 'info-circle'
+        info: 'info-circle',
+        network_delay: 'wifi'
+      };
+      var NOTIFICATION_TYPE_LABELS = {
+        delay: 'Delay',
+        delivery_done: 'Delivery done',
+        problem: 'Problem',
+        route_change: 'Route change',
+        vehicle_issue: 'Vehicle issue',
+        driver_alert: 'Driver alert',
+        alert: 'Alert',
+        info: 'Info',
+        network_delay: 'Networks & Delays'
       };
       function getIconForNotification(n) {
         if (n.type && NOTIFICATION_TYPE_ICONS[n.type]) return NOTIFICATION_TYPE_ICONS[n.type];
         if (n.icon) return n.icon;
         return 'bell';
+      }
+      function getTypeLabelForNotification(n) {
+        var t = (n.type || 'info').trim() || 'info';
+        return NOTIFICATION_TYPE_LABELS[t] || (t.charAt(0).toUpperCase() + t.slice(1).replace(/_/g, ' '));
       }
 
       function getDailyOpsTimeText(n) {
@@ -2027,9 +2126,11 @@
         var timeText = getDailyOpsTimeText(n);
         var icon = getIconForNotification(n);
         var severity = n.severity || 'info';
+        var typeLabel = getTypeLabelForNotification(n);
         return '<div class="sp-notif-item sp-notif-item--' + severity + '" role="listitem">' +
           '<span class="sp-notif-item-icon"><i class="bi bi-' + icon + '"></i></span>' +
           '<div class="sp-notif-item-body">' +
+          '<span class="sp-notif-item-type">' + escapeHtml(typeLabel) + '</span>' +
           '<p class="sp-notif-item-msg">' + escapeHtml(n.message) + '</p>' +
           '<span class="sp-notif-item-time">' + escapeHtml(timeText) + '</span>' +
           '</div></div>';
@@ -2061,6 +2162,8 @@
         var listEl = document.getElementById('spNotifList');
         var emptyEl = document.getElementById('spNotifEmpty');
         var panel = document.querySelector('.sp-notif-sidebar-panel');
+        var spLabel = document.getElementById('spNotifSidebarSp');
+        if (spLabel) { spLabel.textContent = spName ? spName : ''; spLabel.setAttribute('aria-label', spName ? 'Service Provider: ' + spName : 'Service Provider'); }
         if (!listEl) return;
         if (dailyOpsFilteredList.length === 0) {
           listEl.innerHTML = '';
@@ -2106,11 +2209,13 @@
         var notifications = (data.dailyOperationsNotifications) ? data.dailyOperationsNotifications : [];
         var prevLen = dailyOpsFilteredList.length;
         dailyOpsFilteredList = spName ? notifications.filter(function (n) { return n.serviceProvider === spName; }) : [];
+        dailyOpsFilteredList.forEach(function (n) { if (!n.type) n.type = 'info'; });
         dailyOpsFilteredList.sort(function (a, b) { return (a.timeAgoMinutes || 0) - (b.timeAgoMinutes || 0); });
         if (dailyOpsFilteredList.length === 0) {
           var saved = loadDailyOpsFromCard();
           if (saved && saved.notifications && saved.notifications.length) {
             dailyOpsFilteredList = saved.notifications;
+            dailyOpsFilteredList.forEach(function (n) { if (!n.type) n.type = 'info'; });
             updateNotifSidebarContent();
             updateNotifTabBadge();
             dailyOpsPreviousCount = dailyOpsFilteredList.length;
@@ -2127,6 +2232,18 @@
         var isNewNotification = dailyOpsPreviousCount >= 0 && dailyOpsFilteredList.length > dailyOpsPreviousCount;
         dailyOpsPreviousCount = dailyOpsFilteredList.length;
         if (isNewNotification) {
+          /* Snackbar com preview da nova Notificação */
+          var snackbarEl = document.getElementById('spNotifSnackbar');
+          var snackbarText = document.getElementById('spNotifSnackbarText');
+          if (snackbarEl && snackbarText && dailyOpsFilteredList.length > 0) {
+            var preview = (dailyOpsFilteredList[0].message || '').slice(0, 80);
+            if (preview.length < (dailyOpsFilteredList[0].message || '').length) preview += '…';
+            snackbarText.textContent = preview;
+            snackbarEl.removeAttribute('hidden');
+            setTimeout(function () {
+              snackbarEl.setAttribute('hidden', '');
+            }, 4500);
+          }
           openNotificationsSidebar();
           if (dailyOpsAutoCloseTimer) clearTimeout(dailyOpsAutoCloseTimer);
           dailyOpsAutoCloseTimer = setTimeout(function () {
@@ -2151,6 +2268,504 @@
         if (closeBtn) closeBtn.addEventListener('click', closeNotificationsSidebar);
       }
 
+      /* ========== Avisos (lembrete no header; só desaparece se DHL excluir ou data Expire; clique abre modal com páginas) ========== */
+      var avisosList = [];
+      var avisosModalPage = 0;
+      var avisosCarouselIndex = 0;
+      var avisosCarouselTimer = null;
+      var AVISOS_CAROUSEL_INTERVAL_MS = 5000;
+
+      function getActiveAvisos() {
+        return window.AvisosStorage ? AvisosStorage.getActiveAvisos() : [];
+      }
+
+      function updateAvisosCarouselSlide() {
+        var boxText = document.getElementById('spAnnouncementBoxText');
+        var boxPages = document.getElementById('spAnnouncementBoxPages');
+        if (!boxText) return;
+        if (avisosList.length === 0) {
+          boxText.textContent = 'No announcements yet.';
+          if (boxPages) boxPages.textContent = '';
+          return;
+        }
+        var idx = avisosCarouselIndex % avisosList.length;
+        var a = avisosList[idx];
+        var preview = (a.title ? a.title + ' – ' : '') + (a.message || '').slice(0, 50);
+        if ((a.message || '').length > 50) preview += '…';
+        boxText.textContent = preview;
+        if (boxPages) {
+          boxPages.textContent = avisosList.length > 1 ? ' (' + (idx + 1) + ' / ' + avisosList.length + ')' : '';
+        }
+      }
+
+      function startAvisosCarousel() {
+        stopAvisosCarousel();
+        if (avisosList.length <= 1) return;
+        avisosCarouselTimer = setInterval(function () {
+          avisosCarouselIndex = (avisosCarouselIndex + 1) % avisosList.length;
+          updateAvisosCarouselSlide();
+        }, AVISOS_CAROUSEL_INTERVAL_MS);
+      }
+
+      function stopAvisosCarousel() {
+        if (avisosCarouselTimer) {
+          clearInterval(avisosCarouselTimer);
+          avisosCarouselTimer = null;
+        }
+      }
+
+      function updateAvisosStrip() {
+        avisosList = getActiveAvisos();
+        var boxText = document.getElementById('spAnnouncementBoxText');
+        var boxPages = document.getElementById('spAnnouncementBoxPages');
+        var emptyEl = document.getElementById('spAnnouncementEmpty');
+        var trigger = document.getElementById('spAnnouncementBox');
+        if (!boxText) return;
+        if (avisosList.length === 0) {
+          stopAvisosCarousel();
+          boxText.textContent = 'No announcements yet.';
+          if (boxPages) boxPages.textContent = '';
+          if (emptyEl) emptyEl.classList.remove('hidden');
+          if (trigger) { trigger.disabled = true; trigger.setAttribute('aria-disabled', 'true'); }
+          return;
+        }
+        if (emptyEl) emptyEl.classList.add('hidden');
+        if (trigger) { trigger.disabled = false; trigger.removeAttribute('aria-disabled'); }
+        avisosCarouselIndex = 0;
+        updateAvisosCarouselSlide();
+        if (avisosList.length > 1) startAvisosCarousel(); else stopAvisosCarousel();
+      }
+
+      function openAvisosModal() {
+        avisosList = getActiveAvisos();
+        var modal = document.getElementById('spAvisosModal');
+        var trigger = document.getElementById('spAnnouncementBox');
+        if (!modal || avisosList.length === 0) return;
+        avisosModalPage = 0;
+        renderAvisosModalPages();
+        modal.removeAttribute('hidden');
+        if (trigger) trigger.setAttribute('aria-expanded', 'true');
+      }
+
+      function closeAvisosModal() {
+        var modal = document.getElementById('spAvisosModal');
+        var trigger = document.getElementById('spAnnouncementBox');
+        if (modal) modal.setAttribute('hidden', '');
+        if (trigger) trigger.setAttribute('aria-expanded', 'false');
+      }
+
+      function renderAvisosModalPages() {
+        var container = document.getElementById('spAvisosModalPages');
+        var pagenum = document.getElementById('spAvisosModalPagenum');
+        var prevBtn = document.getElementById('spAvisosModalPrev');
+        var nextBtn = document.getElementById('spAvisosModalNext');
+        var dots = document.getElementById('spAvisosModalDots');
+        if (!container) return;
+        var total = avisosList.length;
+        var current = Math.min(avisosModalPage, total - 1);
+        if (total === 0) {
+          container.innerHTML = '';
+          if (pagenum) pagenum.textContent = '0 / 0';
+          return;
+        }
+        var a = avisosList[current];
+        var expStr = a.expireDate ? new Date(a.expireDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+        container.innerHTML = '<div class="sp-avisos-modal-page">' +
+          '<h3 class="sp-avisos-modal-page-title">' + escapeHtml(a.title || 'Notice') + '</h3>' +
+          '<p class="sp-avisos-modal-page-msg">' + escapeHtml(a.message || '') + '</p>' +
+          '<p class="sp-avisos-modal-page-expire"><small>Expires: ' + escapeHtml(expStr) + '</small></p>' +
+          '</div>';
+        if (pagenum) pagenum.textContent = (current + 1) + ' / ' + total;
+        if (prevBtn) {
+          prevBtn.disabled = current <= 0;
+          prevBtn.setAttribute('aria-disabled', current <= 0 ? 'true' : 'false');
+        }
+        if (nextBtn) {
+          nextBtn.disabled = current >= total - 1;
+          nextBtn.setAttribute('aria-disabled', current >= total - 1 ? 'true' : 'false');
+        }
+        if (dots) {
+          dots.innerHTML = avisosList.map(function (_, i) {
+            return '<button type="button" class="sp-avisos-modal-dot' + (i === current ? ' active' : '') + '" data-page="' + i + '" aria-label="Notice ' + (i + 1) + '"' + (i === current ? ' aria-current="true"' : '') + '></button>';
+          }).join('');
+        }
+      }
+
+      function initAvisosStripAndModal() {
+        var modal = document.getElementById('spAvisosModal');
+        var backdrop = document.getElementById('spAvisosModalBackdrop');
+        var closeBtn = document.getElementById('spAvisosModalClose');
+        var prevBtn = document.getElementById('spAvisosModalPrev');
+        var nextBtn = document.getElementById('spAvisosModalNext');
+        var dots = document.getElementById('spAvisosModalDots');
+        updateAvisosStrip();
+        var announcementBox = document.getElementById('spAnnouncementBox');
+        if (announcementBox) announcementBox.addEventListener('click', openAvisosModal);
+        if (backdrop) backdrop.addEventListener('click', closeAvisosModal);
+        if (closeBtn) closeBtn.addEventListener('click', closeAvisosModal);
+        if (prevBtn) prevBtn.addEventListener('click', function () {
+          if (avisosModalPage > 0) {
+            avisosModalPage--;
+            renderAvisosModalPages();
+          }
+        });
+        if (nextBtn) nextBtn.addEventListener('click', function () {
+          if (avisosModalPage < avisosList.length - 1) {
+            avisosModalPage++;
+            renderAvisosModalPages();
+          }
+        });
+        if (dots) dots.addEventListener('click', function (e) {
+          var btn = e.target.closest('.sp-avisos-modal-dot');
+          if (!btn) return;
+          var p = parseInt(btn.getAttribute('data-page'), 10);
+          if (!isNaN(p)) {
+            avisosModalPage = p;
+            renderAvisosModalPages();
+          }
+        });
+        if (modal) modal.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape') closeAvisosModal();
+        });
+      }
+
+      /* ========== Network & Delay (DHL cria; SP só visualiza) ========== */
+      var NETWORK_DELAY_STORAGE_KEY = 'dhl_network_delay';
+      var networkDelayCarouselIndex = 0;
+      var networkDelayCarouselTimer = null;
+      var NETWORK_DELAY_CAROUSEL_INTERVAL_MS = 5000;
+
+      /** Seed inicial: um Announcement e um Network & Delay de exemplo (conteúdo da DHL). */
+      function seedSpDefaultContent() {
+        if (window.AvisosStorage && getActiveAvisos().length === 0) {
+          var exp = new Date();
+          exp.setDate(exp.getDate() + 30);
+          window.AvisosStorage.addAviso({
+            title: 'Service update',
+            message: 'Please ensure all drivers complete the safety briefing by end of week. Contact your DHL representative for materials.',
+            expireDate: exp.toISOString().slice(0, 10)
+          });
+        }
+        var ndList = getNetworkDelayItems();
+        if (ndList.length === 0) {
+          addNetworkDelayItem({ message: 'Network delay reported on Northern corridor – allow extra time for collections.' });
+        }
+      }
+
+      function getNetworkDelayItems() {
+        try {
+          var raw = localStorage.getItem(NETWORK_DELAY_STORAGE_KEY);
+          return raw ? JSON.parse(raw) : [];
+        } catch (e) { return []; }
+      }
+
+      function addNetworkDelayItem(item) {
+        var list = getNetworkDelayItems();
+        list.unshift({
+          id: 'nd-' + Date.now(),
+          message: (item && item.message) ? String(item.message).trim() : 'Network or delay alert',
+          createdAt: new Date().toISOString()
+        });
+        try {
+          localStorage.setItem(NETWORK_DELAY_STORAGE_KEY, JSON.stringify(list));
+        } catch (e) {}
+        return list;
+      }
+
+      function setNetworkDelayCarouselActive(index) {
+        var listEl = document.getElementById('spNetworkDelayList');
+        if (!listEl) return;
+        var slides = listEl.querySelectorAll('.sp-network-delay-slide');
+        slides.forEach(function (el, i) {
+          el.classList.toggle('active', i === index);
+        });
+      }
+
+      function startNetworkDelayCarousel(count) {
+        if (networkDelayCarouselTimer) {
+          clearInterval(networkDelayCarouselTimer);
+          networkDelayCarouselTimer = null;
+        }
+        if (count <= 1) return;
+        networkDelayCarouselTimer = setInterval(function () {
+          var listEl = document.getElementById('spNetworkDelayList');
+          var slides = listEl ? listEl.querySelectorAll('.sp-network-delay-slide') : [];
+          var n = slides.length;
+          if (n <= 1) return;
+          networkDelayCarouselIndex = (networkDelayCarouselIndex + 1) % n;
+          setNetworkDelayCarouselActive(networkDelayCarouselIndex);
+        }, NETWORK_DELAY_CAROUSEL_INTERVAL_MS);
+      }
+
+      function renderNetworkDelayList() {
+        var wrap = document.getElementById('spNetworkDelayWrap');
+        var listEl = document.getElementById('spNetworkDelayList');
+        var emptyEl = document.getElementById('spNetworkDelayEmpty');
+        var items = getNetworkDelayItems();
+        if (!wrap || !listEl) return;
+        listEl.innerHTML = items.map(function (nd, i) {
+          var dateStr = nd.createdAt ? new Date(nd.createdAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
+          return '<li class="list-group-item list-group-item-action py-2 small sp-network-delay-slide' + (i === 0 ? ' active' : '') + '" data-index="' + i + '">' +
+            '<span class="sp-network-delay-msg">' + escapeHtml(nd.message || '') + '</span>' +
+            (dateStr ? ' <span class="text-muted">' + escapeHtml(dateStr) + '</span>' : '') +
+            '</li>';
+        }).join('');
+        if (emptyEl) {
+          emptyEl.classList.toggle('hidden', items.length > 0);
+        }
+        networkDelayCarouselIndex = 0;
+        setNetworkDelayCarouselActive(0);
+        startNetworkDelayCarousel(items.length);
+      }
+
+      function getCreateModalSelectedCategory() {
+        var el = document.querySelector('#spCreateTypeModal input[name="spCreateCategory"]:checked');
+        return (el && el.value) ? el.value : 'info';
+      }
+
+      function getDefaultMessageForCategory(type) {
+        var messages = {
+          delay: 'Delivery delay – estimated 15 min.',
+          delivery_done: 'Delivery completed.',
+          problem: 'Issue reported.',
+          route_change: 'Change to route – new time window.',
+          vehicle_issue: 'Vehicle under review.',
+          driver_alert: 'Driver status update.',
+          alert: 'Alert notice.',
+          info: 'Information update.',
+          network_delay: 'Network or delay reported.'
+        };
+        return messages[type] || 'Notification';
+      }
+
+      function addNotificationFromCreate(type, message) {
+        var list = (data.dailyOperationsNotifications) ? data.dailyOperationsNotifications : [];
+        data.dailyOperationsNotifications = list;
+        var severity = (type === 'problem') ? 'danger' : (type === 'delay' || type === 'vehicle_issue' || type === 'alert' || type === 'network_delay') ? 'warning' : (type === 'delivery_done') ? 'success' : 'info';
+        list.unshift({
+          id: 'op-create-' + Date.now(),
+          serviceProvider: spName,
+          type: type,
+          severity: severity,
+          message: (message || getDefaultMessageForCategory(type)).trim(),
+          timeAgoMinutes: 0
+        });
+        updateDailyOpsSection();
+      }
+
+      function openCreateTypeModal() {
+        var modal = document.getElementById('spCreateTypeModal');
+        if (modal) {
+          modal.removeAttribute('hidden');
+          modal.setAttribute('aria-hidden', 'false');
+        }
+      }
+
+      function closeCreateTypeModal() {
+        var modal = document.getElementById('spCreateTypeModal');
+        if (modal) {
+          modal.setAttribute('hidden', '');
+          modal.setAttribute('aria-hidden', 'true');
+        }
+      }
+
+      /* ---- Previews para o modal Create ---- */
+      var CREATE_PREVIEWS = {
+        notification: {
+          html: '<div class="sp-create-preview-mock sp-create-preview-mock--notif">' +
+            '<div class="sp-create-preview-mock-bar"><span class="sp-create-preview-mock-dot"></span><span>Notifications sidebar</span></div>' +
+            '<div class="sp-create-preview-mock-item sp-create-preview-mock-item--highlight">' +
+              '<span class="sp-create-preview-mock-icon" style="color:#3b82f6"><i class="bi bi-bell-fill"></i></span>' +
+              '<div><div class="sp-create-preview-mock-title">Your notification</div><div class="sp-create-preview-mock-sub">Appears here, on the right side panel</div></div>' +
+            '</div>' +
+            '<div class="sp-create-preview-mock-item">' +
+              '<span class="sp-create-preview-mock-icon" style="color:#94a3b8"><i class="bi bi-bell"></i></span>' +
+              '<div><div class="sp-create-preview-mock-title" style="color:#94a3b8">Previous notification</div></div>' +
+            '</div>' +
+          '</div>'
+        },
+        announcement: {
+          html: '<div class="sp-create-preview-mock sp-create-preview-mock--announce">' +
+            '<div class="sp-create-preview-mock-bar"><span class="sp-create-preview-mock-dot"></span><span>Header banner</span></div>' +
+            '<div class="sp-create-preview-mock-header">' +
+              '<span style="font-size:0.7rem;font-weight:700;color:#1e40af">Dashboard</span>' +
+              '<div class="sp-create-preview-mock-announce-box">' +
+                '<i class="bi bi-megaphone-fill" style="color:#3b82f6;font-size:0.65rem"></i>' +
+                '<span style="font-size:0.65rem;color:#1e40af"> Your announcement appears here</span>' +
+              '</div>' +
+              '<span style="font-size:0.7rem;color:#94a3b8">👤</span>' +
+            '</div>' +
+          '</div>'
+        },
+        network_delay: {
+          html: '<div class="sp-create-preview-mock sp-create-preview-mock--nd">' +
+            '<div class="sp-create-preview-mock-bar"><span class="sp-create-preview-mock-dot"></span><span>Summary block — Network &amp; Delays card</span></div>' +
+            '<div class="sp-create-preview-mock-summary">' +
+              '<div class="sp-create-preview-mock-kpis">' +
+                '<div class="sp-create-preview-mock-kpi">10<br><small>Deliveries</small></div>' +
+                '<div class="sp-create-preview-mock-kpi">3<br><small>Routes</small></div>' +
+                '<div class="sp-create-preview-mock-kpi">2.4<br><small>SPR</small></div>' +
+              '</div>' +
+              '<div class="sp-create-preview-mock-nd-card">' +
+                '<div class="sp-create-preview-mock-nd-title"><i class="bi bi-wifi" style="color:#a16207"></i> Network &amp; Delays</div>' +
+                '<div class="sp-create-preview-mock-nd-msg">Your alert appears here</div>' +
+              '</div>' +
+            '</div>' +
+          '</div>'
+        }
+      };
+
+      function updateCreatePreview(type) {
+        var preview = document.getElementById('spCreateTypePreview');
+        var box = document.getElementById('spCreateTypePreviewBox');
+        var submitBtn = document.getElementById('spCreateTypeSubmit');
+        if (!preview || !box) return;
+        if (!type || !CREATE_PREVIEWS[type]) {
+          preview.classList.add('hidden');
+          if (submitBtn) submitBtn.disabled = true;
+          return;
+        }
+        box.innerHTML = CREATE_PREVIEWS[type].html;
+        preview.classList.remove('hidden');
+        if (submitBtn) submitBtn.disabled = false;
+      }
+
+      function initCreateTypeModal() {
+        var trigger = document.getElementById('spCreateTrigger');
+        var modal = document.getElementById('spCreateTypeModal');
+        var backdrop = document.getElementById('spCreateTypeModalBackdrop');
+        var closeBtn = document.getElementById('spCreateTypeModalClose');
+        var cancelBtn = document.getElementById('spCreateTypeCancel');
+        var submitBtn = document.getElementById('spCreateTypeSubmit');
+        var radios = modal ? modal.querySelectorAll('input[name="spCreateType"]') : [];
+
+        if (trigger) trigger.addEventListener('click', openCreateTypeModal);
+        if (backdrop) backdrop.addEventListener('click', closeCreateTypeModal);
+        if (closeBtn) closeBtn.addEventListener('click', closeCreateTypeModal);
+        if (cancelBtn) cancelBtn.addEventListener('click', closeCreateTypeModal);
+        if (modal) modal.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape') closeCreateTypeModal();
+        });
+
+        radios.forEach(function (radio) {
+          radio.addEventListener('change', function () {
+            /* Atualizar visual das opções */
+            radios.forEach(function (r) {
+              r.closest('.sp-create-type-option').classList.remove('selected');
+            });
+            radio.closest('.sp-create-type-option').classList.add('selected');
+            updateCreatePreview(radio.value);
+          });
+        });
+
+        if (submitBtn) {
+          submitBtn.addEventListener('click', function () {
+            var checked = modal ? modal.querySelector('input[name="spCreateType"]:checked') : null;
+            if (!checked) return;
+            var type = checked.value;
+            closeCreateTypeModal();
+
+            if (type === 'notification') {
+              addNotificationFromCreate('info', getDefaultMessageForCategory('info'));
+              openNotificationsSidebar();
+            } else if (type === 'announcement') {
+              var wrap = document.getElementById('spAnnouncementBoxWrap');
+              if (wrap) wrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+              updateAvisosStrip();
+            } else if (type === 'network_delay') {
+              addNetworkDelayItem({ message: getDefaultMessageForCategory('network_delay') });
+              renderNetworkDelayList();
+              var discoBlock = document.getElementById('spDiscoBlock');
+              if (discoBlock) discoBlock.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          });
+        }
+
+        /* Reset ao abrir */
+        if (modal) {
+          var origOpen = openCreateTypeModal;
+          openCreateTypeModal = function () {
+            origOpen();
+            radios.forEach(function (r) {
+              r.checked = false;
+              r.closest('.sp-create-type-option').classList.remove('selected');
+            });
+            updateCreatePreview(null);
+          };
+        }
+
+        renderNetworkDelayList();
+      }
+
+      /* ---- Tabs do modal de Avisos (3 categorias) ---- */
+      function initAvisosModalTabs() {
+        var modal = document.getElementById('spAvisosModal');
+        if (!modal) return;
+        modal.addEventListener('click', function (e) {
+          var tab = e.target.closest('[data-avisos-tab]');
+          if (!tab) return;
+          var key = tab.getAttribute('data-avisos-tab');
+          modal.querySelectorAll('[data-avisos-tab]').forEach(function (t) {
+            t.classList.toggle('active', t === tab);
+            t.setAttribute('aria-selected', t === tab ? 'true' : 'false');
+          });
+          modal.querySelectorAll('.sp-avisos-modal-panel').forEach(function (p) {
+            p.classList.add('hidden');
+          });
+          var panel = document.getElementById('spAvisosPanel_' + key);
+          if (panel) {
+            panel.classList.remove('hidden');
+            if (key === 'network') renderAvisosNetworkPanel();
+            if (key === 'notifications') renderAvisosNotifPanel();
+          }
+        });
+      }
+
+      function renderAvisosNetworkPanel() {
+        var list = document.getElementById('spAvisosNetworkList');
+        var empty = document.getElementById('spAvisosNetworkEmpty');
+        var items = getNetworkDelayItems();
+        if (!list) return;
+        if (items.length === 0) {
+          list.innerHTML = '';
+          if (empty) empty.classList.remove('hidden');
+          return;
+        }
+        if (empty) empty.classList.add('hidden');
+        list.innerHTML = items.map(function (nd) {
+          var dateStr = nd.createdAt ? new Date(nd.createdAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
+          return '<li class="sp-avisos-list-item">' +
+            '<span class="sp-avisos-list-icon sp-avisos-list-icon--nd"><i class="bi bi-wifi"></i></span>' +
+            '<div class="sp-avisos-list-content">' +
+              '<p class="sp-avisos-list-msg">' + escapeHtml(nd.message || '') + '</p>' +
+              (dateStr ? '<span class="sp-avisos-list-date">' + escapeHtml(dateStr) + '</span>' : '') +
+            '</div>' +
+          '</li>';
+        }).join('');
+      }
+
+      function renderAvisosNotifPanel() {
+        var list = document.getElementById('spAvisosNotifList');
+        var empty = document.getElementById('spAvisosNotifEmpty');
+        var items = (data && data.dailyOperationsNotifications) ? data.dailyOperationsNotifications : [];
+        if (!list) return;
+        if (items.length === 0) {
+          list.innerHTML = '';
+          if (empty) empty.classList.remove('hidden');
+          return;
+        }
+        if (empty) empty.classList.add('hidden');
+        list.innerHTML = items.slice(0, 20).map(function (n) {
+          return '<li class="sp-avisos-list-item">' +
+            '<span class="sp-avisos-list-icon sp-avisos-list-icon--notif"><i class="bi bi-bell-fill"></i></span>' +
+            '<div class="sp-avisos-list-content">' +
+              '<p class="sp-avisos-list-msg">' + escapeHtml(n.message || '') + '</p>' +
+              (n.timeAgoMinutes != null ? '<span class="sp-avisos-list-date">' + (n.timeAgoMinutes === 0 ? 'Just now' : n.timeAgoMinutes + ' min ago') + '</span>' : '') +
+            '</div>' +
+          '</li>';
+        }).join('');
+      }
+
       function render() {
         var depotEl = document.getElementById('spFilterDepot');
         var loopEl = document.getElementById('spFilterLoop');
@@ -2159,6 +2774,8 @@
         filterState.loop = loopEl ? loopEl.value : '';
         filterState.route = routeEl ? routeEl.value : '';
         updateDailyOpsSection();
+        updateAvisosStrip();
+        if (typeof renderNetworkDelayList === 'function') renderNetworkDelayList();
         updateKPIs();
         updateLastDaySection();
         updateSpmsSection();
@@ -2168,19 +2785,46 @@
         updateVehicles();
       }
 
-      var discoState = { depot: '', loop: '' };
+      var discoState = { depot: '', loop: '', slot: 'AM' };
+      var _discoDeliveriesWithSlotCache = null;
 
+      /** Entregas com slot AM/PM; inclui entregas da tarde (PM) geradas no mesmo esquema. */
       function getDiscoDeliveries() {
         var data = window.DISCO_DATA;
-        return (data && data.deliveries && Array.isArray(data.deliveries)) ? data.deliveries : [];
+        var raw = (data && data.deliveries && Array.isArray(data.deliveries)) ? data.deliveries : [];
+        if (!raw.length) return [];
+        if (_discoDeliveriesWithSlotCache) return _discoDeliveriesWithSlotCache;
+        var list = [];
+        raw.forEach(function (d, i) {
+          var slot = (d.slot === 'AM' || d.slot === 'PM') ? d.slot : (d.pre12 === true ? 'AM' : (i % 2 === 0 ? 'AM' : 'PM'));
+          list.push(Object.assign({}, d, { slot: slot }));
+        });
+        var amCount = list.filter(function (d) { return d.slot === 'AM'; }).length;
+        var pmCount = list.filter(function (d) { return d.slot === 'PM'; }).length;
+        if (pmCount < amCount * 0.4) {
+          var toClone = list.filter(function (d) { return d.slot === 'AM'; });
+          var take = Math.max(1, Math.floor(toClone.length * 0.45));
+          for (var j = 0; j < take; j++) {
+            var src = toClone[j % toClone.length];
+            var clone = Object.assign({}, src, {
+              slot: 'PM',
+              subpostcode: (src.subpostcode || '').replace(/\s/g, ' ').trim() + ' PM',
+              address: (src.address || '') + (src.address ? ' (PM)' : ' (PM)')
+            });
+            list.push(clone);
+          }
+        }
+        _discoDeliveriesWithSlotCache = list;
+        return list;
       }
 
       function getFilteredDiscoDeliveries() {
         var list = getDiscoDeliveries();
         var depot = (discoState.depot || '').trim();
         var loop = (discoState.loop || '').trim();
-        if (!depot && !loop) return list;
+        var slot = (discoState.slot || 'AM').trim();
         return list.filter(function (d) {
+          if (slot && (d.slot || '').trim() !== slot) return false;
           if (depot && (d.depot || '').trim() !== depot) return false;
           if (loop && (d.loop || '').trim() !== loop) return false;
           return true;
@@ -2241,32 +2885,38 @@
         });
       }
 
-      /** Entregas de um depot (lista completa, sem filtro de estado). */
+      /** Entregas de um depot (respeita slot AM/PM). */
       function getDeliveriesForDepot(depotName) {
         var list = getDiscoDeliveries();
         var depotTrim = (depotName || '').trim();
+        var slot = (discoState.slot || '').trim();
         if (!depotTrim) return [];
         return list.filter(function (d) {
+          if (slot && (d.slot || '').trim() !== slot) return false;
           return (d.depot || '').trim() === depotTrim;
         });
       }
 
-      /** Entregas de um loop (depot já fixo no estado; lista completa). */
+      /** Entregas de um loop (depot já fixo no estado; respeita slot AM/PM). */
       function getDeliveriesForLoop(depotName, loopName) {
         var list = getDiscoDeliveries();
         var depotTrim = (depotName || '').trim();
         var loopTrim = (loopName || '').trim();
+        var slot = (discoState.slot || '').trim();
         if (!depotTrim || !loopTrim) return [];
         return list.filter(function (d) {
+          if (slot && (d.slot || '').trim() !== slot) return false;
           return (d.depot || '').trim() === depotTrim && (d.loop || '').trim() === loopTrim;
         });
       }
 
-      /** Resumo por depot: array de { depot, totalDeliveries, pre12, asr, dsr }. */
+      /** Resumo por depot: array de { depot, totalDeliveries, pre12, asr, dsr }. Respeita slot AM/PM. */
       function getDiscoDepotSummary() {
         var list = getDiscoDeliveries();
+        var slot = (discoState.slot || '').trim();
         var byDepot = {};
         list.forEach(function (d) {
+          if (slot && (d.slot || '').trim() !== slot) return;
           var dep = (d.depot || '').trim();
           if (!dep) return;
           if (!byDepot[dep]) byDepot[dep] = { depot: dep, totalDeliveries: 0, pre12: 0, asr: 0, dsr: 0 };
@@ -2287,9 +2937,11 @@
         });
       }
 
-      /** Gera HTML das listas Pre-12, ASR e DSR a partir de um array de entregas. Sem entregas numa categoria: só o header do bloco. */
+      /** Gera HTML das listas Pre-12, ASR e DSR a partir de um array de entregas. Slot PM não tem Pre-12. */
       function getPre12AsrDsrTableHtmlFromDeliveries(deliveries) {
-        var pre12 = deliveries.filter(function (d) { return d.pre12 === true; });
+        var slot = (discoState.slot || 'AM').trim();
+        var showPre12 = slot === 'AM';
+        var pre12 = showPre12 ? deliveries.filter(function (d) { return d.pre12 === true; }) : [];
         var asr = deliveries.filter(function (d) { return d.asr === true; });
         var dsr = deliveries.filter(function (d) { return d.dsr === true; });
         function rowsHtml(list) {
@@ -2307,9 +2959,10 @@
           return '<div class="disco-route-detail-list-block' + (onlyHeader ? ' disco-route-detail-list-block--header-only' : '') + '">' +
             '<h4 class="disco-route-detail-list-title">' + title + '</h4>' + body + '</div>';
         }
+        var pre12Block = showPre12 ? blockHtml('Pre-12', pre12) : '';
         return '<div class="disco-route-detail-content">' +
           '<div class="disco-route-detail-lists">' +
-            blockHtml('Pre-12', pre12) +
+            pre12Block +
             blockHtml('ASR', asr) +
             blockHtml('DSR', dsr) +
           '</div></div>';
@@ -2330,16 +2983,26 @@
         return getPre12AsrDsrTableHtmlFromDeliveries(getDeliveriesForLoop(discoState.depot, loopName));
       }
 
-      /** Total stops no header: sempre o total sem filtro (depot/loop). */
+      /** Total stops no header: conta conforme filtros (depot/loop/slot). Switch AM/PM: só o selecionado fica aceso. */
       function updateStopsKpi() {
+        var list = getFilteredDiscoDeliveries();
         var el = document.getElementById('dashboardStopsValue');
-        if (!el) return;
-        var list = getDiscoDeliveries();
-        el.textContent = list.length;
+        if (el) el.textContent = list.length;
+        var slot = (discoState.slot || 'AM').trim();
+        var gravuraAm = document.getElementById('discoGravuraAm');
+        var gravuraPm = document.getElementById('discoGravuraPm');
+        if (gravuraAm) {
+          gravuraAm.classList.toggle('disco-gravura-on', slot === 'AM');
+          gravuraAm.setAttribute('aria-pressed', slot === 'AM' ? 'true' : 'false');
+        }
+        if (gravuraPm) {
+          gravuraPm.classList.toggle('disco-gravura-on', slot === 'PM');
+          gravuraPm.setAttribute('aria-pressed', slot === 'PM' ? 'true' : 'false');
+        }
       }
 
       function getDiscoGeneralSummary() {
-        var list = getDiscoDeliveries();
+        var list = getFilteredDiscoDeliveries();
         var totalDeliveries = list.length;
         var routes = {};
         var depots = {};
@@ -2407,12 +3070,14 @@
         };
       }
 
-      /** Resumo por loop para um depot: array de { loop, totalDeliveries, totalRoutes, pre12, asr, dsr }. */
+      /** Resumo por loop para um depot: array de { loop, totalDeliveries, totalRoutes, pre12, asr, dsr }. Respeita slot AM/PM. */
       function getDiscoLoopSummary(depot) {
         var list = getDiscoDeliveries();
         var depotTrim = (depot || '').trim();
+        var slot = (discoState.slot || '').trim();
         var byLoop = {};
         list.forEach(function (d) {
+          if (slot && (d.slot || '').trim() !== slot) return;
           if ((d.depot || '').trim() !== depotTrim) return;
           var lp = (d.loop || '').trim();
           if (!lp) return;
@@ -2529,11 +3194,13 @@
                 '</div>';
             }
 
-            items +=
-              '<div class="disco-summary-item">' +
+            if ((discoState.slot || 'AM').trim() === 'AM') {
+              items += '<div class="disco-summary-item">' +
                 '<span class="disco-summary-value">' + summary.pre12 + '</span>' +
                 '<span class="disco-summary-label">Pre-12</span>' +
-              '</div>' +
+              '</div>';
+            }
+            items +=
               '<div class="disco-summary-item">' +
                 '<span class="disco-summary-value">' + summary.asr + '</span>' +
                 '<span class="disco-summary-label">ASR</span>' +
@@ -2561,7 +3228,7 @@
                   '<span class="disco-route-block-stops">' + item.totalDeliveries + ' deliveries</span>' +
                 '</div>' +
                 '<div class="disco-route-block-summary d-flex flex-wrap gap-2">' +
-                  '<span class="disco-route-block-badge">Pre-12: ' + item.pre12 + '</span>' +
+                  (discoState.slot === 'AM' ? '<span class="disco-route-block-badge">Pre-12: ' + item.pre12 + '</span>' : '') +
                   '<span class="disco-route-block-badge">ASR: ' + item.asr + '</span>' +
                   '<span class="disco-route-block-badge">DSR: ' + item.dsr + '</span>' +
                 '</div>' +
@@ -2592,7 +3259,7 @@
                     '<span class="disco-route-block-stops">' + item.totalDeliveries + ' deliveries</span>' +
                   '</div>' +
                   '<div class="disco-route-block-summary d-flex flex-wrap gap-2">' +
-                    '<span class="disco-route-block-badge">Pre-12: ' + item.pre12 + '</span>' +
+                    (discoState.slot === 'AM' ? '<span class="disco-route-block-badge">Pre-12: ' + item.pre12 + '</span>' : '') +
                     '<span class="disco-route-block-badge">ASR: ' + item.asr + '</span>' +
                     '<span class="disco-route-block-badge">DSR: ' + item.dsr + '</span>' +
                   '</div>' +
@@ -2633,7 +3300,7 @@
                   '<span class="disco-route-block-stops">' + item.stops + ' stops</span>' +
                 '</div>' +
                 '<div class="disco-route-block-summary d-flex flex-wrap gap-2">' +
-                  '<span class="disco-route-block-badge">Pre-12: ' + item.pre12 + '</span>' +
+                  (discoState.slot === 'AM' ? '<span class="disco-route-block-badge">Pre-12: ' + item.pre12 + '</span>' : '') +
                   '<span class="disco-route-block-badge">ASR: ' + item.asr + '</span>' +
                   '<span class="disco-route-block-badge">DSR: ' + item.dsr + '</span>' +
                 '</div>' +
@@ -2666,6 +3333,20 @@
       }
 
       function initDisco() {
+        var gravuraAm = document.getElementById('discoGravuraAm');
+        var gravuraPm = document.getElementById('discoGravuraPm');
+        if (gravuraAm) {
+          gravuraAm.addEventListener('click', function () {
+            discoState.slot = 'AM';
+            updateDiscoSection();
+          });
+        }
+        if (gravuraPm) {
+          gravuraPm.addEventListener('click', function () {
+            discoState.slot = 'PM';
+            updateDiscoSection();
+          });
+        }
         var noData = document.getElementById('discoNoData');
         var deliveries = getDiscoDeliveries();
         if (!deliveries.length) {
@@ -2747,6 +3428,11 @@
         initLiquidationDamages();
         switchFolderTab('lastday');
         initNotificationsSidebar();
+        seedSpDefaultContent();
+        initAvisosStripAndModal();
+        initAvisosModalTabs();
+        if (document.getElementById('spCreateTypeModal')) initCreateTypeModal();
+        else renderNetworkDelayList();
         initCarousel();
         if (document.getElementById('openFullDashboardBtn')) initFullDashboardModal();
       }
