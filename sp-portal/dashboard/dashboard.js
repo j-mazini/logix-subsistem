@@ -2571,12 +2571,25 @@
 
       /* ---- Previews para o modal Create ---- */
       var CREATE_PREVIEWS = {
+        announcement: {
+          html: '<div class="sp-create-preview-mock sp-create-preview-mock--announce">' +
+            '<div class="sp-create-preview-mock-bar"><span class="sp-create-preview-mock-dot"></span><span>Header — top banner of the dashboard</span></div>' +
+            '<div class="sp-create-preview-mock-header">' +
+              '<span style="font-size:0.7rem;font-weight:700;color:#1e40af">Dashboard</span>' +
+              '<div class="sp-create-preview-mock-announce-box">' +
+                '<i class="bi bi-megaphone-fill" style="color:#3b82f6;font-size:0.65rem"></i>' +
+                '<span style="font-size:0.65rem;color:#1e40af"> Your notice appears here</span>' +
+              '</div>' +
+              '<span style="font-size:0.7rem;color:#94a3b8">👤</span>' +
+            '</div>' +
+          '</div>'
+        },
         notification: {
           html: '<div class="sp-create-preview-mock sp-create-preview-mock--notif">' +
-            '<div class="sp-create-preview-mock-bar"><span class="sp-create-preview-mock-dot"></span><span>Notifications sidebar</span></div>' +
+            '<div class="sp-create-preview-mock-bar"><span class="sp-create-preview-mock-dot"></span><span>Sidebar — notifications side panel</span></div>' +
             '<div class="sp-create-preview-mock-item sp-create-preview-mock-item--highlight">' +
-              '<span class="sp-create-preview-mock-icon" style="color:#3b82f6"><i class="bi bi-bell-fill"></i></span>' +
-              '<div><div class="sp-create-preview-mock-title">Your notification</div><div class="sp-create-preview-mock-sub">Appears here, on the right side panel</div></div>' +
+              '<span class="sp-create-preview-mock-icon" style="color:#6366f1"><i class="bi bi-bell-fill"></i></span>' +
+              '<div><div class="sp-create-preview-mock-title">Your notice</div><div class="sp-create-preview-mock-sub">Appears here, on the right side panel</div></div>' +
             '</div>' +
             '<div class="sp-create-preview-mock-item">' +
               '<span class="sp-create-preview-mock-icon" style="color:#94a3b8"><i class="bi bi-bell"></i></span>' +
@@ -2584,22 +2597,9 @@
             '</div>' +
           '</div>'
         },
-        announcement: {
-          html: '<div class="sp-create-preview-mock sp-create-preview-mock--announce">' +
-            '<div class="sp-create-preview-mock-bar"><span class="sp-create-preview-mock-dot"></span><span>Header banner</span></div>' +
-            '<div class="sp-create-preview-mock-header">' +
-              '<span style="font-size:0.7rem;font-weight:700;color:#1e40af">Dashboard</span>' +
-              '<div class="sp-create-preview-mock-announce-box">' +
-                '<i class="bi bi-megaphone-fill" style="color:#3b82f6;font-size:0.65rem"></i>' +
-                '<span style="font-size:0.65rem;color:#1e40af"> Your announcement appears here</span>' +
-              '</div>' +
-              '<span style="font-size:0.7rem;color:#94a3b8">👤</span>' +
-            '</div>' +
-          '</div>'
-        },
         network_delay: {
           html: '<div class="sp-create-preview-mock sp-create-preview-mock--nd">' +
-            '<div class="sp-create-preview-mock-bar"><span class="sp-create-preview-mock-dot"></span><span>Summary block — Network &amp; Delays card</span></div>' +
+            '<div class="sp-create-preview-mock-bar"><span class="sp-create-preview-mock-dot"></span><span>Delays — Network &amp; Delays summary block</span></div>' +
             '<div class="sp-create-preview-mock-summary">' +
               '<div class="sp-create-preview-mock-kpis">' +
                 '<div class="sp-create-preview-mock-kpi">10<br><small>Deliveries</small></div>' +

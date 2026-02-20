@@ -1093,6 +1093,131 @@
   border-top: 1px solid #e9ecef;
 }
 
+/* ─── DHL Create Notice Modal — 3 cards ─────────────────────── */
+.dhl-notice-modal-content {
+  max-width: 36rem;
+}
+.dhl-notice-modal-header {
+  align-items: flex-start;
+  gap: 0.75rem;
+  background: #f8fafc;
+}
+.dhl-notice-modal-title-wrap { flex: 1; min-width: 0; }
+.dhl-notice-modal-subtitle {
+  margin: 0.15rem 0 0;
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 400;
+}
+.dhl-notice-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Grid de 3 cards */
+.dhl-notice-type-options {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+.dhl-notice-type-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.4rem;
+  padding: 1.4rem 0.65rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 0.85rem;
+  cursor: pointer;
+  background: #fff;
+  text-align: center;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  user-select: none;
+}
+.dhl-notice-type-card:hover {
+  border-color: #93c5fd;
+  background: #f8faff;
+}
+.dhl-notice-type-card.selected {
+  border-color: #FFCC00;
+  background: #fffde7;
+  box-shadow: 0 0 0 3px rgba(255, 204, 0, 0.2);
+}
+.dhl-notice-type-radio { display: none; }
+
+.dhl-notice-type-icon {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.7rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  margin-bottom: 0.1rem;
+  transition: transform 0.2s;
+}
+.dhl-notice-type-card:hover .dhl-notice-type-icon  { transform: scale(1.08); }
+.dhl-notice-type-card.selected .dhl-notice-type-icon { transform: scale(1.1); }
+
+.dhl-notice-icon--header  { background: rgba(59,130,246,0.12);  color: #1d4ed8; }
+.dhl-notice-icon--sidebar { background: rgba(99,102,241,0.12);  color: #6366f1; }
+.dhl-notice-icon--delays  { background: rgba(234,179,8,0.12);   color: #a16207; }
+
+.dhl-notice-type-card.selected .dhl-notice-icon--header  { background: rgba(59,130,246,0.18); }
+.dhl-notice-type-card.selected .dhl-notice-icon--sidebar { background: rgba(99,102,241,0.18); }
+.dhl-notice-type-card.selected .dhl-notice-icon--delays  { background: rgba(234,179,8,0.22); }
+
+.dhl-notice-type-label {
+  display: block;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+.dhl-notice-type-desc {
+  display: block;
+  font-size: 0.68rem;
+  color: #64748b;
+  line-height: 1.35;
+}
+
+/* Check mark — canto superior direito */
+.dhl-notice-type-check {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  border: 1.5px solid #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  color: transparent;
+  background: #fff;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+.dhl-notice-type-card.selected .dhl-notice-type-check {
+  background: #FFCC00;
+  border-color: #FFCC00;
+  color: #0f172a;
+}
+
+/* Formulário — oculto até selecionar tipo */
+.dhl-notice-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 1rem;
+}
+.dhl-notice-form.hidden { display: none; }
+
 /* Alert toast */
 .alert-toast {
   position: fixed;
@@ -1271,3 +1396,181 @@
 .avisos-manage-item--notif .avisos-manage-item-title i {
   font-size: 1rem;
 }
+
+/* ─── Communications Modal — 3 categorias (Header, Sidebar, Delays) ── */
+.comm-modal-content {
+  max-width: 520px;
+}
+.comm-modal-header {
+  align-items: flex-start;
+  gap: 0.75rem;
+  background: #f8fafc;
+}
+.comm-modal-title-wrap { flex: 1; min-width: 0; }
+.comm-modal-subtitle {
+  margin: 0.2rem 0 0;
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 400;
+}
+.comm-modal-body {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Tabs */
+.comm-tabs {
+  display: flex;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+  flex-shrink: 0;
+}
+.comm-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.75rem 0.5rem;
+  border: none;
+  background: transparent;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+  font-family: inherit;
+}
+.comm-tab:hover { color: #0f172a; background: #f1f5f9; }
+.comm-tab.active {
+  color: #0f172a;
+  border-bottom-color: #FFCC00;
+  background: #fff;
+}
+.comm-tab-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 0.35rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+.comm-tab-icon--header  { background: rgba(59,130,246,0.12);  color: #1d4ed8; }
+.comm-tab-icon--sidebar { background: rgba(99,102,241,0.12);  color: #6366f1; }
+.comm-tab-icon--delays  { background: rgba(234,179,8,0.12);   color: #a16207; }
+.comm-tab.active .comm-tab-icon--header  { background: rgba(59,130,246,0.18); }
+.comm-tab.active .comm-tab-icon--sidebar { background: rgba(99,102,241,0.18); }
+.comm-tab.active .comm-tab-icon--delays  { background: rgba(234,179,8,0.22); }
+
+.comm-tab-label { flex: 1; text-align: left; }
+.comm-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  padding: 0.05rem 0.35rem;
+  border-radius: 999px;
+  background: #e2e8f0;
+  color: #475569;
+  font-size: 0.65rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.comm-tab.active .comm-tab-badge {
+  background: #0f172a;
+  color: #fff;
+}
+
+/* Panels */
+.comm-panel {
+  padding: 1rem 1.25rem;
+  flex: 1;
+  overflow-y: auto;
+  max-height: 22rem;
+}
+.comm-panel.hidden { display: none; }
+
+/* Item list */
+.comm-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.comm-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.65rem;
+  background: #fff;
+  transition: border-color 0.15s;
+}
+.comm-item:hover { border-color: #cbd5e1; }
+
+.comm-item-icon {
+  width: 2.1rem;
+  height: 2.1rem;
+  flex-shrink: 0;
+  border-radius: 0.45rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+}
+.comm-item-icon--header  { background: rgba(59,130,246,0.1);  color: #1d4ed8; }
+.comm-item-icon--sidebar { background: rgba(99,102,241,0.1);  color: #6366f1; }
+.comm-item-icon--delays  { background: rgba(234,179,8,0.1);   color: #a16207; }
+
+.comm-item-content { flex: 1; min-width: 0; }
+.comm-item-title {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 0.2rem;
+}
+.comm-item-msg {
+  margin: 0 0 0.25rem;
+  font-size: 0.8125rem;
+  color: #334155;
+  line-height: 1.45;
+}
+.comm-item-meta {
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+.comm-item-delete {
+  flex-shrink: 0;
+  padding: 0.25rem 0.6rem;
+  border: 1px solid #fca5a5;
+  border-radius: 0.4rem;
+  background: #fff;
+  color: #dc2626;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, border-color 0.15s;
+  align-self: flex-start;
+}
+.comm-item-delete:hover { background: #fef2f2; border-color: #ef4444; }
+
+/* Empty state */
+.comm-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1rem;
+  color: #94a3b8;
+  gap: 0.5rem;
+  text-align: center;
+}
+.comm-empty i { font-size: 2rem; }
+.comm-empty p { margin: 0; font-size: 0.875rem; }
+.comm-empty.hidden { display: none; }

@@ -102,10 +102,6 @@
                     </div>
                   </div>
                   </div>
-                  <button type="button" class="sp-create-trigger" id="spCreateTrigger" aria-label="Create notification" title="Create notification">
-                    <i class="bi bi-plus-lg"></i>
-                    <span>Create</span>
-                  </button>
                   <div class="admin-header-user-pill d-flex align-items-center ms-auto" id="spHeaderPill" title="">
                     <span id="spHeaderAvatarFallback" class="admin-header-user-avatar admin-header-user-avatar-fallback" style="display:none;"></span>
                     <img id="spHeaderAvatar" src="" alt="" class="admin-header-user-avatar admin-header-user-avatar--img" style="display:none;" />
@@ -776,13 +772,13 @@
         <!-- Tabs das 3 categorias -->
         <div class="sp-avisos-modal-tabs" role="tablist" aria-label="Notice categories">
           <button type="button" class="sp-avisos-modal-tab active" data-avisos-tab="announcements" role="tab" aria-selected="true">
-            <i class="bi bi-megaphone-fill"></i> Announcements
-          </button>
-          <button type="button" class="sp-avisos-modal-tab" data-avisos-tab="network" role="tab" aria-selected="false">
-            <i class="bi bi-wifi"></i> Network &amp; Delays
+            <i class="bi bi-megaphone-fill"></i> Header
           </button>
           <button type="button" class="sp-avisos-modal-tab" data-avisos-tab="notifications" role="tab" aria-selected="false">
-            <i class="bi bi-bell-fill"></i> Notifications
+            <i class="bi bi-bell-fill"></i> Sidebar
+          </button>
+          <button type="button" class="sp-avisos-modal-tab" data-avisos-tab="network" role="tab" aria-selected="false">
+            <i class="bi bi-wifi"></i> Delays
           </button>
         </div>
         <div class="sp-avisos-modal-body">
@@ -796,81 +792,21 @@
             </div>
             <div class="sp-avisos-modal-dots" id="spAvisosModalDots" role="tablist"></div>
           </div>
-          <!-- Painel: Network & Delays -->
-          <div class="sp-avisos-modal-panel hidden" id="spAvisosPanel_network" role="tabpanel">
-            <ul class="sp-avisos-list" id="spAvisosNetworkList"></ul>
-            <div class="sp-avisos-empty hidden" id="spAvisosNetworkEmpty"><i class="bi bi-check-circle"></i><p>No network or delay notifications.</p></div>
-          </div>
-          <!-- Painel: Notifications -->
+          <!-- Painel: Sidebar (Notifications) -->
           <div class="sp-avisos-modal-panel hidden" id="spAvisosPanel_notifications" role="tabpanel">
             <ul class="sp-avisos-list" id="spAvisosNotifList"></ul>
-            <div class="sp-avisos-empty hidden" id="spAvisosNotifEmpty"><i class="bi bi-inbox"></i><p>No notifications yet.</p></div>
+            <div class="sp-avisos-empty hidden" id="spAvisosNotifEmpty"><i class="bi bi-inbox"></i><p>No sidebar notifications yet.</p></div>
+          </div>
+          <!-- Painel: Delays (Network & Delays) -->
+          <div class="sp-avisos-modal-panel hidden" id="spAvisosPanel_network" role="tabpanel">
+            <ul class="sp-avisos-list" id="spAvisosNetworkList"></ul>
+            <div class="sp-avisos-empty hidden" id="spAvisosNetworkEmpty"><i class="bi bi-check-circle"></i><p>No delays reported.</p></div>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Modal: Create Notification/Alert -->
-  <div id="spCreateTypeModal" class="sp-create-type-modal" role="dialog" aria-modal="true" aria-labelledby="spCreateTypeModalTitle" hidden>
-    <div class="sp-create-type-modal-backdrop" id="spCreateTypeModalBackdrop"></div>
-    <div class="sp-create-type-modal-dialog">
-      <div class="sp-create-type-modal-header">
-        <h2 id="spCreateTypeModalTitle" class="sp-create-type-modal-title"><i class="bi bi-send-fill"></i> Create Notification</h2>
-        <button type="button" class="sp-create-type-modal-close" id="spCreateTypeModalClose" aria-label="Close"><i class="bi bi-x-lg"></i></button>
-      </div>
-      <div class="sp-create-type-modal-body">
-        <p class="sp-create-type-intro">Select where the notification should appear:</p>
-        <!-- 3 opções — radio (só uma pode ser seleccionada) -->
-        <div class="sp-create-type-options" role="radiogroup" aria-label="Notification type">
-          <label class="sp-create-type-option" for="spCreateRadioNotif">
-            <input type="radio" class="sp-create-type-radio" name="spCreateType" id="spCreateRadioNotif" value="notification">
-            <div class="sp-create-type-option-inner">
-              <span class="sp-create-type-option-icon sp-create-icon--notif"><i class="bi bi-bell-fill"></i></span>
-              <div>
-                <span class="sp-create-type-option-label">Notification</span>
-                <span class="sp-create-type-option-desc">Appears in the notifications sidebar</span>
-              </div>
-            </div>
-            <span class="sp-create-type-option-check"><i class="bi bi-check-lg"></i></span>
-          </label>
-          <label class="sp-create-type-option" for="spCreateRadioAnnounce">
-            <input type="radio" class="sp-create-type-radio" name="spCreateType" id="spCreateRadioAnnounce" value="announcement">
-            <div class="sp-create-type-option-inner">
-              <span class="sp-create-type-option-icon sp-create-icon--announce"><i class="bi bi-megaphone-fill"></i></span>
-              <div>
-                <span class="sp-create-type-option-label">Announcement</span>
-                <span class="sp-create-type-option-desc">Shown in the header banner</span>
-              </div>
-            </div>
-            <span class="sp-create-type-option-check"><i class="bi bi-check-lg"></i></span>
-          </label>
-          <label class="sp-create-type-option" for="spCreateRadioNd">
-            <input type="radio" class="sp-create-type-radio" name="spCreateType" id="spCreateRadioNd" value="network_delay">
-            <div class="sp-create-type-option-inner">
-              <span class="sp-create-type-option-icon sp-create-icon--nd"><i class="bi bi-wifi"></i></span>
-              <div>
-                <span class="sp-create-type-option-label">Network &amp; Delay</span>
-                <span class="sp-create-type-option-desc">Shown in the Dashboard Summary block</span>
-              </div>
-            </div>
-            <span class="sp-create-type-option-check"><i class="bi bi-check-lg"></i></span>
-          </label>
-        </div>
-        <!-- Preview: onde vai aparecer -->
-        <div class="sp-create-type-preview hidden" id="spCreateTypePreview">
-          <p class="sp-create-type-preview-label"><i class="bi bi-eye me-1"></i>Where it will appear:</p>
-          <div class="sp-create-type-preview-box" id="spCreateTypePreviewBox"></div>
-        </div>
-      </div>
-      <div class="sp-create-type-modal-footer">
-        <button type="button" class="sp-create-type-cancel" id="spCreateTypeCancel">Cancel</button>
-        <button type="button" class="sp-create-type-submit" id="spCreateTypeSubmit" disabled>
-          <i class="bi bi-send me-1"></i> Create
-        </button>
-      </div>
-    </div>
-  </div>
 
   <!-- Notifications: tab na borda + sidebar (fora do layout para position:fixed ao viewport) -->
   <button type="button" class="sp-notif-tab" id="spNotifTab" aria-label="Open notifications" aria-expanded="false" title="Notifications">

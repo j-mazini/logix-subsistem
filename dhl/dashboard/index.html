@@ -261,46 +261,68 @@
 
   <div id="alertModal" class="alert-modal" role="dialog" aria-modal="true" aria-labelledby="alertModalTitle" aria-hidden="true" hidden>
     <div class="alert-modal-backdrop"></div>
-    <div class="alert-modal-content">
-      <div class="alert-modal-header">
-        <h2 id="alertModalTitle" class="alert-modal-title">
-          <i class="bi bi-megaphone-fill"></i>
-          Create Alert
-        </h2>
+    <div class="alert-modal-content dhl-notice-modal-content">
+      <div class="alert-modal-header dhl-notice-modal-header">
+        <div class="dhl-notice-modal-title-wrap">
+          <h2 id="alertModalTitle" class="alert-modal-title">
+            <i class="bi bi-megaphone-fill"></i> Create Notice
+          </h2>
+          <p class="dhl-notice-modal-subtitle">Sent from DHL to all depots and service providers</p>
+        </div>
         <button type="button" class="alert-modal-close" aria-label="Close">&times;</button>
       </div>
-      <div class="alert-modal-body">
-        <p class="alert-modal-desc">This alert will be sent to <strong>all depots</strong> and <strong>all service providers</strong>.</p>
-        <div class="mb-3">
-          <label class="form-label d-block mb-2">Category</label>
-          <div class="d-flex flex-column gap-2">
-            <div class="form-check form-switch">
-              <input class="form-check-input" type="checkbox" id="alertAsNotificacao" checked />
-              <label class="form-check-label" for="alertAsNotificacao">Notification (sidebar + snackbar preview)</label>
-            </div>
-            <div class="form-check form-switch">
-              <input class="form-check-input" type="checkbox" id="alertAsAviso" checked />
-              <label class="form-check-label" for="alertAsAviso">Notice (pinned to header until expired or removed by DHL)</label>
-            </div>
+      <div class="alert-modal-body dhl-notice-modal-body">
+
+        <!-- 3 cards de seleção de tipo -->
+        <div class="dhl-notice-type-options" role="radiogroup" aria-label="Notice type">
+
+          <label class="dhl-notice-type-card" for="alertTypeHeader">
+            <input type="radio" class="dhl-notice-type-radio" name="alertType" id="alertTypeHeader" value="header">
+            <span class="dhl-notice-type-check"><i class="bi bi-check-lg"></i></span>
+            <span class="dhl-notice-type-icon dhl-notice-icon--header"><i class="bi bi-megaphone-fill"></i></span>
+            <span class="dhl-notice-type-label">Announcement</span>
+            <span class="dhl-notice-type-desc">Pinned to the top banner of the SP dashboard</span>
+          </label>
+
+          <label class="dhl-notice-type-card" for="alertTypeSidebar">
+            <input type="radio" class="dhl-notice-type-radio" name="alertType" id="alertTypeSidebar" value="sidebar">
+            <span class="dhl-notice-type-check"><i class="bi bi-check-lg"></i></span>
+            <span class="dhl-notice-type-icon dhl-notice-icon--sidebar"><i class="bi bi-bell-fill"></i></span>
+            <span class="dhl-notice-type-label">Notifications</span>
+            <span class="dhl-notice-type-desc">Pushed to the SP notifications side panel</span>
+          </label>
+
+          <label class="dhl-notice-type-card" for="alertTypeDelays">
+            <input type="radio" class="dhl-notice-type-radio" name="alertType" id="alertTypeDelays" value="delays">
+            <span class="dhl-notice-type-check"><i class="bi bi-check-lg"></i></span>
+            <span class="dhl-notice-type-icon dhl-notice-icon--delays"><i class="bi bi-wifi"></i></span>
+            <span class="dhl-notice-type-label">Delays</span>
+            <span class="dhl-notice-type-desc">Alert in the Network &amp; Delays summary block</span>
+          </label>
+
+        </div>
+
+        <!-- Campos do formulário — aparecem após selecionar o tipo -->
+        <div id="alertFormFields" class="dhl-notice-form hidden">
+          <div class="mb-3">
+            <label for="alertTitle" class="form-label">Title <span class="text-muted fw-normal" style="font-size:0.8rem">(optional)</span></label>
+            <input type="text" id="alertTitle" class="form-control" placeholder="Notice title" maxlength="100" />
+          </div>
+          <div class="mb-3">
+            <label for="alertMessage" class="form-label">Message <span style="color:#ef4444">*</span></label>
+            <textarea id="alertMessage" class="form-control" rows="3" placeholder="Enter your message..." maxlength="1000"></textarea>
+          </div>
+          <div class="mb-0" id="alertExpiringWrap">
+            <label for="alertExpiringDate" class="form-label">Expiry Date <span style="color:#ef4444">*</span></label>
+            <input type="date" id="alertExpiringDate" class="form-control" aria-describedby="alertExpiringHelp" />
+            <div id="alertExpiringHelp" class="form-text">The notice will remain pinned until this date.</div>
           </div>
         </div>
-        <div class="mb-3">
-          <label for="alertTitle" class="form-label">Title</label>
-          <input type="text" id="alertTitle" class="form-control" placeholder="Alert title" maxlength="100" />
-        </div>
-        <div class="mb-3">
-          <label for="alertMessage" class="form-label">Message</label>
-          <textarea id="alertMessage" class="form-control" rows="4" placeholder="Enter your alert message..." maxlength="1000"></textarea>
-        </div>
-        <div class="mb-3" id="alertExpiringWrap">
-          <label for="alertExpiringDate" class="form-label">Expiring Date</label>
-          <input type="date" id="alertExpiringDate" class="form-control" aria-describedby="alertExpiringHelp" />
-          <div id="alertExpiringHelp" class="form-text">The notification will remain active until this date.</div>
-        </div>
+
       </div>
       <div class="alert-modal-footer">
         <button type="button" class="btn btn-outline-secondary" id="alertModalCancel">Cancel</button>
-        <button type="button" class="btn btn-primary" id="alertModalSend">
+        <button type="button" class="btn btn-primary" id="alertModalSend" disabled>
           <i class="bi bi-send-fill"></i>
           Send to All
         </button>
@@ -313,58 +335,67 @@
     <span id="alertToastText"></span>
   </div>
 
-  <!-- Modal: gerir Avisos (DHL – listar e excluir) -->
+  <!-- Modal: Communications (DHL – ver avisos do dia por categoria) -->
   <div id="avisosManageModal" class="alert-modal avisos-manage-modal" role="dialog" aria-labelledby="avisosManageModalTitle" aria-hidden="true" hidden>
     <div class="alert-modal-backdrop" id="avisosManageModalBackdrop"></div>
-    <div class="alert-modal-content">
-      <div class="alert-modal-header">
-        <h2 id="avisosManageModalTitle" class="alert-modal-title"><i class="bi bi-pin-angle-fill"></i> Communications</h2>
+    <div class="alert-modal-content comm-modal-content">
+      <div class="alert-modal-header comm-modal-header">
+        <div class="comm-modal-title-wrap">
+          <h2 id="avisosManageModalTitle" class="alert-modal-title">
+            <i class="bi bi-broadcast"></i> Communications
+          </h2>
+          <p class="comm-modal-subtitle" id="commModalDate">Today's notices by category</p>
+        </div>
         <button type="button" class="alert-modal-close" id="avisosManageModalClose" aria-label="Close">&times;</button>
       </div>
-      <div class="alert-modal-body">
-        <p class="alert-modal-desc">All items are organised by category: <strong>Notifications</strong> (sidebar) and <strong>Notices</strong> (pinned to header with expiry date).</p>
+      <div class="alert-modal-body comm-modal-body">
 
-        <div class="avisos-manage-topbar">
-          <div class="avisos-manage-tabs" role="tablist" aria-label="Categories">
-            <button type="button" class="avisos-manage-tab active" id="avisosTabNotificacoes" data-tab="notificacoes" role="tab" aria-selected="true">
-              <i class="bi bi-bell-fill"></i>
-              <span>Notifications</span>
-              <span class="avisos-manage-tab-badge" id="avisosNotifCount">0</span>
-            </button>
-            <button type="button" class="avisos-manage-tab" id="avisosTabAvisos" data-tab="avisos" role="tab" aria-selected="false">
-              <i class="bi bi-pin-angle-fill"></i>
-              <span>Notices</span>
-              <span class="avisos-manage-tab-badge" id="avisosAvisoCount">0</span>
-            </button>
-          </div>
-          <button type="button" class="btn btn-outline-secondary btn-sm avisos-history-btn hidden" id="avisosHistoryBtn" aria-label="Notice history">
-            <i class="bi bi-clock-history"></i>
-            <span>History</span>
+        <!-- 3 tabs de categoria -->
+        <div class="comm-tabs" role="tablist" aria-label="Notice categories">
+          <button type="button" class="comm-tab active" id="commTabHeader" data-comm-tab="header" role="tab" aria-selected="true">
+            <span class="comm-tab-icon comm-tab-icon--header"><i class="bi bi-megaphone-fill"></i></span>
+            <span class="comm-tab-label">Announcements</span>
+            <span class="comm-tab-badge" id="commBadgeHeader">0</span>
+          </button>
+          <button type="button" class="comm-tab" id="commTabSidebar" data-comm-tab="sidebar" role="tab" aria-selected="false">
+            <span class="comm-tab-icon comm-tab-icon--sidebar"><i class="bi bi-bell-fill"></i></span>
+            <span class="comm-tab-label">Notifications</span>
+            <span class="comm-tab-badge" id="commBadgeSidebar">0</span>
+          </button>
+          <button type="button" class="comm-tab" id="commTabDelays" data-comm-tab="delays" role="tab" aria-selected="false">
+            <span class="comm-tab-icon comm-tab-icon--delays"><i class="bi bi-wifi"></i></span>
+            <span class="comm-tab-label">Delays</span>
+            <span class="comm-tab-badge" id="commBadgeDelays">0</span>
           </button>
         </div>
 
-        <!-- Panel: Notificações -->
-        <div class="avisos-manage-panel" id="avisosPanelNotificacoes" role="tabpanel" aria-labelledby="avisosTabNotificacoes">
-          <div id="dhlNotifManageList" class="avisos-manage-list" role="list"></div>
-          <div id="dhlNotifManageEmpty" class="avisos-manage-empty hidden">
-            <i class="bi bi-inbox"></i>
-            <p>No notifications.</p>
+        <!-- Panel: Header -->
+        <div class="comm-panel" id="commPanelHeader" role="tabpanel">
+          <div id="commHeaderList" class="comm-list"></div>
+          <div class="comm-empty hidden" id="commHeaderEmpty">
+            <i class="bi bi-megaphone"></i>
+            <p>No announcements sent today.</p>
           </div>
         </div>
 
-        <!-- Panel: Avisos -->
-        <div class="avisos-manage-panel hidden" id="avisosPanelAvisos" role="tabpanel" aria-labelledby="avisosTabAvisos">
-          <div id="avisosManageList" class="avisos-manage-list" role="list"></div>
-          <div id="avisosManageEmpty" class="avisos-manage-empty hidden">
-            <i class="bi bi-inbox"></i>
-            <p>No active notices.</p>
-          </div>
-          <div id="avisosManageHistoryList" class="avisos-manage-list hidden" role="list"></div>
-          <div id="avisosManageHistoryEmpty" class="avisos-manage-empty hidden">
-            <i class="bi bi-inbox"></i>
-            <p>No notice history.</p>
+        <!-- Panel: Sidebar -->
+        <div class="comm-panel hidden" id="commPanelSidebar" role="tabpanel">
+          <div id="commSidebarList" class="comm-list"></div>
+          <div class="comm-empty hidden" id="commSidebarEmpty">
+            <i class="bi bi-bell"></i>
+            <p>No notifications sent today.</p>
           </div>
         </div>
+
+        <!-- Panel: Delays -->
+        <div class="comm-panel hidden" id="commPanelDelays" role="tabpanel">
+          <div id="commDelaysList" class="comm-list"></div>
+          <div class="comm-empty hidden" id="commDelaysEmpty">
+            <i class="bi bi-wifi"></i>
+            <p>No delay alerts sent today.</p>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -990,31 +1021,50 @@
         var closeBtn = modal && modal.querySelector('.alert-modal-close');
         var cancelBtn = document.getElementById('alertModalCancel');
         var sendBtn = document.getElementById('alertModalSend');
-        var asNotificacao = document.getElementById('alertAsNotificacao');
-        var asAviso = document.getElementById('alertAsAviso');
         var titleInput = document.getElementById('alertTitle');
         var messageInput = document.getElementById('alertMessage');
         var expiringDateInput = document.getElementById('alertExpiringDate');
         var expiringWrap = document.getElementById('alertExpiringWrap');
+        var formFields = document.getElementById('alertFormFields');
         var toast = document.getElementById('alertToast');
         var toastText = document.getElementById('alertToastText');
+        var typeCards = modal ? modal.querySelectorAll('.dhl-notice-type-card') : [];
+        var typeRadios = modal ? modal.querySelectorAll('.dhl-notice-type-radio') : [];
+
+        function getSelectedType() {
+          var checked = modal ? modal.querySelector('.dhl-notice-type-radio:checked') : null;
+          return checked ? checked.value : null;
+        }
+
+        function syncFormVisibility() {
+          var type = getSelectedType();
+          if (!formFields) return;
+          if (type) {
+            formFields.classList.remove('hidden');
+            if (expiringWrap) expiringWrap.style.display = (type === 'header') ? '' : 'none';
+          } else {
+            formFields.classList.add('hidden');
+          }
+          if (sendBtn) sendBtn.disabled = !type;
+        }
 
         function openModal() {
           if (!modal) return;
-          if (asNotificacao) asNotificacao.checked = true;
-          if (asAviso) asAviso.checked = true;
-          titleInput.value = '';
-          messageInput.value = '';
+          typeRadios.forEach(function (r) { r.checked = false; });
+          typeCards.forEach(function (c) { c.classList.remove('selected'); });
+          if (titleInput) titleInput.value = '';
+          if (messageInput) messageInput.value = '';
           var minDate = new Date();
           minDate.setHours(0, 0, 0, 0);
-          expiringDateInput.min = minDate.toISOString().slice(0, 10);
-          var defaultExpiring = new Date();
-          defaultExpiring.setDate(defaultExpiring.getDate() + 7);
-          expiringDateInput.value = defaultExpiring.toISOString().slice(0, 10);
-          if (expiringWrap) expiringWrap.style.display = '';
+          if (expiringDateInput) {
+            expiringDateInput.min = minDate.toISOString().slice(0, 10);
+            var defaultExpiring = new Date();
+            defaultExpiring.setDate(defaultExpiring.getDate() + 7);
+            expiringDateInput.value = defaultExpiring.toISOString().slice(0, 10);
+          }
+          syncFormVisibility();
           modal.removeAttribute('hidden');
           modal.setAttribute('aria-hidden', 'false');
-          titleInput.focus();
         }
 
         function closeModal() {
@@ -1031,31 +1081,20 @@
           setTimeout(function () { toast.setAttribute('hidden', ''); }, 4000);
         }
 
-        function syncExpiringVisibility() {
-          var avisoOn = asAviso ? !!asAviso.checked : true;
-          if (!expiringWrap) return;
-          expiringWrap.style.display = avisoOn ? '' : 'none';
-        }
-
         function sendAlert() {
-          var title = (titleInput.value || '').trim();
-          var msg = (messageInput.value || '').trim();
-          var expiringDate = (expiringDateInput.value || '').trim();
-          var createNotif = asNotificacao ? !!asNotificacao.checked : true;
-          var createAviso = asAviso ? !!asAviso.checked : true;
-          if (!msg) {
-            messageInput.focus();
+          var type = getSelectedType();
+          var title = (titleInput ? titleInput.value : '').trim();
+          var msg = (messageInput ? messageInput.value : '').trim();
+          var expiringDate = (expiringDateInput ? expiringDateInput.value : '').trim();
+
+          if (!type) { showToast('Select a notice type.'); return; }
+          if (!msg) { if (messageInput) messageInput.focus(); return; }
+          if (type === 'header' && !expiringDate) {
+            if (expiringDateInput) expiringDateInput.focus();
+            showToast('Please select an expiry date for the Announcement.');
             return;
           }
-          if (!createNotif && !createAviso) {
-            showToast('Select at least one category (Notification or Notice).');
-            return;
-          }
-          if (createAviso && !expiringDate) {
-            expiringDateInput.focus();
-            showToast('Please select an expiring date.');
-            return;
-          }
+
           var data = window.DHL_MOCK_DATA || {};
           var depots = [];
           var sps = [];
@@ -1069,43 +1108,50 @@
           });
           if (depots.length === 0) depots = ['MSE', 'LCY', 'LSE'];
           if (sps.length === 0) sps = ['BA Express', 'Premier Logistics Ltd', 'Swift Haul Solutions', 'Metro Freight Partners', 'Atlas Transport Services'];
-          closeModal();
-          var parts = [];
-          if (createAviso) parts.push('Notice');
-          if (createNotif) parts.push('Notification');
-          var formattedDate = createAviso ? new Date(expiringDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
-          showToast(parts.join(' + ') + ' sent to ' + depots.length + ' depot(s) and ' + sps.length + ' service provider(s).' + (createAviso ? (' Active until ' + formattedDate + '.') : ''));
 
-          if (createAviso && window.AvisosStorage) {
+          closeModal();
+
+          if (type === 'header' && window.AvisosStorage) {
             AvisosStorage.addAviso({ title: title, message: msg, expireDate: expiringDate });
-          }
-          if (createNotif) {
+            var formattedDate = new Date(expiringDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+            showToast('Announcement sent to ' + depots.length + ' depot(s) and ' + sps.length + ' SP(s). Active until ' + formattedDate + '.');
+          } else if (type === 'sidebar') {
             var notifList = data.dailyOperationsNotifications || [];
             var notifMsg = (title ? title + ' – ' : '') + msg;
-            notifList.unshift({
-              id: 'alert-' + Date.now(),
-              type: 'alert',
-              severity: 'info',
-              icon: 'megaphone-fill',
-              message: notifMsg,
-              timeAgoMinutes: 0
-            });
+            notifList.unshift({ id: 'alert-' + Date.now(), type: 'alert', severity: 'info', icon: 'megaphone-fill', message: notifMsg, timeAgoMinutes: 0 });
             data.dailyOperationsNotifications = notifList;
+            showToast('Notification sent to ' + depots.length + ' depot(s) and ' + sps.length + ' SP(s).');
+          } else if (type === 'delays') {
+            try {
+              var ndRaw = localStorage.getItem('dhl_network_delay');
+              var ndList = ndRaw ? JSON.parse(ndRaw) : [];
+              var ndMsg = (title ? title + ' – ' : '') + msg;
+              ndList.unshift({ id: 'nd-' + Date.now(), message: ndMsg, createdAt: new Date().toISOString() });
+              localStorage.setItem('dhl_network_delay', JSON.stringify(ndList));
+            } catch (e) {}
+            showToast('Delays alert sent to ' + depots.length + ' depot(s) and ' + sps.length + ' SP(s).');
           }
 
           if (typeof updateAvisosCount === 'function') updateAvisosCount();
           if (typeof updateAvisosManageCounts === 'function') updateAvisosManageCounts();
           if (typeof renderNotificationsManageList === 'function') renderNotificationsManageList();
           if (typeof renderAvisosManageActive === 'function') renderAvisosManageActive();
+          if (typeof renderCommDelaysPanel === 'function') renderCommDelaysPanel();
         }
+
+        typeCards.forEach(function (card) {
+          card.addEventListener('click', function () {
+            typeCards.forEach(function (c) { c.classList.remove('selected'); });
+            card.classList.add('selected');
+            syncFormVisibility();
+          });
+        });
 
         if (btn) btn.addEventListener('click', openModal);
         if (backdrop) backdrop.addEventListener('click', closeModal);
         if (closeBtn) closeBtn.addEventListener('click', closeModal);
         if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
         if (sendBtn) sendBtn.addEventListener('click', sendAlert);
-        if (asAviso) asAviso.addEventListener('change', syncExpiringVisibility);
-        if (modal) syncExpiringVisibility();
         if (modal) modal.addEventListener('keydown', function (e) {
           if (e.key === 'Escape') closeModal();
         });
@@ -1148,83 +1194,82 @@
       }
 
       function updateAvisosManageCounts() {
-        var notifCountEl = document.getElementById('avisosNotifCount');
-        var avisoCountEl = document.getElementById('avisosAvisoCount');
-        var data = window.DHL_MOCK_DATA || {};
-        var notifList = (data.dailyOperationsNotifications || []).slice();
-        if (notifCountEl) notifCountEl.textContent = notifList.length > 99 ? '99+' : String(notifList.length);
-        var activeAvisos = getActiveAvisosOnly();
-        if (avisoCountEl) avisoCountEl.textContent = activeAvisos.length > 99 ? '99+' : String(activeAvisos.length);
-      }
-
-      function renderAvisosManageActive() {
-        var list = getActiveAvisosOnly();
-        var listEl = document.getElementById('avisosManageList');
-        var emptyEl = document.getElementById('avisosManageEmpty');
-        if (!listEl) return;
-        if (list.length === 0) {
-          listEl.innerHTML = '';
-          if (emptyEl) emptyEl.classList.remove('hidden');
-          return;
-        }
-        if (emptyEl) emptyEl.classList.add('hidden');
-        function escapeHtml(s) {
-          if (s == null) return '';
-          var d = document.createElement('div');
-          d.textContent = s;
-          return d.innerHTML;
-        }
-        listEl.innerHTML = list.map(function (a) {
-          var expStr = a.expireDate ? new Date(a.expireDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
-          return '<div class="avisos-manage-item" data-aviso-id="' + escapeHtml(a.id) + '">' +
-            '<div class="avisos-manage-item-content">' +
-            '<strong class="avisos-manage-item-title">' + escapeHtml(a.title || 'No title') + '</strong>' +
-            '<p class="avisos-manage-item-msg">' + escapeHtml((a.message || '').slice(0, 120)) + (a.message && a.message.length > 120 ? '…' : '') + '</p>' +
-            '<span class="avisos-manage-item-expire">Expires: ' + expStr + '</span>' +
-            '</div>' +
-            '<button type="button" class="btn btn-outline-danger btn-sm avisos-manage-delete" data-aviso-id="' + escapeHtml(a.id) + '" aria-label="Delete notice">Delete</button>' +
-            '</div>';
-        }).join('');
-      }
-
-      function renderAvisosManageHistory() {
-        var list = getAvisosHistoryOnly();
-        var listEl = document.getElementById('avisosManageHistoryList');
-        var emptyEl = document.getElementById('avisosManageHistoryEmpty');
-        if (!listEl) return;
-        if (list.length === 0) {
-          listEl.innerHTML = '';
-          if (emptyEl) emptyEl.classList.remove('hidden');
-          return;
-        }
-        if (emptyEl) emptyEl.classList.add('hidden');
-        function escapeHtml(s) {
-          if (s == null) return '';
-          var d = document.createElement('div');
-          d.textContent = s;
-          return d.innerHTML;
-        }
         var today = new Date().toISOString().slice(0, 10);
+        var data = window.DHL_MOCK_DATA || {};
+
+        /* Header — avisos criados hoje */
+        var allAvisos = window.AvisosStorage ? AvisosStorage.getAllAvisos() : [];
+        var headerCount = allAvisos.filter(function (a) {
+          return !a.deleted && a.createdAt && a.createdAt.slice(0, 10) === today;
+        }).length;
+        var headerBadge = document.getElementById('commBadgeHeader');
+        if (headerBadge) headerBadge.textContent = headerCount > 99 ? '99+' : String(headerCount);
+
+        /* Sidebar — notificações (todas, sem filtro de data) */
+        var notifList = (data.dailyOperationsNotifications || []);
+        var sidebarBadge = document.getElementById('commBadgeSidebar');
+        if (sidebarBadge) sidebarBadge.textContent = notifList.length > 99 ? '99+' : String(notifList.length);
+
+        /* Delays — alertas criados hoje */
+        var ndList = [];
+        try { var ndRaw = localStorage.getItem('dhl_network_delay'); ndList = ndRaw ? JSON.parse(ndRaw) : []; } catch (e) {}
+        var delaysCount = ndList.filter(function (nd) {
+          return nd.createdAt && nd.createdAt.slice(0, 10) === today;
+        }).length;
+        var delaysBadge = document.getElementById('commBadgeDelays');
+        if (delaysBadge) delaysBadge.textContent = delaysCount > 99 ? '99+' : String(delaysCount);
+      }
+
+      /* ── Shared helpers ─────────────────────────────────────────── */
+      function commEscape(s) {
+        if (s == null) return '';
+        var d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+      }
+      function commFmtTime(isoStr) {
+        if (!isoStr) return '';
+        return new Date(isoStr).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+      }
+
+      /* ── Panel: Header (avisos pinned to top banner) ─────────── */
+      function renderAvisosManageActive() {
+        var today = new Date().toISOString().slice(0, 10);
+        var allAvisos = window.AvisosStorage ? AvisosStorage.getAllAvisos() : [];
+        var list = allAvisos.filter(function (a) {
+          return !a.deleted && a.createdAt && a.createdAt.slice(0, 10) === today;
+        });
+        var listEl = document.getElementById('commHeaderList');
+        var emptyEl = document.getElementById('commHeaderEmpty');
+        if (!listEl) return;
+        if (list.length === 0) {
+          listEl.innerHTML = '';
+          if (emptyEl) emptyEl.classList.remove('hidden');
+          return;
+        }
+        if (emptyEl) emptyEl.classList.add('hidden');
         listEl.innerHTML = list.map(function (a) {
+          var time = commFmtTime(a.createdAt);
           var expStr = a.expireDate ? new Date(a.expireDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
-          var expired = a.expireDate && a.expireDate < today;
-          var status = a.deleted ? 'Deleted' : (expired ? 'Expired' : '—');
-          return '<div class="avisos-manage-item avisos-manage-item--history" data-aviso-id="' + escapeHtml(a.id) + '">' +
-            '<div class="avisos-manage-item-content">' +
-            '<strong class="avisos-manage-item-title">' + escapeHtml(a.title || 'No title') + '</strong>' +
-            '<p class="avisos-manage-item-msg">' + escapeHtml((a.message || '').slice(0, 120)) + (a.message && a.message.length > 120 ? '…' : '') + '</p>' +
-            '<span class="avisos-manage-item-expire">' + escapeHtml(status) + ' · Expires: ' + expStr + '</span>' +
+          return '<div class="comm-item" data-aviso-id="' + commEscape(a.id) + '">' +
+            '<span class="comm-item-icon comm-item-icon--header"><i class="bi bi-megaphone-fill"></i></span>' +
+            '<div class="comm-item-content">' +
+              (a.title ? '<strong class="comm-item-title">' + commEscape(a.title) + '</strong>' : '') +
+              '<p class="comm-item-msg">' + commEscape((a.message || '').slice(0, 140)) + (a.message && a.message.length > 140 ? '…' : '') + '</p>' +
+              '<span class="comm-item-meta">' + (time ? time + ' · ' : '') + 'Expires ' + commEscape(expStr) + '</span>' +
             '</div>' +
-            '</div>';
+            '<button type="button" class="comm-item-delete avisos-manage-delete" data-aviso-id="' + commEscape(a.id) + '" aria-label="Remove notice">Remove</button>' +
+          '</div>';
         }).join('');
       }
 
+      /* ── Panel: Sidebar (sidebar notifications) ──────────────── */
       function renderNotificationsManageList() {
         var data = window.DHL_MOCK_DATA || {};
         var list = (data.dailyOperationsNotifications || []).slice();
         list.sort(function (a, b) { return (a.timeAgoMinutes || 0) - (b.timeAgoMinutes || 0); });
-        var listEl = document.getElementById('dhlNotifManageList');
-        var emptyEl = document.getElementById('dhlNotifManageEmpty');
+        var listEl = document.getElementById('commSidebarList');
+        var emptyEl = document.getElementById('commSidebarEmpty');
         if (!listEl) return;
         if (!list.length) {
           listEl.innerHTML = '';
@@ -1232,98 +1277,107 @@
           return;
         }
         if (emptyEl) emptyEl.classList.add('hidden');
-        function escapeHtml(s) {
-          if (s == null) return '';
-          var d = document.createElement('div');
-          d.textContent = s;
-          return d.innerHTML;
-        }
-        function getIcon(n) {
-          return n.icon ? n.icon : 'bell';
-        }
-        function timeText(n) {
-          var m = n.timeAgoMinutes || 0;
-          return m <= 60 ? m + ' min ago' : Math.floor(m / 60) + ' h ago';
-        }
         listEl.innerHTML = list.map(function (n) {
-          var icon = getIcon(n);
-          return '<div class="avisos-manage-item avisos-manage-item--notif" role="listitem">' +
-            '<div class="avisos-manage-item-content">' +
-            '<strong class="avisos-manage-item-title"><i class="bi bi-' + escapeHtml(icon) + ' me-2 text-secondary"></i>' + escapeHtml((n.type || 'notification').toString().replace(/_/g, ' ')) + '</strong>' +
-            '<p class="avisos-manage-item-msg">' + escapeHtml(n.message || '') + '</p>' +
-            '<span class="avisos-manage-item-expire">' + escapeHtml(timeText(n)) + '</span>' +
+          var m = n.timeAgoMinutes || 0;
+          var timeText = m === 0 ? 'Just now' : (m <= 60 ? m + ' min ago' : Math.floor(m / 60) + ' h ago');
+          var icon = n.icon || 'bell-fill';
+          return '<div class="comm-item">' +
+            '<span class="comm-item-icon comm-item-icon--sidebar"><i class="bi bi-' + commEscape(icon) + '"></i></span>' +
+            '<div class="comm-item-content">' +
+              '<p class="comm-item-msg">' + commEscape(n.message || '') + '</p>' +
+              '<span class="comm-item-meta">' + commEscape(timeText) + '</span>' +
             '</div>' +
-            '</div>';
+          '</div>';
         }).join('');
       }
 
+      /* ── Panel: Delays (network & delay alerts) ──────────────── */
+      function renderCommDelaysPanel() {
+        var today = new Date().toISOString().slice(0, 10);
+        var list = [];
+        try { var ndRaw = localStorage.getItem('dhl_network_delay'); list = ndRaw ? JSON.parse(ndRaw) : []; } catch (e) {}
+        list = list.filter(function (nd) { return nd.createdAt && nd.createdAt.slice(0, 10) === today; });
+        var listEl = document.getElementById('commDelaysList');
+        var emptyEl = document.getElementById('commDelaysEmpty');
+        if (!listEl) return;
+        if (!list.length) {
+          listEl.innerHTML = '';
+          if (emptyEl) emptyEl.classList.remove('hidden');
+          return;
+        }
+        if (emptyEl) emptyEl.classList.add('hidden');
+        listEl.innerHTML = list.map(function (nd) {
+          var time = commFmtTime(nd.createdAt);
+          return '<div class="comm-item">' +
+            '<span class="comm-item-icon comm-item-icon--delays"><i class="bi bi-wifi"></i></span>' +
+            '<div class="comm-item-content">' +
+              '<p class="comm-item-msg">' + commEscape(nd.message || '') + '</p>' +
+              (time ? '<span class="comm-item-meta">' + commEscape(time) + '</span>' : '') +
+            '</div>' +
+          '</div>';
+        }).join('');
+      }
+
+      /* ── Init Communications modal ───────────────────────────── */
       function initAvisosManageModal() {
         var modal = document.getElementById('avisosManageModal');
         var btn = document.getElementById('manageAvisosBtn');
         var backdrop = document.getElementById('avisosManageModalBackdrop');
         var closeBtn = document.getElementById('avisosManageModalClose');
-        var listEl = document.getElementById('avisosManageList');
-        var historyBtn = document.getElementById('avisosHistoryBtn');
-        var tabNotifs = document.getElementById('avisosTabNotificacoes');
-        var tabAvisos = document.getElementById('avisosTabAvisos');
-        var panelNotifs = document.getElementById('avisosPanelNotificacoes');
-        var panelAvisos = document.getElementById('avisosPanelAvisos');
-        var historyList = document.getElementById('avisosManageHistoryList');
-        var activeList = document.getElementById('avisosManageList');
-        var historyEmpty = document.getElementById('avisosManageHistoryEmpty');
-        var activeEmpty = document.getElementById('avisosManageEmpty');
-        var isHistory = false;
-        var currentTab = 'notificacoes';
+        var headerList = document.getElementById('commHeaderList');
+        var tabs = modal ? modal.querySelectorAll('.comm-tab') : [];
 
-        function setTab(tab) {
-          currentTab = tab;
-          if (tabNotifs) { tabNotifs.classList.toggle('active', tab === 'notificacoes'); tabNotifs.setAttribute('aria-selected', tab === 'notificacoes' ? 'true' : 'false'); }
-          if (tabAvisos) { tabAvisos.classList.toggle('active', tab === 'avisos'); tabAvisos.setAttribute('aria-selected', tab === 'avisos' ? 'true' : 'false'); }
-          if (panelNotifs) panelNotifs.classList.toggle('hidden', tab !== 'notificacoes');
-          if (panelAvisos) panelAvisos.classList.toggle('hidden', tab !== 'avisos');
-          if (historyBtn) historyBtn.classList.toggle('hidden', tab !== 'avisos');
-          if (tab === 'notificacoes') {
-            renderNotificationsManageList();
-          } else {
-            renderAvisosManageActive();
-            renderAvisosManageHistory();
-            setHistory(false);
-          }
+        function renderTab(tabName) {
+          if (tabName === 'header') renderAvisosManageActive();
+          else if (tabName === 'sidebar') renderNotificationsManageList();
+          else if (tabName === 'delays') renderCommDelaysPanel();
         }
 
-        function setHistory(on) {
-          isHistory = !!on;
-          if (historyBtn) {
-            historyBtn.classList.toggle('active', isHistory);
+        function setTab(tabName) {
+          tabs.forEach(function (t) {
+            var isActive = t.getAttribute('data-comm-tab') === tabName;
+            t.classList.toggle('active', isActive);
+            t.setAttribute('aria-selected', isActive ? 'true' : 'false');
+          });
+          if (modal) {
+            modal.querySelectorAll('.comm-panel').forEach(function (p) {
+              var key = p.id.replace('commPanel', '').toLowerCase();
+              p.classList.toggle('hidden', key !== tabName);
+            });
           }
-          if (activeList) activeList.classList.toggle('hidden', isHistory);
-          if (activeEmpty) activeEmpty.classList.toggle('hidden', isHistory);
-          if (historyList) historyList.classList.toggle('hidden', !isHistory);
-          if (historyEmpty) historyEmpty.classList.toggle('hidden', !isHistory);
+          renderTab(tabName);
+        }
+
+        function updateDateLabel() {
+          var el = document.getElementById('commModalDate');
+          if (!el) return;
+          el.textContent = 'Today · ' + new Date().toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
         }
 
         function openModal() {
           if (!modal) return;
           updateAvisosManageCounts();
-          setTab('notificacoes');
+          updateDateLabel();
+          setTab('header');
           modal.removeAttribute('hidden');
           modal.setAttribute('aria-hidden', 'false');
         }
         function closeModal() {
-          if (modal) {
-            modal.setAttribute('hidden', '');
-            modal.setAttribute('aria-hidden', 'true');
-          }
+          if (modal) { modal.setAttribute('hidden', ''); modal.setAttribute('aria-hidden', 'true'); }
         }
+
+        tabs.forEach(function (tab) {
+          tab.addEventListener('click', function () { setTab(tab.getAttribute('data-comm-tab')); });
+        });
 
         if (btn) btn.addEventListener('click', openModal);
         if (backdrop) backdrop.addEventListener('click', closeModal);
         if (closeBtn) closeBtn.addEventListener('click', closeModal);
-        if (tabNotifs) tabNotifs.addEventListener('click', function () { setTab('notificacoes'); });
-        if (tabAvisos) tabAvisos.addEventListener('click', function () { setTab('avisos'); });
-        if (historyBtn) historyBtn.addEventListener('click', function () { setHistory(!isHistory); });
-        if (listEl) {
-          listEl.addEventListener('click', function (e) {
+        if (modal) modal.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+
+        /* Delete handler no painel Header */
+        if (headerList) {
+          headerList.addEventListener('click', function (e) {
             var delBtn = e.target.closest('.avisos-manage-delete');
             if (!delBtn) return;
             var id = delBtn.getAttribute('data-aviso-id');
@@ -1332,17 +1386,88 @@
             updateAvisosCount();
             updateAvisosManageCounts();
             renderAvisosManageActive();
-            renderAvisosManageHistory();
           });
         }
-        if (modal) modal.addEventListener('keydown', function (e) {
-          if (e.key === 'Escape') closeModal();
-        });
+      }
+
+      /* ── Seed demo data (espelha o conteúdo do SP portal) ──────── */
+      function seedDhlDemoData() {
+        var today = new Date().toISOString().slice(0, 10);
+
+        /* Announcements — mesmo aviso que o SP portal vê */
+        if (window.AvisosStorage) {
+          var todayAvisos = AvisosStorage.getAllAvisos().filter(function (a) {
+            return !a.deleted && a.createdAt && a.createdAt.slice(0, 10) === today;
+          });
+          if (todayAvisos.length === 0) {
+            var exp = new Date();
+            exp.setDate(exp.getDate() + 30);
+            AvisosStorage.addAviso({
+              title: 'Service Update',
+              message: 'Please ensure all drivers complete the safety briefing by end of week. Contact your DHL representative for materials.',
+              expireDate: exp.toISOString().slice(0, 10)
+            });
+            AvisosStorage.addAviso({
+              title: 'Holiday Schedule',
+              message: 'Adjusted delivery windows will apply during the upcoming bank holiday. Please review the updated route plan sent to your depot coordinator.',
+              expireDate: exp.toISOString().slice(0, 10)
+            });
+          }
+        }
+
+        /* Notifications — aparece no painel lateral do SP */
+        if (!data.dailyOperationsNotifications || data.dailyOperationsNotifications.length === 0) {
+          data.dailyOperationsNotifications = [
+            {
+              id: 'notif-seed-1',
+              type: 'alert',
+              severity: 'warning',
+              icon: 'megaphone-fill',
+              message: 'Route MSE-07 delayed by approximately 25 minutes due to traffic on the A12.',
+              timeAgoMinutes: 5
+            },
+            {
+              id: 'notif-seed-2',
+              type: 'info',
+              severity: 'info',
+              icon: 'bell-fill',
+              message: 'Vehicle inspection for BA Express fleet scheduled for tomorrow morning at 08:00.',
+              timeAgoMinutes: 12
+            },
+            {
+              id: 'notif-seed-3',
+              type: 'info',
+              severity: 'info',
+              icon: 'bell-fill',
+              message: 'Premier Logistics Ltd has completed the onboarding process and is now active.',
+              timeAgoMinutes: 31
+            }
+          ];
+        }
+
+        /* Delays — mesmo item que o SP portal vê no bloco Network & Delays */
+        try {
+          var ndRaw = localStorage.getItem('dhl_network_delay');
+          var ndList = ndRaw ? JSON.parse(ndRaw) : [];
+          var todayNd = ndList.filter(function (nd) {
+            return nd.createdAt && nd.createdAt.slice(0, 10) === today;
+          });
+          if (todayNd.length === 0) {
+            ndList.unshift({
+              id: 'nd-seed-' + Date.now(),
+              message: 'Network delay reported on Northern corridor – allow extra time for collections.',
+              createdAt: new Date().toISOString()
+            });
+            localStorage.setItem('dhl_network_delay', JSON.stringify(ndList));
+          }
+        } catch (e) {}
       }
 
       updateAvisosCount();
       initAlertModal();
       initAvisosManageModal();
+      seedDhlDemoData();
+      updateAvisosManageCounts();
     })();
   </script>
 </body>
