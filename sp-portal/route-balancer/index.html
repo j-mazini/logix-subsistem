@@ -1,0 +1,222 @@
+Cr<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Route Balancer - Service Provider Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../sidebar-beam.css" />
+  <link rel="stylesheet" href="../../modern-ui.css" />
+  <link rel="stylesheet" href="../../liquid-glass.css" />
+  <link rel="stylesheet" href="../sp-portal.css" />
+  <link rel="stylesheet" href="../dashboard/disco-block.css" />
+  <link rel="stylesheet" href="route-balancer.css" />
+</head>
+<body class="has-beam-sidebar sp-portal route-balancer-page">
+  <div class="sidebar-wrapper" id="sidebarWrapper">
+    <div class="sidebar-gap" id="sidebarGap" aria-hidden="true"></div>
+    <div class="beam-overlay" id="beamOverlay" aria-hidden="true"></div>
+    <nav class="beam-sidebar" id="beamSidebar" data-state="closed" role="navigation" aria-label="Service Provider menu">
+      <button type="button" class="beam-trigger" id="beamTrigger" aria-label="Open menu" aria-expanded="false">
+        <i class="bi bi-list beam-icon-menu"></i>
+        <i class="bi bi-x-lg beam-icon-close"></i>
+      </button>
+      <div class="beam-rail" aria-hidden="true"></div>
+      <div class="beam-plates">
+        <a href="../dashboard/index.html" class="beam-plate"><i class="bi bi-house-door-fill beam-plate-icon"></i><span>Home</span></a>
+        <a href="../profile/index.html" class="beam-plate"><i class="bi bi-building beam-plate-icon"></i><span>My Profile</span></a>
+        <a href="../drivers/index.html" class="beam-plate"><i class="bi bi-people-fill beam-plate-icon"></i><span>Drivers</span></a>
+        <a href="../vehicles/index.html" class="beam-plate"><i class="bi bi-truck beam-plate-icon"></i><span>Vehicles</span></a>
+        <a href="../contracts/index.html" class="beam-plate"><i class="bi bi-file-earmark-text beam-plate-icon"></i><span>Contracts</span></a>
+        <a href="../sop-feed/index.html" class="beam-plate"><i class="bi bi-journal-bookmark-fill beam-plate-icon"></i><span>SOP Feed</span></a>
+        <a href="index.html" class="beam-plate active"><i class="bi bi-diagram-3-fill beam-plate-icon"></i><span>Route Balancer</span></a>
+        <a href="../../dhl/access-select/index.html" class="beam-plate beam-plate--switch"><i class="bi bi-arrow-left-right beam-plate-icon"></i><span>Select access</span></a>
+      </div>
+    </nav>
+
+    <div class="sidebar-inset" id="sidebarInset">
+      <div class="liquid-glass-page-bg" aria-hidden="true"></div>
+      <main class="route-balancer-container container-fluid px-3 px-lg-4 py-4">
+        <header class="page-header">
+          <div class="brand">
+            <div class="logo-wrap">
+              <img class="logo" alt="DHL" src="../../assets/dhl-uk-logo.png" />
+            </div>
+            <div class="header-title">
+              <h1>Route Balancer</h1>
+            </div>
+          </div>
+          <div class="toolbar" role="toolbar" aria-label="Route Balancer controls">
+            <button type="button" class="toolbar-btn" id="btnLangPt" aria-label="Português">PT</button>
+            <button type="button" class="toolbar-btn" id="btnLangEn" aria-label="English">EN</button>
+            <span class="toolbar-sep"></span>
+            <button type="button" class="toolbar-btn" id="btnThemeLight" aria-label="Modo claro"><span class="theme-icon theme-icon-sun" aria-hidden="true">☀</span></button>
+            <button type="button" class="toolbar-btn" id="btnThemeDark" aria-label="Modo escuro"><span class="theme-icon theme-icon-moon" aria-hidden="true">☾</span><span class="theme-stars" aria-hidden="true"><span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span></span></button>
+            <span class="toolbar-sep"></span>
+            <button type="button" class="toolbar-btn" id="btnRefresh" aria-label="Atualizar página" title="Atualizar página" data-i18n-title="btnRefresh"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i></button>
+          </div>
+        </header>
+
+        <p class="subtitle" id="textSubtitle">Envie um ficheiro Excel para obter o ficheiro consolidado com as abas Pre-12, Análise de Postcodes e analise_size_class.</p>
+
+        <section class="route-disco-section dashboard-section dashboard-block mb-4" id="spDiscoBlock" aria-label="Disco deliveries">
+          <div class="card liquid-glass-card sp-dashboard-module-card sp-dashboard-module-card--fluid">
+            <div class="dashboard-block-header d-flex flex-wrap align-items-center justify-content-between gap-3">
+              <div>
+                <span class="route-disco-eyebrow">DISCO operations</span>
+                <h2 class="dashboard-block-title mb-1"><i class="bi bi-truck me-2" aria-hidden="true"></i>My deliveries</h2>
+                <p class="dashboard-block-desc mb-0">Today deliveries and route groups stay beside Route Balancer for faster planning.</p>
+              </div>
+              <div class="disco-header-stops-and-switch d-flex align-items-center gap-2">
+                <div class="disco-header-stops-kpi rounded-3 px-3 py-2 d-flex flex-column align-items-center justify-content-center" id="discoHeaderStopsKpi" aria-label="Total stops">
+                  <span class="disco-header-stops-label small text-uppercase fw-semibold text-muted">Stops</span>
+                  <span class="disco-header-stops-value fs-4 fw-bold text-primary" id="dashboardStopsValue">—</span>
+                </div>
+                <div class="disco-am-pm-switch disco-am-pm-switch--vertical" role="group" aria-label="Morning or Afternoon">
+                  <button type="button" class="disco-gravura disco-gravura-am disco-gravura-on" id="discoGravuraAm" title="Morning (AM)" aria-pressed="true">AM</button>
+                  <button type="button" class="disco-gravura disco-gravura-pm" id="discoGravuraPm" title="Afternoon (PM)" aria-pressed="false">PM</button>
+                </div>
+              </div>
+            </div>
+            <div class="disco-filters disco-filters--top d-flex flex-wrap align-items-end gap-3 gap-md-4" id="discoFiltersWrap">
+              <div class="disco-filter-group flex-shrink-0">
+                <span class="disco-filter-label d-block mb-1">Depot</span>
+                <div id="discoDepotChips" class="disco-chips d-flex flex-wrap gap-2" role="group" aria-label="Filter by depot"></div>
+              </div>
+              <div class="disco-filter-group flex-shrink-0">
+                <span class="disco-filter-label d-block mb-1">Loop</span>
+                <div id="discoLoopChips" class="disco-chips d-flex flex-wrap gap-2" role="group" aria-label="Filter by loop"></div>
+              </div>
+            </div>
+            <div class="dashboard-block-content">
+              <div class="disco-summary-block" id="discoSummaryBlock">
+                <div class="disco-summary-card">
+                  <div class="disco-summary-card-header">
+                    <h3 class="disco-summary-title">Summary</h3>
+                  </div>
+                  <div class="disco-summary-card-body">
+                    <div class="disco-summary-kpi-row">
+                      <div class="disco-summary-grid" id="discoSummaryGrid"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="disco-depot-blocks-wrap hidden" id="discoDepotBlocksWrap">
+                <div class="disco-route-blocks disco-depot-blocks" id="discoDepotBlocks"></div>
+              </div>
+              <div class="disco-loop-summary-block hidden" id="discoLoopSummaryBlock">
+                <h3 class="disco-loop-summary-title" id="discoLoopSummaryTitle">Depot loops</h3>
+                <div class="disco-route-blocks" id="discoLoopSummaryGrid"></div>
+              </div>
+              <div id="discoRouteBlocks" class="disco-route-blocks"></div>
+              <div id="discoNoData" class="disco-no-data alert alert-warning mb-0 hidden">
+                <i class="bi bi-info-circle me-2"></i>No Disco data available. Run the script with the Excel file to generate <code>assets/disco-data.js</code>.
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="app-layout row g-4 align-items-start" id="appLayout">
+          <aside class="app-sidebar col-12 col-xl-4 col-xxl-3">
+            <div class="card liquid-glass-card">
+              <div class="upload-zone" id="dropZone">
+                <input type="file" id="fileInput" accept=".xlsx,.xls,.xlsm" multiple />
+                <p class="primary" id="textUploadPrimary">Arraste o ficheiro Excel para aqui</p>
+                <p id="textUploadOr">ou <span class="open-finder" id="textOpenFinder">abrir explorador de ficheiros</span></p>
+                <p id="textFormats">Formatos: .xlsx, .xls, .xlsm</p>
+              </div>
+              <div class="btn-wrap">
+                <button class="btn" id="btnProcess" disabled data-i18n="btnProcess">Processar</button>
+              </div>
+              <div class="btn-download-wrap" id="btnDownloadWrap">
+                <button class="btn" id="btnDownload" data-i18n="btnDownload">Descarregar</button>
+                <button class="btn btn-secondary" id="btnDone" data-i18n="btnDone">Concluído</button>
+              </div>
+            </div>
+          </aside>
+
+          <section class="app-main col-12 col-xl-8 col-xxl-9" aria-label="Route Balancer preview">
+            <div class="dashboard-wrap" id="dashboardWrap">
+              <div class="summary" id="summary" style="display: none;"></div>
+            </div>
+            <div class="card liquid-glass-card" id="mainCard">
+              <p class="preview-label" id="textPreviewLabel">Preview dos dados</p>
+              <div id="previewEmpty" class="preview-empty" data-i18n="previewEmpty">Processe um ficheiro para ver o preview das abas Pre-12, Análise de Postcodes e analise_size_class.</div>
+              <div id="previewLoading" class="preview-loading" style="display: none;" data-i18n="previewLoading">A processar...</div>
+              <div id="previewSkeleton" class="preview-skeleton" style="display: none;">
+                <div class="skeleton-section">
+                  <div class="skeleton-header"></div>
+                  <div class="skeleton-table">
+                    <div class="skeleton-row"><span class="skeleton-cell w-1"></span><span class="skeleton-cell w-2"></span><span class="skeleton-cell w-3"></span></div>
+                    <div class="skeleton-row"><span class="skeleton-cell w-1"></span><span class="skeleton-cell w-2"></span><span class="skeleton-cell w-3"></span></div>
+                    <div class="skeleton-row"><span class="skeleton-cell w-1"></span><span class="skeleton-cell w-2"></span><span class="skeleton-cell w-3"></span></div>
+                    <div class="skeleton-row"><span class="skeleton-cell w-1"></span><span class="skeleton-cell w-2"></span><span class="skeleton-cell w-3"></span></div>
+                    <div class="skeleton-row"><span class="skeleton-cell w-1"></span><span class="skeleton-cell w-2"></span><span class="skeleton-cell w-3"></span></div>
+                  </div>
+                </div>
+                <div class="skeleton-section">
+                  <div class="skeleton-header"></div>
+                  <div class="skeleton-table">
+                    <div class="skeleton-row"><span class="skeleton-cell w-1"></span><span class="skeleton-cell w-2"></span></div>
+                    <div class="skeleton-row"><span class="skeleton-cell w-1"></span><span class="skeleton-cell w-2"></span></div>
+                    <div class="skeleton-row"><span class="skeleton-cell w-1"></span><span class="skeleton-cell w-2"></span></div>
+                    <div class="skeleton-row"><span class="skeleton-cell w-1"></span><span class="skeleton-cell w-2"></span></div>
+                  </div>
+                </div>
+                <div class="skeleton-section">
+                  <div class="skeleton-header"></div>
+                  <div class="skeleton-table">
+                    <div class="skeleton-row"><span class="skeleton-cell w-1"></span><span class="skeleton-cell w-2"></span><span class="skeleton-cell w-2"></span></div>
+                    <div class="skeleton-row"><span class="skeleton-cell w-1"></span><span class="skeleton-cell w-2"></span><span class="skeleton-cell w-2"></span></div>
+                    <div class="skeleton-row"><span class="skeleton-cell w-1"></span><span class="skeleton-cell w-2"></span><span class="skeleton-cell w-2"></span></div>
+                    <div class="skeleton-row"><span class="skeleton-cell w-1"></span><span class="skeleton-cell w-2"></span><span class="skeleton-cell w-2"></span></div>
+                    <div class="skeleton-row"><span class="skeleton-cell w-1"></span><span class="skeleton-cell w-2"></span><span class="skeleton-cell w-2"></span></div>
+                  </div>
+                </div>
+              </div>
+              <div id="previewError" class="preview-error" style="display: none;"></div>
+              <div id="previewWrap" class="preview-wrap">
+                <div class="preview-section">
+                  <div class="preview-section-header">
+                    <div class="preview-title">Pre-12</div>
+                    <button type="button" class="btn-copy-section" data-section="pre12" disabled title="Copiar Pre-12"><i class="bi bi-clipboard" aria-hidden="true"></i> <span class="btn-copy-section-text">Copiar</span></button>
+                  </div>
+                  <div class="preview-table-wrap" id="previewPre12"></div>
+                </div>
+                <div class="preview-section">
+                  <div class="preview-section-header">
+                    <div class="preview-title">Análise de Postcodes</div>
+                    <button type="button" class="btn-copy-section" data-section="postcodes" disabled title="Copiar Postcodes"><i class="bi bi-clipboard" aria-hidden="true"></i> <span class="btn-copy-section-text">Copiar</span></button>
+                  </div>
+                  <div class="preview-table-wrap" id="previewPostcodes"></div>
+                </div>
+                <div class="preview-section">
+                  <div class="preview-section-header">
+                    <div class="preview-title">analise_size_class</div>
+                    <button type="button" class="btn-copy-section" data-section="sizeclass" disabled title="Copiar Size Class"><i class="bi bi-clipboard" aria-hidden="true"></i> <span class="btn-copy-section-text">Copiar</span></button>
+                  </div>
+                  <div class="preview-table-wrap" id="previewSizeClass"></div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../../assets/disco-data.js"></script>
+  <script src="../sp-session.js"></script>
+  <script src="../sp-portal-responsive.js"></script>
+  <script src="../sp-framework-ui.js"></script>
+  <script src="../../beam-sidebar.js"></script>
+  <script src="route-balancer-disco.js"></script>
+  <script src="route-balancer.js"></script>
+</body>
+</html>

@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="../sp-portal/drivers/drivers.css" />
   <link rel="stylesheet" href="../liquid-glass.css" />
   <link rel="stylesheet" href="../modern-ui.css" />
+  <link rel="stylesheet" href="../refinements-v2.css" />
 </head>
 <body class="has-beam-sidebar">
   <div class="sidebar-wrapper" id="sidebarWrapper">
@@ -507,7 +508,7 @@
         document.title = spName + ' – DHL Subsystem';
 
         var cover = document.getElementById('spProfileCover');
-        var logoMap = { 'BA Express': 'ba-express-logo.png', 'Premier Logistics Ltd': 'premier-logistics-logo.png', 'Swift Haul Solutions': 'swift-haul-logo.png', 'Metro Freight Partners': 'metro-freight-logo.png', 'Atlas Transport Services': 'atlas-transport-logo.png' };
+        var logoMap = {};
         var hasCustomBranding = logoMap[spName];
         cover.style.background = 'linear-gradient(135deg, ' + (spMeta.coverColor || '#2c3e50') + ' 0%, ' + (spMeta.color || '#3498db') + ' 100%)';
 

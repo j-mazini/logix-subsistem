@@ -660,7 +660,7 @@
     document.getElementById('spNotFound').classList.add('hidden');
     document.getElementById('spVendorContent').classList.remove('hidden');
 
-    var logoMap = { 'BA Express': 'ba-express-logo.png', 'Premier Logistics Ltd': 'premier-logistics-logo.png', 'Swift Haul Solutions': 'swift-haul-logo.png', 'Metro Freight Partners': 'metro-freight-logo.png', 'Atlas Transport Services': 'atlas-transport-logo.png' };
+    var logoMap = {};
     document.getElementById('spHeaderName').textContent = spName;
     var avatar = document.getElementById('spHeaderAvatar');
     if (avatar) {
