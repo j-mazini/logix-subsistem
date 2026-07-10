@@ -130,7 +130,8 @@ Core CSS layers:
 | `base-system-reference.css` | Common tokens and base visual reference |
 | `liquid-glass.css` | Shared glass surfaces and background treatment; imports the base reference |
 | `modern-ui.css` | Modern system components, typography and shadows |
-| `refinements-v2.css` | V2 refinement overrides, loaded last on most modernized pages |
+| `refinements-v2.css` | V2 refinement overrides, loaded after liquid-glass/modern-ui |
+| `refinements-v3-motion.css` + `refinements-v3-motion.js` | Final shared motion/polish layer: staggered scroll reveal, table-row cascade, animated gradient page titles, card hover hairline, KPI count-up, beam/button/modal micro-interactions. Loaded last on every canonical page; degrades to a fully static page without JS or with `prefers-reduced-motion` |
 | `sidebar-beam.css` + `beam-sidebar.js` | Collapsible beam sidebar behavior and visual pattern |
 | `shared-pages.css` | Common admin-page layout rules |
 | `vendor-admin-view.css` | Shared administration shell/header/table styling |
@@ -186,7 +187,3 @@ Before considering any subsystem change complete:
 | --- | --- |
 | 2026-07-10 | Created this living architecture context. Recorded the static mock boundary, TBX-only provider model, active canonical routes, browser data/storage contracts, shared styling system, and Live Service homepage architecture. |
 | 2026-07-10 | Restyled Live Service as a route-by-route dispatch carousel with current delivery, assigned driver, vehicle and delivery queue. |
-| 2026-07-10 | Added the TBX dashboard Notes widget for training compliance and vehicle attention. |
-| 2026-07-10 | Compactified Notes into click-to-expand Compliance and Vehicles tabs; removed the visible compliance cards. |
-| 2026-07-10 | Updated the MSE route taxonomy to the MD7/MD9 route set in the central mock and Live Service carousel. |
-| 2026-07-10 | Removed the Compliance and Vehicles blocks from the TBX homepage; Live Service and system navigation remain the visible operational surface. |
