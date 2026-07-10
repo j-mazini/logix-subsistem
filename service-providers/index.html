@@ -12,6 +12,8 @@
   <link rel="stylesheet" href="../service-provider-profile.css" />
   <link rel="stylesheet" href="../liquid-glass.css" />
   <link rel="stylesheet" href="../modern-ui.css" />
+  <link rel="stylesheet" href="../refinements-v2.css" />
+  <link rel="stylesheet" href="../refinements-v3-motion.css" />
 </head>
 <body class="has-beam-sidebar">
   <div class="sidebar-wrapper" id="sidebarWrapper">
@@ -123,7 +125,7 @@
         grid.innerHTML = list.map(function (sp) {
           var name = sp.name;
           var url = 'profile.html?sp=' + encodeURIComponent(name);
-          var logoMap = { 'BA Express': 'ba-express-logo.png', 'Premier Logistics Ltd': 'premier-logistics-logo.png', 'Swift Haul Solutions': 'swift-haul-logo.png', 'Metro Freight Partners': 'metro-freight-logo.png', 'Atlas Transport Services': 'atlas-transport-logo.png' };
+          var logoMap = {};
           var hasCustomBranding = logoMap[name];
           var coverStyle = 'background: linear-gradient(135deg, ' + (sp.coverColor || '#2c3e50') + ' 0%, ' + (sp.color || '#3498db') + ' 100%);';
           var initials = (sp.initials || name.split(' ').map(function (w) { return w[0]; }).join('').slice(0, 2) || 'SP').toUpperCase();
@@ -191,5 +193,6 @@
       }
     })();
   </script>
+  <script src="../refinements-v3-motion.js" defer></script>
 </body>
 </html>
