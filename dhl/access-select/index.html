@@ -12,63 +12,381 @@
   <link rel="stylesheet" href="../../base-system-reference.css" />
   <link rel="stylesheet" href="../../modern-ui.css" />
   <style>
+    :root {
+      --accent-dhl: #d40511;
+      --accent-dhl-light: #fef08a;
+      --accent-dhl-bg: #fff4f4;
+      --accent-sp: #6366f1;
+      --accent-sp-light: #e0e7ff;
+      --accent-sp-bg: #f8f8ff;
+    }
+
     .access-select-page {
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 2rem 1rem;
+      padding: 3rem 1.5rem;
       background: linear-gradient(160deg, #f8fafc 0%, #f1f5f9 30%, #e8f4fc 60%, #f1f5f9 100%);
       font-family: var(--font-sans);
       position: relative;
       overflow: hidden;
     }
+
     .access-select-page::before {
       content: "";
       position: fixed;
       inset: 0;
       pointer-events: none;
       z-index: 0;
-      background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 102, 241, 0.12), transparent),
-                  radial-gradient(ellipse 60% 40% at 100% 50%, rgba(14, 165, 233, 0.08), transparent),
-                  radial-gradient(ellipse 60% 40% at 0% 80%, rgba(139, 92, 246, 0.08), transparent);
+      background:
+        radial-gradient(ellipse 100% 60% at 50% -30%, rgba(99, 102, 241, 0.15), transparent),
+        radial-gradient(ellipse 70% 50% at 100% 40%, rgba(14, 165, 233, 0.1), transparent),
+        radial-gradient(ellipse 70% 50% at 0% 100%, rgba(139, 92, 246, 0.08), transparent);
     }
-    .access-select-header { position: relative; z-index: 1; text-align: center; margin-bottom: 2.5rem; }
-    .access-select-header h1 { font-size: 1.875rem; font-weight: 700; letter-spacing: -0.03em; color: #0f172a; margin-bottom: 0.5rem; }
-    .access-select-header p { font-size: 1rem; color: #64748b; font-weight: 500; }
+
+    .access-select-header {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      margin-bottom: 3.5rem;
+      max-width: 600px;
+    }
+
+    .access-select-header-logo {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, #d40511 0%, #b30310 100%);
+      border-radius: 12px;
+      color: white;
+      font-size: 1.75rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 8px 24px rgba(212, 5, 17, 0.25);
+    }
+
+    .access-select-header h1 {
+      font-size: 2.25rem;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      color: #0f172a;
+      margin-bottom: 0.75rem;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .access-select-header p {
+      font-size: 1.05rem;
+      color: #64748b;
+      font-weight: 500;
+      margin: 0;
+      line-height: 1.6;
+    }
+
     .access-select-grid {
       position: relative;
       z-index: 1;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1.5rem;
-      max-width: 740px;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 2rem;
+      max-width: 900px;
       width: 100%;
     }
+
     .access-select-card {
-      display: block;
-      padding: 2rem;
-      background: rgba(255, 255, 255, 0.85);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+      display: flex;
+      flex-direction: column;
+      padding: 2.25rem;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      border-radius: 16px;
       text-decoration: none;
       color: inherit;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      cursor: pointer;
+      height: 100%;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
     }
-    .access-select-card:focus { outline: 2px solid #6366f1; outline-offset: 2px; }
+
+    .access-select-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .access-select-card--dhl::before {
+      background: linear-gradient(135deg, rgba(212, 5, 17, 0.03) 0%, rgba(212, 5, 17, 0.02) 100%);
+    }
+
+    .access-select-card--sp::before {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.03) 0%, rgba(99, 102, 241, 0.02) 100%);
+    }
+
+    .access-select-card:hover {
+      transform: translateY(-8px);
+      border-color: rgba(255, 255, 255, 1);
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.12);
+    }
+
+    .access-select-card:hover::before {
+      opacity: 1;
+    }
+
+    .access-select-card:focus-visible {
+      outline: 3px solid #6366f1;
+      outline-offset: 2px;
+    }
+
     .access-select-card-icon {
-      width: 56px;
-      height: 56px;
+      width: 72px;
+      height: 72px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.75rem;
-      margin-bottom: 1.25rem;
+      font-size: 2.25rem;
+      margin-bottom: 1.5rem;
+      border-radius: 14px;
+      position: relative;
+      z-index: 1;
+      transition: all 0.4s ease;
     }
-    .access-select-card--dhl .access-select-card-icon { background: linear-gradient(135deg, #fef08a 0%, #fde047 100%); color: #d40511; box-shadow: 0 4px 14px rgba(250, 204, 21, 0.35); }
-    .access-select-card--sp .access-select-card-icon { background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: #fff; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4); }
-    .access-select-card h2 { font-size: 1.25rem; font-weight: 600; color: #0f172a; margin-bottom: 0.5rem; letter-spacing: -0.02em; }
-    .access-select-card p { font-size: 0.9rem; color: #64748b; margin: 0; line-height: 1.5; }
+
+    .access-select-card--dhl .access-select-card-icon {
+      background: linear-gradient(135deg, #fef08a 0%, #fde047 100%);
+      color: #d40511;
+      box-shadow: 0 8px 24px rgba(250, 204, 21, 0.3);
+    }
+
+    .access-select-card--sp .access-select-card-icon {
+      background: linear-gradient(135deg, #e0e7ff 0%, #dbeafe 100%);
+      color: #6366f1;
+      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.2);
+    }
+
+    .access-select-card:hover .access-select-card-icon {
+      transform: scale(1.12) rotate(4deg);
+    }
+
+    .access-select-card-header {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+
+    .access-select-card h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 0;
+      letter-spacing: -0.02em;
+      flex: 1;
+    }
+
+    .access-select-card-badge {
+      display: inline-block;
+      padding: 0.375rem 0.75rem;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-left: 0.75rem;
+    }
+
+    .access-select-card--dhl .access-select-card-badge {
+      background: #fff4f4;
+      color: #d40511;
+    }
+
+    .access-select-card--sp .access-select-card-badge {
+      background: #f8f8ff;
+      color: #6366f1;
+    }
+
+    .access-select-card-description {
+      position: relative;
+      z-index: 1;
+      font-size: 0.95rem;
+      color: #64748b;
+      margin-bottom: 1.5rem;
+      line-height: 1.6;
+      flex-grow: 1;
+    }
+
+    .access-select-card-features {
+      position: relative;
+      z-index: 1;
+      list-style: none;
+      margin: 0 0 1.5rem 0;
+      padding: 0;
+    }
+
+    .access-select-card-features li {
+      display: flex;
+      align-items: center;
+      font-size: 0.85rem;
+      color: #64748b;
+      margin-bottom: 0.5rem;
+      padding-left: 0;
+    }
+
+    .access-select-card-features li::before {
+      content: "✓";
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      margin-right: 0.5rem;
+      border-radius: 4px;
+      font-weight: bold;
+      font-size: 0.75rem;
+    }
+
+    .access-select-card--dhl .access-select-card-features li::before {
+      background: rgba(212, 5, 17, 0.1);
+      color: #d40511;
+    }
+
+    .access-select-card--sp .access-select-card-features li::before {
+      background: rgba(99, 102, 241, 0.1);
+      color: #6366f1;
+    }
+
+    .access-select-card-cta {
+      position: relative;
+      z-index: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.875rem 1.5rem;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: all 0.3s ease;
+      gap: 0.5rem;
+    }
+
+    .access-select-card--dhl .access-select-card-cta {
+      background: linear-gradient(135deg, #d40511 0%, #b30310 100%);
+      color: white;
+      box-shadow: 0 4px 16px rgba(212, 5, 17, 0.25);
+    }
+
+    .access-select-card--dhl .access-select-card-cta:hover {
+      box-shadow: 0 8px 24px rgba(212, 5, 17, 0.35);
+      transform: translateX(4px);
+    }
+
+    .access-select-card--sp .access-select-card-cta {
+      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+      color: white;
+      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.25);
+    }
+
+    .access-select-card--sp .access-select-card-cta:hover {
+      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.35);
+      transform: translateX(4px);
+    }
+
+    @media (max-width: 768px) {
+      .access-select-page {
+        padding: 2rem 1rem;
+      }
+
+      .access-select-header {
+        margin-bottom: 2.5rem;
+      }
+
+      .access-select-header h1 {
+        font-size: 1.75rem;
+      }
+
+      .access-select-header p {
+        font-size: 0.95rem;
+      }
+
+      .access-select-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
+
+      .access-select-card {
+        padding: 1.75rem;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .access-select-card {
+        transition: none;
+      }
+
+      .access-select-card-icon {
+        transition: none;
+      }
+
+      .access-select-card:hover {
+        transform: none;
+      }
+
+      .access-select-card:hover .access-select-card-icon {
+        transform: none;
+      }
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .access-select-page {
+        background: linear-gradient(160deg, #0f172a 0%, #1a1f35 30%, #1e3a4c 60%, #1a1f35 100%);
+      }
+
+      .access-select-page::before {
+        background:
+          radial-gradient(ellipse 100% 60% at 50% -30%, rgba(99, 102, 241, 0.1), transparent),
+          radial-gradient(ellipse 70% 50% at 100% 40%, rgba(14, 165, 233, 0.06), transparent),
+          radial-gradient(ellipse 70% 50% at 0% 100%, rgba(139, 92, 246, 0.05), transparent);
+      }
+
+      .access-select-header h1 {
+        background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .access-select-header p {
+        color: #94a3b8;
+      }
+
+      .access-select-card {
+        background: rgba(30, 41, 59, 0.8);
+        border-color: rgba(71, 85, 105, 0.4);
+      }
+
+      .access-select-card-description,
+      .access-select-card-features li {
+        color: #cbd5e1;
+      }
+
+      .access-select-card h2 {
+        color: #f1f5f9;
+      }
+    }
   </style>
   <link rel="stylesheet" href="../../refinements-v2.css" />
   <link rel="stylesheet" href="../../refinements-v3-motion.css" />
@@ -76,21 +394,52 @@
 <body>
   <div class="access-select-page">
     <header class="access-select-header">
+      <div class="access-select-header-logo"><i class="bi bi-box2-heart"></i></div>
       <h1>DHL Subsystem</h1>
-      <p>Select which area you want to access</p>
+      <p>Choose your portal to get started managing operations, drivers, and logistics</p>
     </header>
 
     <div class="access-select-grid">
       <a href="../dashboard/index.html" class="access-select-card access-select-card--dhl">
         <div class="access-select-card-icon"><i class="bi bi-building-gear"></i></div>
-        <h2>DHL Administration</h2>
-        <p>Dashboard, Service Providers, Vendors, Vehicles, Contracts, SOP Feed. Create alerts and posts.</p>
+        <div class="access-select-card-header">
+          <h2>DHL Administration</h2>
+          <span class="access-select-card-badge">Admin</span>
+        </div>
+        <p class="access-select-card-description">Centralized management dashboard for operations, vendors, service providers, and compliance monitoring.</p>
+        <ul class="access-select-card-features">
+          <li>Dashboard & KPI tracking</li>
+          <li>Service provider management</li>
+          <li>Vendor compliance</li>
+          <li>Vehicle fleet management</li>
+          <li>Contracts & SOP Feed</li>
+          <li>Alerts & notifications</li>
+        </ul>
+        <button type="button" class="access-select-card-cta" onclick="window.location.href='../dashboard/index.html'; return false;" aria-label="Access DHL Administration portal">
+          Enter Dashboard
+          <i class="bi bi-arrow-right"></i>
+        </button>
       </a>
 
       <a href="../../sp-portal/select/index.html" class="access-select-card access-select-card--sp">
         <div class="access-select-card-icon"><i class="bi bi-person-badge"></i></div>
-        <h2>TBX Portal</h2>
-        <p>Access the TBX portal: dashboard, profile, drivers, vehicles and contracts.</p>
+        <div class="access-select-card-header">
+          <h2>TBX Portal</h2>
+          <span class="access-select-card-badge">Portal</span>
+        </div>
+        <p class="access-select-card-description">Service provider portal for managing drivers, vehicles, contracts, and personal profile information.</p>
+        <ul class="access-select-card-features">
+          <li>Driver management</li>
+          <li>Vehicle operations</li>
+          <li>Contract details</li>
+          <li>Profile management</li>
+          <li>Performance metrics</li>
+          <li>Document tracking</li>
+        </ul>
+        <button type="button" class="access-select-card-cta" onclick="window.location.href='../../sp-portal/select/index.html'; return false;" aria-label="Access TBX Service Provider portal">
+          Enter Portal
+          <i class="bi bi-arrow-right"></i>
+        </button>
       </a>
     </div>
   </div>
