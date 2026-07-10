@@ -27,6 +27,7 @@
   <link rel="stylesheet" href="../../refinements-v2.css" />
   <link rel="stylesheet" href="live-service.css" />
   <link rel="stylesheet" href="../../refinements-v3-motion.css" />
+  <link rel="stylesheet" href="../navigation-menu.css" />
 </head>
 <body class="has-beam-sidebar sp-portal">
   <div class="sidebar-wrapper" id="sidebarWrapper">
@@ -63,10 +64,11 @@
           <i class="bi bi-journal-bookmark-fill beam-plate-icon"></i>
           <span>SOP Feed</span>
         </a>
-        <a href="../../dhl/access-select/index.html" class="beam-plate beam-plate--switch">
+        <button type="button" class="beam-plate beam-plate--switch beam-plate--menu-toggle" id="spNavMenuToggle" aria-label="Open navigation menu" aria-expanded="false">
           <i class="bi bi-arrow-left-right beam-plate-icon"></i>
-          <span>Select access</span>
-        </a>
+          <span>Navigate</span>
+          <span class="beam-plate-badge" aria-hidden="true"></span>
+        </button>
       </div>
     </nav>
 
@@ -802,5 +804,27 @@
   </div>
 
   <script src="../../refinements-v3-motion.js" defer></script>
+  <script src="../navigation-menu.js" defer></script>
+  <script>
+    // Initialize navigation menu toggle button
+    document.addEventListener('DOMContentLoaded', function () {
+      const navMenuToggle = document.getElementById('spNavMenuToggle');
+      if (navMenuToggle) {
+        navMenuToggle.addEventListener('click', function (e) {
+          e.preventDefault();
+          window.spNavigation.openMenu();
+          navMenuToggle.setAttribute('aria-expanded', 'true');
+        });
+      }
+
+      // Update aria-expanded when menu closes
+      const backdrop = document.getElementById('spNavMenuBackdrop');
+      if (backdrop) {
+        backdrop.addEventListener('click', function () {
+          navMenuToggle.setAttribute('aria-expanded', 'false');
+        });
+      }
+    });
+  </script>
 </body>
 </html>
