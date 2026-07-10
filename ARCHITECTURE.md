@@ -67,9 +67,8 @@ The root HTML files and the short files inside `sp-portal/` are compatibility re
 `sp-portal/dashboard/index.html` is the active presentation homepage. It preserves older dashboard data blocks in `dashboard.js` for later reuse while foregrounding:
 
 1. Header with **Announcements** and user/notification context.
-2. **Live Service** at Depot MSE. `live-service.js` renders the MSE route set (`MD7A`, `MD7B`, `MD7C`, `MD7D`, `MD7E`, `MD7X`, `MD7Q`, `MD9A`, `MD9B`, `MD9C`, `MD9D`, `MD9X`) as a dispatch carousel. Each route retains its Pre-12, ASR and/or DSR service classification, current delivery, assigned MSE driver and vehicle, delivery queue and progress. It advances every 7 seconds unless `prefers-reduced-motion` is enabled.
-3. **Notes** directly below Live Service. It is compact and closed by default, with two tabs: Compliance and Vehicles. A click expands only the selected view; Compliance uses compact course rows rather than cards.
-4. Category navigation for Planning & Operations, Setup, Feed & Announcements, Compliance, Billing, Performance, Vendor Requests, and Trace & Queries.
+2. **Live Service** at Depot MSE. `live-service.js` renders the MSE route set (`MD7A`, `MD7B`, `MD7C`, `MD7D`, `MD7E`, `MD7X`, `MD7Q`, `MD9A`, `MD9B`, `MD9C`, `MD9D`, `MD9X`) as a dispatch carousel. KPIs and delivery progress are calculated for the selected route only. The third panel surfaces SLA warnings, including pending Pre-12 deliveries approaching the 12:00 deadline, instead of a delivery queue. It advances every 7 seconds unless `prefers-reduced-motion` is enabled.
+3. Category navigation for Planning & Operations, Setup, Feed & Announcements, Compliance, Billing, Performance, Vendor Requests, and Trace & Queries.
 
 Some navigation cards intentionally have no destination and display **Soon**. They are product placeholders, not missing broken links. Before creating one of these screens, replace its `href: null` in `sp-portal/dashboard/live-service.js` with the real canonical route and document it here.
 
@@ -187,3 +186,6 @@ Before considering any subsystem change complete:
 | --- | --- |
 | 2026-07-10 | Created this living architecture context. Recorded the static mock boundary, TBX-only provider model, active canonical routes, browser data/storage contracts, shared styling system, and Live Service homepage architecture. |
 | 2026-07-10 | Restyled Live Service as a route-by-route dispatch carousel with current delivery, assigned driver, vehicle and delivery queue. |
+| 2026-07-10 | Updated the MSE route taxonomy to the MD7/MD9 route set in the central mock and Live Service carousel. |
+| 2026-07-10 | Removed the Compliance and Vehicles blocks from the TBX homepage; Live Service and system navigation remain the visible operational surface. |
+| 2026-07-10 | Changed Live Service KPIs, progress and the third panel to selected-route delivery and warning data. |
