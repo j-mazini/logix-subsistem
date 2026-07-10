@@ -208,7 +208,6 @@
     var done = progress[route.key];
     var warnings = getRouteWarnings(route).length;
     setText('spLiveKpiTotal', route.label);
-    setText('spLiveKpiPre12', total);
     setText('spLiveKpiAsr', done);
     setText('spLiveKpiDsr', total - done);
     setText('spLiveKpiRoutes', route.service);
