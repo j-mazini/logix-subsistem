@@ -18,6 +18,13 @@
       "rationale": "Synthesis complete. Key caveat up front: this was supposed to be a three-way review, but **only Sonnet produced an approach** — Codex failed (CLI not in PATH) and Gemini failed (missing `GEMINI_API_KE",
       "date": "2026-07-10",
       "commit": "584fbb294e0a42702f449000fc11c7a6b29321f8"
+    },
+    {
+      "phase": "design_review_ceremony",
+      "decision": "Design review completed for: No bloco Route dispatch a barra de progresso deve representa",
+      "rationale": "I verified Sonnet's claims against the actual code. Key confirmations: routes are built from 2-stop slices of the pre-12 pool (`live-service.js:60-66`); `renderKpis` maps `spLiveKpiPre12←total`, `spLi",
+      "date": "2026-07-10",
+      "commit": "7a223199db63a0290c94413099881e1d62f8c5bd"
     }
   ],
   "blockers": [],
