@@ -99,7 +99,8 @@
     'LL4': [ { min: 1, max: 503, price: 3.81 }, { min: 504, max: 580, price: 3.43 }, { min: 581, max: 657, price: 3.24 }, { min: 658, max: null, price: 3.05 } ],
     'DY1': [ { min: 1, max: 719, price: 3.66 }, { min: 720, max: 781, price: 3.29 }, { min: 782, max: 843, price: 3.11 }, { min: 844, max: null, price: 2.93 } ],
     'DY2': [ { min: 1, max: 719, price: 3.66 }, { min: 720, max: 781, price: 3.29 }, { min: 782, max: 843, price: 3.11 }, { min: 844, max: null, price: 2.93 } ],
-    'MD7': [ { min: 1, max: 436, price: 3.38 }, { min: 437, max: 486, price: 3.04 }, { min: 487, max: 536, price: 2.87 }, { min: 537, max: null, price: 2.71 } ]
+    'MD7': [ { min: 1, max: 436, price: 3.38 }, { min: 437, max: 486, price: 3.04 }, { min: 487, max: 536, price: 2.87 }, { min: 537, max: null, price: 2.71 } ],
+    'MD9': [ { min: 1, max: 436, price: 3.38 }, { min: 437, max: 486, price: 3.04 }, { min: 487, max: 536, price: 2.87 }, { min: 537, max: null, price: 2.71 } ]
   };
 
   /* Estrutura canónica de depots/loops/rotas (Contract Management + Last Day Operation / planilhas).
@@ -112,6 +113,12 @@
     'MSE|MD7D': ['ME9 1DA', 'ME9 2DB', 'ME9 3DC'],
     'MSE|MD7E': ['ME9 4EA', 'ME9 5EB', 'ME10 6EC'],
     'MSE|MD7X': ['ME7 0XA', 'ME8 0XB', 'ME9 0XC'],
+    'MSE|MD7Q': ['ME10 7QD', 'ME10 8QE', 'ME10 9QF'],
+    'MSE|MD9A': ['ME11 1AA', 'ME11 2AB', 'ME11 3AC'],
+    'MSE|MD9B': ['ME11 4BA', 'ME11 5BB', 'ME11 6BC'],
+    'MSE|MD9C': ['ME12 1CA', 'ME12 2CB', 'ME12 3CC'],
+    'MSE|MD9D': ['ME12 4DA', 'ME12 5DB', 'ME12 6DC'],
+    'MSE|MD9X': ['ME11 0XA', 'ME12 0XB', 'ME12 0XC'],
     'LCY|DY1A': ['E1 1AA', 'E1 2AB', 'E2 3AC'],
     'LCY|DY1B': ['E1 4BA', 'E2 5BB', 'E3 6BC'],
     'LCY|DY1C': ['E2 7CA', 'E3 8CB', 'E3 9CC'],
@@ -141,7 +148,15 @@
           { name: 'MD7C', type: 'Child', targetDel: 80, targetPu: 10, postcodes: ROUTE_POSTCODES['MSE|MD7C'] },
           { name: 'MD7D', type: 'Child', targetDel: 80, targetPu: 10, postcodes: ROUTE_POSTCODES['MSE|MD7D'] },
           { name: 'MD7E', type: 'Child', targetDel: 80, targetPu: 10, postcodes: ROUTE_POSTCODES['MSE|MD7E'] },
-          { name: 'MD7X', type: 'Flex', targetDel: 80, targetPu: 10, postcodes: ROUTE_POSTCODES['MSE|MD7X'] }
+          { name: 'MD7X', type: 'Flex', targetDel: 80, targetPu: 10, postcodes: ROUTE_POSTCODES['MSE|MD7X'] },
+          { name: 'MD7Q', type: 'Child', targetDel: 80, targetPu: 10, postcodes: ROUTE_POSTCODES['MSE|MD7Q'] }
+        ]},
+        { name: 'MD9', deliveryRate: 3.38, routes: [
+          { name: 'MD9A', type: 'Child', targetDel: 80, targetPu: 10, postcodes: ROUTE_POSTCODES['MSE|MD9A'] },
+          { name: 'MD9B', type: 'Child', targetDel: 80, targetPu: 10, postcodes: ROUTE_POSTCODES['MSE|MD9B'] },
+          { name: 'MD9C', type: 'Child', targetDel: 80, targetPu: 10, postcodes: ROUTE_POSTCODES['MSE|MD9C'] },
+          { name: 'MD9D', type: 'Child', targetDel: 80, targetPu: 10, postcodes: ROUTE_POSTCODES['MSE|MD9D'] },
+          { name: 'MD9X', type: 'Flex', targetDel: 80, targetPu: 10, postcodes: ROUTE_POSTCODES['MSE|MD9X'] }
         ]}
       ]
     },

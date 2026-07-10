@@ -10,7 +10,7 @@
   var REDUCED_MOTION = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* ============================ Dados (Depot MSE) ============================ */
-  var LIVE_ROUTES = [
+  var LIVE_SERVICE_STOPS = [
     {
       key: 'pre12', label: 'Pre-12', icon: 'bi-sunrise', tone: 'pre12',
       stops: [
@@ -51,8 +51,31 @@
     }
   ];
 
+  function liveRoute(name, service, icon, tone, stops) {
+    return { key: name.toLowerCase(), label: name, service: service, icon: icon, tone: tone, stops: stops };
+  }
+
+  /* Rotas do Depot MSE. As entregas seguem classificadas por tipo de serviço. */
+  var LIVE_ROUTES = [
+    liveRoute('MD7A', 'Pre-12', 'bi-sunrise', 'pre12', LIVE_SERVICE_STOPS[0].stops.slice(0, 2)),
+    liveRoute('MD7B', 'Pre-12', 'bi-sunrise', 'pre12', LIVE_SERVICE_STOPS[0].stops.slice(2, 4)),
+    liveRoute('MD7C', 'Pre-12', 'bi-sunrise', 'pre12', LIVE_SERVICE_STOPS[0].stops.slice(4, 6)),
+    liveRoute('MD7D', 'Pre-12', 'bi-sunrise', 'pre12', LIVE_SERVICE_STOPS[0].stops.slice(6, 8)),
+    liveRoute('MD7E', 'Pre-12', 'bi-sunrise', 'pre12', LIVE_SERVICE_STOPS[0].stops.slice(8, 10)),
+    liveRoute('MD7X', 'Pre-12', 'bi-sunrise', 'pre12', LIVE_SERVICE_STOPS[0].stops.slice(10, 12)),
+    liveRoute('MD7Q', 'Pre-12', 'bi-sunrise', 'pre12', LIVE_SERVICE_STOPS[0].stops.slice(12, 14)),
+    liveRoute('MD9A', 'ASR / DSR', 'bi-arrow-repeat', 'asr', [LIVE_SERVICE_STOPS[1].stops[0], LIVE_SERVICE_STOPS[2].stops[0]]),
+    liveRoute('MD9B', 'ASR / DSR', 'bi-arrow-repeat', 'asr', [LIVE_SERVICE_STOPS[1].stops[1], LIVE_SERVICE_STOPS[2].stops[1]]),
+    liveRoute('MD9C', 'ASR / DSR', 'bi-arrow-repeat', 'asr', [LIVE_SERVICE_STOPS[1].stops[2], LIVE_SERVICE_STOPS[2].stops[2]]),
+    liveRoute('MD9D', 'ASR / DSR', 'bi-arrow-repeat', 'asr', [LIVE_SERVICE_STOPS[1].stops[3], LIVE_SERVICE_STOPS[2].stops[3]]),
+    liveRoute('MD9X', 'ASR', 'bi-arrow-repeat', 'asr', LIVE_SERVICE_STOPS[1].stops.slice(4, 5))
+  ];
+
   /* progresso inicial simulado: parte de cada rota já concluída */
-  var progress = { pre12: 5, asr: 2, dsr: 1 }; // nº de stops Completed por rota
+  var progress = LIVE_ROUTES.reduce(function (state, route) {
+    state[route.key] = route.stops.length > 1 ? 1 : 0;
+    return state;
+  }, {});
   var activeRouteIndex = 0;
 
   function statusFor(routeKey, index) {
@@ -78,7 +101,6 @@
     var vehicle = vehicles[routeIndex % vehicles.length] || { brand: 'Fleet', model: 'Van', vrn: 'TBX LIVE' };
     return {
       driverName: [driver.firstName, driver.lastName].filter(Boolean).join(' ') || 'TBX Driver',
-      driverInitials: ((driver.firstName || 'T').charAt(0) + (driver.lastName || 'D').charAt(0)).toUpperCase(),
       vehicleName: [vehicle.brand, vehicle.model].filter(Boolean).join(' ') || 'Fleet Van',
       vehicleVrn: vehicle.vrn || 'TBX LIVE'
     };
@@ -119,7 +141,7 @@
       var completed = done >= total;
       return '<article class="sp-live-route-slide sp-live-route-slide--' + route.tone + '" role="group" aria-roledescription="slide" aria-label="' + route.label + ', route ' + (routeIndex + 1) + ' of ' + LIVE_ROUTES.length + '">' +
         '<div class="sp-live-route-head">' +
-          '<div><span class="sp-live-route-eyebrow"><i class="bi ' + route.icon + '" aria-hidden="true"></i> ' + route.label + ' service</span><h3 class="sp-live-route-title">' + route.label + ' route</h3></div>' +
+          '<div><span class="sp-live-route-eyebrow"><i class="bi ' + route.icon + '" aria-hidden="true"></i> ' + route.service + ' service</span><h3 class="sp-live-route-title">' + route.label + ' route</h3></div>' +
           '<div class="sp-live-route-progress-copy"><strong>' + done + '<span>/' + total + '</span></strong><span>deliveries complete</span></div>' +
         '</div>' +
         '<div class="sp-live-route-progress" role="progressbar" aria-valuenow="' + pct + '" aria-valuemin="0" aria-valuemax="100" aria-label="' + route.label + ' progress"><span style="width:' + pct + '%"></span></div>' +
@@ -167,9 +189,9 @@
     var total = 0, done = 0;
     LIVE_ROUTES.forEach(function (r) { total += r.stops.length; done += progress[r.key]; });
     setText('spLiveKpiTotal', total);
-    setText('spLiveKpiPre12', LIVE_ROUTES[0].stops.length);
-    setText('spLiveKpiAsr', LIVE_ROUTES[1].stops.length);
-    setText('spLiveKpiDsr', LIVE_ROUTES[2].stops.length);
+    setText('spLiveKpiPre12', LIVE_ROUTES.filter(function (route) { return route.service === 'Pre-12'; }).reduce(function (count, route) { return count + route.stops.length; }, 0));
+    setText('spLiveKpiAsr', LIVE_ROUTES.filter(function (route) { return route.service.indexOf('ASR') !== -1; }).reduce(function (count, route) { return count + route.stops.length; }, 0));
+    setText('spLiveKpiDsr', LIVE_ROUTES.filter(function (route) { return route.service.indexOf('DSR') !== -1; }).reduce(function (count, route) { return count + route.stops.length; }, 0));
     setText('spLiveKpiRoutes', LIVE_ROUTES.length);
     setText('spLiveKpiDone', done);
   }
