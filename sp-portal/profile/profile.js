@@ -136,7 +136,7 @@
         document.getElementById('profileForm').classList.add('hidden');
       } else {
         document.getElementById('spHeaderName').textContent = spName;
-        var logoMap = {};
+        var logoMap = { 'BA Express': 'ba-express-logo.png', 'Premier Logistics Ltd': 'premier-logistics-logo.png', 'Swift Haul Solutions': 'swift-haul-logo.png', 'Metro Freight Partners': 'metro-freight-logo.png', 'Atlas Transport Services': 'atlas-transport-logo.png' };
         var avatar = document.getElementById('spHeaderAvatar');
         if (avatar) {
           var fallback = document.getElementById('spHeaderAvatarFallback');

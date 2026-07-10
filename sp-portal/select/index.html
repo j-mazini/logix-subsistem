@@ -12,8 +12,6 @@
   <link rel="stylesheet" href="../../access-select.css" />
   <link rel="stylesheet" href="../../liquid-glass.css" />
   <link rel="stylesheet" href="../../modern-ui.css" />
-  <link rel="stylesheet" href="../../refinements-v2.css" />
-  <link rel="stylesheet" href="../../refinements-v3-motion.css" />
 </head>
 <body>
   <div class="access-select-page">
@@ -55,7 +53,11 @@
       var list = (window.DHL_MOCK_DATA && window.DHL_MOCK_DATA.serviceProviders && Array.isArray(window.DHL_MOCK_DATA.serviceProviders))
         ? window.DHL_MOCK_DATA.serviceProviders
         : [
-            { id: 'tbx', name: 'TBX' }
+            { id: 'ba-express', name: 'BA Express' },
+            { id: 'premier-logistics', name: 'Premier Logistics Ltd' },
+            { id: 'swift-haul', name: 'Swift Haul Solutions' },
+            { id: 'metro-freight', name: 'Metro Freight Partners' },
+            { id: 'atlas-transport', name: 'Atlas Transport Services' }
           ];
       list.forEach(function (sp) {
         var name = (sp && sp.name) ? sp.name : (typeof sp === 'string' ? sp : '—');
@@ -75,6 +77,5 @@
       });
     })();
   </script>
-  <script src="../../refinements-v3-motion.js" defer></script>
 </body>
 </html>

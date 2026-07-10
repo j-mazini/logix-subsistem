@@ -47,7 +47,7 @@
           });
         }
         return [
-          { id: 0, author: 'DHL Uk', authorAvatar: 'assets/dhl-uk-logo.png', timeAgo: '1 hour ago', type: 'tutorial', title: 'DHL Training Video', content: 'Watch the DHL training video directly on the platform.', video: 'assets/videos/dhl-training-1.mp4', image: null, youtubeVideoId: null, likes: 15, comments: 3, liked: false, commentList: [{ author: 'James T.', company: 'TBX', authorAvatar: 'assets/dhl-uk-logo.png', text: 'Really clear video, thanks.', timeAgo: '50 min ago' }] },
+          { id: 0, author: 'DHL Uk', authorAvatar: 'assets/dhl-uk-logo.png', timeAgo: '1 hour ago', type: 'tutorial', title: 'DHL Training Video', content: 'Watch the DHL training video directly on the platform.', video: 'assets/videos/dhl-training-1.mp4', image: null, youtubeVideoId: null, likes: 15, comments: 3, liked: false, commentList: [{ author: 'James T.', company: 'BA Express', authorAvatar: 'assets/ba-express-logo.png', text: 'Really clear video, thanks.', timeAgo: '50 min ago' }] },
           { id: 1, author: 'DHL Uk', authorAvatar: 'assets/dhl-uk-logo.png', timeAgo: '2 hours ago', type: 'tutorial', title: 'Safe Loading Procedures', content: 'Updated tutorial for safe loading and unloading of parcels.', image: 'assets/sop-dhl-truck-london.png', video: null, youtubeVideoId: null, likes: 24, comments: 8, liked: false, commentList: [] },
           { id: 2, author: 'DHL Uk', authorAvatar: 'assets/dhl-uk-logo.png', timeAgo: '1 day ago', type: 'update', title: 'New Depot Hours – MSE & LCY', content: 'Effective from next Monday, MSE and LCY depots will operate extended hours.', image: null, video: null, youtubeVideoId: null, likes: 42, comments: 12, liked: false, commentList: [] },
           { id: 3, author: 'DHL Uk', authorAvatar: 'assets/dhl-uk-logo.png', timeAgo: '3 days ago', type: 'info', title: 'Time Window (TW) Compliance Reminder', content: 'Please ensure all deliveries are completed within the agreed time windows.', image: null, video: null, youtubeVideoId: null, likes: 67, comments: 5, liked: true, commentList: [] }
@@ -96,7 +96,7 @@
             '<div class="sop-comment-body"><strong class="sop-comment-author">' + escapeHtml(getCommentAuthorDisplay(c)) + '</strong> <span class="sop-comment-time">' + escapeHtml(c.timeAgo) + '</span>' +
             '<p class="sop-comment-text">' + escapeHtml(c.text) + '</p></div></div>';
         }).join('');
-        var logoMap = {};
+        var logoMap = { 'BA Express': 'ba-express-logo.png', 'Premier Logistics Ltd': 'premier-logistics-logo.png', 'Swift Haul Solutions': 'swift-haul-logo.png', 'Metro Freight Partners': 'metro-freight-logo.png', 'Atlas Transport Services': 'atlas-transport-logo.png' };
         var spName = getCurrentSp();
         var avatarSrc = (spName && logoMap[spName]) ? ASSET('assets/' + logoMap[spName]) : ASSET('assets/dhl-uk-logo.png');
         var commentFormHtml = '<form class="sop-comments-form" data-post-id="' + p.id + '">' +
@@ -166,7 +166,7 @@
       var spName = getCurrentSp();
       if (spName) {
         document.getElementById('spHeaderName').textContent = spName;
-        var logoMap = {};
+        var logoMap = { 'BA Express': 'ba-express-logo.png', 'Premier Logistics Ltd': 'premier-logistics-logo.png', 'Swift Haul Solutions': 'swift-haul-logo.png', 'Metro Freight Partners': 'metro-freight-logo.png', 'Atlas Transport Services': 'atlas-transport-logo.png' };
         var avatar = document.getElementById('spHeaderAvatar');
         if (avatar) {
           var fallback = document.getElementById('spHeaderAvatarFallback');
@@ -215,7 +215,7 @@
         var post = MOCK_POSTS.find(function (p) { return p.id === postId; });
         if (!post) return;
         var spInfo = getSpOwnerAndCompany();
-        var logoMap = {};
+        var logoMap = { 'BA Express': 'ba-express-logo.png', 'Premier Logistics Ltd': 'premier-logistics-logo.png', 'Swift Haul Solutions': 'swift-haul-logo.png', 'Metro Freight Partners': 'metro-freight-logo.png', 'Atlas Transport Services': 'atlas-transport-logo.png' };
         var spName = getCurrentSp();
         var avatar = (spName && logoMap[spName]) ? 'assets/' + logoMap[spName] : 'assets/dhl-uk-logo.png';
         if (!post.commentList) post.commentList = [];

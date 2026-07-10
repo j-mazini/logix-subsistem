@@ -363,7 +363,7 @@
         if (welcomeEl) welcomeEl.textContent = 'Welcome, ' + spName + '. Here is your operations summary.';
         document.getElementById('spHeaderName').textContent = spName;
         document.getElementById('spHeaderPill').setAttribute('title', spName);
-        var logoMap = {};
+        var logoMap = { 'BA Express': 'ba-express-logo.png', 'Premier Logistics Ltd': 'premier-logistics-logo.png', 'Swift Haul Solutions': 'swift-haul-logo.png', 'Metro Freight Partners': 'metro-freight-logo.png', 'Atlas Transport Services': 'atlas-transport-logo.png' };
         var avatar = document.getElementById('spHeaderAvatar');
         if (avatar) {
           var fallback = document.getElementById('spHeaderAvatarFallback');

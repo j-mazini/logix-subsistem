@@ -1,11 +1,11 @@
 /**
- * Service Provider Portal (TBX) – Login
+ * Service Provider Portal (BA Express) – Login
  * Mesma lógica e animações do login principal; redireciona para o portal BA.
  */
 (function () {
   'use strict';
 
-  var SP_NAME = 'TBX';
+  var SP_NAME = 'BA Express';
   var REDIRECT_URL = '../dashboard/index.html?sp=' + encodeURIComponent(SP_NAME);
 
   function initParticles() {
