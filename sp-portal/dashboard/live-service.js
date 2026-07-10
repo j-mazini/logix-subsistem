@@ -112,14 +112,29 @@
     });
   }
 
-  function renderDeliveryQueue(route) {
-    return route.stops.map(function (stop, index) {
-      var status = statusFor(route.key, index);
-      var meta = STATUS_META[status];
-      return '<li class="sp-live-queue-item sp-live-queue-item--' + status + '">' +
-        '<span class="sp-live-queue-index">' + String(index + 1).padStart(2, '0') + '</span>' +
-        '<span class="sp-live-queue-address"><strong>' + escapeHtml(stop.pc) + '</strong><span>' + escapeHtml(stop.addr) + '</span></span>' +
-        '<span class="sp-live-queue-status"><i class="bi ' + meta.icon + '" aria-hidden="true"></i>' + meta.label + '</span>' +
+  function getRouteWarnings(route) {
+    var pending = route.stops.filter(function (stop, index) { return statusFor(route.key, index) !== 'completed'; });
+    if (!pending.length) return [];
+    return pending.slice(0, 2).map(function (stop, index) {
+      var pre12 = route.service === 'Pre-12';
+      var asr = route.service.indexOf('ASR') !== -1;
+      var title = pre12 ? 'Pre-12 delivery still pending' : (asr ? 'Delivery requires attention' : 'Delivery window pending');
+      var detail = pre12
+        ? stop.pc + ' has not been delivered and is approaching the 12:00 deadline.'
+        : stop.pc + (asr ? ' requires a delivery/signature update.' : ' remains pending in the delivery window.');
+      return { title: title, detail: detail, critical: pre12 && index === 0 };
+    });
+  }
+
+  function renderWarnings(route) {
+    var warnings = getRouteWarnings(route);
+    if (!warnings.length) {
+      return '<li class="sp-live-warning sp-live-warning--clear"><i class="bi bi-check-circle-fill" aria-hidden="true"></i><span><strong>No active warnings</strong><small>All route deliveries are complete.</small></span></li>';
+    }
+    return warnings.map(function (warning) {
+      return '<li class="sp-live-warning' + (warning.critical ? ' sp-live-warning--critical' : '') + '">' +
+        '<i class="bi ' + (warning.critical ? 'bi-exclamation-triangle-fill' : 'bi-info-circle-fill') + '" aria-hidden="true"></i>' +
+        '<span><strong>' + escapeHtml(warning.title) + '</strong><small>' + escapeHtml(warning.detail) + '</small></span>' +
         '</li>';
     }).join('');
   }
@@ -139,12 +154,13 @@
       var currentStatus = statusFor(route.key, currentIndex);
       var assignment = getAssignment(routeIndex);
       var completed = done >= total;
+      var warnings = getRouteWarnings(route);
       return '<article class="sp-live-route-slide sp-live-route-slide--' + route.tone + '" role="group" aria-roledescription="slide" aria-label="' + route.label + ', route ' + (routeIndex + 1) + ' of ' + LIVE_ROUTES.length + '">' +
         '<div class="sp-live-route-head">' +
           '<div><span class="sp-live-route-eyebrow"><i class="bi ' + route.icon + '" aria-hidden="true"></i> ' + route.service + ' service</span><h3 class="sp-live-route-title">' + route.label + ' route</h3></div>' +
           '<div class="sp-live-route-progress-copy"><strong>' + done + '<span>/' + total + '</span></strong><span>deliveries complete</span></div>' +
         '</div>' +
-        '<div class="sp-live-route-progress" role="progressbar" aria-valuenow="' + pct + '" aria-valuemin="0" aria-valuemax="100" aria-label="' + route.label + ' progress"><span style="width:' + pct + '%"></span></div>' +
+        '<div class="sp-live-route-progress" role="progressbar" aria-valuenow="' + pct + '" aria-valuemin="0" aria-valuemax="100" aria-label="' + route.label + ' delivery progress"><span style="width:' + pct + '%"></span></div>' +
         '<div class="sp-live-route-body">' +
           '<section class="sp-live-current-delivery ' + (completed ? 'sp-live-current-delivery--complete' : '') + '" aria-label="Current delivery">' +
             '<div class="sp-live-current-kicker"><span class="sp-live-current-signal"><i class="bi ' + STATUS_META[currentStatus].icon + '" aria-hidden="true"></i></span>' + (completed ? 'Route complete' : 'Current delivery') + '</div>' +
@@ -156,7 +172,7 @@
             '<div class="sp-live-resource"><span class="sp-live-resource-icon"><i class="bi bi-person-fill" aria-hidden="true"></i></span><span><small>Driver</small><strong>' + escapeHtml(assignment.driverName) + '</strong><em>On route</em></span></div>' +
             '<div class="sp-live-resource"><span class="sp-live-resource-icon"><i class="bi bi-truck-front-fill" aria-hidden="true"></i></span><span><small>Vehicle</small><strong>' + escapeHtml(assignment.vehicleName) + '</strong><em>' + escapeHtml(assignment.vehicleVrn) + '</em></span></div>' +
           '</section>' +
-          '<section class="sp-live-queue-panel" aria-label="Route deliveries"><div class="sp-live-queue-head"><span>Deliveries</span><span>' + total + ' stops</span></div><ol class="sp-live-queue-list">' + renderDeliveryQueue(route) + '</ol></section>' +
+          '<section class="sp-live-queue-panel sp-live-warning-panel" aria-label="Route warnings"><div class="sp-live-queue-head"><span><i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i> Warnings</span><span>' + warnings.length + ' active</span></div><ul class="sp-live-warning-list">' + renderWarnings(route) + '</ul></section>' +
         '</div>' +
         '</article>';
     }).join('');
@@ -186,14 +202,17 @@
   }
 
   function renderKpis() {
-    var total = 0, done = 0;
-    LIVE_ROUTES.forEach(function (r) { total += r.stops.length; done += progress[r.key]; });
-    setText('spLiveKpiTotal', total);
-    setText('spLiveKpiPre12', LIVE_ROUTES.filter(function (route) { return route.service === 'Pre-12'; }).reduce(function (count, route) { return count + route.stops.length; }, 0));
-    setText('spLiveKpiAsr', LIVE_ROUTES.filter(function (route) { return route.service.indexOf('ASR') !== -1; }).reduce(function (count, route) { return count + route.stops.length; }, 0));
-    setText('spLiveKpiDsr', LIVE_ROUTES.filter(function (route) { return route.service.indexOf('DSR') !== -1; }).reduce(function (count, route) { return count + route.stops.length; }, 0));
-    setText('spLiveKpiRoutes', LIVE_ROUTES.length);
-    setText('spLiveKpiDone', done);
+    var route = LIVE_ROUTES[activeRouteIndex];
+    if (!route) return;
+    var total = route.stops.length;
+    var done = progress[route.key];
+    var warnings = getRouteWarnings(route).length;
+    setText('spLiveKpiTotal', route.label);
+    setText('spLiveKpiPre12', total);
+    setText('spLiveKpiAsr', done);
+    setText('spLiveKpiDsr', total - done);
+    setText('spLiveKpiRoutes', route.service);
+    setText('spLiveKpiDone', warnings);
   }
 
   function setText(id, value) {
@@ -214,6 +233,7 @@
   function changeRoute(nextIndex, animate) {
     activeRouteIndex = (nextIndex + LIVE_ROUTES.length) % LIVE_ROUTES.length;
     setCarouselPosition(animate !== false);
+    renderKpis();
   }
 
   function bindCarouselControls() {
