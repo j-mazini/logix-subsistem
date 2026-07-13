@@ -222,6 +222,72 @@
     { serviceProvider: 'TBX', depots: cloneDepotsAndAddDeliveries(CONTRACT_DEPOTS_STRUCTURE) }
   ];
 
+  /* Route Dispatch live mock: volumes operacionais por rota para o card Live Service.
+   * Cada rota define o volume total do card e um pace alvo ('ontrack' | 'attention' |
+   * 'delayed' | 'complete'). O completedVolume é calculado na carga em relação ao turno
+   * de 7h (08:00–15:00), de modo que cada rota caia na faixa desejada em qualquer
+   * horário de visualização. Antes das 08:00 nada está atrasado (expected = 0), então
+   * todas as rotas incompletas aparecem "On track" — comportamento intencional. */
+  var LIVE_ROUTE_VOLUME_PLAN = [
+    { name: 'MD7A', service: 'Pre-12', icon: 'bi-sunrise', tone: 'pre12', totalVolume: 86, pace: 'ontrack' },
+    { name: 'MD7B', service: 'Pre-12', icon: 'bi-sunrise', tone: 'pre12', totalVolume: 92, pace: 'attention' },
+    { name: 'MD7C', service: 'Pre-12', icon: 'bi-sunrise', tone: 'pre12', totalVolume: 108, pace: 'delayed' },
+    { name: 'MD7D', service: 'Pre-12', icon: 'bi-sunrise', tone: 'pre12', totalVolume: 101, pace: 'complete' },
+    { name: 'MD7E', service: 'Pre-12', icon: 'bi-sunrise', tone: 'pre12', totalVolume: 116, pace: 'ontrack' },
+    { name: 'MD7X', service: 'Pre-12', icon: 'bi-sunrise', tone: 'pre12', totalVolume: 73, pace: 'attention' },
+    { name: 'MD7Q', service: 'Pre-12', icon: 'bi-sunrise', tone: 'pre12', totalVolume: 68, pace: 'delayed' }
+  ];
+
+  function liveShiftExpectedFraction() {
+    var now = new Date();
+    var start = new Date(now);
+    start.setHours(8, 0, 0, 0);
+    return Math.min(1, Math.max(0, (now - start) / (7 * 3600000)));
+  }
+
+  /* Offsets sobre o esperado linear: ontrack +3pts, attention -10pts (faixa -5..-15),
+     delayed -25pts (abaixo de -15). Rotas não-completas nunca chegam a 100%. */
+  function liveCompletedVolumeFor(total, pace) {
+    if (pace === 'complete') return total;
+    var offset = pace === 'delayed' ? -0.25 : (pace === 'attention' ? -0.10 : 0.03);
+    var frac = Math.min(1, Math.max(0, liveShiftExpectedFraction() + offset));
+    var done = Math.round(total * frac);
+    if (done >= total) done = total - 1;
+    return Math.max(0, done);
+  }
+
+  var LIVE_ROUTE_POSTCODE_POOL = ['RM 9 9AE', 'RM 4 3QR', 'RM 6 8GD', 'RM 8 0WP', 'RM 8 7HZ', 'RM 9 4XK', 'RM 6 5GY', 'RM 6 8UL', 'RM 7 1TD', 'RM 4 4KL', 'RM 3 4RY', 'RM 3 8ES', 'RM 1 2PD', 'RM 8 6JU', 'RM 3 8XQ', 'RM 3 5PT', 'RM 1 2DE', 'RM 6 2CK', 'RM 6 7CT', 'RM 3 7DB'];
+  var LIVE_ROUTE_ADDRESS_POOL = ['Market Street', 'Park Lane', 'New Road', 'Bridge Street', 'George Street', 'High Street', 'Manor Road', 'Green Lane', 'Queen Street', 'School Lane', 'Victoria Street', 'Station Road'];
+
+  function buildLiveRouteStops(routeName, volume) {
+    var seed = hash(routeName);
+    var stops = [];
+    for (var i = 0; i < volume; i++) {
+      stops.push({
+        pc: LIVE_ROUTE_POSTCODE_POOL[(seed + i * 3) % LIVE_ROUTE_POSTCODE_POOL.length],
+        addr: (18 + ((seed + i * 17) % 180)) + ' ' + LIVE_ROUTE_ADDRESS_POOL[(seed + i) % LIVE_ROUTE_ADDRESS_POOL.length]
+      });
+    }
+    return stops;
+  }
+
+  var LIVE_ROUTE_DISPATCH = {
+    depot: 'MSE',
+    serviceProvider: 'TBX',
+    updatedAt: '2026-01-31T10:35:00Z',
+    routes: LIVE_ROUTE_VOLUME_PLAN.map(function (route) {
+      return {
+        name: route.name,
+        service: route.service,
+        icon: route.icon,
+        tone: route.tone,
+        totalVolume: route.totalVolume,
+        completedVolume: liveCompletedVolumeFor(route.totalVolume, route.pace),
+        stops: buildLiveRouteStops(route.name, route.totalVolume)
+      };
+    })
+  };
+
   var SERVICE_PROVIDERS = [
     { id: 'tbx', name: 'TBX', initials: 'TBX', color: '#3b82f6', coverColor: '#1e3a5f', owner: 'TBX Operations', email: 'operations@tbxlogistics.co.uk', phone: '+44 20 7123 4501', description: 'TBX is the dedicated Service Provider for this local mock presentation, covering vendor, vehicle, contract and route operations across the DHL network.', depotManagers: { MSE: { name: 'Sarah Mitchell', email: 'mse@tbxlogistics.co.uk', phone: '+44 7700 123101' }, LCY: { name: 'James Collins', email: 'lcy@tbxlogistics.co.uk', phone: '+44 7700 123102' }, LSE: { name: 'Emma Watson', email: 'lse@tbxlogistics.co.uk', phone: '+44 7700 123103' } } }
   ];
@@ -389,6 +455,7 @@
     lastDayRoutes: LAST_DAY_ROUTES,
     lastDayLoops: LAST_DAY_LOOPS,
     spmsOverview: SPMS_OVERVIEW,
+    liveRouteDispatch: LIVE_ROUTE_DISPATCH,
     dailyOperationsNotifications: DAILY_OPERATIONS_NOTIFICATIONS
   };
 })(typeof window !== 'undefined' ? window : this);

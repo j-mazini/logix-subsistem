@@ -2,79 +2,118 @@
 <html lang="en-GB">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Select company – Service Provider Portal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Login – TBX Portal</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="../../access-select.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Sans+Pro:wght@300;400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="login.css" />
   <link rel="stylesheet" href="../../liquid-glass.css" />
   <link rel="stylesheet" href="../../modern-ui.css" />
   <link rel="stylesheet" href="../../refinements-v2.css" />
   <link rel="stylesheet" href="../../refinements-v3-motion.css" />
 </head>
-<body>
-  <div class="access-select-page">
-    <header class="access-select-header">
-      <h1>Service Provider Portal</h1>
-      <p>Select your company to enter the portal</p>
-    </header>
+<body class="login-page">
+  <div class="login-page__background">
+    <div id="tsparticles" class="login-page__particles"></div>
+  </div>
 
-    <div class="access-select-grid" style="max-width: 420px;">
-      <div class="access-select-card" style="cursor: default;">
-        <div class="access-select-card-icon access-select-card-icon--sp" style="margin-bottom: 1rem;">
-          <i class="bi bi-building"></i>
+  <main class="login-page__main">
+    <section class="login-card">
+      <form id="loginForm" class="login-card__form" novalidate>
+        <div id="feedbackMessage" class="login-card__feedback" role="alert" aria-live="polite" hidden></div>
+
+        <div class="login-card__field">
+          <label for="email" class="login-card__label">
+            <i class="bi bi-envelope"></i>
+            Email
+          </label>
+          <div class="login-card__input-wrap">
+            <input
+              type="email"
+              id="email"
+              name="email"
+              class="login-card__input"
+              placeholder="your@email.com"
+              autocomplete="email"
+            />
+          </div>
         </div>
-        <h2>Your company</h2>
-        <form id="selectSpForm" class="mt-3">
-          <label for="spSelect" class="form-label visually-hidden">Service Provider</label>
-          <select id="spSelect" class="form-select form-select-lg" required aria-label="Select your company">
-            <option value="">— Select company —</option>
-          </select>
-          <button type="submit" class="btn btn-primary btn-lg w-100 mt-3">
-            <i class="bi bi-box-arrow-in-right"></i> Enter portal
-          </button>
-        </form>
-        <a href="../../dhl/access-select/index.html" class="btn btn-outline-secondary w-100 mt-2">
-          <i class="bi bi-arrow-left"></i> Back to access selection
-        </a>
+
+        <div class="login-card__field">
+          <label for="password" class="login-card__label">
+            <i class="bi bi-lock"></i>
+            Password
+          </label>
+          <div class="login-card__input-wrap">
+            <input
+              type="password"
+              id="password"
+              name="password"
+              class="login-card__input"
+              placeholder="••••••••"
+              autocomplete="current-password"
+            />
+          </div>
+        </div>
+
+        <div class="login-card__options">
+          <label class="login-card__checkbox">
+            <input type="checkbox" id="rememberMe" name="rememberMe" />
+            <span>Remember me</span>
+          </label>
+        </div>
+
+        <button type="submit" id="loginButton" class="login-card__submit">
+          Sign In
+        </button>
+
+        <p class="login-card__footer">
+          <a href="../../dhl/access-select/index.html" class="login-card__link">Back to access selection</a>
+        </p>
+      </form>
+    </section>
+  </main>
+
+  <div id="loadingOverlay" class="login-overlay" aria-hidden="true">
+    <div class="login-overlay__loader" id="loadingSpinner">
+      <div class="loader">
+        <div class="loader__grid"></div>
+        <div class="loader__ring loader__ring--outer"></div>
+        <div class="loader__ring loader__ring--mid"></div>
+        <div class="loader__ring loader__ring--inner"></div>
+        <div class="loader__orbit loader__orbit--1">
+          <span class="loader__dot"></span>
+        </div>
+        <div class="loader__orbit loader__orbit--2">
+          <span class="loader__dot"></span>
+        </div>
+        <div class="loader__orbit loader__orbit--3">
+          <span class="loader__dot"></span>
+        </div>
+        <div class="loader__orbit loader__orbit--4">
+          <span class="loader__dot"></span>
+        </div>
+        <div class="loader__orbit loader__orbit--5">
+          <span class="loader__dot"></span>
+        </div>
+        <div class="loader__orbit loader__orbit--6">
+          <span class="loader__dot"></span>
+        </div>
+        <div class="loader__core">
+          <div class="loader__core-pulse"></div>
+          <div class="loader__core-glow"></div>
+        </div>
       </div>
+    </div>
+    <div class="login-overlay__welcome" id="welcomeMessage">
+      <span class="login-overlay__text">Welcome, TBX</span>
     </div>
   </div>
 
-  <script src="../../dhl-mock-data.js" defer></script>
-  <script defer>
-    (function () {
-      'use strict';
-      var sel = document.getElementById('spSelect');
-      var form = document.getElementById('selectSpForm');
-      if (!sel || !form) return;
-
-      var list = (window.DHL_MOCK_DATA && window.DHL_MOCK_DATA.serviceProviders && Array.isArray(window.DHL_MOCK_DATA.serviceProviders))
-        ? window.DHL_MOCK_DATA.serviceProviders
-        : [
-            { id: 'tbx', name: 'TBX' }
-          ];
-      list.forEach(function (sp) {
-        var name = (sp && sp.name) ? sp.name : (typeof sp === 'string' ? sp : '—');
-        if (!name) return;
-        var opt = document.createElement('option');
-        opt.value = name;
-        opt.textContent = name;
-        sel.appendChild(opt);
-      });
-
-      form.addEventListener('submit', function (e) {
-        e.preventDefault();
-        var sp = sel.value.trim();
-        if (!sp) return;
-        try { sessionStorage.setItem('dhl_sp_portal_current_sp', sp); } catch (err) {}
-        window.location.href = '../dashboard/index.html?sp=' + encodeURIComponent(sp);
-      });
-    })();
-  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tsparticles-slim/2.12.0/tsparticles.slim.bundle.min.js" defer></script>
+  <script src="login.js" defer></script>
   <script src="../../refinements-v3-motion.js" defer></script>
 </body>
 </html>

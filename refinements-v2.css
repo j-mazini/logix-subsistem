@@ -353,3 +353,308 @@
     transform: none !important;
   }
 }
+
+/* =====================================================
+   v2.0 — Notificações: tab lateral, sidebar e modal DHL Notices
+   Camada aditiva sobre sp-portal.css e dashboard/modals.css
+   ===================================================== */
+
+/* ---- Tab lateral (botão de notificações na borda) ---- */
+body.sp-portal .sp-notif-tab,
+.sp-portal .sp-notif-tab {
+  top: 1.25rem;
+  width: 2.85rem;
+  height: 4.25rem;
+  background: linear-gradient(160deg, var(--v2-primary) 0%, var(--v2-accent) 100%);
+  border-radius: 0.85rem 0 0 0.85rem;
+  box-shadow:
+    -6px 4px 18px rgba(99, 102, 241, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  transition: width 0.22s ease, box-shadow 0.22s ease, filter 0.22s ease;
+}
+.sp-portal .sp-notif-tab:hover {
+  width: 3.35rem;
+  filter: brightness(1.06);
+  box-shadow:
+    -8px 6px 24px rgba(99, 102, 241, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+.sp-portal .sp-notif-tab:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: -4px;
+}
+.sp-portal .sp-notif-tab i {
+  font-size: 1.2rem;
+  text-shadow: 0 1px 2px rgba(49, 46, 129, 0.35);
+  transition: transform 0.22s ease;
+}
+.sp-portal .sp-notif-tab:hover i {
+  transform: rotate(-12deg) scale(1.08);
+}
+.sp-portal .sp-notif-tab-badge {
+  top: 0.3rem;
+  right: 0.3rem;
+  background: #ef4444;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
+}
+
+/* ---- Sidebar de notificações ---- */
+.sp-portal .sp-notif-sidebar-backdrop {
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+.sp-portal .sp-notif-sidebar-panel {
+  max-width: 23rem;
+  border-radius: 1rem 0 0 1rem;
+  box-shadow:
+    -16px 12px 48px rgba(15, 23, 42, 0.18),
+    -2px 0 8px rgba(15, 23, 42, 0.06);
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), max-height 0.25s ease;
+}
+.sp-portal .sp-notif-sidebar-header {
+  padding: 1rem 1.15rem;
+  background: linear-gradient(150deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.04) 55%, #fff 100%);
+  border-bottom: 1px solid var(--v2-border);
+  border-radius: 1rem 0 0 0;
+}
+.sp-portal .sp-notif-sidebar-title {
+  font-size: 1.05rem;
+  gap: 0.6rem;
+  color: var(--v2-text-dark);
+}
+.sp-portal .sp-notif-sidebar-title i {
+  width: 2.15rem;
+  height: 2.15rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  color: #fff;
+  background: linear-gradient(160deg, var(--v2-primary) 0%, var(--v2-accent) 100%);
+  border-radius: 0.65rem;
+  box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
+}
+.sp-portal .sp-notif-sidebar-close {
+  border-radius: 0.65rem;
+}
+.sp-portal .sp-notif-sidebar-close:hover {
+  background: rgba(99, 102, 241, 0.12);
+  color: var(--v2-primary-strong);
+}
+.sp-portal .sp-notif-sidebar-body {
+  padding: 0.85rem 1rem 1rem;
+}
+.sp-portal .sp-notif-item {
+  padding: 0.8rem 0.9rem;
+  gap: 0.7rem;
+  border-radius: 0.75rem;
+  background: #fff;
+  border: 1px solid var(--v2-border);
+  border-left-width: 4px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+.sp-portal .sp-notif-item:hover {
+  background: #fff;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+  transform: translateY(-1px);
+}
+.sp-portal .sp-notif-item-icon {
+  border-radius: 0.65rem;
+}
+
+/* ---- Modal DHL Notices ---- */
+.sp-portal .sp-avisos-modal-backdrop {
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.sp-portal .sp-avisos-modal-dialog {
+  max-width: 31rem;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow:
+    0 32px 64px -16px rgba(15, 23, 42, 0.35),
+    0 8px 24px rgba(99, 102, 241, 0.12);
+  animation: v2AvisosModalIn 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes v2AvisosModalIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.sp-portal .sp-avisos-modal-header {
+  padding: 1.05rem 1.25rem;
+  background: linear-gradient(150deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.04) 55%, #fff 100%);
+  border-bottom: 1px solid var(--v2-border);
+}
+.sp-portal .sp-avisos-modal-title {
+  gap: 0.6rem;
+  color: var(--v2-text-dark);
+}
+.sp-portal .sp-avisos-modal-title i {
+  width: 2.15rem;
+  height: 2.15rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  color: #fff;
+  background: linear-gradient(160deg, var(--v2-primary) 0%, var(--v2-accent) 100%);
+  border-radius: 0.65rem;
+  box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
+}
+.sp-portal .sp-avisos-modal-close {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.65rem;
+}
+.sp-portal .sp-avisos-modal-close:hover {
+  background: rgba(99, 102, 241, 0.12);
+  color: var(--v2-primary-strong);
+}
+
+/* Tabs em estilo segmentado (pílulas) */
+.sp-portal .sp-avisos-modal-tabs {
+  gap: 0.35rem;
+  padding: 0.5rem 0.75rem;
+  background: #f4f5fb;
+  border-bottom: 1px solid var(--v2-border);
+}
+.sp-portal .sp-avisos-modal-tab {
+  padding: 0.5rem 0.5rem;
+  border-radius: 0.6rem;
+  border-bottom: none;
+  color: var(--v2-text-light);
+  transition: color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+.sp-portal .sp-avisos-modal-tab:hover {
+  color: var(--v2-primary-strong);
+  background: rgba(99, 102, 241, 0.08);
+}
+.sp-portal .sp-avisos-modal-tab.active {
+  color: var(--v2-primary-strong);
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08), inset 0 0 0 1px rgba(99, 102, 241, 0.18);
+}
+
+/* Navegação de páginas e dots */
+.sp-portal .sp-avisos-modal-prev,
+.sp-portal .sp-avisos-modal-next {
+  border-radius: 0.65rem;
+  border-color: var(--v2-border);
+}
+.sp-portal .sp-avisos-modal-prev:hover:not(:disabled),
+.sp-portal .sp-avisos-modal-next:hover:not(:disabled) {
+  background: rgba(99, 102, 241, 0.08);
+  border-color: rgba(99, 102, 241, 0.35);
+  color: var(--v2-primary-strong);
+}
+.sp-portal .sp-avisos-modal-dot {
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.sp-portal .sp-avisos-modal-dot.active {
+  background: var(--v2-primary);
+}
+
+/* Itens das listas (Sidebar / Delays) */
+.sp-portal .sp-avisos-list-item {
+  border-radius: 0.75rem;
+  border: 1px solid var(--v2-border);
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.sp-portal .sp-avisos-list-item:hover {
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+  transform: translateY(-1px);
+}
+
+/* Redução de movimento */
+@media (prefers-reduced-motion: reduce) {
+  .sp-portal .sp-avisos-modal-dialog { animation: none; }
+  .sp-portal .sp-notif-tab,
+  .sp-portal .sp-notif-tab i,
+  .sp-portal .sp-notif-item,
+  .sp-portal .sp-avisos-list-item { transition: none; }
+  .sp-portal .sp-notif-item:hover,
+  .sp-portal .sp-avisos-list-item:hover { transform: none; }
+}
+
+/* =====================================================
+   v2.0.1 — Iteração: botão lateral + sidebar de notificações
+   ===================================================== */
+
+/* Botão: estado pressionado e pulso de atenção no badge */
+.sp-portal .sp-notif-tab:active {
+  filter: brightness(0.96);
+  width: 3.1rem;
+}
+.sp-portal .sp-notif-tab-badge {
+  animation: v2NotifBadgePulse 2.4s ease-out infinite;
+}
+@keyframes v2NotifBadgePulse {
+  0%   { box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9), 0 0 0 0 rgba(239, 68, 68, 0.45); }
+  45%  { box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9), 0 0 0 7px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9), 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+/* Sidebar: entrada escalonada dos cartões ao abrir */
+.sp-portal .sp-notif-sidebar.is-open .sp-notif-item {
+  animation: v2NotifItemIn 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.sp-portal .sp-notif-sidebar.is-open .sp-notif-item:nth-child(1) { animation-delay: 0.05s; }
+.sp-portal .sp-notif-sidebar.is-open .sp-notif-item:nth-child(2) { animation-delay: 0.10s; }
+.sp-portal .sp-notif-sidebar.is-open .sp-notif-item:nth-child(3) { animation-delay: 0.15s; }
+.sp-portal .sp-notif-sidebar.is-open .sp-notif-item:nth-child(4) { animation-delay: 0.20s; }
+.sp-portal .sp-notif-sidebar.is-open .sp-notif-item:nth-child(5) { animation-delay: 0.25s; }
+.sp-portal .sp-notif-sidebar.is-open .sp-notif-item:nth-child(n+6) { animation-delay: 0.30s; }
+@keyframes v2NotifItemIn {
+  from { opacity: 0; transform: translateX(14px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* Rótulo de categoria colorido conforme a severidade do item */
+.sp-portal .sp-notif-item-type {
+  font-size: 0.65rem;
+  letter-spacing: 0.06em;
+  color: var(--v2-text-light);
+}
+.sp-portal .sp-notif-item--success .sp-notif-item-type { color: #16a34a; }
+.sp-portal .sp-notif-item--warning .sp-notif-item-type { color: #b45309; }
+.sp-portal .sp-notif-item--danger  .sp-notif-item-type { color: #dc2626; }
+.sp-portal .sp-notif-item--info    .sp-notif-item-type { color: var(--v2-primary-strong); }
+.sp-portal .sp-notif-item-time {
+  color: #94a3b8;
+  font-size: 0.72rem;
+}
+.sp-portal .sp-notif-item--info .sp-notif-item-icon {
+  background: linear-gradient(135deg, var(--v2-primary), var(--v2-primary-strong));
+}
+
+/* Scrollbar fina e discreta no corpo da sidebar */
+.sp-portal .sp-notif-sidebar-body {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(99, 102, 241, 0.35) transparent;
+}
+.sp-portal .sp-notif-sidebar-body::-webkit-scrollbar { width: 6px; }
+.sp-portal .sp-notif-sidebar-body::-webkit-scrollbar-track { background: transparent; }
+.sp-portal .sp-notif-sidebar-body::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.3);
+  border-radius: 999px;
+}
+.sp-portal .sp-notif-sidebar-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.5);
+}
+
+/* Estado vazio alinhado ao tema */
+.sp-portal .sp-notif-empty i {
+  background: rgba(99, 102, 241, 0.1);
+  color: var(--v2-primary);
+}
+
+/* Redução de movimento */
+@media (prefers-reduced-motion: reduce) {
+  .sp-portal .sp-notif-tab-badge { animation: none; }
+  .sp-portal .sp-notif-sidebar.is-open .sp-notif-item { animation: none; }
+}
