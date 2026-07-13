@@ -394,9 +394,10 @@ class RouteBalanceApp {
       const stops = this.visibleStops(route);
       const del = stops.filter(s => s.type === 'DEL').length;
       const pu = stops.length - del;
+      const rebalanceClass = this.rebalanceMode ? 'rebalance-mode' : '';
 
       return `
-      <section class="route-block" data-route-id="${route.id}">
+      <section class="route-block ${rebalanceClass}" data-route-id="${route.id}">
         <div class="route-block-header">
           <h3 class="route-block-title">Route ${route.name}</h3>
           <div class="route-block-completion">${route.completion}%</div>
@@ -483,6 +484,23 @@ class RouteBalanceApp {
             <textarea class="notes-textarea" placeholder="Write observations…">${route.notes}</textarea>
           </div>
 
+          ${this.rebalanceMode ? `
+          <div class="postcodes-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+              <h4 style="margin: 0; font-size: 0.875rem; font-weight: 600; color: var(--text-primary);">Postcodes (Rebalance)</h4>
+              <button class="add-postcode-btn" data-action="add-postcode" data-route-id="${route.id}">
+                <i class="bi bi-plus-circle" style="font-size: 0.85rem;"></i> Add
+              </button>
+            </div>
+            <div class="postcodes-container" data-route-id="${route.id}" ondrop="return false;" ondragover="return false;">
+              ${stops.map(s => `
+                <div class="postcode-item" draggable="true" data-stop-id="${s.id}" data-postcode="${s.postcode}" data-route-id="${route.id}">
+                  ${s.postcode}
+                </div>`).join('')}
+            </div>
+          </div>
+          ` : ''}
+
           <div class="route-buttons">
             <button class="styled-button styled-button--outline" data-action="see-all-stops">
               <i class="bi bi-geo-alt"></i> See All Stops
@@ -534,6 +552,84 @@ class RouteBalanceApp {
         .addEventListener('click', () => this.showAllStopsModal(route));
       block.querySelector('[data-action="shipment-details"]')
         .addEventListener('click', () => this.showShipmentDetailsModal(route));
+
+      // Rebalance mode: drag-and-drop postcodes
+      if (this.rebalanceMode) {
+        const postcodeContainer = block.querySelector('.postcodes-container');
+        if (postcodeContainer) {
+          // Make postcodes draggable
+          postcodeContainer.querySelectorAll('.postcode-item').forEach(item => {
+            item.addEventListener('dragstart', (e) => {
+              e.dataTransfer.effectAllowed = 'move';
+              e.dataTransfer.setData('text/plain', item.dataset.stopId);
+              e.dataTransfer.setData('text/postcode', item.dataset.postcode);
+              e.dataTransfer.setData('text/sourceRoute', item.dataset.routeId);
+              item.classList.add('dragging');
+            });
+
+            item.addEventListener('dragend', (e) => {
+              item.classList.remove('dragging');
+              document.querySelectorAll('.postcodes-container').forEach(c => c.classList.remove('drop-target'));
+            });
+          });
+
+          // Make container a drop target
+          postcodeContainer.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            postcodeContainer.classList.add('drop-target');
+          });
+
+          postcodeContainer.addEventListener('dragleave', (e) => {
+            if (e.target === postcodeContainer) {
+              postcodeContainer.classList.remove('drop-target');
+            }
+          });
+
+          postcodeContainer.addEventListener('drop', (e) => {
+            e.preventDefault();
+            postcodeContainer.classList.remove('drop-target');
+            const sourceRouteId = Number(e.dataTransfer.getData('text/sourceRoute'));
+            const targetRouteId = route.id;
+            const stopId = Number(e.dataTransfer.getData('text/plain'));
+
+            if (sourceRouteId !== targetRouteId) {
+              this.transferPostcodesToRoute(sourceRouteId, targetRouteId, [stopId]);
+            }
+          });
+        }
+
+        // Add postcode button
+        const addBtn = block.querySelector('[data-action="add-postcode"]');
+        if (addBtn) {
+          addBtn.addEventListener('click', () => {
+            const postcode = prompt('Enter postcode to add:', '');
+            if (postcode && postcode.trim()) {
+              const newStop = {
+                id: Date.now(),
+                routeName: route.name,
+                stopNumber: route.stops.length + 1,
+                postcode: postcode.trim(),
+                address: `${postcode.trim()} - New Address`,
+                customer: 'New Customer',
+                type: 'DEL',
+                pm: false,
+                pre12: false,
+                asr: Math.random() > 0.15,
+                dsr: Math.random() > 0.12,
+                status: 'pending'
+              };
+              route.stops.push(newStop);
+              this.stops.push(newStop);
+              route.totalStops = route.stops.length;
+              route.deliveries = route.stops.filter(s => s.type === 'DEL').length;
+              this.persistRebalance();
+              this.render();
+              this.showToast(`✓ Postcode ${postcode.trim()} added to ${route.name}`, 'success');
+            }
+          });
+        }
+      }
     });
   }
 
@@ -672,13 +768,13 @@ class RouteBalanceApp {
     this.render();
   }
 
-  transferPostcodesToRoute(sourceRouteId, targetRouteId) {
-    if (!this.selectedPostcodes[sourceRouteId] || this.selectedPostcodes[sourceRouteId].length === 0) {
+  transferPostcodesToRoute(sourceRouteId, targetRouteId, stopIds = null) {
+    const stops = stopIds || (this.selectedPostcodes[sourceRouteId] || []);
+
+    if (stops.length === 0) {
       this.showToast('No postcodes selected to transfer', 'error');
       return;
     }
-
-    const stops = this.selectedPostcodes[sourceRouteId];
     const sourceRoute = this.routes.find(r => r.id === sourceRouteId);
     const targetRoute = this.routes.find(r => r.id === targetRouteId);
 
