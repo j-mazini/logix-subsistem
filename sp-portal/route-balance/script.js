@@ -19,6 +19,7 @@ class RouteBalanceApp {
     this.editingStopId = null;      // stop currently open in the Edit Postcode modal
     this.rebalanceMode = false;     // admin mode for transferring postcodes between routes
     this.selectedPostcodes = {};    // { routeId: [postcode, ...] } for rebalance transfers
+    this.dragPayload = null;        // { stopId, postcode, sourceRouteId } during a drag
 
     // ---- Static datasets for fake data generation ----
     this.VENDORS = ['FedEx', 'UPS', 'DPD', 'TNT', 'Logixsphere'];
@@ -274,17 +275,26 @@ class RouteBalanceApp {
   }
 
   /**
-   * Collapse Routes: removes the route with the fewest stops and
-   * redistributes its postcodes/stops evenly across remaining routes.
+   * Close a route and redistribute its postcodes/stops evenly across the
+   * remaining routes. Pass a routeId to close that specific route (from the
+   * per-block "Close route" button); with no id, closes the route with the
+   * fewest stops (from the toolbar "Collapse Routes" button).
    */
-  collapseRoute() {
+  collapseRoute(routeId = null) {
     if (this.routes.length <= 1) {
       this.showToast('At least two routes are required to collapse', 'error');
       return;
     }
 
-    const removed = this.routes.reduce((min, r) => r.totalStops < min.totalStops ? r : min);
-    if (!confirm(`Collapse route ${removed.name}? Its ${removed.totalStops} stops will be redistributed.`)) return;
+    const removed = routeId != null
+      ? this.routes.find(r => r.id === Number(routeId))
+      : this.routes.reduce((min, r) => r.totalStops < min.totalStops ? r : min);
+
+    if (!removed) {
+      this.showToast('Route not found', 'error');
+      return;
+    }
+    if (!confirm(`Close route ${removed.name}? Its ${removed.totalStops} postcodes will be redistributed across the other routes.`)) return;
 
     this.routes = this.routes.filter(r => r !== removed);
 
@@ -298,8 +308,9 @@ class RouteBalanceApp {
 
     // Recompute per-route aggregates
     this.routes.forEach(r => this.recomputeRoute(r));
+    this.persistRebalance();
     this.render();
-    this.showToast(`Route ${removed.name} collapsed — postcodes redistributed`, 'success');
+    this.showToast(`Route ${removed.name} closed — postcodes redistributed`, 'success');
   }
 
   recomputeRoute(route) {
@@ -308,6 +319,8 @@ class RouteBalanceApp {
     route.pickups = route.totalStops - route.deliveries;
     route.completedStops = route.stops.filter(s => s.status === 'completed').length;
     route.pre12 = route.stops.filter(s => s.pre12).length;
+    route.asr = route.stops.filter(s => s.asr).length;
+    route.dsr = route.stops.filter(s => s.dsr).length;
     route.completion = route.totalStops
       ? Math.round(route.completedStops / route.totalStops * 100) : 0;
     route.status = this.deriveStatus(route);
@@ -391,7 +404,9 @@ class RouteBalanceApp {
     const routes = this.filteredRoutes();
 
     container.innerHTML = routes.map(route => {
-      const stops = this.visibleStops(route);
+      // Copy before sorting so we never mutate route.stops; Pre 12 first.
+      const stops = [...this.visibleStops(route)]
+        .sort((a, b) => (b.pre12 === true) - (a.pre12 === true));
       const del = stops.filter(s => s.type === 'DEL').length;
       const pu = stops.length - del;
       const rebalanceClass = this.rebalanceMode ? 'rebalance-mode' : '';
@@ -400,7 +415,13 @@ class RouteBalanceApp {
       <section class="route-block ${rebalanceClass}" data-route-id="${route.id}">
         <div class="route-block-header">
           <h3 class="route-block-title">Route ${route.name}</h3>
-          <div class="route-block-completion">${route.completion}%</div>
+          <div class="route-block-header-right">
+            <div class="route-block-completion">${route.completion}%</div>
+            <button class="route-collapse-btn" data-action="collapse-route" data-route-id="${route.id}"
+                    title="Close this route and redistribute its postcodes">
+              <i class="bi bi-box-arrow-in-down"></i> Close route
+            </button>
+          </div>
         </div>
 
         <div class="progress-bar-container">
@@ -413,7 +434,9 @@ class RouteBalanceApp {
           <div class="route-info-grid">
             <div class="info-box">
               <span class="info-box-label">Vendor</span>
-              <span class="info-box-value editable" data-field="vendor" title="Click to edit">${route.vendor}</span>
+              <select class="info-box-select" data-field="vendor" title="Change vendor">
+                ${this.VENDORS.map(v => `<option value="${v}" ${v === route.vendor ? 'selected' : ''}>${v}</option>`).join('')}
+              </select>
             </div>
             <div class="info-box">
               <span class="info-box-label">Driver</span>
@@ -421,7 +444,9 @@ class RouteBalanceApp {
             </div>
             <div class="info-box">
               <span class="info-box-label">Vehicle</span>
-              <span class="info-box-value editable" data-field="vehicle" title="Click to edit">${route.vehicle}</span>
+              <select class="info-box-select" data-field="vehicle" title="Change vehicle">
+                ${this.VEHICLES.map(v => `<option value="${v}" ${v === route.vehicle ? 'selected' : ''}>${v}</option>`).join('')}
+              </select>
             </div>
           </div>
 
@@ -434,8 +459,11 @@ class RouteBalanceApp {
               </thead>
               <tbody>
                 ${stops.map(s => `
-                  <tr>
+                  <tr class="${this.rebalanceMode ? 'rebalance-row' : ''}"
+                      ${this.rebalanceMode ? 'draggable="true"' : ''}
+                      data-stop-id="${s.id}" data-postcode="${s.postcode}" data-route-id="${route.id}">
                     <td class="pc-cell">
+                      ${this.rebalanceMode ? '<i class="bi bi-grip-vertical drag-handle"></i>' : ''}
                       <span class="editable" data-stop-id="${s.id}" title="Click to edit / substitute">${s.postcode}</span>
                       ${s.pre12 ? '<span class="status-badge status-badge-pre12">Pre 12</span>' : ''}
                     </td>
@@ -485,20 +513,10 @@ class RouteBalanceApp {
           </div>
 
           ${this.rebalanceMode ? `
-          <div class="postcodes-section">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
-              <h4 style="margin: 0; font-size: 0.875rem; font-weight: 600; color: var(--text-primary);">Postcodes (Rebalance)</h4>
-              <button class="add-postcode-btn" data-action="add-postcode" data-route-id="${route.id}">
-                <i class="bi bi-plus-circle" style="font-size: 0.85rem;"></i> Add
-              </button>
-            </div>
-            <div class="postcodes-container" data-route-id="${route.id}">
-              ${stops.map(s => `
-                <div class="postcode-item" draggable="true" data-stop-id="${s.id}" data-postcode="${s.postcode}" data-route-id="${route.id}">
-                  ${s.postcode}
-                </div>`).join('')}
-            </div>
-          </div>
+          <p class="rebalance-hint">
+            <i class="bi bi-info-circle"></i>
+            Drag a postcode row onto another route to move it.
+          </p>
           ` : ''}
 
           <div class="route-buttons">
@@ -521,16 +539,13 @@ class RouteBalanceApp {
       const route = this.routes.find(r => r.id === Number(block.dataset.routeId));
       if (!route) return;
 
-      // Editable vendor / vehicle (prompt-based modal edit)
-      block.querySelectorAll('.info-box-value.editable').forEach(el => {
-        el.addEventListener('click', () => {
+      // Editable vendor / vehicle via dropdown
+      block.querySelectorAll('.info-box-select').forEach(el => {
+        el.addEventListener('change', () => {
           const field = el.dataset.field;
-          const value = prompt(`Edit ${field}:`, route[field]);
-          if (value && value.trim()) {
-            route[field] = value.trim();
-            this.render();
-            this.showToast(`${field.charAt(0).toUpperCase() + field.slice(1)} updated`, 'success');
-          }
+          route[field] = el.value;
+          this.render();
+          this.showToast(`${field.charAt(0).toUpperCase() + field.slice(1)} updated to ${el.value}`, 'success');
         });
       });
 
@@ -553,85 +568,66 @@ class RouteBalanceApp {
       block.querySelector('[data-action="shipment-details"]')
         .addEventListener('click', () => this.showShipmentDetailsModal(route));
 
-      // Rebalance mode: drag-and-drop postcodes
+      // Close route: redistribute this route's postcodes across the others
+      const collapseBtn = block.querySelector('[data-action="collapse-route"]');
+      if (collapseBtn) {
+        collapseBtn.addEventListener('click', () => this.collapseRoute(route.id));
+      }
+
+      // Rebalance mode: drag a postcode row onto another route to move it
       if (this.rebalanceMode) {
-        const postcodeContainer = block.querySelector('.postcodes-container');
-        if (postcodeContainer) {
-          // Make postcodes draggable
-          postcodeContainer.querySelectorAll('.postcode-item').forEach(item => {
-            item.addEventListener('dragstart', (e) => {
-              e.dataTransfer.effectAllowed = 'move';
-              e.dataTransfer.setData('text/plain', item.dataset.stopId);
-              e.dataTransfer.setData('text/postcode', item.dataset.postcode);
-              e.dataTransfer.setData('text/sourceRoute', item.dataset.routeId);
-              item.classList.add('dragging');
-            });
-
-            item.addEventListener('dragend', (e) => {
-              item.classList.remove('dragging');
-              document.querySelectorAll('.postcodes-container').forEach(c => c.classList.remove('drop-target'));
-            });
+        // Each table row is a drag source
+        block.querySelectorAll('tr.rebalance-row').forEach(row => {
+          row.addEventListener('dragstart', (e) => {
+            e.dataTransfer.effectAllowed = 'move';
+            // stash the payload on the app so drop always has it (dataTransfer
+            // can be unreliable across some browsers / re-renders)
+            this.dragPayload = {
+              stopId: Number(row.dataset.stopId),
+              postcode: row.dataset.postcode,
+              sourceRouteId: Number(row.dataset.routeId),
+            };
+            e.dataTransfer.setData('text/plain', row.dataset.stopId);
+            row.classList.add('dragging');
           });
 
-          // Make container a drop target
-          postcodeContainer.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
-            postcodeContainer.classList.add('drop-target');
+          row.addEventListener('dragend', () => {
+            row.classList.remove('dragging');
+            this.dragPayload = null;
+            document.querySelectorAll('.route-block.drop-target')
+              .forEach(b => b.classList.remove('drop-target'));
           });
+        });
 
-          postcodeContainer.addEventListener('dragleave', (e) => {
-            // Only remove if truly leaving the container
-            const rect = postcodeContainer.getBoundingClientRect();
-            if (e.clientX < rect.left || e.clientX > rect.right ||
-                e.clientY < rect.top || e.clientY > rect.bottom) {
-              postcodeContainer.classList.remove('drop-target');
-            }
-          });
+        // The whole route block is a drop zone — drop a postcode onto another
+        // route's block to move it there.
+        block.addEventListener('dragover', (e) => {
+          if (!this.dragPayload) return;
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          if (this.dragPayload.sourceRouteId !== route.id) {
+            block.classList.add('drop-target');
+          }
+        });
 
-          postcodeContainer.addEventListener('drop', (e) => {
-            e.preventDefault();
-            postcodeContainer.classList.remove('drop-target');
-            const sourceRouteId = Number(e.dataTransfer.getData('text/sourceRoute'));
-            const targetRouteId = route.id;
-            const stopId = Number(e.dataTransfer.getData('text/plain'));
+        block.addEventListener('dragleave', (e) => {
+          const rect = block.getBoundingClientRect();
+          if (e.clientX < rect.left || e.clientX > rect.right ||
+              e.clientY < rect.top || e.clientY > rect.bottom) {
+            block.classList.remove('drop-target');
+          }
+        });
 
-            if (sourceRouteId !== targetRouteId) {
-              this.transferPostcodesToRoute(sourceRouteId, targetRouteId, [stopId]);
-            }
-          });
-        }
-
-        // Add postcode button
-        const addBtn = block.querySelector('[data-action="add-postcode"]');
-        if (addBtn) {
-          addBtn.addEventListener('click', () => {
-            const postcode = prompt('Enter postcode to add:', '');
-            if (postcode && postcode.trim()) {
-              const newStop = {
-                id: Date.now(),
-                routeName: route.name,
-                stopNumber: route.stops.length + 1,
-                postcode: postcode.trim(),
-                address: `${postcode.trim()} - New Address`,
-                customer: 'New Customer',
-                type: 'DEL',
-                pm: false,
-                pre12: false,
-                asr: Math.random() > 0.15,
-                dsr: Math.random() > 0.12,
-                status: 'pending'
-              };
-              route.stops.push(newStop);
-              this.stops.push(newStop);
-              route.totalStops = route.stops.length;
-              route.deliveries = route.stops.filter(s => s.type === 'DEL').length;
-              this.persistRebalance();
-              this.render();
-              this.showToast(`✓ Postcode ${postcode.trim()} added to ${route.name}`, 'success');
-            }
-          });
-        }
+        block.addEventListener('drop', (e) => {
+          e.preventDefault();
+          block.classList.remove('drop-target');
+          const payload = this.dragPayload;
+          if (!payload) return;
+          const targetRouteId = route.id;
+          if (payload.sourceRouteId !== targetRouteId) {
+            this.transferPostcodesToRoute(payload.sourceRouteId, targetRouteId, [payload.stopId]);
+          }
+        });
       }
     });
   }
@@ -787,29 +783,27 @@ class RouteBalanceApp {
     }
 
     // Move stops from source to target route
+    let moved = 0;
     stops.forEach(stopId => {
       const stop = sourceRoute.stops.find(s => s.id === stopId);
       if (stop) {
         sourceRoute.stops = sourceRoute.stops.filter(s => s.id !== stopId);
         stop.routeName = targetRoute.name;
+        stop.stopNumber = targetRoute.stops.length + 1;
         targetRoute.stops.push(stop);
+        moved++;
       }
     });
 
-    // Update metrics
-    sourceRoute.totalStops = sourceRoute.stops.length;
-    sourceRoute.deliveries = sourceRoute.stops.filter(s => s.type === 'DEL').length;
-    sourceRoute.pickups = sourceRoute.stops.filter(s => s.type === 'PU').length;
-    sourceRoute.completion = sourceRoute.totalStops > 0
-      ? Math.round((sourceRoute.stops.filter(s => s.status === 'completed').length / sourceRoute.totalStops) * 100)
-      : 0;
+    if (moved === 0) {
+      this.showToast('Nothing to transfer', 'error');
+      return;
+    }
 
-    targetRoute.totalStops = targetRoute.stops.length;
-    targetRoute.deliveries = targetRoute.stops.filter(s => s.type === 'DEL').length;
-    targetRoute.pickups = targetRoute.stops.filter(s => s.type === 'PU').length;
-    targetRoute.completion = targetRoute.totalStops > 0
-      ? Math.round((targetRoute.stops.filter(s => s.status === 'completed').length / targetRoute.totalStops) * 100)
-      : 0;
+    // Recompute every aggregate for both routes (stops, deliveries, pickups,
+    // completion, pre12, asr, dsr, status)
+    this.recomputeRoute(sourceRoute);
+    this.recomputeRoute(targetRoute);
 
     // Persist transfer to localStorage
     this.persistRebalance();
@@ -817,7 +811,7 @@ class RouteBalanceApp {
     // Clear selection and refresh
     this.selectedPostcodes[sourceRouteId] = [];
     this.render();
-    this.showToast(`✓ Transferred ${stops.length} postcode(s) from ${sourceRoute.name} to ${targetRoute.name}`, 'success');
+    this.showToast(`✓ Moved ${moved} postcode(s): ${sourceRoute.name} → ${targetRoute.name}`, 'success');
   }
 
   persistRebalance() {
