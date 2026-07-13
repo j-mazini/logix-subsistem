@@ -55,8 +55,27 @@
     return { key: name.toLowerCase(), label: name, service: service, icon: icon, tone: tone, stops: stops };
   }
 
+  function getMockDispatchRoutes() {
+    var data = window.DHL_MOCK_DATA || {};
+    var dispatch = data.liveRouteDispatch || {};
+    if (!Array.isArray(dispatch.routes) || !dispatch.routes.length) return null;
+    return dispatch.routes.map(function (route) {
+      var name = route.name || route.label || 'Route';
+      var stops = Array.isArray(route.stops) ? route.stops : [];
+      return {
+        key: String(name).toLowerCase(),
+        label: name,
+        service: route.service || 'Service',
+        icon: route.icon || 'bi-signpost-2',
+        tone: route.tone || 'asr',
+        stops: stops,
+        completedVolume: Math.max(0, Math.min(Number(route.completedVolume) || 0, stops.length))
+      };
+    });
+  }
+
   /* Rotas do Depot MSE. As entregas seguem classificadas por tipo de serviço. */
-  var LIVE_ROUTES = [
+  var LIVE_ROUTES = getMockDispatchRoutes() || [
     liveRoute('MD7A', 'Pre-12', 'bi-sunrise', 'pre12', LIVE_SERVICE_STOPS[0].stops.slice(0, 2)),
     liveRoute('MD7B', 'Pre-12', 'bi-sunrise', 'pre12', LIVE_SERVICE_STOPS[0].stops.slice(2, 4)),
     liveRoute('MD7C', 'Pre-12', 'bi-sunrise', 'pre12', LIVE_SERVICE_STOPS[0].stops.slice(4, 6)),
@@ -73,7 +92,7 @@
 
   /* progresso inicial simulado: parte de cada rota já concluída */
   var progress = LIVE_ROUTES.reduce(function (state, route) {
-    state[route.key] = route.stops.length > 1 ? 1 : 0;
+    state[route.key] = typeof route.completedVolume === 'number' ? route.completedVolume : (route.stops.length > 1 ? 1 : 0);
     return state;
   }, {});
   var activeRouteIndex = 0;
@@ -92,6 +111,33 @@
     next: { label: 'Next', icon: 'bi-skip-forward-circle' },
     queued: { label: 'Queued', icon: 'bi-clock' }
   };
+
+  /* Pace do turno: 7h de serviço (08:00–15:00), progressão linear esperada.
+     Compara % de entregas feitas com % do turno decorrido. */
+  var SHIFT_HOURS = 7;
+  var SHIFT_START_HOUR = 8;
+
+  var PACE_META = {
+    ontrack: { label: 'On track' },
+    attention: { label: 'Attention' },
+    delayed: { label: 'Delayed' }
+  };
+
+  function shiftElapsedPct() {
+    var now = new Date();
+    var start = new Date(now);
+    start.setHours(SHIFT_START_HOUR, 0, 0, 0);
+    var elapsed = (now - start) / (SHIFT_HOURS * 3600000);
+    return Math.min(100, Math.max(0, elapsed * 100));
+  }
+
+  function paceFor(done, total) {
+    if (done >= total) return 'ontrack';
+    var diff = (done / total) * 100 - shiftElapsedPct();
+    if (diff >= -5) return 'ontrack';
+    if (diff >= -15) return 'attention';
+    return 'delayed';
+  }
 
   function getAssignment(routeIndex) {
     var data = window.DHL_MOCK_DATA || {};
@@ -155,12 +201,13 @@
       var assignment = getAssignment(routeIndex);
       var completed = done >= total;
       var warnings = getRouteWarnings(route);
-      return '<article class="sp-live-route-slide sp-live-route-slide--' + route.tone + '" role="group" aria-roledescription="slide" aria-label="' + route.label + ', route ' + (routeIndex + 1) + ' of ' + LIVE_ROUTES.length + '">' +
+      var pace = paceFor(done, total);
+      return '<article class="sp-live-route-slide sp-live-route-slide--' + route.tone + '" data-live-slide="' + routeIndex + '" data-route-label="' + escapeHtml(route.label) + '" data-route-service="' + escapeHtml(route.service) + '" data-route-total="' + total + '" data-route-done="' + done + '" data-route-remaining="' + Math.max(total - done, 0) + '" data-route-warnings="' + warnings.length + '" role="group" aria-roledescription="slide" aria-label="' + route.label + ', route ' + (routeIndex + 1) + ' of ' + LIVE_ROUTES.length + '">' +
         '<div class="sp-live-route-head">' +
-          '<div><span class="sp-live-route-eyebrow"><i class="bi ' + route.icon + '" aria-hidden="true"></i> ' + route.service + ' service</span><h3 class="sp-live-route-title">' + route.label + ' route</h3></div>' +
-          '<div class="sp-live-route-progress-copy"><strong>' + done + '<span>/' + total + '</span></strong><span>deliveries complete</span></div>' +
+          '<div><h3 class="sp-live-route-title">' + route.label + ' route</h3></div>' +
+          '<div class="sp-live-route-progress-copy"><strong>' + done + '<span>/' + total + '</span></strong><span>deliveries complete</span><span class="sp-live-pace sp-live-pace--' + pace + '">' + PACE_META[pace].label + '</span></div>' +
         '</div>' +
-        '<div class="sp-live-route-progress" role="progressbar" aria-valuenow="' + pct + '" aria-valuemin="0" aria-valuemax="100" aria-label="' + route.label + ' delivery progress"><span style="width:' + pct + '%"></span></div>' +
+        '<div class="sp-live-route-progress sp-live-route-progress--' + pace + '" role="progressbar" aria-valuenow="' + pct + '" aria-valuemin="0" aria-valuemax="100" aria-label="' + route.label + ' delivery progress, ' + PACE_META[pace].label + '"><span style="width:' + pct + '%"></span></div>' +
         '<div class="sp-live-route-body">' +
           '<section class="sp-live-current-delivery ' + (completed ? 'sp-live-current-delivery--complete' : '') + '" aria-label="Current delivery">' +
             '<div class="sp-live-current-kicker"><span class="sp-live-current-signal"><i class="bi ' + STATUS_META[currentStatus].icon + '" aria-hidden="true"></i></span>' + (completed ? 'Route complete' : 'Current delivery') + '</div>' +
@@ -194,6 +241,10 @@
       if (!animate) requestAnimationFrame(function () { track.classList.remove('sp-live-carousel-track--instant'); });
     }
     if (position) position.textContent = 'Route ' + (activeRouteIndex + 1) + ' of ' + LIVE_ROUTES.length;
+    document.querySelectorAll('.sp-live-route-slide').forEach(function (slide, index) {
+      slide.classList.toggle('is-active', index === activeRouteIndex);
+      slide.setAttribute('aria-hidden', String(index !== activeRouteIndex));
+    });
     dots.forEach(function (dot, index) {
       var selected = index === activeRouteIndex;
       dot.classList.toggle('is-active', selected);
@@ -204,20 +255,34 @@
   function renderKpis() {
     var route = LIVE_ROUTES[activeRouteIndex];
     if (!route) return;
-    var total = route.stops.length;
-    var done = progress[route.key];
-    var warnings = getRouteWarnings(route).length;
-    setText('spLiveKpiTotal', route.label);
+    var activeSlide = document.querySelector('.sp-live-route-slide.is-active');
+    var total = activeSlide ? Number(activeSlide.getAttribute('data-route-total')) : route.stops.length;
+    var done = activeSlide ? Number(activeSlide.getAttribute('data-route-done')) : progress[route.key];
+    var remaining = activeSlide ? Number(activeSlide.getAttribute('data-route-remaining')) : Math.max(total - done, 0);
+    var warnings = activeSlide ? Number(activeSlide.getAttribute('data-route-warnings')) : getRouteWarnings(route).length;
+    var service = activeSlide ? activeSlide.getAttribute('data-route-service') : route.service;
+    setText('spLiveKpiTotal', activeSlide ? activeSlide.getAttribute('data-route-label') : route.label);
     setText('spLiveKpiPre12', total);
+    setText('spLiveKpiPre12Label', service);
     setText('spLiveKpiAsr', done);
-    setText('spLiveKpiDsr', total - done);
-    setText('spLiveKpiRoutes', route.service);
+    setText('spLiveKpiDsr', remaining);
+    setText('spLiveKpiRoutes', total);
+    setText('spLiveKpiRoutesLabel', service + ' Service');
     setText('spLiveKpiDone', warnings);
   }
 
   function setText(id, value) {
     var el = document.getElementById(id);
-    if (el) el.textContent = String(value);
+    if (!el) return;
+    var next = String(value);
+    if (el.textContent === next) return;
+    el.textContent = next;
+    var card = el.closest('.sp-live-kpi');
+    if (card && !REDUCED_MOTION) {
+      card.classList.remove('sp-live-kpi--updated');
+      void card.offsetWidth;
+      card.classList.add('sp-live-kpi--updated');
+    }
   }
 
   /* avanço simulado: a cada tick, uma rota com stops pendentes progride */
@@ -254,7 +319,7 @@
       title: 'Planning & Operations', icon: 'bi-calendar3',
       items: [
         { label: 'Week Planner', desc: 'Plan routes and crews for the week', icon: 'bi-calendar-week', href: null },
-        { label: 'Route Balance', desc: 'Balance stops across live routes', icon: 'bi-sliders', href: null },
+        { label: 'Route Balance', desc: 'Balance stops across live routes', icon: 'bi-sliders', href: '../route-balancer/index.html' },
         { label: 'Daily Operations Management', desc: 'Run and adjust today’s operation', icon: 'bi-speedometer2', href: null }
       ]
     },

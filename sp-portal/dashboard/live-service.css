@@ -110,6 +110,25 @@
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
 }
 
+.sp-live-kpi--updated {
+  animation: spLiveKpiUpdated 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes spLiveKpiUpdated {
+  0% {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+  }
+  38% {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 22px rgba(79, 70, 229, 0.16);
+  }
+  100% {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+  }
+}
+
 .sp-live-kpi-value {
   font-size: 1.35rem;
   font-weight: 700;
@@ -368,7 +387,28 @@
   border-radius: 999px;
   background: rgba(148, 163, 184, 0.2);
 }
-.sp-live-route-progress span { display: block; height: 100%; border-radius: inherit; background: var(--live-route); transition: width 500ms ease; }
+.sp-live-route-progress span { display: block; height: 100%; border-radius: inherit; background: var(--live-route); transition: width 500ms ease, background 300ms ease; }
+
+/* Pace do turno (7h): cor da barra conforme entregas feitas vs. tempo decorrido */
+.sp-live-route-progress--ontrack span { background: linear-gradient(90deg, #22c55e, #16a34a); }
+.sp-live-route-progress--attention span { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
+.sp-live-route-progress--delayed span { background: linear-gradient(90deg, #f87171, #ef4444); }
+.sp-live-pace {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.35rem;
+  padding: 0.14rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.sp-live-pace::before { content: ''; width: 0.38rem; height: 0.38rem; border-radius: 50%; background: currentColor; }
+.sp-live-pace--ontrack { background: rgba(34, 197, 94, 0.12); color: #15803d; }
+.sp-live-pace--attention { background: rgba(245, 158, 11, 0.15); color: #b45309; }
+.sp-live-pace--delayed { background: rgba(239, 68, 68, 0.12); color: #dc2626; }
 
 .sp-live-route-body { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(13rem, 0.92fr) minmax(16rem, 1fr); gap: 0.8rem; }
 .sp-live-current-delivery,
@@ -628,6 +668,7 @@
 
   .sp-live-dot,
   .sp-live-now-ring,
+  .sp-live-kpi--updated,
   .sp-live-stop--inprogress .sp-live-stop-marker {
     animation: none;
   }
