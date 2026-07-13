@@ -60,6 +60,15 @@ class RouteBalanceApp {
   rand(n) { return Math.floor(Math.random() * n); }
   pick(arr) { return arr[this.rand(arr.length)]; }
 
+  /** Delays fn until `wait` ms after the last call — avoids a full render per keystroke. */
+  debounce(fn, wait) {
+    let timer;
+    return (...args) => {
+      clearTimeout(timer);
+      timer = setTimeout(() => fn(...args), wait);
+    };
+  }
+
   generateFakeData() {
     let stopId = 1;
 
@@ -157,9 +166,10 @@ class RouteBalanceApp {
       this.showToast(this.rebalanceMode ? '🔄 Rebalance mode: select postcodes to transfer' : 'Operations mode: standard view', 'info');
     });
 
+    const debouncedSearchRender = this.debounce(() => this.render(), 200);
     document.getElementById('searchRoute').addEventListener('input', (e) => {
       this.searchQuery = e.target.value.toLowerCase();
-      this.render();
+      debouncedSearchRender();
     });
 
     document.getElementById('filterVendor').addEventListener('change', (e) => {
@@ -181,6 +191,138 @@ class RouteBalanceApp {
         this.render();
       });
     });
+
+    this.setupRouteBlocksDelegation();
+  }
+
+  /**
+   * Route blocks are rebuilt (innerHTML) on every render(), which can fire
+   * on every filter/sort/search. Rather than re-attaching a fresh set of
+   * listeners to every row/button/select after each rebuild, we bind once
+   * here at the container level and resolve the target route from the
+   * clicked/changed element's closest `.route-block` at event time.
+   */
+  setupRouteBlocksDelegation() {
+    const container = document.getElementById('routeBlocksContainer');
+
+    container.addEventListener('change', (e) => {
+      const select = e.target.closest('.info-box-select');
+      if (select) {
+        const route = this.routeFromEl(select);
+        if (!route) return;
+        const field = select.dataset.field;
+        route[field] = select.value;
+        this.render();
+        this.showToast(`${field.charAt(0).toUpperCase() + field.slice(1)} updated to ${select.value}`, 'success');
+        return;
+      }
+
+      const notes = e.target.closest('.notes-textarea');
+      if (notes) {
+        const route = this.routeFromEl(notes);
+        if (route) route.notes = notes.value;
+      }
+    });
+
+    container.addEventListener('click', (e) => {
+      const pcEditable = e.target.closest('.postcode-editable');
+      if (pcEditable) {
+        const stop = this.stops.find(s => s.id === Number(pcEditable.dataset.stopId));
+        if (stop) this.showEditStopModal(stop);
+        return;
+      }
+
+      // Expand/collapse a subpostcode directly in the DOM (no this.render())
+      // so the rest of the dashboard doesn't flash/redraw on every click.
+      const toggleBtn = e.target.closest('.subpostcode-toggle');
+      if (toggleBtn) {
+        e.stopPropagation();
+        const key = `${toggleBtn.dataset.routeId}:${toggleBtn.dataset.subpostcode}`;
+        const willExpand = !this.expandedSubpostcodes.has(key);
+
+        if (willExpand) this.expandedSubpostcodes.add(key);
+        else this.expandedSubpostcodes.delete(key);
+
+        toggleBtn.classList.toggle('expanded', willExpand);
+        const detailRow = toggleBtn.closest('tr.subpostcode-row')?.nextElementSibling;
+        if (detailRow && detailRow.classList.contains('subpostcode-detail-row')) {
+          detailRow.classList.toggle('collapsed', !willExpand);
+        }
+        return;
+      }
+
+      const actionBtn = e.target.closest('[data-action]');
+      if (!actionBtn) return;
+      const route = this.routeFromEl(actionBtn);
+      if (!route) return;
+
+      switch (actionBtn.dataset.action) {
+        case 'see-all-stops': this.showAllStopsModal(route); break;
+        case 'shipment-details': this.showShipmentDetailsModal(route); break;
+        case 'collapse-route': this.collapseRoute(route.id); break;
+      }
+    });
+
+    // Rebalance mode: drag a subpostcode row onto another route's block.
+    container.addEventListener('dragstart', (e) => {
+      const row = e.target.closest('tr.subpostcode-row.rebalance-row');
+      if (!this.rebalanceMode || !row) return;
+      e.dataTransfer.effectAllowed = 'move';
+      this.dragPayload = {
+        subpostcode: row.dataset.subpostcode,
+        sourceRouteId: Number(row.dataset.routeId),
+      };
+      e.dataTransfer.setData('text/plain', row.dataset.subpostcode);
+      row.classList.add('dragging');
+    });
+
+    container.addEventListener('dragend', (e) => {
+      const row = e.target.closest('tr.subpostcode-row.rebalance-row');
+      if (row) row.classList.remove('dragging');
+      this.dragPayload = null;
+      container.querySelectorAll('.route-block.drop-target')
+        .forEach(b => b.classList.remove('drop-target'));
+    });
+
+    container.addEventListener('dragover', (e) => {
+      if (!this.dragPayload) return;
+      const block = e.target.closest('.route-block');
+      if (!block) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      if (this.dragPayload.sourceRouteId !== Number(block.dataset.routeId)) {
+        block.classList.add('drop-target');
+      }
+    });
+
+    container.addEventListener('dragleave', (e) => {
+      const block = e.target.closest('.route-block');
+      if (!block) return;
+      const rect = block.getBoundingClientRect();
+      if (e.clientX < rect.left || e.clientX > rect.right ||
+          e.clientY < rect.top || e.clientY > rect.bottom) {
+        block.classList.remove('drop-target');
+      }
+    });
+
+    container.addEventListener('drop', (e) => {
+      const block = e.target.closest('.route-block');
+      if (!block) return;
+      e.preventDefault();
+      block.classList.remove('drop-target');
+      const payload = this.dragPayload;
+      if (!payload) return;
+      const targetRouteId = Number(block.dataset.routeId);
+      if (payload.sourceRouteId !== targetRouteId) {
+        this.openTransferModal(payload.sourceRouteId, targetRouteId, payload.subpostcode);
+      }
+    });
+  }
+
+  /** Resolves the route object owning the `.route-block` an element sits in. */
+  routeFromEl(el) {
+    const block = el.closest('.route-block');
+    return block ? this.routes.find(r => r.id === Number(block.dataset.routeId)) : null;
   }
 
   /* ==================== HEADER CLOCK ==================== */
@@ -610,126 +752,6 @@ class RouteBalanceApp {
         </div>
       </section>`;
     }).join('');
-
-    this.bindRouteBlockEvents(container);
-  }
-
-  bindRouteBlockEvents(container) {
-    container.querySelectorAll('.route-block').forEach(block => {
-      const route = this.routes.find(r => r.id === Number(block.dataset.routeId));
-      if (!route) return;
-
-      // Editable vendor / vehicle via dropdown
-      block.querySelectorAll('.info-box-select').forEach(el => {
-        el.addEventListener('change', () => {
-          const field = el.dataset.field;
-          route[field] = el.value;
-          this.render();
-          this.showToast(`${field.charAt(0).toUpperCase() + field.slice(1)} updated to ${el.value}`, 'success');
-        });
-      });
-
-      // Editable postcodes (inside an expanded subpostcode dropdown) → Edit Postcode modal
-      block.querySelectorAll('.postcode-editable').forEach(el => {
-        el.addEventListener('click', () => {
-          const stop = this.stops.find(s => s.id === Number(el.dataset.stopId));
-          if (stop) this.showEditStopModal(stop);
-        });
-      });
-
-      // Expand/collapse a subpostcode to reveal its individual postcodes.
-      // Toggled directly in the DOM (no this.render()) so the rest of the
-      // dashboard doesn't flash/redraw on every expand/collapse click.
-      block.querySelectorAll('.subpostcode-toggle').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const key = `${btn.dataset.routeId}:${btn.dataset.subpostcode}`;
-          const expanded = this.expandedSubpostcodes.has(key);
-          const willExpand = !expanded;
-
-          if (willExpand) this.expandedSubpostcodes.add(key);
-          else this.expandedSubpostcodes.delete(key);
-
-          btn.classList.toggle('expanded', willExpand);
-          const detailRow = btn.closest('tr.subpostcode-row')?.nextElementSibling;
-          if (detailRow && detailRow.classList.contains('subpostcode-detail-row')) {
-            detailRow.classList.toggle('collapsed', !willExpand);
-          }
-        });
-      });
-
-      // Notes persistence
-      block.querySelector('.notes-textarea').addEventListener('change', (e) => {
-        route.notes = e.target.value;
-      });
-
-      // Modals
-      block.querySelector('[data-action="see-all-stops"]')
-        .addEventListener('click', () => this.showAllStopsModal(route));
-      block.querySelector('[data-action="shipment-details"]')
-        .addEventListener('click', () => this.showShipmentDetailsModal(route));
-
-      // Close route: redistribute this route's postcodes across the others
-      const collapseBtn = block.querySelector('[data-action="collapse-route"]');
-      if (collapseBtn) {
-        collapseBtn.addEventListener('click', () => this.collapseRoute(route.id));
-      }
-
-      // Rebalance mode: drag a subpostcode group onto another route
-      if (this.rebalanceMode) {
-        // Each subpostcode row (not its expanded detail rows) is a drag source
-        block.querySelectorAll('tr.subpostcode-row.rebalance-row').forEach(row => {
-          row.addEventListener('dragstart', (e) => {
-            e.dataTransfer.effectAllowed = 'move';
-            // stash the payload on the app so drop always has it (dataTransfer
-            // can be unreliable across some browsers / re-renders)
-            this.dragPayload = {
-              subpostcode: row.dataset.subpostcode,
-              sourceRouteId: Number(row.dataset.routeId),
-            };
-            e.dataTransfer.setData('text/plain', row.dataset.subpostcode);
-            row.classList.add('dragging');
-          });
-
-          row.addEventListener('dragend', () => {
-            row.classList.remove('dragging');
-            this.dragPayload = null;
-            document.querySelectorAll('.route-block.drop-target')
-              .forEach(b => b.classList.remove('drop-target'));
-          });
-        });
-
-        // The whole route block is a drop zone — drop a subpostcode onto
-        // another route's block to open the transfer modal.
-        block.addEventListener('dragover', (e) => {
-          if (!this.dragPayload) return;
-          e.preventDefault();
-          e.dataTransfer.dropEffect = 'move';
-          if (this.dragPayload.sourceRouteId !== route.id) {
-            block.classList.add('drop-target');
-          }
-        });
-
-        block.addEventListener('dragleave', (e) => {
-          const rect = block.getBoundingClientRect();
-          if (e.clientX < rect.left || e.clientX > rect.right ||
-              e.clientY < rect.top || e.clientY > rect.bottom) {
-            block.classList.remove('drop-target');
-          }
-        });
-
-        block.addEventListener('drop', (e) => {
-          e.preventDefault();
-          block.classList.remove('drop-target');
-          const payload = this.dragPayload;
-          if (!payload) return;
-          const targetRouteId = route.id;
-          if (payload.sourceRouteId !== targetRouteId) {
-            this.openTransferModal(payload.sourceRouteId, targetRouteId, payload.subpostcode);
-          }
-        });
-      }
-    });
   }
 
   /* ==================== MODALS ==================== */
