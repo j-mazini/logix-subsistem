@@ -1150,23 +1150,99 @@ body.route-balance-page {
   .summary-cards { grid-template-columns: repeat(4, 1fr); }
 }
 
-/* ==================== REBALANCE MODE STYLING ==================== */
+/* =====================================================
+   MODE SWITCH — Operations / Rebalance segmented control
+   A real two-word segmented control (not a pill switch —
+   "Operations"/"Rebalance" need room the AM/PM slider can't give).
+   Flipping it previews the admin state: the track itself glows
+   the same blue used on .route-block.rebalance-mode below, so the
+   control foreshadows what the page is about to do.
+   ===================================================== */
+.mode-switch { display: inline-flex; }
 
-.toggle-switch input:checked + label .toggle-text { font-weight: 600; }
-
-/* Rebalance mode toggle - special styling */
-.filter-group:has(#rebalanceToggle) .toggle-switch label {
-  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+.mode-switch-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
 
-.filter-group:has(#rebalanceToggle) .toggle-switch input:checked + label {
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+.mode-switch-track {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(102px, 1fr));
+  align-items: stretch;
+  background: var(--main-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 3px;
+  cursor: pointer;
+  margin: 0;
+  transition: border-color var(--transition-base), box-shadow var(--transition-base);
 }
 
-.filter-group:has(#rebalanceToggle) .toggle-text { color: var(--text-secondary); }
-.filter-group:has(#rebalanceToggle) .toggle-text:nth-of-type(1) { color: var(--text-light); }
-.filter-group:has(#rebalanceToggle) .toggle-switch input:checked + label .toggle-text:nth-of-type(1) { color: var(--text-light); }
-.filter-group:has(#rebalanceToggle) .toggle-switch input:checked + label .toggle-text:nth-of-type(2) { color: #0d6efd; font-weight: 700; }
+.mode-switch-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: calc(50% - 3px);
+  height: calc(100% - 6px);
+  background: var(--card-bg);
+  border-radius: 7px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background var(--transition-base);
+}
+
+.mode-switch-option {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-light);
+  white-space: nowrap;
+  transition: color var(--transition-base);
+}
+
+.mode-switch-option i { font-size: 0.85rem; }
+
+/* Operations selected (default) */
+.mode-switch-option:first-child { color: var(--text-dark); }
+
+/* Rebalance selected */
+.mode-switch-input:checked ~ .mode-switch-track .mode-switch-thumb {
+  transform: translateX(calc(100% + 0px));
+  background: var(--primary-blue);
+  box-shadow: 0 4px 10px rgba(13, 110, 253, 0.35);
+}
+
+.mode-switch-input:checked ~ .mode-switch-track .mode-switch-option:first-child { color: var(--text-light); }
+.mode-switch-input:checked ~ .mode-switch-track .mode-switch-option:last-child { color: #ffffff; }
+
+.mode-switch-input:checked ~ .mode-switch-track {
+  border-color: rgba(13, 110, 253, 0.4);
+  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.12);
+}
+
+.mode-switch-input:focus-visible ~ .mode-switch-track {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.3);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .mode-switch-track:hover { border-color: var(--text-light); }
+}
+
+@media (max-width: 480px) {
+  .mode-switch-option span:last-child { display: none; }
+  .mode-switch-track { grid-template-columns: repeat(2, minmax(44px, 1fr)); }
+}
 
 /* ==================== ROUTE BLOCKS - REBALANCE MODE ==================== */
 

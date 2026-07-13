@@ -9,9 +9,10 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../sidebar-beam.css" />
   <link rel="stylesheet" href="style.css" />
 </head>
-<body class="route-balance-page">
+<body class="route-balance-page has-beam-sidebar">
 
   <!-- Loading Screen -->
   <div class="loading-overlay active" id="loadingOverlay">
@@ -19,6 +20,29 @@
     <p>Loading operation data…</p>
   </div>
 
+  <!-- ============ BEAM SIDEBAR ============ -->
+  <div class="sidebar-wrapper" id="sidebarWrapper">
+    <div class="beam-overlay" id="beamOverlay" aria-hidden="true"></div>
+    <nav class="beam-sidebar" id="beamSidebar" data-state="closed" role="navigation" aria-label="Service Provider menu">
+      <button type="button" class="beam-trigger" id="beamTrigger" aria-label="Open menu" aria-expanded="false">
+        <i class="bi bi-list beam-icon-menu"></i>
+        <i class="bi bi-x-lg beam-icon-close"></i>
+      </button>
+      <div class="beam-rail" aria-hidden="true"></div>
+      <div class="beam-plates">
+        <a href="../dashboard/index.html" class="beam-plate"><i class="bi bi-house-door-fill beam-plate-icon"></i><span>Home</span></a>
+        <a href="../profile/index.html" class="beam-plate"><i class="bi bi-building beam-plate-icon"></i><span>My Profile</span></a>
+        <a href="../drivers/index.html" class="beam-plate"><i class="bi bi-people-fill beam-plate-icon"></i><span>Drivers</span></a>
+        <a href="../vehicles/index.html" class="beam-plate"><i class="bi bi-truck beam-plate-icon"></i><span>Vehicles</span></a>
+        <a href="../contracts/index.html" class="beam-plate"><i class="bi bi-file-earmark-text beam-plate-icon"></i><span>Contracts</span></a>
+        <a href="../sop-feed/index.html" class="beam-plate"><i class="bi bi-journal-bookmark-fill beam-plate-icon"></i><span>SOP Feed</span></a>
+        <a href="../route-balancer/index.html" class="beam-plate"><i class="bi bi-diagram-3-fill beam-plate-icon"></i><span>Route Balancer</span></a>
+        <a href="index.html" class="beam-plate active"><i class="bi bi-graph-up beam-plate-icon"></i><span>Route Balance</span></a>
+        <a href="../../dhl/access-select/index.html" class="beam-plate beam-plate--switch"><i class="bi bi-arrow-left-right beam-plate-icon"></i><span>Select access</span></a>
+      </div>
+    </nav>
+
+    <div class="sidebar-inset" id="sidebarInset">
   <main class="route-balance-container container-fluid px-3 px-lg-4 py-4">
 
     <!-- ============ HEADER ============ -->
@@ -80,12 +104,18 @@
 
       <div class="filter-group">
         <label class="toggle-label" for="rebalanceToggle">Mode</label>
-        <div class="toggle-switch">
-          <input type="checkbox" id="rebalanceToggle" />
-          <label for="rebalanceToggle">
-            <span class="toggle-text">Operations</span>
-            <span class="toggle-slider"></span>
-            <span class="toggle-text">Rebalance</span>
+        <div class="mode-switch" title="Rebalance mode: select and transfer postcodes between routes">
+          <input type="checkbox" id="rebalanceToggle" class="mode-switch-input" />
+          <label for="rebalanceToggle" class="mode-switch-track">
+            <span class="mode-switch-thumb" aria-hidden="true"></span>
+            <span class="mode-switch-option">
+              <i class="bi bi-compass"></i>
+              <span>Operations</span>
+            </span>
+            <span class="mode-switch-option">
+              <i class="bi bi-shuffle"></i>
+              <span>Rebalance</span>
+            </span>
           </label>
         </div>
       </div>
@@ -200,6 +230,8 @@
     <!-- ============ ROUTE BLOCKS ============ -->
     <section class="route-blocks" id="routeBlocksContainer"></section>
   </main>
+    </div>
+  </div>
 
   <!-- ============ MODAL: Add New Flex Route ============ -->
   <div class="modal fade" id="addRouteModal" tabindex="-1" aria-hidden="true">
@@ -348,6 +380,7 @@
   <div class="toast-container" id="toastContainer"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../../beam-sidebar.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
