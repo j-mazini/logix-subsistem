@@ -492,7 +492,7 @@ class RouteBalanceApp {
                 <i class="bi bi-plus-circle" style="font-size: 0.85rem;"></i> Add
               </button>
             </div>
-            <div class="postcodes-container" data-route-id="${route.id}" ondrop="return false;" ondragover="return false;">
+            <div class="postcodes-container" data-route-id="${route.id}">
               ${stops.map(s => `
                 <div class="postcode-item" draggable="true" data-stop-id="${s.id}" data-postcode="${s.postcode}" data-route-id="${route.id}">
                   ${s.postcode}
@@ -581,7 +581,10 @@ class RouteBalanceApp {
           });
 
           postcodeContainer.addEventListener('dragleave', (e) => {
-            if (e.target === postcodeContainer) {
+            // Only remove if truly leaving the container
+            const rect = postcodeContainer.getBoundingClientRect();
+            if (e.clientX < rect.left || e.clientX > rect.right ||
+                e.clientY < rect.top || e.clientY > rect.bottom) {
               postcodeContainer.classList.remove('drop-target');
             }
           });
