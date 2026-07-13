@@ -20,7 +20,7 @@
           title: 'Route Balance',
           description: 'Balance stops across live routes',
           icon: 'bi-distribute-horizontal',
-          soon: true,
+          link: '../route-balance/index.html',
         },
         {
           id: 'daily-ops',

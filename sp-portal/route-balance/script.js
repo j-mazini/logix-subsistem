@@ -72,8 +72,8 @@ class RouteBalanceApp {
         deliveries,
         pickups: totalStops - deliveries,
         pre12: 0,                                    // computed from stops below
-        asr: (85 + Math.random() * 12).toFixed(1),
-        dsr: (88 + Math.random() * 10).toFixed(1),
+        asr: 0,                                      // Achieved Service Rate (count)
+        dsr: 0,                                      // Delayed Service Rate (count)
         spr: 90 + this.rand(80),
         notes: '',
         status: 'pending',
@@ -93,11 +93,15 @@ class RouteBalanceApp {
           type: j < deliveries ? 'DEL' : 'PU',
           pm: Math.random() > 0.68,                  // flag PM = true → hidden in AM view
           pre12: Math.random() > 0.78,               // flag Pre 12 = must deliver before 12:00
+          asr: Math.random() > 0.15,                 // Achieved Service Rate
+          dsr: Math.random() > 0.12,                 // Delayed Service Rate
           status: j < completedStops ? 'completed' : 'pending',
         });
       }
 
       route.pre12 = route.stops.filter(s => s.pre12).length;
+      route.asr = route.stops.filter(s => s.asr).length;
+      route.dsr = route.stops.filter(s => s.dsr).length;
       this.routes.push(route);
       this.stops.push(...route.stops);
     }
@@ -249,7 +253,7 @@ class RouteBalanceApp {
       target: isNaN(target) ? 85 : target,
       totalStops: 0, completedStops: 0, completion: 0,
       deliveries: 0, pickups: 0,
-      pre12: 0, asr: '0.0', dsr: '0.0', spr: 0,
+      pre12: 0, asr: 0, dsr: 0, spr: 0,
       notes: '', status: 'pending', stops: [],
     });
 
@@ -457,11 +461,11 @@ class RouteBalanceApp {
             </div>
             <div class="metric-badge metric-badge--asr">
               <div class="metric-label">ASR</div>
-              <div class="metric-value">${route.asr}%</div>
+              <div class="metric-value">${route.asr}</div>
             </div>
             <div class="metric-badge metric-badge--dsr">
               <div class="metric-label">DSR</div>
-              <div class="metric-value">${route.dsr}%</div>
+              <div class="metric-value">${route.dsr}</div>
             </div>
           </div>
 
@@ -582,8 +586,8 @@ class RouteBalanceApp {
 
     document.getElementById('allStopsMetrics').innerHTML = `
       <span class="status-badge metric-badge--pre12" style="background:#e0f2fe;color:#075985;">Pre 12: ${route.pre12}</span>
-      <span class="status-badge" style="background:#d1fae5;color:#065f46;">ASR: ${route.asr}%</span>
-      <span class="status-badge" style="background:#ede9fe;color:#5b21b6;">DSR: ${route.dsr}%</span>`;
+      <span class="status-badge" style="background:#d1fae5;color:#065f46;">ASR: ${route.asr}</span>
+      <span class="status-badge" style="background:#ede9fe;color:#5b21b6;">DSR: ${route.dsr}</span>`;
 
     const sorted = [...this.visibleStops(route)]
       .sort((a, b) => a.routeName.localeCompare(b.routeName) || a.stopNumber - b.stopNumber);
