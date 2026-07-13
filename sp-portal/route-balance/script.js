@@ -17,6 +17,8 @@ class RouteBalanceApp {
     this.sortKey = null;
     this.sortAsc = true;
     this.editingStopId = null;      // stop currently open in the Edit Postcode modal
+    this.rebalanceMode = false;     // admin mode for transferring postcodes between routes
+    this.selectedPostcodes = {};    // { routeId: [postcode, ...] } for rebalance transfers
 
     // ---- Static datasets for fake data generation ----
     this.VENDORS = ['FedEx', 'UPS', 'DPD', 'TNT', 'Logixsphere'];
@@ -34,6 +36,7 @@ class RouteBalanceApp {
 
   init() {
     this.generateFakeData();
+    this.loadRebalanceState();
     this.setupEventListeners();
     this.populateVendorFilter();
     this.updateDateTime();
@@ -130,6 +133,12 @@ class RouteBalanceApp {
       this.filterPM = e.target.checked;
       this.render();
       this.showToast(this.filterPM ? 'PM view: showing all stops' : 'AM view: PM stops hidden', 'info');
+    });
+
+    document.getElementById('rebalanceToggle').addEventListener('change', (e) => {
+      this.rebalanceMode = e.target.checked;
+      this.render();
+      this.showToast(this.rebalanceMode ? '🔄 Rebalance mode: select postcodes to transfer' : 'Operations mode: standard view', 'info');
     });
 
     document.getElementById('searchRoute').addEventListener('input', (e) => {
@@ -642,6 +651,103 @@ class RouteBalanceApp {
       toast.classList.add('hiding');
       setTimeout(() => toast.remove(), 300);
     }, 3000);
+  }
+
+  /* ==================== REBALANCE MODE ==================== */
+
+  togglePostcodeSelection(stopId, routeId) {
+    if (!this.rebalanceMode) return;
+
+    if (!this.selectedPostcodes[routeId]) {
+      this.selectedPostcodes[routeId] = [];
+    }
+
+    const idx = this.selectedPostcodes[routeId].indexOf(stopId);
+    if (idx > -1) {
+      this.selectedPostcodes[routeId].splice(idx, 1);
+    } else {
+      this.selectedPostcodes[routeId].push(stopId);
+    }
+
+    this.render();
+  }
+
+  transferPostcodesToRoute(sourceRouteId, targetRouteId) {
+    if (!this.selectedPostcodes[sourceRouteId] || this.selectedPostcodes[sourceRouteId].length === 0) {
+      this.showToast('No postcodes selected to transfer', 'error');
+      return;
+    }
+
+    const stops = this.selectedPostcodes[sourceRouteId];
+    const sourceRoute = this.routes.find(r => r.id === sourceRouteId);
+    const targetRoute = this.routes.find(r => r.id === targetRouteId);
+
+    if (!sourceRoute || !targetRoute) {
+      this.showToast('Invalid route selection', 'error');
+      return;
+    }
+
+    // Move stops from source to target route
+    stops.forEach(stopId => {
+      const stop = sourceRoute.stops.find(s => s.id === stopId);
+      if (stop) {
+        sourceRoute.stops = sourceRoute.stops.filter(s => s.id !== stopId);
+        stop.routeName = targetRoute.name;
+        targetRoute.stops.push(stop);
+      }
+    });
+
+    // Update metrics
+    sourceRoute.totalStops = sourceRoute.stops.length;
+    sourceRoute.deliveries = sourceRoute.stops.filter(s => s.type === 'DEL').length;
+    sourceRoute.pickups = sourceRoute.stops.filter(s => s.type === 'PU').length;
+    sourceRoute.completion = sourceRoute.totalStops > 0
+      ? Math.round((sourceRoute.stops.filter(s => s.status === 'completed').length / sourceRoute.totalStops) * 100)
+      : 0;
+
+    targetRoute.totalStops = targetRoute.stops.length;
+    targetRoute.deliveries = targetRoute.stops.filter(s => s.type === 'DEL').length;
+    targetRoute.pickups = targetRoute.stops.filter(s => s.type === 'PU').length;
+    targetRoute.completion = targetRoute.totalStops > 0
+      ? Math.round((targetRoute.stops.filter(s => s.status === 'completed').length / targetRoute.totalStops) * 100)
+      : 0;
+
+    // Persist transfer to localStorage
+    this.persistRebalance();
+
+    // Clear selection and refresh
+    this.selectedPostcodes[sourceRouteId] = [];
+    this.render();
+    this.showToast(`✓ Transferred ${stops.length} postcode(s) from ${sourceRoute.name} to ${targetRoute.name}`, 'success');
+  }
+
+  persistRebalance() {
+    localStorage.setItem('dhl_route_balance_transfers', JSON.stringify(this.routes.map(r => ({
+      id: r.id,
+      name: r.name,
+      stops: r.stops.map(s => ({ id: s.id, routeName: s.routeName }))
+    }))));
+  }
+
+  loadRebalanceState() {
+    const saved = localStorage.getItem('dhl_route_balance_transfers');
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        // Merge saved state with current routes
+        data.forEach(savedRoute => {
+          const route = this.routes.find(r => r.id === savedRoute.id);
+          if (route) {
+            savedRoute.stops.forEach(savedStop => {
+              const stop = this.stops.find(s => s.id === savedStop.id);
+              if (stop) stop.routeName = savedStop.routeName;
+            });
+          }
+        });
+      } catch (e) {
+        console.warn('Could not load saved rebalance state:', e);
+      }
+    }
   }
 }
 
