@@ -1264,26 +1264,163 @@ body.route-balance-page {
   border-radius: inherit;
 }
 
-/* Draggable postcode rows in rebalance mode */
-.route-table tr.rebalance-row {
+/* ==================== SUBPOSTCODE GROUPS ==================== */
+
+/* Group header row (always present; draggable only in rebalance mode) */
+.route-table tr.subpostcode-row td.pc-cell {
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-top: 0.3rem;
+  padding-bottom: 0.3rem;
+}
+
+.route-table tr.subpostcode-row.rebalance-row {
   cursor: grab;
-  transition: background var(--transition-fast);
 }
 
 .route-table tr.rebalance-row:hover {
-  background: #dbeafe;
+  background: #f0f7ff;
 }
 
 .route-table tr.rebalance-row .drag-handle {
-  color: #60a5fa;
-  margin-right: 0.35rem;
+  color: #93c5fd;
   cursor: grab;
+  transition: color var(--transition-fast);
+}
+
+.route-table tr.rebalance-row:hover .drag-handle {
+  color: #3b82f6;
 }
 
 .route-table tr.rebalance-row.dragging {
   opacity: 0.45;
   background: #eff6ff;
 }
+
+/* Subpostcode toggle button — the clickable "MEx" chip that expands the list */
+.subpostcode-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.65rem;
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+  border-radius: 999px;
+  color: #3730a3;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.subpostcode-toggle:hover {
+  background: #e0e7ff;
+  border-color: #a5b4fc;
+  box-shadow: 0 2px 6px rgba(55, 48, 163, 0.12);
+}
+
+.subpostcode-toggle .bi-chevron-right {
+  font-size: 0.7rem;
+  transition: transform var(--transition-fast);
+}
+
+.subpostcode-toggle.expanded {
+  background: #4f46e5;
+  border-color: #4f46e5;
+  color: #ffffff;
+}
+
+.subpostcode-toggle.expanded .bi-chevron-right {
+  transform: rotate(90deg);
+}
+
+/* Small muted pill showing how many postcodes live under this subpostcode */
+.postcode-count-badge {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-light);
+  background: var(--main-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  padding: 0.15rem 0.55rem;
+  white-space: nowrap;
+}
+
+/* Expanded detail row: the postcode list nested under a subpostcode */
+.subpostcode-detail-row td {
+  padding: 0 0.75rem 0.75rem 2.35rem;
+  border-bottom: 1px solid var(--border-color);
+  background: #fafbff;
+}
+
+/* Collapsed by default; the toggle button shows/hides this via classList,
+   never a re-render, so no flash/redraw happens on open. */
+.subpostcode-detail-row.collapsed {
+  display: none;
+}
+
+/* This row is a plain container for the dropdown, not an interactive row —
+   opt it out of the generic hover tint so moving the mouse across postcode
+   items underneath doesn't flicker between two overlapping backgrounds. */
+.route-table tbody tr.subpostcode-detail-row:hover {
+  background: transparent;
+}
+
+.postcode-dropdown {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.6rem 0.75rem;
+  background: #ffffff;
+  border: 1px solid #e0e7ff;
+  border-left: 3px solid #a5b4fc;
+  border-radius: 0.5rem;
+}
+
+.postcode-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: 0.375rem;
+}
+
+.postcode-dropdown-item:hover {
+  background: #eef2ff;
+}
+
+.postcode-dropdown-item:not(:last-child) {
+  border-bottom: 1px dashed var(--border-color);
+  border-radius: 0.375rem 0.375rem 0 0;
+}
+
+.postcode-editable {
+  cursor: pointer;
+  color: var(--primary-blue);
+  font-weight: 600;
+  font-size: 0.85rem;
+  border-bottom: 1px dashed rgba(13, 110, 253, 0.4);
+}
+
+.postcode-editable:hover {
+  background: rgba(13, 110, 253, 0.08);
+  border-bottom-color: var(--primary-blue);
+}
+
+.pc-mini-stat {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-light);
+  background: var(--main-bg);
+  border-radius: 0.3rem;
+  padding: 0.1rem 0.4rem;
+  margin-left: auto;
+}
+
+.pc-mini-stat + .pc-mini-stat { margin-left: 0.35rem; }
 
 /* Hint shown in rebalance mode */
 .rebalance-hint {
@@ -1311,6 +1448,91 @@ body.route-balance-page {
 .route-block.rebalance-mode.drop-target .route-table {
   outline: 2px dashed #3b82f6;
   outline-offset: 2px;
+}
+
+/* Transfer modal: Send Subpostcode / Send Postcode */
+.transfer-mode-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.transfer-mode-tab {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.75rem;
+  background: var(--main-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.transfer-mode-tab:hover {
+  border-color: #a5b4fc;
+  color: #3730a3;
+}
+
+.transfer-mode-tab.active {
+  background: #4f46e5;
+  border-color: #4f46e5;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(79, 70, 229, 0.25);
+}
+
+.transfer-mode-info {
+  padding: 0.75rem;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 0.5rem;
+  color: #0c63e4;
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.transfer-postcode-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.transfer-postcode-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.65rem;
+  background: var(--main-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 0.4rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.transfer-postcode-item:hover {
+  border-color: #a5b4fc;
+  background: #eef2ff;
+}
+
+.transfer-postcode-item:has(.transfer-postcode-check:checked) {
+  background: #eef2ff;
+  border-color: #4f46e5;
+}
+
+.transfer-postcode-code {
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.transfer-postcode-item .pc-mini-stat {
+  margin-left: auto;
 }
 
 /* Header layout + per-route Close button */
