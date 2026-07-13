@@ -18,15 +18,19 @@ class RouteBalanceApp {
     this.sortAsc = true;
     this.editingStopId = null;      // stop currently open in the Edit Postcode modal
     this.rebalanceMode = false;     // admin mode for transferring postcodes between routes
-    this.selectedPostcodes = {};    // { routeId: [postcode, ...] } for rebalance transfers
-    this.dragPayload = null;        // { stopId, postcode, sourceRouteId } during a drag
+    this.dragPayload = null;        // { subpostcode, sourceRouteId } during a drag
+    this.expandedSubpostcodes = new Set(); // `${routeId}:${subcode}` keys currently expanded
+    this.transferContext = null;    // state for the Send Subpostcode/Postcode modal
 
     // ---- Static datasets for fake data generation ----
     this.VENDORS = ['FedEx', 'UPS', 'DPD', 'TNT', 'Logixsphere'];
     this.DRIVERS = ['Carlos Silva', 'Ana Costa', 'João Martins', 'Maria Santos', 'Pedro Oliveira',
                     'Lucas Pereira', 'Sofia Alves', 'Ricardo Dias', 'Juliana Ribeiro', 'Felipe Costa'];
     this.VEHICLES = ['Van-001', 'Van-002', 'Van-003', 'Truck-001', 'Truck-002', 'Truck-003', 'Bike-001', 'Car-001'];
-    this.POSTCODES = Array.from({ length: 30 }, (_, i) => `ME${String(i + 1).padStart(2, '0')} ${1 + (i % 9)}AB`);
+    // Subpostcodes (outward area codes) each grouping several full postcodes.
+    this.SUBPOSTCODES = Array.from({ length: 8 }, (_, i) => `ME${i + 1}`);
+    this.POSTCODES = this.SUBPOSTCODES.flatMap(sub =>
+      Array.from({ length: 5 }, (_, i) => `${sub} ${i + 1}AB`));
     this.STREETS = ['High Street', 'Station Road', 'Church Lane', 'Victoria Avenue', 'Mill Road',
                     'Park View', 'Queensway', 'Riverside Drive'];
 
@@ -130,6 +134,17 @@ class RouteBalanceApp {
     document.getElementById('btnSaveRoute').addEventListener('click', () => this.saveNewRoute());
     document.getElementById('btnSaveStop').addEventListener('click', () => this.saveStopEdit());
 
+    document.getElementById('sendSubpostcodeBtn').addEventListener('click', () => {
+      if (this.transferContext) { this.transferContext.mode = 'subpostcode'; this.renderTransferModalBody(); }
+    });
+    document.getElementById('sendPostcodeBtn').addEventListener('click', () => {
+      if (this.transferContext) { this.transferContext.mode = 'postcode'; this.renderTransferModalBody(); }
+    });
+    document.getElementById('btnConfirmTransfer').addEventListener('click', () => this.confirmTransfer());
+    document.getElementById('transferModal').addEventListener('hidden.bs.modal', () => {
+      this.transferContext = null;
+    });
+
     document.getElementById('ampmToggle').addEventListener('change', (e) => {
       this.filterPM = e.target.checked;
       this.render();
@@ -185,6 +200,51 @@ class RouteBalanceApp {
   /** Stops visible under the current AM/PM shift filter. */
   visibleStops(route) {
     return this.filterPM ? route.stops : route.stops.filter(s => !s.pm);
+  }
+
+  /** The outward area code a full postcode belongs to, e.g. "ME3 2AB" → "ME3". */
+  subpostcodeOf(postcode) {
+    return postcode.split(' ')[0];
+  }
+
+  /**
+   * Groups a flat stop list into subpostcode → postcode → stops[] for
+   * the route table. Groups containing a Pre 12 stop sort first.
+   */
+  groupBySubpostcode(stops) {
+    const bySub = new Map();
+    stops.forEach(s => {
+      const sub = this.subpostcodeOf(s.postcode);
+      if (!bySub.has(sub)) bySub.set(sub, new Map());
+      const byPc = bySub.get(sub);
+      if (!byPc.has(s.postcode)) byPc.set(s.postcode, []);
+      byPc.get(s.postcode).push(s);
+    });
+
+    const groups = [...bySub.entries()].map(([code, byPc]) => {
+      const groupStops = [...byPc.values()].flat();
+      const del = groupStops.filter(s => s.type === 'DEL').length;
+      const completed = groupStops.filter(s => s.status === 'completed').length;
+      return {
+        code,
+        postcodes: [...byPc.entries()].map(([postcode, pcStops]) => ({
+          postcode,
+          stops: pcStops,
+          del: pcStops.filter(s => s.type === 'DEL').length,
+          pu: pcStops.filter(s => s.type === 'PU').length,
+          pre12: pcStops.some(s => s.pre12),
+        })),
+        del,
+        pu: groupStops.length - del,
+        total: groupStops.length,
+        completion: groupStops.length ? Math.round(completed / groupStops.length * 100) : 0,
+        allCompleted: completed === groupStops.length,
+        pre12: groupStops.some(s => s.pre12),
+      };
+    });
+
+    groups.sort((a, b) => (b.pre12 === true) - (a.pre12 === true));
+    return groups;
   }
 
   /** Routes that pass search + vendor + status filters. */
@@ -404,9 +464,8 @@ class RouteBalanceApp {
     const routes = this.filteredRoutes();
 
     container.innerHTML = routes.map(route => {
-      // Copy before sorting so we never mutate route.stops; Pre 12 first.
-      const stops = [...this.visibleStops(route)]
-        .sort((a, b) => (b.pre12 === true) - (a.pre12 === true));
+      const stops = this.visibleStops(route);
+      const groups = this.groupBySubpostcode(stops);
       const del = stops.filter(s => s.type === 'DEL').length;
       const pu = stops.length - del;
       const rebalanceClass = this.rebalanceMode ? 'rebalance-mode' : '';
@@ -454,25 +513,46 @@ class RouteBalanceApp {
             <table class="route-table">
               <thead>
                 <tr>
-                  <th>Postcode</th><th>DEL</th><th>PU</th><th>Total</th><th>Completion %</th><th>Status</th>
+                  <th>Subpostcode</th><th>DEL</th><th>PU</th><th>Total</th><th>Completion %</th><th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                ${stops.map(s => `
-                  <tr class="${this.rebalanceMode ? 'rebalance-row' : ''}"
+                ${groups.map(g => {
+                  const key = `${route.id}:${g.code}`;
+                  const expanded = this.expandedSubpostcodes.has(key);
+                  return `
+                  <tr class="subpostcode-row ${this.rebalanceMode ? 'rebalance-row' : ''}"
                       ${this.rebalanceMode ? 'draggable="true"' : ''}
-                      data-stop-id="${s.id}" data-postcode="${s.postcode}" data-route-id="${route.id}">
+                      data-subpostcode="${g.code}" data-route-id="${route.id}">
                     <td class="pc-cell">
                       ${this.rebalanceMode ? '<i class="bi bi-grip-vertical drag-handle"></i>' : ''}
-                      <span class="editable" data-stop-id="${s.id}" title="Click to edit / substitute">${s.postcode}</span>
-                      ${s.pre12 ? '<span class="status-badge status-badge-pre12">Pre 12</span>' : ''}
+                      <button type="button" class="subpostcode-toggle ${expanded ? 'expanded' : ''}"
+                              data-action="toggle-subpostcode" data-subpostcode="${g.code}" data-route-id="${route.id}">
+                        <i class="bi bi-chevron-right"></i> ${g.code}
+                      </button>
+                      <span class="postcode-count-badge">${g.postcodes.length} postcode${g.postcodes.length === 1 ? '' : 's'}</span>
+                      ${g.pre12 ? '<span class="status-badge status-badge-pre12">Pre 12</span>' : ''}
                     </td>
-                    <td>${s.type === 'DEL' ? 1 : 0}</td>
-                    <td>${s.type === 'PU' ? 1 : 0}</td>
-                    <td>1</td>
-                    <td>${s.status === 'completed' ? '100%' : '0%'}</td>
-                    <td>${this.statusBadge(s.status)}</td>
-                  </tr>`).join('')}
+                    <td>${g.del}</td>
+                    <td>${g.pu}</td>
+                    <td>${g.total}</td>
+                    <td>${g.completion}%</td>
+                    <td>${this.statusBadge(g.allCompleted ? 'completed' : 'pending')}</td>
+                  </tr>
+                  <tr class="subpostcode-detail-row ${expanded ? '' : 'collapsed'}">
+                    <td colspan="6">
+                      <div class="postcode-dropdown">
+                        ${g.postcodes.map(p => `
+                          <div class="postcode-dropdown-item">
+                            <span class="postcode-editable" data-stop-id="${p.stops[0].id}" title="Click to edit / substitute">${p.postcode}</span>
+                            ${p.pre12 ? '<span class="status-badge status-badge-pre12">Pre 12</span>' : ''}
+                            <span class="pc-mini-stat">DEL ${p.del}</span>
+                            <span class="pc-mini-stat">PU ${p.pu}</span>
+                          </div>`).join('')}
+                      </div>
+                    </td>
+                  </tr>`;
+                }).join('')}
               </tbody>
             </table>
           </div>
@@ -515,7 +595,7 @@ class RouteBalanceApp {
           ${this.rebalanceMode ? `
           <p class="rebalance-hint">
             <i class="bi bi-info-circle"></i>
-            Drag a postcode row onto another route to move it.
+            Drag a subpostcode onto another route to send it whole or split specific postcodes into it.
           </p>
           ` : ''}
 
@@ -549,11 +629,32 @@ class RouteBalanceApp {
         });
       });
 
-      // Editable postcodes → open Edit Postcode modal
-      block.querySelectorAll('.pc-cell .editable').forEach(el => {
+      // Editable postcodes (inside an expanded subpostcode dropdown) → Edit Postcode modal
+      block.querySelectorAll('.postcode-editable').forEach(el => {
         el.addEventListener('click', () => {
           const stop = this.stops.find(s => s.id === Number(el.dataset.stopId));
           if (stop) this.showEditStopModal(stop);
+        });
+      });
+
+      // Expand/collapse a subpostcode to reveal its individual postcodes.
+      // Toggled directly in the DOM (no this.render()) so the rest of the
+      // dashboard doesn't flash/redraw on every expand/collapse click.
+      block.querySelectorAll('.subpostcode-toggle').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const key = `${btn.dataset.routeId}:${btn.dataset.subpostcode}`;
+          const expanded = this.expandedSubpostcodes.has(key);
+          const willExpand = !expanded;
+
+          if (willExpand) this.expandedSubpostcodes.add(key);
+          else this.expandedSubpostcodes.delete(key);
+
+          btn.classList.toggle('expanded', willExpand);
+          const detailRow = btn.closest('tr.subpostcode-row')?.nextElementSibling;
+          if (detailRow && detailRow.classList.contains('subpostcode-detail-row')) {
+            detailRow.classList.toggle('collapsed', !willExpand);
+          }
         });
       });
 
@@ -574,20 +675,19 @@ class RouteBalanceApp {
         collapseBtn.addEventListener('click', () => this.collapseRoute(route.id));
       }
 
-      // Rebalance mode: drag a postcode row onto another route to move it
+      // Rebalance mode: drag a subpostcode group onto another route
       if (this.rebalanceMode) {
-        // Each table row is a drag source
-        block.querySelectorAll('tr.rebalance-row').forEach(row => {
+        // Each subpostcode row (not its expanded detail rows) is a drag source
+        block.querySelectorAll('tr.subpostcode-row.rebalance-row').forEach(row => {
           row.addEventListener('dragstart', (e) => {
             e.dataTransfer.effectAllowed = 'move';
             // stash the payload on the app so drop always has it (dataTransfer
             // can be unreliable across some browsers / re-renders)
             this.dragPayload = {
-              stopId: Number(row.dataset.stopId),
-              postcode: row.dataset.postcode,
+              subpostcode: row.dataset.subpostcode,
               sourceRouteId: Number(row.dataset.routeId),
             };
-            e.dataTransfer.setData('text/plain', row.dataset.stopId);
+            e.dataTransfer.setData('text/plain', row.dataset.subpostcode);
             row.classList.add('dragging');
           });
 
@@ -599,8 +699,8 @@ class RouteBalanceApp {
           });
         });
 
-        // The whole route block is a drop zone — drop a postcode onto another
-        // route's block to move it there.
+        // The whole route block is a drop zone — drop a subpostcode onto
+        // another route's block to open the transfer modal.
         block.addEventListener('dragover', (e) => {
           if (!this.dragPayload) return;
           e.preventDefault();
@@ -625,7 +725,7 @@ class RouteBalanceApp {
           if (!payload) return;
           const targetRouteId = route.id;
           if (payload.sourceRouteId !== targetRouteId) {
-            this.transferPostcodesToRoute(payload.sourceRouteId, targetRouteId, [payload.stopId]);
+            this.openTransferModal(payload.sourceRouteId, targetRouteId, payload.subpostcode);
           }
         });
       }
@@ -750,25 +850,96 @@ class RouteBalanceApp {
 
   /* ==================== REBALANCE MODE ==================== */
 
-  togglePostcodeSelection(stopId, routeId) {
-    if (!this.rebalanceMode) return;
+  /**
+   * Opens the "Send Subpostcode / Send Postcode" modal for a subpostcode
+   * dragged from sourceRouteId onto targetRouteId. Defaults to the
+   * "Send Subpostcode" (whole-group) mode.
+   */
+  openTransferModal(sourceRouteId, targetRouteId, subcode) {
+    const sourceRoute = this.routes.find(r => r.id === sourceRouteId);
+    const targetRoute = this.routes.find(r => r.id === targetRouteId);
+    if (!sourceRoute || !targetRoute) return;
 
-    if (!this.selectedPostcodes[routeId]) {
-      this.selectedPostcodes[routeId] = [];
+    const groupStops = sourceRoute.stops.filter(s => this.subpostcodeOf(s.postcode) === subcode);
+    if (groupStops.length === 0) {
+      this.showToast('Nothing to transfer', 'error');
+      return;
     }
 
-    const idx = this.selectedPostcodes[routeId].indexOf(stopId);
-    if (idx > -1) {
-      this.selectedPostcodes[routeId].splice(idx, 1);
-    } else {
-      this.selectedPostcodes[routeId].push(stopId);
-    }
+    const byPostcode = new Map();
+    groupStops.forEach(s => {
+      if (!byPostcode.has(s.postcode)) byPostcode.set(s.postcode, []);
+      byPostcode.get(s.postcode).push(s);
+    });
 
-    this.render();
+    this.transferContext = {
+      sourceRouteId, targetRouteId, subcode,
+      postcodes: [...byPostcode.entries()].map(([postcode, stops]) => ({ postcode, stops })),
+      mode: 'subpostcode',
+    };
+
+    document.getElementById('transferModalTitle').innerHTML =
+      `<i class="bi bi-arrow-left-right me-2"></i>Transfer ${subcode} → Route ${targetRoute.name}`;
+
+    this.renderTransferModalBody();
+    new bootstrap.Modal(document.getElementById('transferModal')).show();
   }
 
-  transferPostcodesToRoute(sourceRouteId, targetRouteId, stopIds = null) {
-    const stops = stopIds || (this.selectedPostcodes[sourceRouteId] || []);
+  renderTransferModalBody() {
+    const ctx = this.transferContext;
+    if (!ctx) return;
+    const isSub = ctx.mode === 'subpostcode';
+
+    document.getElementById('sendSubpostcodeBtn').classList.toggle('active', isSub);
+    document.getElementById('sendPostcodeBtn').classList.toggle('active', !isSub);
+
+    const body = document.getElementById('transferModalBody');
+    if (isSub) {
+      const total = ctx.postcodes.reduce((n, p) => n + p.stops.length, 0);
+      body.innerHTML = `
+        <p class="transfer-mode-info">
+          All <strong>${ctx.postcodes.length}</strong> postcode(s)
+          (<strong>${total}</strong> stop(s)) under <strong>${ctx.subcode}</strong>
+          will move to the destination route.
+        </p>`;
+    } else {
+      body.innerHTML = `
+        <p class="form-hint">Select which postcodes to send. Unselected postcodes stay on the source route — this splits ${ctx.subcode} across both routes.</p>
+        <div class="transfer-postcode-list">
+          ${ctx.postcodes.map((p, i) => `
+            <label class="transfer-postcode-item">
+              <input type="checkbox" class="transfer-postcode-check" data-index="${i}">
+              <span class="transfer-postcode-code">${p.postcode}</span>
+              <span class="pc-mini-stat">${p.stops.length} stop(s)</span>
+            </label>`).join('')}
+        </div>`;
+    }
+  }
+
+  confirmTransfer() {
+    const ctx = this.transferContext;
+    if (!ctx) return;
+
+    let stopIds;
+    if (ctx.mode === 'subpostcode') {
+      stopIds = ctx.postcodes.flatMap(p => p.stops.map(s => s.id));
+    } else {
+      const checked = [...document.querySelectorAll('.transfer-postcode-check:checked')]
+        .map(cb => Number(cb.dataset.index));
+      if (checked.length === 0) {
+        this.showToast('Select at least one postcode', 'error');
+        return;
+      }
+      stopIds = checked.flatMap(i => ctx.postcodes[i].stops.map(s => s.id));
+    }
+
+    this.transferPostcodesToRoute(ctx.sourceRouteId, ctx.targetRouteId, stopIds);
+    bootstrap.Modal.getInstance(document.getElementById('transferModal'))?.hide();
+    this.transferContext = null;
+  }
+
+  transferPostcodesToRoute(sourceRouteId, targetRouteId, stopIds) {
+    const stops = stopIds || [];
 
     if (stops.length === 0) {
       this.showToast('No postcodes selected to transfer', 'error');
@@ -807,9 +978,6 @@ class RouteBalanceApp {
 
     // Persist transfer to localStorage
     this.persistRebalance();
-
-    // Clear selection and refresh
-    this.selectedPostcodes[sourceRouteId] = [];
     this.render();
     this.showToast(`✓ Moved ${moved} postcode(s): ${sourceRoute.name} → ${targetRoute.name}`, 'success');
   }

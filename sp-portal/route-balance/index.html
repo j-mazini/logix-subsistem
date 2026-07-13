@@ -344,6 +344,33 @@
     </div>
   </div>
 
+  <!-- ============ MODAL: Transfer Subpostcode (Rebalance) ============ -->
+  <div class="modal fade" id="transferModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="transferModalTitle"><i class="bi bi-arrow-left-right me-2"></i>Transfer</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="transfer-mode-tabs">
+            <button type="button" class="transfer-mode-tab active" id="sendSubpostcodeBtn">
+              <i class="bi bi-signpost-2"></i> Send Subpostcode
+            </button>
+            <button type="button" class="transfer-mode-tab" id="sendPostcodeBtn">
+              <i class="bi bi-geo-alt"></i> Send Postcode
+            </button>
+          </div>
+          <div id="transferModalBody"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="styled-button styled-button--outline" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="styled-button styled-button--primary" id="btnConfirmTransfer">Confirm Transfer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Container -->
   <div class="toast-container" id="toastContainer"></div>
 
