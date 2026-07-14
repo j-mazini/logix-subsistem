@@ -18,6 +18,41 @@
       "rationale": "Synthesis complete. Key caveat up front: this was supposed to be a three-way review, but **only Sonnet produced an approach** — Codex failed (CLI not in PATH) and Gemini failed (missing `GEMINI_API_KE",
       "date": "2026-07-10",
       "commit": "584fbb294e0a42702f449000fc11c7a6b29321f8"
+    },
+    {
+      "phase": "design_review_ceremony",
+      "decision": "Design review completed for: No bloco Route dispatch a barra de progresso deve representa",
+      "rationale": "I verified Sonnet's claims against the actual code. Key confirmations: routes are built from 2-stop slices of the pre-12 pool (`live-service.js:60-66`); `renderKpis` maps `spLiveKpiPre12←total`, `spLi",
+      "date": "2026-07-10",
+      "commit": "7a223199db63a0290c94413099881e1d62f8c5bd"
+    },
+    {
+      "phase": "design_review_ceremony",
+      "decision": "Design review completed for: No route balance, o ASR e DSR não devem ser %, mas sim quant",
+      "rationale": "## Design Review Synthesis: route-balance ASR/DSR Metrics\n\n**Source availability note:** Only 1 of 3 providers responded. Codex and Gemini CLIs were not in PATH, so this is effectively a single-source",
+      "date": "2026-07-13",
+      "commit": "b18dd6411945cc25a796efb741d8ee4cc5639430"
+    },
+    {
+      "phase": "design_review_ceremony",
+      "decision": "Design review completed for: adicione o modo 'rebalance' onde o admin pode acessar as rot",
+      "rationale": "## Design Review Synthesis: DHL Admin Route-Balance\n\n**Source availability caveat:** Only 1 of 3 providers (Sonnet) actually responded — Codex and Gemini were unavailable (CLI not in PATH). There is n",
+      "date": "2026-07-13",
+      "commit": "700721ec5b3d47dd261d316c28ed5a2092f6d4fa"
+    },
+    {
+      "phase": "design_review_ceremony",
+      "decision": "Design review completed for: revise as pages deste subsistema (logix-subsistem) para que ",
+      "rationale": "Only one of three providers actually responded (codex and gemini were unavailable), so this is effectively a single-source synthesis. That itself is the headline caveat.\n\n## 1. CONFLICTS\nNone substant",
+      "date": "2026-07-14",
+      "commit": "8bdc5adcb6b7380adee9dba0f8977a332f79c3b7"
+    },
+    {
+      "phase": "design_review_ceremony",
+      "decision": "Design review completed for: revise as pages deste subsistema (logix-subsistem) para que ",
+      "rationale": "Only one of three providers actually produced an approach (codex and gemini CLIs were unavailable). That's the dominant fact here: this is a single-source synthesis, not a three-way reconciliation. I'",
+      "date": "2026-07-14",
+      "commit": "8bdc5adcb6b7380adee9dba0f8977a332f79c3b7"
     }
   ],
   "blockers": [],
@@ -34,7 +69,7 @@
       "codex": 2,
       "gemini": 0,
       "perplexity": 0,
-      "claude": 0
+      "claude": 6
     }
   }
 }

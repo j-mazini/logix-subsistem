@@ -146,10 +146,11 @@ body.has-beam-sidebar .sidebar-inset {
 }
 
 .beam-sidebar[data-state="open"] .beam-plates {
-  max-height: 400px;
+  max-height: min(400px, 70vh);
   opacity: 1;
   transform: translateY(0);
-  overflow: visible;
+  overflow-y: auto;
+  overflow-x: visible;
   padding: 0.5rem 1.5rem 0.5rem 0;
 }
 
@@ -167,6 +168,9 @@ body.has-beam-sidebar .sidebar-inset {
   font-weight: 500;
   font-size: 0.9rem;
   white-space: nowrap;
+  max-width: calc(100vw - 3rem);
+  overflow: hidden;
+  text-overflow: ellipsis;
   border: 1px solid #e5e7eb;
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
   transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1), box-shadow 0.3s ease, border-color 0.3s ease, background 0.3s ease, color 0.3s ease;
@@ -174,7 +178,6 @@ body.has-beam-sidebar .sidebar-inset {
   transform: translateZ(0);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  overflow: visible;
 }
 
 .beam-plate::before {
@@ -251,6 +254,15 @@ body.has-beam-sidebar .sidebar-inset {
   pointer-events: auto;
 }
 
+/* Tablet/desktop (>=1024px): a beam permanece off-canvas (ícone flutuante) em
+   todos os tamanhos de ecrã por desenho; aqui só respiramos um pouco mais. */
+@media (min-width: 1024px) {
+  .beam-sidebar {
+    bottom: 2rem;
+    left: 2rem;
+  }
+}
+
 @media (max-width: 767px) {
   .beam-sidebar {
     bottom: 1rem;
@@ -266,5 +278,25 @@ body.has-beam-sidebar .sidebar-inset {
   .beam-plate {
     padding: 0.5rem 0.85rem 0.5rem 0.7rem;
     font-size: 0.85rem;
+    max-width: calc(100vw - 2rem);
+  }
+}
+
+@media (max-width: 380px) {
+  .beam-sidebar {
+    bottom: 0.75rem;
+    left: 0.75rem;
+  }
+
+  .beam-trigger {
+    width: 2.75rem;
+    height: 2.75rem;
+    font-size: 1.1rem;
+  }
+
+  .beam-plate {
+    gap: 0.5rem;
+    padding: 0.45rem 0.7rem 0.45rem 0.6rem;
+    font-size: 0.8rem;
   }
 }

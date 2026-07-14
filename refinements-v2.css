@@ -245,7 +245,7 @@
    ===================================================== */
 .table {
   vertical-align: middle;
-  font-size: 0.85rem;
+  font-size: clamp(0.78rem, 0.7rem + 0.35vw, 0.85rem);
 }
 
 .table th,

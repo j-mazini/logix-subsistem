@@ -40,6 +40,12 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--text-primary, #0f172a);
 }
 
+/* Escala tipográfica fluida (fallback): qualquer título sem tamanho próprio
+   mais específico escala suavemente entre mobile e desktop. */
+h1 { font-size: clamp(1.35rem, 1.05rem + 1.4vw, 1.85rem); }
+h2 { font-size: clamp(1.2rem, 1rem + 1vw, 1.5rem); }
+h3 { font-size: clamp(1.05rem, 0.95rem + 0.6vw, 1.25rem); }
+
 /* Cards modernos (override suave) */
 .card,
 .sp-dashboard-card,
