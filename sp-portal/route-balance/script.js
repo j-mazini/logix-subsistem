@@ -34,25 +34,235 @@ class RouteBalanceApp {
     this.STREETS = ['High Street', 'Station Road', 'Church Lane', 'Victoria Avenue', 'Mill Road',
                     'Park View', 'Queensway', 'Riverside Drive'];
 
+    this.intakeFile = null; // file staged in the dropzone, awaiting "Process manifest"
+
     this.init();
   }
 
   /* ==================== INIT ==================== */
 
   init() {
-    this.generateFakeData();
+    this.setupIntakeListeners();
+
+    // Loading screen: fade out into the intake gate (upload / mock choice)
+    setTimeout(() => {
+      document.getElementById('loadingOverlay').classList.remove('active');
+    }, 500);
+  }
+
+  /** Called once real routes/stops data is ready (uploaded manifest or mock), swaps the intake gate for the dashboard. */
+  enterDashboard() {
+    document.getElementById('intakeView').hidden = true;
+    document.getElementById('dashboardView').hidden = false;
+
     this.loadRebalanceState();
     this.setupEventListeners();
     this.populateVendorFilter();
     this.updateDateTime();
     setInterval(() => this.updateDateTime(), 1000);
     this.render();
+    this.showToast('Operation data loaded', 'success');
+  }
 
-    // Loading screen: fade out once first render is done
-    setTimeout(() => {
-      document.getElementById('loadingOverlay').classList.remove('active');
-      this.showToast('Operation data loaded', 'success');
-    }, 700);
+  /* ==================== INTAKE (upload / mock) ==================== */
+
+  setupIntakeListeners() {
+    const dropzone = document.getElementById('intakeDropzone');
+    const fileInput = document.getElementById('intakeFileInput');
+    const btnProcess = document.getElementById('btnIntakeProcess');
+    const btnMock = document.getElementById('btnIntakeMock');
+
+    const openPicker = () => fileInput.click();
+    dropzone.addEventListener('click', openPicker);
+    dropzone.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPicker(); }
+    });
+
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files && fileInput.files[0]) this.stageIntakeFile(fileInput.files[0]);
+    });
+
+    ['dragenter', 'dragover'].forEach(evt => {
+      dropzone.addEventListener(evt, (e) => {
+        e.preventDefault();
+        dropzone.classList.add('is-dragover');
+      });
+    });
+    ['dragleave', 'drop'].forEach(evt => {
+      dropzone.addEventListener(evt, (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('is-dragover');
+      });
+    });
+    dropzone.addEventListener('drop', (e) => {
+      const file = e.dataTransfer?.files?.[0];
+      if (file) this.stageIntakeFile(file);
+    });
+
+    btnProcess.addEventListener('click', () => this.processIntakeFile());
+    btnMock.addEventListener('click', () => {
+      this.generateFakeData();
+      this.enterDashboard();
+    });
+  }
+
+  stageIntakeFile(file) {
+    const allowed = /\.(xlsx|xls|xlsm)$/i;
+    const dropzone = document.getElementById('intakeDropzone');
+    const primary = document.getElementById('intakeDropzonePrimary');
+    const btnProcess = document.getElementById('btnIntakeProcess');
+
+    if (!allowed.test(file.name)) {
+      this.showIntakeStatus('Unsupported file type. Please choose a .xlsx, .xls or .xlsm file.', 'error');
+      return;
+    }
+
+    this.intakeFile = file;
+    dropzone.classList.add('has-file');
+    primary.textContent = file.name;
+    btnProcess.disabled = false;
+    this.showIntakeStatus('', null, true);
+  }
+
+  showIntakeStatus(message, type, hide = false) {
+    const status = document.getElementById('intakeStatus');
+    if (hide) { status.hidden = true; status.textContent = ''; status.className = 'intake-status'; return; }
+    status.hidden = false;
+    status.textContent = message;
+    status.className = `intake-status ${type === 'error' ? 'is-error' : 'is-success'}`;
+  }
+
+  async processIntakeFile() {
+    if (!this.intakeFile) return;
+    const btnProcess = document.getElementById('btnIntakeProcess');
+    btnProcess.disabled = true;
+    btnProcess.innerHTML = '<i class="bi bi-arrow-repeat"></i> Processing…';
+
+    try {
+      const data = await this.intakeFile.arrayBuffer();
+      const workbook = XLSX.read(data, { type: 'array' });
+      const { routes, stops } = this.parseManifestWorkbook(workbook);
+
+      if (!routes.length) {
+        throw new Error('No recognizable route/postcode data found in this file.');
+      }
+
+      this.routes = routes;
+      this.stops = stops;
+      this.showIntakeStatus(`Loaded ${routes.length} routes / ${stops.length} stops from "${this.intakeFile.name}".`, 'success');
+      this.enterDashboard();
+    } catch (err) {
+      this.showIntakeStatus(`Could not process this manifest: ${err.message}`, 'error');
+      btnProcess.disabled = false;
+      btnProcess.innerHTML = '<i class="bi bi-arrow-right-circle"></i> Process manifest';
+    }
+  }
+
+  /** Reads the first sheet with recognizable columns and groups rows into routes/stops matching the app's data model. */
+  parseManifestWorkbook(workbook) {
+    const alias = {
+      route: ['route', 'routename', 'route name', 'route id'],
+      postcode: ['postcode', 'post code', 'postal code'],
+      address: ['address', 'street', 'delivery address'],
+      customer: ['customer', 'customer name', 'client'],
+      type: ['type', 'stop type', 'delivery type'],
+      driver: ['driver', 'driver name'],
+      vendor: ['vendor', 'carrier'],
+      vehicle: ['vehicle', 'vehicle id'],
+      target: ['target', 'target %', 'target percent'],
+      pm: ['pm', 'pm flag', 'afternoon'],
+      pre12: ['pre12', 'pre-12', 'pre 12'],
+    };
+
+    const matchKey = (header) => {
+      const norm = String(header).trim().toLowerCase();
+      for (const [key, names] of Object.entries(alias)) {
+        if (names.includes(norm)) return key;
+      }
+      return null;
+    };
+
+    let rows = null;
+    for (const sheetName of workbook.SheetNames) {
+      const sheet = workbook.Sheets[sheetName];
+      const json = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+      if (!json.length) continue;
+      const headerKeys = Object.keys(json[0]).map(matchKey);
+      if (headerKeys.includes('postcode') && headerKeys.includes('route')) {
+        rows = json.map(row => {
+          const mapped = {};
+          for (const [header, value] of Object.entries(row)) {
+            const key = matchKey(header);
+            if (key) mapped[key] = value;
+          }
+          return mapped;
+        });
+        break;
+      }
+    }
+
+    if (!rows) return { routes: [], stops: [] };
+
+    const routesByName = new Map();
+    let stopId = 1;
+    const stops = [];
+
+    rows.forEach((row, i) => {
+      const routeName = String(row.route || '').trim() || 'UNASSIGNED';
+      if (!routesByName.has(routeName)) {
+        routesByName.set(routeName, {
+          id: routesByName.size + 1,
+          name: routeName,
+          vendor: String(row.vendor || '').trim() || this.pick(this.VENDORS),
+          driver: String(row.driver || '').trim() || this.pick(this.DRIVERS),
+          vehicle: String(row.vehicle || '').trim() || this.pick(this.VEHICLES),
+          target: Number(row.target) || 85,
+          totalStops: 0, completedStops: 0, completion: 0,
+          deliveries: 0, pickups: 0,
+          pre12: 0, asr: 0, dsr: 0,
+          spr: 90 + this.rand(80),
+          sortAttendance: 'yes',
+          notes: '',
+          status: 'pending',
+          stops: [],
+        });
+      }
+
+      const route = routesByName.get(routeName);
+      const type = /pick\s*-?up|pu/i.test(String(row.type || '')) ? 'PU' : 'DEL';
+      const stop = {
+        id: stopId++,
+        routeName,
+        stopNumber: route.stops.length + 1,
+        postcode: String(row.postcode || '').trim() || '—',
+        address: String(row.address || '').trim() || `Stop ${i + 1}`,
+        customer: String(row.customer || '').trim() || `Customer ${i + 1}`,
+        type,
+        pm: /^(true|1|yes|y)$/i.test(String(row.pm || '')),
+        pre12: /^(true|1|yes|y)$/i.test(String(row.pre12 || '')),
+        asr: true,
+        dsr: true,
+        status: 'pending',
+      };
+
+      route.stops.push(stop);
+      stops.push(stop);
+    });
+
+    const routes = Array.from(routesByName.values()).map(route => {
+      route.totalStops = route.stops.length;
+      route.deliveries = route.stops.filter(s => s.type === 'DEL').length;
+      route.pickups = route.stops.filter(s => s.type === 'PU').length;
+      route.pre12 = route.stops.filter(s => s.pre12).length;
+      route.asr = route.stops.length;
+      route.dsr = route.stops.length;
+      route.completedStops = 0;
+      route.completion = 0;
+      route.status = this.deriveStatus(route);
+      return route;
+    });
+
+    return { routes, stops };
   }
 
   /* ==================== FAKE DATA ==================== */
@@ -92,6 +302,7 @@ class RouteBalanceApp {
         asr: 0,                                      // Achieved Service Rate (count)
         dsr: 0,                                      // Delayed Service Rate (count)
         spr: 90 + this.rand(80),
+        sortAttendance: this.pick(['yes', 'yes', 'yes', 'late', 'no']), // driver showed up to the sort: yes/no/late
         notes: '',
         status: 'pending',
         stops: [],
@@ -213,7 +424,13 @@ class RouteBalanceApp {
         const field = select.dataset.field;
         route[field] = select.value;
         this.render();
-        this.showToast(`${field.charAt(0).toUpperCase() + field.slice(1)} updated to ${select.value}`, 'success');
+
+        if (field === 'sortAttendance') {
+          const labels = { yes: 'Attended', late: 'Late', no: 'No-show' };
+          this.showToast(`Route ${route.name}: sort attendance set to ${labels[select.value]}`, select.value === 'no' ? 'error' : 'success');
+        } else {
+          this.showToast(`${field.charAt(0).toUpperCase() + field.slice(1)} updated to ${select.value}`, 'success');
+        }
         return;
       }
 
@@ -466,6 +683,7 @@ class RouteBalanceApp {
       totalStops: 0, completedStops: 0, completion: 0,
       deliveries: 0, pickups: 0,
       pre12: 0, asr: 0, dsr: 0, spr: 0,
+      sortAttendance: 'yes',
       notes: '', status: 'pending', stops: [],
     });
 
@@ -649,6 +867,15 @@ class RouteBalanceApp {
                 ${this.VEHICLES.map(v => `<option value="${v}" ${v === route.vehicle ? 'selected' : ''}>${v}</option>`).join('')}
               </select>
             </div>
+            <div class="info-box">
+              <span class="info-box-label">Sort</span>
+              <select class="info-box-select sort-attendance-select sort-attendance-${route.sortAttendance}"
+                      data-field="sortAttendance" title="Driver attendance at the sort">
+                <option value="yes" ${route.sortAttendance === 'yes' ? 'selected' : ''}>Attended</option>
+                <option value="late" ${route.sortAttendance === 'late' ? 'selected' : ''}>Late</option>
+                <option value="no" ${route.sortAttendance === 'no' ? 'selected' : ''}>No-show</option>
+              </select>
+            </div>
           </div>
 
           <div class="route-table-responsive">
@@ -810,10 +1037,17 @@ class RouteBalanceApp {
     document.getElementById('allStopsModalTitle').innerHTML =
       `<i class="bi bi-geo-alt me-2"></i>All Stops — Route ${route.name}`;
 
+    const sortLabels = { yes: 'Sort: Attended', late: 'Sort: Late', no: 'Sort: No-show' };
+    const sortColors = {
+      yes: 'background:#d1fae5;color:#065f46;',
+      late: 'background:#fef3c7;color:#92400e;',
+      no: 'background:#fee2e2;color:#991b1b;',
+    };
     document.getElementById('allStopsMetrics').innerHTML = `
       <span class="status-badge metric-badge--pre12" style="background:#e0f2fe;color:#075985;">Pre 12: ${route.pre12}</span>
       <span class="status-badge" style="background:#d1fae5;color:#065f46;">ASR: ${route.asr}</span>
-      <span class="status-badge" style="background:#ede9fe;color:#5b21b6;">DSR: ${route.dsr}</span>`;
+      <span class="status-badge" style="background:#ede9fe;color:#5b21b6;">DSR: ${route.dsr}</span>
+      <span class="status-badge" style="${sortColors[route.sortAttendance]}">${sortLabels[route.sortAttendance]}</span>`;
 
     const sorted = [...this.visibleStops(route)]
       .sort((a, b) => a.routeName.localeCompare(b.routeName) || a.stopNumber - b.stopNumber);

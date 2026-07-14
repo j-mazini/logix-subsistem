@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Daily Financial Insights - Logixsphere</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../sidebar-beam.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="dfi-page has-beam-sidebar">
+
+  <!-- Loading Screen -->
+  <div class="loading-overlay active" id="loadingOverlay">
+    <div class="spinner"></div>
+    <p>Loading daily financial insights…</p>
+  </div>
+
+  <!-- ============ BEAM SIDEBAR ============ -->
+  <div class="sidebar-wrapper" id="sidebarWrapper">
+    <div class="beam-overlay" id="beamOverlay" aria-hidden="true"></div>
+    <nav class="beam-sidebar" id="beamSidebar" data-state="closed" role="navigation" aria-label="Service Provider menu">
+      <button type="button" class="beam-trigger" id="beamTrigger" aria-label="Open menu" aria-expanded="false">
+        <i class="bi bi-list beam-icon-menu"></i>
+        <i class="bi bi-x-lg beam-icon-close"></i>
+      </button>
+      <div class="beam-rail" aria-hidden="true"></div>
+      <div class="beam-plates">
+        <a href="../dashboard/index.html" class="beam-plate"><i class="bi bi-house-door-fill beam-plate-icon"></i><span>Home</span></a>
+        <a href="../profile/index.html" class="beam-plate"><i class="bi bi-building beam-plate-icon"></i><span>My Profile</span></a>
+        <a href="../drivers/index.html" class="beam-plate"><i class="bi bi-people-fill beam-plate-icon"></i><span>Drivers</span></a>
+        <a href="../vehicles/index.html" class="beam-plate"><i class="bi bi-truck beam-plate-icon"></i><span>Vehicles</span></a>
+        <a href="../contracts/index.html" class="beam-plate"><i class="bi bi-file-earmark-text beam-plate-icon"></i><span>Contracts</span></a>
+        <a href="../sop-feed/index.html" class="beam-plate"><i class="bi bi-journal-bookmark-fill beam-plate-icon"></i><span>SOP Feed</span></a>
+        <a href="../route-balance/index.html" class="beam-plate"><i class="bi bi-shuffle beam-plate-icon"></i><span>Route Balance</span></a>
+        <a href="../daily-operations-management/index.html" class="beam-plate"><i class="bi bi-clock-history beam-plate-icon"></i><span>Daily Operations Management</span></a>
+        <span class="beam-plate beam-plate--soon" aria-disabled="true" tabindex="-1"><i class="bi bi-calendar-week beam-plate-icon"></i><span>Week Planner</span><span class="beam-plate-soon-badge">Soon</span></span>
+        <a href="../assets/index.html" class="beam-plate"><i class="bi bi-phone beam-plate-icon"></i><span>Assets</span></a>
+        <a href="../adhoc-invoice-management/index.html" class="beam-plate"><i class="bi bi-file-plus beam-plate-icon"></i><span>Ad-hoc Invoice System</span></a>
+        <a href="index.html" class="beam-plate active"><i class="bi bi-graph-up beam-plate-icon"></i><span>Daily Financial Insights</span></a>
+        <a href="../daily-operations-reports/index.html" class="beam-plate"><i class="bi bi-bar-chart beam-plate-icon"></i><span>Daily Operation Insights</span></a>
+        <a href="../vendor-performance/index.html" class="beam-plate"><i class="bi bi-speedometer beam-plate-icon"></i><span>Vendor Performance</span></a>
+        <a href="../requests-admin/index.html" class="beam-plate"><i class="bi bi-inbox beam-plate-icon"></i><span>Vendor Requests</span></a>
+        <a href="../../dhl/access-select/index.html" class="beam-plate beam-plate--switch"><i class="bi bi-arrow-left-right beam-plate-icon"></i><span>Select access</span></a>
+      </div>
+    </nav>
+
+    <div class="sidebar-inset" id="sidebarInset">
+  <main class="dfi-container container-fluid px-3 px-lg-4 py-4">
+
+    <!-- ============ HEADER ============ -->
+    <header class="page-header-section">
+      <div class="page-header-welcome-text">
+        <h1 class="page-header-title">Daily Financial Insights</h1>
+        <p class="page-header-date"><i class="bi bi-graph-up"></i><span id="pageHeaderSubtitle">Loading…</span></p>
+      </div>
+      <div class="dfi-metrics" id="dfiMetrics"></div>
+    </header>
+
+    <!-- ============ FILTERS ============ -->
+    <div class="filters-bar" data-animate="fade-in-up">
+      <div>
+        <label class="filters-label" for="dateFromInput">Period</label>
+        <div class="dfi-period-group">
+          <input type="date" id="dateFromInput" class="date-nav-input" aria-label="Period from" />
+          <span class="dfi-period-sep">to</span>
+          <input type="date" id="dateToInput" class="date-nav-input" aria-label="Period to" />
+        </div>
+      </div>
+      <div class="search-wrap dfi-search-wrap">
+        <label class="filters-label" for="searchInput">Search (Route, Vehicle, Vendor)</label>
+        <div class="search-input-wrap">
+          <i class="bi bi-search"></i>
+          <input type="text" id="searchInput" class="form-control" placeholder="Route, vehicle, vendor…" />
+        </div>
+      </div>
+      <div>
+        <label class="filters-label" for="filterPaymentMode">Payment Mode</label>
+        <select class="form-select filter-select" id="filterPaymentMode">
+          <option value="All">All</option>
+          <option value="DR">DR</option>
+          <option value="FSR">FSR</option>
+          <option value="VSR">VSR</option>
+          <option value="SP_VSR">SP_VSR</option>
+          <option value="1">DAF</option>
+          <option value="7">Hourly Rate</option>
+          <option value="OFF">OFF</option>
+        </select>
+      </div>
+      <div class="dfi-actions">
+        <button type="button" class="styled-button styled-button--outline" id="btnClearFilters">
+          <i class="bi bi-x-circle"></i> Clear
+        </button>
+        <button type="button" class="styled-button styled-button--primary" id="btnNewRegister">
+          <i class="bi bi-plus-circle"></i> New
+        </button>
+      </div>
+    </div>
+
+    <!-- ============ TABLE ============ -->
+    <div class="dfi-table-card">
+      <div class="dfi-table-scroll">
+        <table class="dfi-table" id="insightsTable">
+          <thead id="insightsTableHead">
+            <tr>
+              <th data-sort-key="date">Date</th>
+              <th data-sort-key="vrm">VRN</th>
+              <th data-sort-key="courier">Vendor</th>
+              <th data-sort-key="route">Route</th>
+              <th data-sort-key="paymentMode">Payment</th>
+              <th data-sort-key="rate">Rate</th>
+              <th data-sort-key="stops">Stops</th>
+              <th data-sort-key="totalPaidStops">Total Paid</th>
+              <th data-sort-key="sort">Route Sort</th>
+              <th data-sort-key="adhoc">AD-HOC SERVICE</th>
+              <th data-sort-key="extras">Extras</th>
+              <th class="dfi-no-sort">Notes</th>
+              <th data-sort-key="total" class="dfi-total-col">Total</th>
+              <th data-sort-key="avgPerStop">Avg/Stop</th>
+              <th class="dfi-no-sort">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="insightsTableBody"></tbody>
+          <tfoot id="insightsTableFoot"></tfoot>
+        </table>
+      </div>
+    </div>
+
+  </main>
+    </div>
+  </div>
+
+  <!-- ============ MODAL: Add / Edit Register ============ -->
+  <div class="dom-modal-backdrop" id="operationModalBackdrop" hidden>
+    <div class="dom-modal dfi-op-modal">
+      <div class="dom-modal-header">
+        <h2 class="dom-modal-title" id="operationModalTitle">Add New Register</h2>
+        <button type="button" class="dom-modal-close" id="btnCloseOperationModal" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <form class="dom-modal-body" id="operationForm">
+        <div class="dfi-form-error" id="operationFormError" hidden></div>
+        <div class="dom-form-grid" id="operationFormGrid"></div>
+        <div class="dom-form-actions">
+          <button type="button" class="styled-button styled-button--outline" id="btnCancelOperation">Cancel</button>
+          <button type="submit" class="styled-button styled-button--primary" id="btnSubmitOperation">Save Register</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============ MODAL: Delete confirm ============ -->
+  <div class="dom-modal-backdrop" id="deleteModalBackdrop" hidden>
+    <div class="dom-modal dom-modal-small">
+      <div class="dom-modal-header">
+        <h2 class="dom-modal-title"><i class="bi bi-exclamation-triangle text-danger me-2"></i>Confirm Delete</h2>
+        <button type="button" class="dom-modal-close" id="btnCloseDeleteModal" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="dom-modal-body">
+        <p id="deleteModalText">Are you sure you want to remove this register?</p>
+        <div class="dom-form-actions">
+          <button type="button" class="styled-button styled-button--outline" id="btnCancelDelete">Cancel</button>
+          <button type="button" class="styled-button styled-button--danger" id="btnConfirmDelete">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../../beam-sidebar.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

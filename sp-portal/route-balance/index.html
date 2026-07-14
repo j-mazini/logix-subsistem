@@ -36,14 +36,64 @@
         <a href="../vehicles/index.html" class="beam-plate"><i class="bi bi-truck beam-plate-icon"></i><span>Vehicles</span></a>
         <a href="../contracts/index.html" class="beam-plate"><i class="bi bi-file-earmark-text beam-plate-icon"></i><span>Contracts</span></a>
         <a href="../sop-feed/index.html" class="beam-plate"><i class="bi bi-journal-bookmark-fill beam-plate-icon"></i><span>SOP Feed</span></a>
-        <a href="../route-balancer/index.html" class="beam-plate"><i class="bi bi-diagram-3-fill beam-plate-icon"></i><span>Route Balancer</span></a>
-        <a href="index.html" class="beam-plate active"><i class="bi bi-graph-up beam-plate-icon"></i><span>Route Balance</span></a>
+        <a href="index.html" class="beam-plate active"><i class="bi bi-shuffle beam-plate-icon"></i><span>Route Balance</span></a>
+        <a href="../daily-operations-management/index.html" class="beam-plate"><i class="bi bi-clock-history beam-plate-icon"></i><span>Daily Operations Management</span></a>
+        <span class="beam-plate beam-plate--soon" aria-disabled="true" tabindex="-1"><i class="bi bi-calendar-week beam-plate-icon"></i><span>Week Planner</span><span class="beam-plate-soon-badge">Soon</span></span>
+        <a href="../assets/index.html" class="beam-plate"><i class="bi bi-phone beam-plate-icon"></i><span>Assets</span></a>
+        <a href="../adhoc-invoice-management/index.html" class="beam-plate"><i class="bi bi-file-plus beam-plate-icon"></i><span>Ad-hoc Invoice System</span></a>
+        <a href="../daily-financial-insights/index.html" class="beam-plate"><i class="bi bi-graph-up beam-plate-icon"></i><span>Daily Financial Insights</span></a>
+        <a href="../daily-operations-reports/index.html" class="beam-plate"><i class="bi bi-bar-chart beam-plate-icon"></i><span>Daily Operation Insights</span></a>
+        <a href="../vendor-performance/index.html" class="beam-plate"><i class="bi bi-speedometer beam-plate-icon"></i><span>Vendor Performance</span></a>
+        <a href="../requests-admin/index.html" class="beam-plate"><i class="bi bi-inbox beam-plate-icon"></i><span>Vendor Requests</span></a>
         <a href="../../dhl/access-select/index.html" class="beam-plate beam-plate--switch"><i class="bi bi-arrow-left-right beam-plate-icon"></i><span>Select access</span></a>
       </div>
     </nav>
 
     <div class="sidebar-inset" id="sidebarInset">
   <main class="route-balance-container container-fluid px-3 px-lg-4 py-4">
+
+    <!-- ============ INTAKE (manifest upload / mock) ============ -->
+    <section class="intake-view" id="intakeView">
+      <header class="intake-header">
+        <h1 class="intake-title">Route Balance</h1>
+        <p class="intake-subtitle">Import today's manifest to build the routes, or generate mock data to explore the dashboard.</p>
+      </header>
+
+      <div class="intake-grid">
+        <div class="intake-card">
+          <div class="intake-card-icon"><i class="bi bi-cloud-arrow-up"></i></div>
+          <h2 class="intake-card-title">Upload manifest</h2>
+          <p class="intake-card-text">Drop an Excel manifest (.xlsx, .xls, .xlsm) with your stops, or click to browse.</p>
+
+          <div class="intake-dropzone" id="intakeDropzone" tabindex="0" role="button" aria-label="Upload manifest file">
+            <input type="file" id="intakeFileInput" accept=".xlsx,.xls,.xlsm" hidden />
+            <i class="bi bi-file-earmark-spreadsheet intake-dropzone-icon"></i>
+            <p class="intake-dropzone-primary" id="intakeDropzonePrimary">Drag the file here, or click to browse</p>
+            <p class="intake-dropzone-formats">.xlsx · .xls · .xlsm</p>
+          </div>
+
+          <div class="intake-status" id="intakeStatus" hidden></div>
+
+          <button type="button" class="styled-button styled-button--primary intake-btn" id="btnIntakeProcess" disabled>
+            <i class="bi bi-arrow-right-circle"></i> Process manifest
+          </button>
+        </div>
+
+        <div class="intake-divider" aria-hidden="true"><span>or</span></div>
+
+        <div class="intake-card">
+          <div class="intake-card-icon"><i class="bi bi-magic"></i></div>
+          <h2 class="intake-card-title">Generate mock data</h2>
+          <p class="intake-card-text">No manifest handy? Spin up a realistic simulated operation — 8 routes, ~200 stops, 10 drivers, 5 vendors — to explore the dashboard.</p>
+          <button type="button" class="styled-button styled-button--outline intake-btn" id="btnIntakeMock">
+            <i class="bi bi-magic"></i> Generate mock operation
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ DASHBOARD ============ -->
+    <div class="dashboard-view" id="dashboardView" hidden>
 
     <!-- ============ HEADER ============ -->
     <header class="page-header-section">
@@ -229,6 +279,7 @@
 
     <!-- ============ ROUTE BLOCKS ============ -->
     <section class="route-blocks" id="routeBlocksContainer"></section>
+    </div>
   </main>
     </div>
   </div>
@@ -406,6 +457,7 @@
   <!-- Toast Container -->
   <div class="toast-container" id="toastContainer"></div>
 
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script src="../../beam-sidebar.js"></script>
   <script src="script.js"></script>

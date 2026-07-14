@@ -1,0 +1,33 @@
+{
+  "version": "1.0.0",
+  "project_id": "",
+  "current_workflow": null,
+  "current_phase": null,
+  "session_start": "2026-07-14T12:44:53Z",
+  "decisions": [
+    {
+      "phase": "design_review_ceremony",
+      "decision": "Design review completed for: Merge the Route Balancer upload/intake step into the new Rou",
+      "rationale": "1. CONFLICTS: No conflicts to resolve — both Codex and Gemini providers were unavailable (Codex CLI not on PATH; Gemini missing API key in this non-interactive shell), so only the Sonnet approach exis",
+      "date": "2026-07-14",
+      "commit": "7f2e1b626b4f878be4a19e4022e670153a781a39"
+    }
+  ],
+  "blockers": [],
+  "context": {
+    "discover": null,
+    "define": null,
+    "develop": null,
+    "deliver": null
+  },
+  "metrics": {
+    "phases_completed": 0,
+    "total_execution_time_minutes": 0,
+    "provider_usage": {
+      "codex": 1,
+      "gemini": 0,
+      "perplexity": 0,
+      "claude": 0
+    }
+  }
+}

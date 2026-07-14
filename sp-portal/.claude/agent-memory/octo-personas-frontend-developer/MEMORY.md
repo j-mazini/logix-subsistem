@@ -1,0 +1,1 @@
+- [sp-portal Next.js-to-static migration series](sp-portal-migration-series.md) — 9-page port; page 2 (requests-admin) done, conventions to reuse for pages 3-9

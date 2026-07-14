@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Requests Management - Logixsphere</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../sidebar-beam.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="va-page has-beam-sidebar">
+
+  <!-- Loading Screen -->
+  <div class="loading-overlay active" id="loadingOverlay">
+    <div class="spinner"></div>
+    <p>Loading vendor requests…</p>
+  </div>
+
+  <!-- ============ BEAM SIDEBAR ============ -->
+  <div class="sidebar-wrapper" id="sidebarWrapper">
+    <div class="beam-overlay" id="beamOverlay" aria-hidden="true"></div>
+    <nav class="beam-sidebar" id="beamSidebar" data-state="closed" role="navigation" aria-label="Service Provider menu">
+      <button type="button" class="beam-trigger" id="beamTrigger" aria-label="Open menu" aria-expanded="false">
+        <i class="bi bi-list beam-icon-menu"></i>
+        <i class="bi bi-x-lg beam-icon-close"></i>
+      </button>
+      <div class="beam-rail" aria-hidden="true"></div>
+      <div class="beam-plates">
+        <a href="../dashboard/index.html" class="beam-plate"><i class="bi bi-house-door-fill beam-plate-icon"></i><span>Home</span></a>
+        <a href="../profile/index.html" class="beam-plate"><i class="bi bi-building beam-plate-icon"></i><span>My Profile</span></a>
+        <a href="../drivers/index.html" class="beam-plate"><i class="bi bi-people-fill beam-plate-icon"></i><span>Drivers</span></a>
+        <a href="../vehicles/index.html" class="beam-plate"><i class="bi bi-truck beam-plate-icon"></i><span>Vehicles</span></a>
+        <a href="../contracts/index.html" class="beam-plate"><i class="bi bi-file-earmark-text beam-plate-icon"></i><span>Contracts</span></a>
+        <a href="../sop-feed/index.html" class="beam-plate"><i class="bi bi-journal-bookmark-fill beam-plate-icon"></i><span>SOP Feed</span></a>
+        <a href="../route-balance/index.html" class="beam-plate"><i class="bi bi-shuffle beam-plate-icon"></i><span>Route Balance</span></a>
+        <a href="../daily-operations-management/index.html" class="beam-plate"><i class="bi bi-clock-history beam-plate-icon"></i><span>Daily Operations Management</span></a>
+        <span class="beam-plate beam-plate--soon" aria-disabled="true" tabindex="-1"><i class="bi bi-calendar-week beam-plate-icon"></i><span>Week Planner</span><span class="beam-plate-soon-badge">Soon</span></span>
+        <a href="../assets/index.html" class="beam-plate"><i class="bi bi-phone beam-plate-icon"></i><span>Assets</span></a>
+        <a href="../adhoc-invoice-management/index.html" class="beam-plate"><i class="bi bi-file-plus beam-plate-icon"></i><span>Ad-hoc Invoice System</span></a>
+        <a href="../daily-financial-insights/index.html" class="beam-plate"><i class="bi bi-graph-up beam-plate-icon"></i><span>Daily Financial Insights</span></a>
+        <a href="../daily-operations-reports/index.html" class="beam-plate"><i class="bi bi-bar-chart beam-plate-icon"></i><span>Daily Operation Insights</span></a>
+        <a href="../vendor-performance/index.html" class="beam-plate"><i class="bi bi-speedometer beam-plate-icon"></i><span>Vendor Performance</span></a>
+        <a href="index.html" class="beam-plate active"><i class="bi bi-inbox beam-plate-icon"></i><span>Vendor Requests</span></a>
+        <a href="../../dhl/access-select/index.html" class="beam-plate beam-plate--switch"><i class="bi bi-arrow-left-right beam-plate-icon"></i><span>Select access</span></a>
+      </div>
+    </nav>
+
+    <div class="sidebar-inset" id="sidebarInset">
+  <main class="va-container container-fluid px-3 px-lg-4 py-4">
+
+    <!-- ============ HEADER ============ -->
+    <header class="page-header-section">
+      <div class="page-header-welcome-text">
+        <h1 class="page-header-title">Requests Management</h1>
+        <p class="page-header-date"><i class="bi bi-inbox"></i><span>Review and manage vendor requests.</span></p>
+      </div>
+    </header>
+
+    <!-- ============ TABS ============ -->
+    <div class="va-tabs" role="tablist">
+      <button type="button" class="va-tab active" id="tabBtnRequests" data-tab="requests" role="tab" aria-selected="true">Requests (<span id="pendingCountLabel">0</span>)</button>
+      <button type="button" class="va-tab" id="tabBtnHistory" data-tab="history" role="tab" aria-selected="false">History</button>
+    </div>
+
+    <!-- ============ REQUESTS TAB ============ -->
+    <section class="va-tab-panel" id="panelRequests">
+      <div class="va-card">
+        <div class="va-card-head">
+          <div>
+            <div class="va-card-title">Pending Requests</div>
+            <div class="va-card-subtitle">Review and approve or reject pending requests.</div>
+          </div>
+          <div class="va-card-head-actions">
+            <select class="form-select filter-select" id="filterServicePartner">
+              <option value="">All Service Partners</option>
+            </select>
+            <button type="button" class="styled-button styled-button--outline" id="btnRefreshRequests">
+              <i class="bi bi-arrow-clockwise"></i> Refresh
+            </button>
+          </div>
+        </div>
+
+        <div id="requestsEmptyState" class="va-empty-state" hidden>
+          <p class="va-empty-text">No pending requests found.</p>
+        </div>
+
+        <div class="va-table-scroll" id="requestsTableWrap">
+          <table class="va-table">
+            <thead>
+              <tr>
+                <th>Request Type</th>
+                <th>Vendor</th>
+                <th>Date(s)</th>
+                <th>Amount</th>
+                <th>Reason</th>
+                <th>Notes</th>
+                <th>Created At</th>
+                <th class="text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="requestsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ HISTORY TAB ============ -->
+    <section class="va-tab-panel" id="panelHistory" hidden>
+      <div class="va-card">
+        <div class="va-card-head">
+          <div>
+            <div class="va-card-title">Request History</div>
+            <div class="va-card-subtitle">View all processed requests.</div>
+          </div>
+          <div class="va-card-head-actions">
+            <select class="form-select filter-select" id="filterRecordType">
+              <option value="all">All Types</option>
+              <option value="DayOff">Day Off</option>
+              <option value="HolyDay">Holiday</option>
+              <option value="PrePayment">Pre-Payment</option>
+            </select>
+            <select class="form-select filter-select" id="filterVendorType">
+              <option value="all">All Vendor Types</option>
+            </select>
+            <button type="button" class="styled-button styled-button--outline" id="btnRefreshHistory">
+              <i class="bi bi-arrow-clockwise"></i> Refresh
+            </button>
+          </div>
+        </div>
+
+        <div id="historyEmptyState" class="va-empty-state" hidden>
+          <p class="va-empty-text">No requests found.</p>
+        </div>
+
+        <div class="va-table-scroll" id="historyTableWrap">
+          <table class="va-table">
+            <thead>
+              <tr>
+                <th>Request Type</th>
+                <th>Vendor</th>
+                <th>Date(s)</th>
+                <th>Amount</th>
+                <th>Reason</th>
+                <th>Notes</th>
+                <th class="text-center">Status</th>
+                <th>Created At</th>
+                <th>Updated At</th>
+              </tr>
+            </thead>
+            <tbody id="historyTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+    </div>
+  </div>
+
+  <!-- ============ MODAL: Pre-Payment Schedule Terms ============ -->
+  <div class="va-modal-backdrop" id="scheduleTermsModalBackdrop" hidden>
+    <div class="va-modal va-modal-small">
+      <div class="va-modal-header">
+        <h2 class="va-modal-title">Pre-Payment Schedule Terms</h2>
+        <button type="button" class="va-modal-close" id="btnCloseScheduleTermsModal" aria-label="Close">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      <div class="va-modal-body">
+        <p class="va-modal-desc">Enter the schedule terms for this pre-payment request. This will determine how the payment is deducted.</p>
+        <div class="va-form-field">
+          <label class="va-form-label" for="scheduleTermsInput">Schedule Terms</label>
+          <textarea id="scheduleTermsInput" rows="4" placeholder="e.g., 4 installments of £50 each"></textarea>
+          <p class="va-form-hint">Leave empty for automatic deduction schedule based on £200 per installment.</p>
+        </div>
+        <div class="va-form-actions">
+          <button type="button" class="styled-button styled-button--outline" id="btnCancelScheduleTerms">Cancel</button>
+          <button type="button" class="styled-button styled-button--success" id="btnConfirmScheduleTerms">Approve</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../../beam-sidebar.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
