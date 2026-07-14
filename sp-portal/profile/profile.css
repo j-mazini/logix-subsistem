@@ -4,15 +4,15 @@
 
 /* ========== Page layout ========== */
 .sp-profile-page .page-inner {
-  padding: 0.75rem 1rem;
+  padding: 0.85rem 1rem;
   background: transparent;
+  max-width: 1100px;
+  margin: 0 auto;
 }
 
 @media (min-width: 768px) {
   .sp-profile-page .page-inner {
     padding: 1rem 1.5rem;
-    max-width: 900px;
-    margin: 0 auto;
   }
 }
 
@@ -40,7 +40,7 @@
 .sp-profile-fb-wrap {
   display: flex;
   flex-direction: column;
-  gap: 4rem;
+  gap: 2rem;
 }
 
 .sp-profile-fb-card {
@@ -171,7 +171,7 @@
 
 /* Profile body (name below cover) */
 .sp-profile-fb-body {
-  padding: 4rem 1.5rem 2.5rem;
+  padding: 3.5rem 1.25rem 2rem;
 }
 
 .sp-profile-fb-name {
@@ -261,7 +261,7 @@
 
 @media (max-width: 576px) {
   .sp-profile-cover-wrap {
-    height: 200px;
+    height: 190px;
   }
   .sp-profile-avatar {
     width: 100px;
@@ -282,5 +282,11 @@
   }
   .sp-profile-fb-name {
     font-size: 1.35rem;
+  }
+  .sp-profile-section-body {
+    padding: 1rem;
+  }
+  .sp-profile-section-header {
+    padding: 0.9rem 1rem;
   }
 }

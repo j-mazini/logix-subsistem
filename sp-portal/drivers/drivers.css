@@ -97,7 +97,7 @@
 .vendor-filters-bar {
   background: #fff;
   border-radius: 0.75rem;
-  padding: 1.5rem;
+  padding: 1.25rem 1.25rem;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
 }
 
@@ -109,8 +109,8 @@
 }
 
 .vendor-filters-search-wrap {
-  flex: 1;
-  min-width: 300px;
+  flex: 1 1 280px;
+  min-width: 220px;
   max-width: 600px;
 }
 
@@ -186,6 +186,7 @@
   align-items: center;
   gap: 0.75rem;
   flex-shrink: 0;
+  flex-wrap: wrap;
 }
 
 .vendor-filters-new {
@@ -194,6 +195,46 @@
 
 .vendor-filters-export {
   font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .vendor-filters-bar {
+    padding: 1rem;
+  }
+
+  .vendor-filters-inner {
+    align-items: stretch;
+  }
+
+  .vendor-filters-search-wrap {
+    max-width: none;
+  }
+
+  .vendor-filters-status-wrap,
+  .vendor-filters-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 576px) {
+  .vendor-filters-status-wrap {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .vendor-filters-status-group {
+    width: 100%;
+  }
+
+  .vendor-filters-status-btn {
+    flex: 1;
+    text-align: center;
+  }
+
+  .vendor-filters-actions {
+    justify-content: flex-start;
+  }
 }
 
 /* ========== VendorTable ========== */
@@ -866,4 +907,74 @@
 .driver-detail-qr-box img {
   max-width: 100%;
   height: auto;
+}
+
+/* ========== Responsivo ========== */
+@media (max-width: 768px) {
+  .vendor-page-title {
+    font-size: 1.5rem;
+  }
+
+  .vendor-page-metric {
+    min-width: 130px;
+  }
+
+  .vendor-filters-search-wrap {
+    min-width: 0;
+    width: 100%;
+    max-width: none;
+  }
+
+  .vendor-filters-status-wrap {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .vendor-filters-status-group {
+    flex: 1;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .vendor-filters-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .vendor-modal-header-lg .modal-title {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .vendor-page-header-user {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .vendor-filters-status-label {
+    display: none;
+  }
+
+  .vendor-filters-status-btn {
+    padding: 0.375rem 0.6rem;
+    font-size: 0.75rem;
+  }
+
+  .driver-detail-modal-wrap {
+    padding: 0.5rem;
+  }
+
+  .driver-detail-modal-header {
+    padding: 1rem 1.25rem;
+  }
+
+  .driver-detail-modal-title {
+    font-size: 1.1rem;
+  }
+
+  .driver-detail-qr-box {
+    min-width: 140px;
+    min-height: 140px;
+  }
 }

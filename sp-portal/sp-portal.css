@@ -29,16 +29,23 @@
   padding: clamp(0.5rem, 1.5vw, 1.75rem) clamp(0.5rem, 2vw, 2rem);
   box-sizing: border-box;
   overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.85rem, 1.7vw, 1.3rem);
 }
 
 .sp-portal .vendor-admin-main,
 .sp-portal .dashboard-main,
 .sp-portal .contract-management-main,
-.sp-portal .sp-vendor-main {
+.sp-portal .sp-vendor-main,
+.sp-portal .sp-profile-main {
   width: 100%;
   max-width: 100%;
   min-width: 0;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 /* Variáveis que adaptam ao viewport (data-viewport é definido por sp-portal-responsive.js) */
@@ -162,6 +169,17 @@ html[data-viewport="xl"] .sp-portal .page-container {
   }
 }
 
+@media (max-width: 767px) {
+  .sp-portal .page-container {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  .sp-portal .page-inner {
+    padding: 0.75rem;
+  }
+}
+
 @media (max-width: 575px) {
   .sp-portal .admin-header {
     flex-direction: column;
@@ -171,6 +189,7 @@ html[data-viewport="xl"] .sp-portal .page-container {
   .sp-portal .sp-portal-action-wrap {
     margin-left: 0;
     order: 2;
+    justify-content: flex-start;
   }
 
   .sp-portal .admin-header-user-pill {

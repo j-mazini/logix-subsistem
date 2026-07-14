@@ -18,6 +18,9 @@
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
   animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
   transition: box-shadow 0.25s ease, border-color 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
 }
 
 .shared-page-header:hover,
@@ -36,7 +39,7 @@
 .vendor-page-header-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 0.9rem 1rem;
   align-items: flex-start;
   justify-content: space-between;
 }
@@ -44,7 +47,7 @@
 .shared-page-title,
 .vendor-page-title {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: clamp(1.15rem, 1rem + 1.2vw, 1.5rem);
   font-weight: 700;
   letter-spacing: -0.02em;
   color: #0f172a;
@@ -62,7 +65,7 @@
 .vendor-page-metrics {
   display: flex;
   gap: 0.5rem;
-  margin-top: 0.75rem;
+  margin-top: 0.25rem;
   flex-wrap: wrap;
   overflow-x: auto;
   padding-bottom: 0;
@@ -80,7 +83,8 @@
   display: flex;
   flex-direction: column;
   gap: 0.125rem;
-  min-width: 100px;
+  min-width: clamp(84px, 22vw, 100px);
+  flex: 1 1 110px;
   padding: 0.5rem 0.75rem;
   border-radius: 10px;
   border: 1px solid #e2e8f0;
@@ -134,7 +138,7 @@
 }
 .contracts-page-title {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: clamp(1.15rem, 1rem + 1.2vw, 1.5rem);
   font-weight: 700;
   letter-spacing: -0.02em;
   color: #0f172a;
@@ -155,7 +159,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.125rem;
-  min-width: 100px;
+  min-width: clamp(84px, 22vw, 100px);
   padding: 0.5rem 0.75rem;
   border-radius: 10px;
   border: 1px solid #e2e8f0;
@@ -178,4 +182,47 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+/* ========== Ecrãs estreitos: header em coluna, sem cortes ========== */
+@media (max-width: 640px) {
+  .shared-page-header-row,
+  .vendor-page-header-row,
+  .contracts-page-header-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .shared-page-header-user,
+  .vendor-page-header-user,
+  .contracts-page-header-user {
+    justify-content: flex-start;
+  }
+
+  .shared-page-metrics,
+  .vendor-page-metrics,
+  .contracts-page-metrics {
+    gap: 0.4rem;
+  }
+
+  .shared-page-metric,
+  .vendor-page-metric,
+  .contracts-page-metric {
+    min-width: 0;
+    flex-basis: calc(50% - 0.2rem);
+  }
+}
+
+@media (max-width: 480px) {
+  .shared-page-header,
+  .vendor-page-header,
+  .contracts-page-header {
+    padding: 1rem;
+  }
+
+  .shared-page-metric,
+  .vendor-page-metric,
+  .contracts-page-metric {
+    flex-basis: 100%;
+  }
 }
