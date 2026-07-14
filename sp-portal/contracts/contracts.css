@@ -468,4 +468,19 @@
   .contract-route-meta {
     gap: 0.75rem 1rem;
   }
+
+  .contract-tree > .accordion > .accordion-item .accordion-button {
+    padding: 0.7rem 1rem;
+    font-size: 0.9375rem;
+  }
+
+  .contract-tree .accordion-flush .accordion-button {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+  }
+
+  .contract-route-target-input {
+    max-width: none;
+    width: 100%;
+  }
 }

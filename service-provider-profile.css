@@ -50,19 +50,26 @@
 /* Header tipo rede social */
 .sp-profile-header {
   position: relative;
-  margin-bottom: 2.5rem;
+  margin-bottom: 3rem;
+  padding-bottom: 0.5rem;
 }
 
 .sp-profile-cover {
   height: 180px;
+  min-height: 180px;
   background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
   border-radius: 14px 14px 0 0;
+  box-shadow: inset 0 -80px 80px -60px rgba(0, 0, 0, 0.18);
 }
 
 .sp-profile-avatar-wrap {
   position: absolute;
   left: 1.25rem;
-  bottom: -2.5rem;
+  bottom: -2.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
 }
 
 .sp-profile-avatar {
@@ -76,9 +83,11 @@
   justify-content: center;
   font-size: 2rem;
   font-weight: 700;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
   border: 4px solid #fff;
   overflow: hidden;
+  position: relative;
+  isolation: isolate;
 }
 .sp-profile-avatar-img {
   width: 100%;
@@ -176,8 +185,8 @@
 .sp-profile-card {
   display: flex;
   align-items: flex-start;
-  gap: 1.25rem;
-  padding: 1.25rem 1.25rem;
+  gap: 1rem;
+  padding: 1.1rem 1.15rem;
   min-height: 100px;
   background: #fff;
   border-radius: 14px;
@@ -185,6 +194,7 @@
   text-decoration: none;
   color: inherit;
   transition: box-shadow 0.2s, transform 0.2s;
+  flex-wrap: wrap;
 }
 .sp-profile-card:hover {
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.1);
@@ -223,7 +233,7 @@
 }
 
 .sp-profile-card-body {
-  flex: 1;
+  flex: 1 1 0;
   min-width: 0;
 }
 .sp-profile-card-body strong {
@@ -232,16 +242,22 @@
   font-weight: 600;
   color: var(--text-primary, #0f172a);
   margin-bottom: 0.2rem;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 .sp-profile-card-body span {
   display: block;
   font-size: 0.9375rem;
   color: var(--text-secondary, #64748b);
   margin-bottom: 0.2rem;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 .sp-profile-card-body small {
   font-size: 0.8125rem;
   color: var(--text-light, #8491a1);
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .sp-profile-empty {
@@ -518,16 +534,27 @@
 }
 
 @media (max-width: 576px) {
+  .sp-profile-header {
+    margin-bottom: 2.6rem;
+  }
   .sp-profile-avatar {
-    width: 80px;
-    height: 80px;
-    font-size: 1.75rem;
+    width: 84px;
+    height: 84px;
+    font-size: 1.7rem;
   }
   .sp-profile-avatar-wrap {
-    bottom: -2rem;
+    left: 1rem;
+    bottom: -1.9rem;
   }
   .sp-profile-cover {
-    height: 140px;
+    height: 148px;
+    min-height: 148px;
+  }
+  .sp-profile-body {
+    padding: 0 1rem 1.25rem;
+  }
+  .sp-profile-name {
+    padding-left: 0.1rem;
   }
   .sp-profile-cards {
     grid-template-columns: 1fr;
@@ -536,7 +563,16 @@
     grid-template-columns: 1fr;
   }
   .sp-profile-card {
-    padding: 1rem;
+    padding: 0.95rem;
+    gap: 0.8rem;
+    align-items: center;
+  }
+  .sp-profile-card-body {
+    width: 100%;
+    min-width: 0;
+  }
+  .sp-profile-card-body strong {
+    font-size: 0.98rem;
   }
   .sp-profile-card-icon,
   .sp-profile-card-avatar img {
