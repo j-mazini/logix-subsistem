@@ -83,6 +83,21 @@
 
 .vehicles-table-empty { padding: 1.5rem; text-align: center; color: #6c757d; font-size: 0.9rem; }
 
+@media (max-width: 767px) {
+  .vehicle-modal-header {
+    padding: 1rem;
+  }
+
+  .vehicle-modal-body {
+    padding: 1rem;
+  }
+
+  .vehicle-modal-footer {
+    padding: 1rem;
+    flex-wrap: wrap;
+  }
+}
+
 /* ========== VehicleModal (exact Next.js) ========== */
 .vehicle-modal-backdrop {
   position: fixed;
@@ -475,4 +490,30 @@
 .vehicle-detail-qr-box img {
   max-width: 100%;
   height: auto;
+}
+
+/* ========== Responsivo ========== */
+@media (max-width: 480px) {
+  .vehicle-detail-modal-wrap {
+    padding: 0.5rem;
+  }
+
+  .vehicle-detail-modal-header {
+    padding: 1rem 1.25rem;
+  }
+
+  .vehicle-detail-modal-title {
+    font-size: 1.1rem;
+  }
+
+  .vehicle-detail-qr-box {
+    min-width: 140px;
+    min-height: 140px;
+  }
+
+  .vehicle-modal-header,
+  .vehicle-modal-body,
+  .vehicle-modal-footer {
+    padding: 1rem;
+  }
 }
