@@ -665,9 +665,13 @@ body.route-balance-page {
    ===================================================== */
 .route-blocks {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(560px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
+}
+
+@media (max-width: 900px) {
+  .route-blocks { grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); }
 }
 
 @media (max-width: 640px) {
