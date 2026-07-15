@@ -61,6 +61,9 @@
         <button class="styled-button styled-button--outline" id="btnCollapseRoutes">
           <i class="bi bi-arrows-collapse"></i> Collapse Routes
         </button>
+        <button class="styled-button styled-button--outline" id="btnRouteOverview">
+          <i class="bi bi-list-ul"></i> Route Overview
+        </button>
         <button class="styled-button styled-button--outline" id="btnExportCsv">
           <i class="bi bi-filetype-csv"></i> Export CSV
         </button>
@@ -195,6 +198,50 @@
       <section class="route-detail" id="routeDetail"></section>
     </div>
   </main>
+
+  <!-- ============ MODAL: Route Overview (general dashboard + full list) ============ -->
+  <div class="modal fade" id="routeOverviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-list-ul me-2"></i>Route Overview</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="modal-metrics" id="routeOverviewMetrics"></div>
+          <div class="table-responsive">
+            <table class="table table-hover" id="routeOverviewTable">
+              <thead>
+                <tr>
+                  <th data-sort="name">Route <i class="bi bi-arrow-down-up"></i></th>
+                  <th data-sort="vendor">Vendor <i class="bi bi-arrow-down-up"></i></th>
+                  <th data-sort="vehicle">Vehicle <i class="bi bi-arrow-down-up"></i></th>
+                  <th>Driver</th>
+                  <th data-sort="target">Target (%) <i class="bi bi-arrow-down-up"></i></th>
+                  <th data-sort="totalStops">Total Stops <i class="bi bi-arrow-down-up"></i></th>
+                  <th data-sort="completedStops">Completed <i class="bi bi-arrow-down-up"></i></th>
+                  <th data-sort="completion">Completion % <i class="bi bi-arrow-down-up"></i></th>
+                  <th data-sort="status">Status <i class="bi bi-arrow-down-up"></i></th>
+                </tr>
+              </thead>
+              <tbody id="routeOverviewTableBody"></tbody>
+            </table>
+          </div>
+          <p class="form-hint">Click a row to open that route in the detail panel.</p>
+
+          <hr class="my-3" />
+
+          <h6 class="overview-list-title"><i class="bi bi-box-seam"></i> All Deliveries by Route</h6>
+          <div class="overview-list" id="routeOverviewDeliveries"></div>
+
+          <hr class="my-3" />
+
+          <h6 class="overview-list-title"><i class="bi bi-arrow-repeat"></i> All Pickups by Route</h6>
+          <div class="overview-list" id="routeOverviewPickups"></div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- ============ MODAL: Add New Flex Route ============ -->
   <div class="modal fade" id="addRouteModal" tabindex="-1" aria-hidden="true">

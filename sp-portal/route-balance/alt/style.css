@@ -558,6 +558,11 @@ body.route-balance-page {
 .table tbody tr { transition: background var(--transition-fast); }
 .table tbody tr:hover { background: rgba(13, 110, 253, 0.04); }
 
+/* Route Overview modal: rows are clickable and select a route */
+.route-overview-row { cursor: pointer; }
+.route-overview-row.selected { background: rgba(13, 110, 253, 0.08); }
+.route-overview-row.selected:hover { background: rgba(13, 110, 253, 0.1); }
+
 /* =====================================================
    STATUS BADGES  (Logixsphere status-badge.css)
    ===================================================== */
@@ -976,6 +981,76 @@ body.route-balance-page {
 }
 
 .form-check-label { font-size: 0.88rem; color: var(--text-dark); }
+
+/* =====================================================
+   ROUTE OVERVIEW: All Deliveries / All Pickups by Route
+   (collapsible groups — shared by both lists)
+   ===================================================== */
+.overview-list-title {
+  margin: 0 0 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.overview-list-title i { color: var(--primary-blue); margin-right: 0.35rem; }
+
+.overview-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.overview-group {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.overview-group summary {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem 0.9rem;
+  background: var(--main-bg);
+  cursor: pointer;
+  font-size: 0.85rem;
+  list-style: none;
+}
+
+.overview-group summary::-webkit-details-marker { display: none; }
+
+.overview-group summary:hover { background: #eef2f7; }
+
+.overview-chevron {
+  font-size: 0.7rem;
+  color: var(--text-light);
+  transition: transform var(--transition-fast);
+}
+
+.overview-group[open] .overview-chevron { transform: rotate(90deg); }
+
+.overview-group-name {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.overview-group-driver { color: var(--text-secondary); }
+
+.overview-group-count {
+  margin-left: auto;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--primary-blue);
+  background: rgba(13, 110, 253, 0.1);
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+  white-space: nowrap;
+}
+
+.overview-group table {
+  border-top: 1px solid var(--border-color);
+}
 
 .form-check-input:checked {
   background-color: var(--primary-blue);

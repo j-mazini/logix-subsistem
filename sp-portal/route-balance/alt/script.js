@@ -136,6 +136,7 @@ class RouteBalanceApp {
     document.getElementById('btnFinish').addEventListener('click', () => this.finishOperation());
     document.getElementById('btnAddRoute').addEventListener('click', () => this.showAddRouteModal());
     document.getElementById('btnCollapseRoutes').addEventListener('click', () => this.collapseRoute());
+    document.getElementById('btnRouteOverview').addEventListener('click', () => this.showRouteOverviewModal());
     document.getElementById('btnExportCsv').addEventListener('click', () => this.exportCsv());
     document.getElementById('btnSaveRoute').addEventListener('click', () => this.saveNewRoute());
     document.getElementById('btnSaveStop').addEventListener('click', () => this.saveStopEdit());
@@ -189,6 +190,20 @@ class RouteBalanceApp {
       document.getElementById('btnSortDir').classList.toggle('desc', !this.sortAsc);
       document.getElementById('sortDirIcon').className = this.sortAsc ? 'bi bi-sort-down' : 'bi bi-sort-up';
       this.render();
+    });
+
+    // Route Overview modal: sortable headers share the same sort state as
+    // the sidebar (select + direction button), so both stay in sync.
+    document.querySelectorAll('#routeOverviewTable th[data-sort]').forEach(th => {
+      th.addEventListener('click', () => {
+        const key = th.dataset.sort;
+        if (this.sortKey === key) this.sortAsc = !this.sortAsc;
+        else { this.sortKey = key; this.sortAsc = true; }
+        document.getElementById('sortKeySelect').value = this.sortKey;
+        document.getElementById('btnSortDir').classList.toggle('desc', !this.sortAsc);
+        document.getElementById('sortDirIcon').className = this.sortAsc ? 'bi bi-sort-down' : 'bi bi-sort-up';
+        this.render();
+      });
     });
   }
 
@@ -437,6 +452,9 @@ class RouteBalanceApp {
     this.updateDashboardCards();
     this.renderRouteList();
     this.renderRouteDetail();
+    this.renderRouteOverviewTable();
+    this.renderRouteOverviewDeliveries();
+    this.renderRouteOverviewPickups();
   }
 
   populateVendorFilter() {
@@ -859,6 +877,103 @@ class RouteBalanceApp {
         this.openTransferModal(payload.sourceRouteId, targetRouteId, payload.subpostcode);
       });
     });
+  }
+
+  /* ---------- Route Overview (general dashboard + full list) ---------- */
+
+  /** Full list of every filtered route, kept in sync on every render() so
+   *  the modal reflects live data even if it was left open across a change. */
+  renderRouteOverviewTable() {
+    const tbody = document.getElementById('routeOverviewTableBody');
+    if (!tbody) return;
+
+    const list = this.filteredRoutes();
+    const avg = (arr) => arr.length ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) : 0;
+
+    document.getElementById('routeOverviewMetrics').innerHTML = `
+      <span class="status-badge status-badge-running">Routes: ${list.length}</span>
+      <span class="status-badge status-badge-completed">Avg completion: ${avg(list.map(r => r.completion))}%</span>
+      <span class="status-badge status-badge-pending">Avg target: ${avg(list.map(r => r.target))}%</span>`;
+
+    tbody.innerHTML = list.map(route => `
+      <tr class="route-overview-row ${route.id === this.selectedRouteId ? 'selected' : ''}" data-route-id="${route.id}">
+        <td><strong>${route.name}</strong></td>
+        <td>${route.vendor}</td>
+        <td>${route.vehicle}</td>
+        <td>${route.driver}</td>
+        <td>${route.target}%</td>
+        <td>${this.visibleStops(route).length}</td>
+        <td>${route.completedStops}</td>
+        <td>${route.completion}%</td>
+        <td>${this.statusBadge(route.status)}</td>
+      </tr>`).join('');
+
+    tbody.querySelectorAll('.route-overview-row').forEach(row => {
+      row.addEventListener('click', () => {
+        this.selectedRouteId = Number(row.dataset.routeId);
+        bootstrap.Modal.getInstance(document.getElementById('routeOverviewModal'))?.hide();
+        this.render();
+      });
+    });
+  }
+
+  /**
+   * Renders one collapsible group per route into `containerId`, listing its
+   * stops of `stopType` ('DEL' or 'PU') under the current AM/PM shift and
+   * search/vendor/status filters.
+   */
+  renderRouteOverviewStopList(containerId, stopType, singular, plural) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    container.innerHTML = this.filteredRoutes().map(route => {
+      const stops = this.visibleStops(route).filter(s => s.type === stopType);
+      const noun = stops.length === 1 ? singular : plural;
+
+      return `
+      <details class="overview-group">
+        <summary>
+          <i class="bi bi-chevron-right overview-chevron"></i>
+          <span class="overview-group-name">Route ${route.name}</span>
+          <span class="overview-group-driver">${route.driver}</span>
+          <span class="overview-group-count">${stops.length} ${noun}</span>
+        </summary>
+        ${stops.length ? `
+        <table class="table table-hover table-sm mb-0">
+          <thead>
+            <tr><th>Stop</th><th>Address</th><th>Postcode</th><th>Customer</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            ${stops.map(s => `
+              <tr>
+                <td>#${s.stopNumber}</td>
+                <td>${s.address}</td>
+                <td>${s.postcode}</td>
+                <td>${s.customer}</td>
+                <td>
+                  ${s.pre12 ? '<span class="status-badge status-badge-pre12">Pre 12</span>' : ''}
+                  ${this.statusBadge(s.status)}
+                </td>
+              </tr>`).join('')}
+          </tbody>
+        </table>` : `<p class="form-hint px-3 pb-3 mb-0">No ${plural} for this route under the current filters.</p>`}
+      </details>`;
+    }).join('');
+  }
+
+  renderRouteOverviewDeliveries() {
+    this.renderRouteOverviewStopList('routeOverviewDeliveries', 'DEL', 'delivery', 'deliveries');
+  }
+
+  renderRouteOverviewPickups() {
+    this.renderRouteOverviewStopList('routeOverviewPickups', 'PU', 'pickup', 'pickups');
+  }
+
+  showRouteOverviewModal() {
+    this.renderRouteOverviewTable();
+    this.renderRouteOverviewDeliveries();
+    this.renderRouteOverviewPickups();
+    new bootstrap.Modal(document.getElementById('routeOverviewModal')).show();
   }
 
   /* ==================== MODALS ==================== */
