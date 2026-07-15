@@ -33,6 +33,7 @@
         <a href="../dashboard/index.html" class="beam-plate"><i class="bi bi-house-door-fill beam-plate-icon"></i><span>Home</span></a>
         <a href="../profile/index.html" class="beam-plate"><i class="bi bi-building beam-plate-icon"></i><span>My Profile</span></a>
         <a href="../drivers/index.html" class="beam-plate"><i class="bi bi-people-fill beam-plate-icon"></i><span>Drivers</span></a>
+        <a href="index.html" class="beam-plate active"><i class="bi bi-check-circle beam-plate-icon"></i><span>Driver Vetting</span></a>
         <a href="../vehicles/index.html" class="beam-plate"><i class="bi bi-truck beam-plate-icon"></i><span>Vehicles</span></a>
         <a href="../contracts/index.html" class="beam-plate"><i class="bi bi-file-earmark-text beam-plate-icon"></i><span>Contracts</span></a>
         <a href="../sop-feed/index.html" class="beam-plate"><i class="bi bi-journal-bookmark-fill beam-plate-icon"></i><span>SOP Feed</span></a>
@@ -45,126 +46,105 @@
         <a href="../daily-operations-reports/index.html" class="beam-plate"><i class="bi bi-bar-chart beam-plate-icon"></i><span>Daily Operation Insights</span></a>
         <a href="../vendor-performance/index.html" class="beam-plate"><i class="bi bi-speedometer beam-plate-icon"></i><span>Vendor Performance</span></a>
         <a href="../requests-admin/index.html" class="beam-plate"><i class="bi bi-inbox beam-plate-icon"></i><span>Vendor Requests</span></a>
-        <a href="index.html" class="beam-plate active"><i class="bi bi-check-circle beam-plate-icon"></i><span>Driver Vetting</span></a>
         <a href="../../dhl/access-select/index.html" class="beam-plate beam-plate--switch"><i class="bi bi-arrow-left-right beam-plate-icon"></i><span>Select access</span></a>
       </div>
     </nav>
 
     <div class="sidebar-inset" id="sidebarInset">
-  <main class="vetting-container container-fluid px-3 px-lg-4 py-4">
+      <main class="vetting-container container-fluid px-3 px-lg-4 py-4">
 
-    <!-- ============ HEADER ============ -->
-    <header class="page-header-section">
-      <div class="page-header-welcome-text">
-        <h1 class="page-header-title">Driver Vetting</h1>
-        <p class="page-header-date"><i class="bi bi-check-circle"></i><span>Manage driver applications and vetting status.</span></p>
-      </div>
-      <div class="header-stats">
-        <div class="stat-item">
-          <span class="stat-label">Pending</span>
-          <span class="stat-value" id="pendingCount">0</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-label">Approved</span>
-          <span class="stat-value" id="approvedCount">0</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-label">Rejected</span>
-          <span class="stat-value" id="rejectedCount">0</span>
-        </div>
-      </div>
-    </header>
-
-    <!-- ============ FILTERS & CONTROLS ============ -->
-    <div class="controls-section">
-      <div class="filter-group">
-        <label for="filterStatus" class="filter-label">Status</label>
-        <select class="form-select" id="filterStatus">
-          <option value="">All statuses</option>
-          <option value="pending">Pending</option>
-          <option value="approved">Approved</option>
-          <option value="rejected">Rejected</option>
-          <option value="in-review">In Review</option>
-        </select>
-      </div>
-      <div class="filter-group">
-        <label for="filterVendor" class="filter-label">Vendor</label>
-        <select class="form-select" id="filterVendor">
-          <option value="">All vendors</option>
-        </select>
-      </div>
-      <div class="filter-group search-wrap">
-        <label for="searchDriver" class="filter-label">Search</label>
-        <input type="text" class="form-control" id="searchDriver" placeholder="Driver name or ID…" />
-      </div>
-      <div class="filter-group">
-        <button class="styled-button styled-button--primary" id="btnRefresh">
-          <i class="bi bi-arrow-clockwise"></i> Refresh
-        </button>
-      </div>
-    </div>
-
-    <!-- ============ APPLICATIONS TABLE ============ -->
-    <section class="applications-section">
-      <div class="section-header">
-        <h2>Applications</h2>
-        <p class="section-subtitle">Review driver applications and manage vetting status</p>
-      </div>
-
-      <div id="emptyState" class="empty-state" hidden>
-        <i class="bi bi-inbox"></i>
-        <p>No applications found</p>
-      </div>
-
-      <div class="table-responsive" id="applicationsTableWrap">
-        <table class="applications-table">
-          <thead>
-            <tr>
-              <th>Driver</th>
-              <th>Vendor</th>
-              <th>Applied</th>
-              <th>Status</th>
-              <th>Background Check</th>
-              <th>Documents</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="applicationsTableBody">
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- ============ VETTING DETAILS MODAL ============ -->
-    <div class="modal fade" id="vettingModal" tabindex="-1">
-      <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="vettingModalTitle">Driver Vetting Details</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <!-- ============ HEADER ============ -->
+        <header class="page-header-section">
+          <div class="page-header-welcome-text">
+            <h1 class="page-header-title">Driver Vetting</h1>
+            <p class="page-header-date"><i class="bi bi-check-circle"></i><span>Manage driver applications and vetting status.</span></p>
           </div>
-          <div class="modal-body" id="vettingModalBody">
-            <!-- Content loaded dynamically -->
+        </header>
+
+        <!-- ============ STATS GRID ============ -->
+        <section class="stats-grid">
+          <button class="stat-card stat-card-active" data-filter="All">
+            <p class="stat-value" id="statTotal">0</p>
+            <p class="stat-label">All candidates</p>
+          </button>
+          <button class="stat-card">
+            <p class="stat-value stat-amber" id="statInProgress">0</p>
+            <p class="stat-label">In progress</p>
+          </button>
+          <button class="stat-card" data-filter="Active">
+            <p class="stat-value stat-success" id="statApproved">0</p>
+            <p class="stat-label">Approved</p>
+          </button>
+          <button class="stat-card" data-filter="Rejected">
+            <p class="stat-value stat-danger" id="statRejected">0</p>
+            <p class="stat-label">Rejected</p>
+          </button>
+        </section>
+
+        <!-- ============ FILTERS & SEARCH ============ -->
+        <div class="filters-section">
+          <div class="filter-buttons-wrap">
+            <button class="filter-btn filter-btn-active" data-stage="All">All</button>
+            <button class="filter-btn" data-stage="Application">Application</button>
+            <button class="filter-btn" data-stage="Pre-screen">Pre-screen</button>
+            <button class="filter-btn" data-stage="Interview">Interview</button>
+            <button class="filter-btn" data-stage="Documents">Documents</button>
+            <button class="filter-btn" data-stage="Active">Active</button>
+            <button class="filter-btn" data-stage="Rejected">Rejected</button>
           </div>
-          <div class="modal-footer">
-            <button type="button" class="styled-button styled-button--outline" data-bs-dismiss="modal">Close</button>
-            <button type="button" class="styled-button styled-button--success" id="btnApprove" hidden>
-              <i class="bi bi-check-circle"></i> Approve
-            </button>
-            <button type="button" class="styled-button styled-button--danger" id="btnReject" hidden>
-              <i class="bi bi-x-circle"></i> Reject
-            </button>
+          <div class="search-wrap">
+            <i class="bi bi-search"></i>
+            <input type="text" id="searchInput" class="search-input" placeholder="Search name, email, phone…" />
           </div>
         </div>
-      </div>
-    </div>
 
-  </main>
+        <!-- ============ CANDIDATES TABLE ============ -->
+        <div class="table-shell">
+          <table class="candidates-table">
+            <thead>
+              <tr>
+                <th>Candidate</th>
+                <th class="th-hidden">Phone</th>
+                <th>Stage</th>
+                <th class="th-hidden">Submitted</th>
+                <th>SLA</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="candidatesBody">
+              <tr><td colspan="6" class="empty-cell">Loading candidates…</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+      </main>
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- ============ CHECKLIST MODAL ============ -->
+  <div class="modal fade" id="checklistModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div>
+            <h5 class="modal-title">Vetting Checklist</h5>
+            <p class="modal-subtitle" id="modalCandidateName"></p>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="checklistBody">
+          <!-- Checklist items will be inserted here -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="styled-button styled-button--outline" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="styled-button styled-button--primary" id="btnSaveChecklist">Save Progress</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="../../beam-sidebar.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

@@ -11,6 +11,7 @@ class RouteBalanceApp {
     this.currentUser = 'João Silva';
     this.operationStatus = 'pending';
     this.filterPM = false;          // false = AM view (hide PM), true = PM view (show all)
+    this.filterPre12 = false;       // toggle to filter only Pre 12 stops
     this.searchQuery = '';
     this.vendorFilter = '';
     this.statusFilter = '';
@@ -42,19 +43,17 @@ class RouteBalanceApp {
   /* ==================== INIT ==================== */
 
   init() {
-    this.setupIntakeListeners();
+    this.generateFakeData();
+    this.enterDashboard();
 
-    // Loading screen: fade out into the intake gate (upload / mock choice)
+    // Loading screen: fade out
     setTimeout(() => {
       document.getElementById('loadingOverlay').classList.remove('active');
     }, 500);
   }
 
-  /** Called once real routes/stops data is ready (uploaded manifest or mock), swaps the intake gate for the dashboard. */
+  /** Called once real routes/stops data is ready (uploaded manifest or mock), initialize the dashboard. */
   enterDashboard() {
-    document.getElementById('intakeView').hidden = true;
-    document.getElementById('dashboardView').hidden = false;
-
     this.loadRebalanceState();
     this.setupEventListeners();
     this.populateVendorFilter();
@@ -491,6 +490,7 @@ class RouteBalanceApp {
         case 'see-all-stops': this.showAllStopsModal(route); break;
         case 'shipment-details': this.showShipmentDetailsModal(route); break;
         case 'collapse-route': this.collapseRoute(route.id); break;
+        case 'toggle-pre12-filter': this.togglePre12Filter(); break;
       }
     });
 
@@ -576,13 +576,23 @@ class RouteBalanceApp {
    * PM (filterPM=true): Only meeting-type stops (special PM view)
    */
   visibleStops(route) {
+    let stops = route.stops;
+
+    // Apply shift filter (AM/PM)
     if (this.filterPM) {
       // PM view: show only stops flagged as pm (meeting/afternoon deliveries)
-      return route.stops.filter(s => s.pm);
+      stops = stops.filter(s => s.pm);
     } else {
       // AM view: show only regular morning deliveries
-      return route.stops.filter(s => !s.pm);
+      stops = stops.filter(s => !s.pm);
     }
+
+    // Apply Pre 12 filter
+    if (this.filterPre12) {
+      stops = stops.filter(s => s.pre12);
+    }
+
+    return stops;
   }
 
   /** The outward area code a full postcode belongs to, e.g. "ME3 2AB" → "ME3". */
@@ -810,6 +820,13 @@ class RouteBalanceApp {
     this.persistRebalance();
     this.render();
     this.showToast(`Route ${removed.name} closed — postcodes redistributed`, 'success');
+  }
+
+  togglePre12Filter() {
+    this.filterPre12 = !this.filterPre12;
+    this.render();
+    const status = this.filterPre12 ? 'enabled' : 'disabled';
+    this.showToast(`Pre 12 filter ${status}`, 'info');
   }
 
   recomputeRoute(route) {
@@ -1153,10 +1170,6 @@ class RouteBalanceApp {
           </div>
 
           <div class="metrics-row">
-            <div class="metric-badge metric-badge--pre12">
-              <div class="metric-label">Pre 12</div>
-              <div class="metric-value">${route.pre12}</div>
-            </div>
             <div class="metric-badge metric-badge--asr">
               <div class="metric-label">ASR</div>
               <div class="metric-value">${route.asr}</div>
@@ -1166,6 +1179,36 @@ class RouteBalanceApp {
               <div class="metric-value">${route.dsr}</div>
             </div>
           </div>
+
+          ${route.pre12 > 0 ? `
+          <div class="pre12-block ${this.filterPre12 ? 'pre12-block--active' : ''}" data-action="toggle-pre12-filter" data-route-id="${route.id}">
+            <div class="pre12-block-header">
+              <h4 class="pre12-block-title">
+                <i class="bi bi-clock-history"></i> Pre 12 Stops (${route.pre12})
+              </h4>
+              <span class="pre12-filter-hint">Click to filter</span>
+            </div>
+            <div class="pre12-block-content">
+              ${groups.filter(g => g.pre12).map(g => `
+                <div class="pre12-group">
+                  <div class="pre12-group-header">
+                    <span class="pre12-group-code">${g.code}</span>
+                    <span class="pre12-group-count">${g.postcodes.filter(p => p.pre12).length} postcode${g.postcodes.filter(p => p.pre12).length === 1 ? '' : 's'}</span>
+                  </div>
+                  <div class="pre12-items">
+                    ${g.postcodes.filter(p => p.pre12).map(p => `
+                      <div class="pre12-item">
+                        <span class="pre12-postcode">${p.postcode}</span>
+                        <span class="pre12-customer">${p.stops[0]?.customer || 'N/A'}</span>
+                        <span class="pre12-count">${p.del + p.pu} stop${(p.del + p.pu) === 1 ? '' : 's'}</span>
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+          ` : ''}
 
           <div class="notes-section">
             <label class="notes-label">Notes</label>

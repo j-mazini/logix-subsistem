@@ -53,48 +53,8 @@
     <div class="sidebar-inset" id="sidebarInset">
   <main class="route-balance-container container-fluid px-3 px-lg-4 py-4">
 
-    <!-- ============ INTAKE (manifest upload / mock) ============ -->
-    <section class="intake-view" id="intakeView">
-      <header class="intake-header">
-        <h1 class="intake-title">Route Balance</h1>
-        <p class="intake-subtitle">Import today's manifest to build the routes, or generate mock data to explore the dashboard.</p>
-      </header>
-
-      <div class="intake-grid">
-        <div class="intake-card">
-          <div class="intake-card-icon"><i class="bi bi-cloud-arrow-up"></i></div>
-          <h2 class="intake-card-title">Upload manifest</h2>
-          <p class="intake-card-text">Drop an Excel manifest (.xlsx, .xls, .xlsm) with your stops, or click to browse.</p>
-
-          <div class="intake-dropzone" id="intakeDropzone" tabindex="0" role="button" aria-label="Upload manifest file">
-            <input type="file" id="intakeFileInput" accept=".xlsx,.xls,.xlsm" hidden />
-            <i class="bi bi-file-earmark-spreadsheet intake-dropzone-icon"></i>
-            <p class="intake-dropzone-primary" id="intakeDropzonePrimary">Drag the file here, or click to browse</p>
-            <p class="intake-dropzone-formats">.xlsx · .xls · .xlsm</p>
-          </div>
-
-          <div class="intake-status" id="intakeStatus" hidden></div>
-
-          <button type="button" class="styled-button styled-button--primary intake-btn" id="btnIntakeProcess" disabled>
-            <i class="bi bi-arrow-right-circle"></i> Process manifest
-          </button>
-        </div>
-
-        <div class="intake-divider" aria-hidden="true"><span>or</span></div>
-
-        <div class="intake-card">
-          <div class="intake-card-icon"><i class="bi bi-magic"></i></div>
-          <h2 class="intake-card-title">Generate mock data</h2>
-          <p class="intake-card-text">No manifest handy? Spin up a realistic simulated operation — 8 routes, ~200 stops, 10 drivers, 5 vendors — to explore the dashboard.</p>
-          <button type="button" class="styled-button styled-button--outline intake-btn" id="btnIntakeMock">
-            <i class="bi bi-magic"></i> Generate mock operation
-          </button>
-        </div>
-      </div>
-    </section>
-
     <!-- ============ DASHBOARD ============ -->
-    <div class="dashboard-view" id="dashboardView" hidden>
+    <div class="dashboard-view" id="dashboardView">
 
     <!-- ============ HEADER ============ -->
     <header class="page-header-section">

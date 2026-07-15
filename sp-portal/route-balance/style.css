@@ -985,6 +985,138 @@ body.route-balance-page {
   outline: none;
 }
 
+/* Pre 12 Block */
+.pre12-block {
+  margin: 1.25rem 0;
+  padding: 1rem;
+  background: linear-gradient(135deg, rgba(30, 144, 255, 0.05) 0%, rgba(65, 105, 225, 0.05) 100%);
+  border: 1px solid rgba(13, 110, 253, 0.2);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  position: relative;
+}
+
+.pre12-block:hover {
+  background: linear-gradient(135deg, rgba(30, 144, 255, 0.1) 0%, rgba(65, 105, 225, 0.1) 100%);
+  border-color: rgba(13, 110, 253, 0.4);
+  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+}
+
+.pre12-block--active {
+  background: linear-gradient(135deg, rgba(30, 144, 255, 0.15) 0%, rgba(65, 105, 225, 0.15) 100%);
+  border-color: #0d6efd;
+  border-width: 2px;
+  box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.15);
+}
+
+.pre12-block-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(13, 110, 253, 0.15);
+}
+
+.pre12-filter-hint {
+  font-size: 0.7rem;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 500;
+  opacity: 0.7;
+}
+
+.pre12-block-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pre12-block-title i {
+  color: #0d6efd;
+  font-size: 1.1rem;
+}
+
+.pre12-block-content {
+  display: grid;
+  gap: 1rem;
+}
+
+.pre12-group {
+  padding: 0.75rem;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+}
+
+.pre12-group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.65rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.pre12-group-code {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.pre12-group-count {
+  font-size: 0.75rem;
+  color: var(--text-light);
+  background: var(--main-bg);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
+
+.pre12-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.pre12-item {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.5rem 0.65rem;
+  background: var(--bg-body);
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.pre12-postcode {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.pre12-customer {
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pre12-count {
+  font-size: 0.75rem;
+  color: var(--text-light);
+  white-space: nowrap;
+  text-align: right;
+}
+
 /* Route action buttons */
 .route-buttons {
   display: flex;
