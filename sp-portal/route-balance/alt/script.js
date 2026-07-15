@@ -1,6 +1,9 @@
 /* =====================================================
-   Route Balance — Operational dashboard
-   Vanilla JS, modular class-based architecture
+   Route Balance — Master-detail layout (alternative)
+   Same business logic/data model as ../script.js; only the
+   rendering layer changes: a sidebar route list drives a
+   single selected-route detail panel instead of a grid of
+   per-route cards.
    ===================================================== */
 
 class RouteBalanceApp {
@@ -10,12 +13,13 @@ class RouteBalanceApp {
     this.stops = [];
     this.currentUser = 'João Silva';
     this.operationStatus = 'pending';
-    this.filterPM = false;          // false = AM view (hide PM), true = PM view (show all)
+    this.filterPM = false;          // false = AM view (hide PM), true = PM view (meeting stops only)
     this.searchQuery = '';
     this.vendorFilter = '';
     this.statusFilter = '';
-    this.sortKey = null;
+    this.sortKey = 'name';
     this.sortAsc = true;
+    this.selectedRouteId = null;    // route currently shown in the detail panel
     this.editingStopId = null;      // stop currently open in the Edit Postcode modal
     this.rebalanceMode = false;     // admin mode for transferring postcodes between routes
     this.dragPayload = null;        // { subpostcode, sourceRouteId } during a drag
@@ -113,6 +117,8 @@ class RouteBalanceApp {
       this.routes.push(route);
       this.stops.push(...route.stops);
     }
+
+    this.selectedRouteId = this.routes[0]?.id ?? null;
   }
 
   deriveStatus(route) {
@@ -154,7 +160,7 @@ class RouteBalanceApp {
     document.getElementById('rebalanceToggle').addEventListener('change', (e) => {
       this.rebalanceMode = e.target.checked;
       this.render();
-      this.showToast(this.rebalanceMode ? '🔄 Rebalance mode: select postcodes to transfer' : 'Operations mode: standard view', 'info');
+      this.showToast(this.rebalanceMode ? '🔄 Rebalance mode: drag a subpostcode onto another route in the list' : 'Operations mode: standard view', 'info');
     });
 
     document.getElementById('searchRoute').addEventListener('input', (e) => {
@@ -172,14 +178,17 @@ class RouteBalanceApp {
       this.render();
     });
 
-    // Table sorting on summary table headers
-    document.querySelectorAll('#summaryTable th[data-sort]').forEach(th => {
-      th.addEventListener('click', () => {
-        const key = th.dataset.sort;
-        if (this.sortKey === key) this.sortAsc = !this.sortAsc;
-        else { this.sortKey = key; this.sortAsc = true; }
-        this.render();
-      });
+    // Sidebar list sorting (replaces the sortable summary-table headers)
+    document.getElementById('sortKeySelect').addEventListener('change', (e) => {
+      this.sortKey = e.target.value || null;
+      this.render();
+    });
+
+    document.getElementById('btnSortDir').addEventListener('click', () => {
+      this.sortAsc = !this.sortAsc;
+      document.getElementById('btnSortDir').classList.toggle('desc', !this.sortAsc);
+      document.getElementById('sortDirIcon').className = this.sortAsc ? 'bi bi-sort-down' : 'bi bi-sort-up';
+      this.render();
     });
   }
 
@@ -203,13 +212,9 @@ class RouteBalanceApp {
    * PM (filterPM=true): Only meeting-type stops (special PM view)
    */
   visibleStops(route) {
-    if (this.filterPM) {
-      // PM view: show only stops flagged as pm (meeting/afternoon deliveries)
-      return route.stops.filter(s => s.pm);
-    } else {
-      // AM view: show only regular morning deliveries
-      return route.stops.filter(s => !s.pm);
-    }
+    return this.filterPM
+      ? route.stops.filter(s => s.pm)
+      : route.stops.filter(s => !s.pm);
   }
 
   /** The outward area code a full postcode belongs to, e.g. "ME3 2AB" → "ME3". */
@@ -257,7 +262,7 @@ class RouteBalanceApp {
     return groups;
   }
 
-  /** Routes that pass search + vendor + status filters. */
+  /** Routes that pass search + vendor + status filters, sorted. */
   filteredRoutes() {
     let list = [...this.routes];
 
@@ -275,6 +280,14 @@ class RouteBalanceApp {
     }
 
     return list;
+  }
+
+  /** Keep selectedRouteId pointing at a route that's actually in view. */
+  ensureSelection(list) {
+    if (!list.length) { this.selectedRouteId = null; return; }
+    if (!list.some(r => r.id === this.selectedRouteId)) {
+      this.selectedRouteId = list[0].id;
+    }
   }
 
   /* ==================== ACTIONS ==================== */
@@ -324,7 +337,7 @@ class RouteBalanceApp {
       this.showToast('A route with this name already exists', 'error'); return;
     }
 
-    this.routes.push({
+    const newRoute = {
       id: Date.now(),
       name,
       vendor: document.getElementById('newVendor').value,
@@ -335,7 +348,9 @@ class RouteBalanceApp {
       deliveries: 0, pickups: 0,
       pre12: 0, asr: 0, dsr: 0, spr: 0,
       notes: '', status: 'pending', stops: [],
-    });
+    };
+    this.routes.push(newRoute);
+    this.selectedRouteId = newRoute.id;
 
     bootstrap.Modal.getInstance(document.getElementById('addRouteModal')).hide();
     document.getElementById('addRouteForm').reset();
@@ -347,8 +362,8 @@ class RouteBalanceApp {
   /**
    * Close a route and redistribute its postcodes/stops evenly across the
    * remaining routes. Pass a routeId to close that specific route (from the
-   * per-block "Close route" button); with no id, closes the route with the
-   * fewest stops (from the toolbar "Collapse Routes" button).
+   * detail panel's "Close route" button); with no id, closes the route with
+   * the fewest stops (from the toolbar "Collapse Routes" button).
    */
   collapseRoute(routeId = null) {
     if (this.routes.length <= 1) {
@@ -420,8 +435,8 @@ class RouteBalanceApp {
 
   render() {
     this.updateDashboardCards();
-    this.renderSummaryTable();
-    this.renderRouteBlocks();
+    this.renderRouteList();
+    this.renderRouteDetail();
   }
 
   populateVendorFilter() {
@@ -454,380 +469,395 @@ class RouteBalanceApp {
     return `<span class="status-badge status-badge-${status}">${status}</span>`;
   }
 
-  renderSummaryTable() {
-    const tableBody = document.getElementById('summaryTableBody');
+  /* ---------- Sidebar (master list) ---------- */
 
-    // Update table header based on shift
-    const thead = document.querySelector('#summaryTable thead tr');
-    if (this.filterPM) {
-      // PM view: simpler headers
-      thead.innerHTML = `
-        <th>Route</th>
-        <th>Driver</th>
-        <th>Meeting Stops</th>
-        <th>Status</th>
-      `;
-    } else {
-      // AM view: headers without Vehicle and Completion %
-      thead.innerHTML = `
-        <th data-sort="name">Route <i class="bi bi-arrow-down-up"></i></th>
-        <th data-sort="vendor">Vendor <i class="bi bi-arrow-down-up"></i></th>
-        <th data-sort="target">Target (%)</th>
-        <th data-sort="totalStops">Total Stops</th>
-        <th data-sort="status">Status</th>
-      `;
+  renderRouteList() {
+    const list = this.filteredRoutes();
+    this.ensureSelection(list);
+    const container = document.getElementById('routeList');
+
+    if (!list.length) {
+      container.innerHTML = '<p class="route-list-empty">No routes match the current filters.</p>';
+      return;
     }
 
-    tableBody.innerHTML = this.filteredRoutes().map(route => {
-      if (this.filterPM) {
-        const pmStops = this.visibleStops(route).length;
-        return `
-          <tr>
-            <td><strong>${route.name}</strong></td>
-            <td>${route.driver}</td>
-            <td>${pmStops}</td>
-            <td>${this.statusBadge(route.status)}</td>
-          </tr>`;
-      } else {
-        return `
-          <tr>
-            <td><strong>${route.name}</strong></td>
-            <td>${route.vendor}</td>
-            <td>${route.target}%</td>
-            <td>${this.visibleStops(route).length}</td>
-            <td>${this.statusBadge(route.status)}</td>
-          </tr>`;
-      }
+    container.innerHTML = list.map(route => {
+      const stops = this.visibleStops(route);
+      const selected = route.id === this.selectedRouteId;
+      const secondaryStat = this.filterPM
+        ? `<strong>${stops.length}</strong> meeting stop${stops.length === 1 ? '' : 's'}`
+        : `<strong>${route.completion}%</strong> complete · <strong>${stops.length}</strong> stops`;
+
+      return `
+        <button type="button" class="route-list-item ${selected ? 'selected' : ''}" data-route-id="${route.id}">
+          <div class="route-list-item-top">
+            <span class="route-list-item-name">Route ${route.name}</span>
+            ${this.statusBadge(route.status)}
+          </div>
+          <div class="route-list-item-meta">
+            <span>${route.driver}</span>
+            <span class="dot">·</span>
+            <span>${route.vendor}</span>
+            ${route.pre12 ? `<span class="status-badge status-badge-pre12">Pre 12 ${route.pre12}</span>` : ''}
+          </div>
+          <div class="route-list-item-stats">${secondaryStat}</div>
+        </button>`;
     }).join('');
+
+    container.querySelectorAll('.route-list-item').forEach(el => {
+      el.addEventListener('click', () => {
+        this.selectedRouteId = Number(el.dataset.routeId);
+        this.render();
+      });
+    });
+
+    if (this.rebalanceMode) this.bindSidebarDropTargets(container);
   }
 
-  renderRouteBlocks() {
-    const container = document.getElementById('routeBlocksContainer');
-    const routes = this.filteredRoutes();
+  /* ---------- Detail panel (selected route) ---------- */
 
-    if (this.filterPM) {
-      // PM (Meeting) View
-      container.innerHTML = routes.map(route => {
-        const stops = this.visibleStops(route);
-        if (stops.length === 0) return '';
+  renderRouteDetail() {
+    const container = document.getElementById('routeDetail');
+    const route = this.routes.find(r => r.id === this.selectedRouteId);
 
-        return `
-        <section class="route-block pm-meeting-view" data-route-id="${route.id}">
-          <div class="route-block-header">
-            <h3 class="route-block-title">📅 Route ${route.name} — Meeting View</h3>
-            <div class="route-block-header-right">
-              <span class="shift-badge shift-badge-pm">PM</span>
-            </div>
-          </div>
-
-          <div class="route-block-content">
-            <div class="route-info-grid">
-              <div class="info-box">
-                <span class="info-box-label">Driver</span>
-                <span class="info-box-value">${route.driver}</span>
-              </div>
-              <div class="info-box">
-                <span class="info-box-label">Vendor</span>
-                <span class="info-box-value">${route.vendor}</span>
-              </div>
-            </div>
-
-            <div class="route-table-responsive">
-              <table class="route-table">
-                <thead>
-                  <tr>
-                    <th>Stop #</th><th>Address</th><th>Postcode</th><th>Customer</th><th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${stops.map((s, idx) => `
-                  <tr>
-                    <td>#${idx + 1}</td>
-                    <td>${s.address}</td>
-                    <td>${s.postcode}</td>
-                    <td>${s.customer}</td>
-                    <td>${this.statusBadge(s.status)}</td>
-                  </tr>`).join('')}
-                </tbody>
-              </table>
-            </div>
-
-            <div class="route-totals">
-              <div class="total-item">
-                <div class="total-label">Meeting Stops</div>
-                <div class="total-value">${stops.length}</div>
-              </div>
-            </div>
-
-            <div class="route-buttons">
-              <button class="styled-button styled-button--outline" data-action="see-all-stops">
-                <i class="bi bi-geo-alt"></i> See All Stops
-              </button>
-            </div>
-          </div>
-        </section>`;
-      }).join('');
-    } else {
-      // AM (Regular Delivery) View
-      container.innerHTML = routes.map(route => {
-        const stops = this.visibleStops(route);
-        const groups = this.groupBySubpostcode(stops);
-        const del = stops.filter(s => s.type === 'DEL').length;
-        const pu = stops.length - del;
-        const rebalanceClass = this.rebalanceMode ? 'rebalance-mode' : '';
-
-        return `
-        <section class="route-block ${rebalanceClass}" data-route-id="${route.id}">
-          <div class="route-block-header">
-            <h3 class="route-block-title">Route ${route.name}</h3>
-            <div class="route-block-header-right">
-              <button class="route-collapse-btn" data-action="collapse-route" data-route-id="${route.id}"
-                      title="Close this route and redistribute its postcodes">
-                <i class="bi bi-box-arrow-in-down"></i> Close route
-              </button>
-            </div>
-          </div>
-
-        <div class="progress-bar-container">
-          <div class="progress-bar-wrapper">
-            <div class="progress-bar-fill" style="width:${route.completion}%"></div>
-          </div>
-        </div>
-
-        <div class="route-block-content">
-          <div class="route-info-grid">
-            <div class="info-box">
-              <span class="info-box-label">Vendor (Driver)</span>
-              <select class="info-box-select" data-field="vendor" title="Change vendor/driver">
-                ${this.VENDORS.map(v => `<option value="${v}" ${v === route.vendor ? 'selected' : ''}>${v}</option>`).join('')}
-              </select>
-            </div>
-            <div class="info-box">
-              <span class="info-box-label">Driver</span>
-              <span class="info-box-value">${route.driver}</span>
-            </div>
-          </div>
-
-          <div class="route-table-responsive">
-            <table class="route-table">
-              <thead>
-                <tr>
-                  <th>Subpostcode</th><th>DEL</th><th>PU</th><th>Total</th><th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${groups.map(g => {
-                  const key = `${route.id}:${g.code}`;
-                  const expanded = this.expandedSubpostcodes.has(key);
-                  return `
-                  <tr class="subpostcode-row ${this.rebalanceMode ? 'rebalance-row' : ''}"
-                      ${this.rebalanceMode ? 'draggable="true"' : ''}
-                      data-subpostcode="${g.code}" data-route-id="${route.id}">
-                    <td class="pc-cell">
-                      ${this.rebalanceMode ? '<i class="bi bi-grip-vertical drag-handle"></i>' : ''}
-                      <button type="button" class="subpostcode-toggle ${expanded ? 'expanded' : ''}"
-                              data-action="toggle-subpostcode" data-subpostcode="${g.code}" data-route-id="${route.id}">
-                        <i class="bi bi-chevron-right"></i> ${g.code}
-                      </button>
-                      <span class="postcode-count-badge">${g.postcodes.length} postcode${g.postcodes.length === 1 ? '' : 's'}</span>
-                      ${g.pre12 ? '<span class="status-badge status-badge-pre12">Pre 12</span>' : ''}
-                    </td>
-                    <td>${g.del}</td>
-                    <td>${g.pu}</td>
-                    <td>${g.total}</td>
-                    <td>${this.statusBadge(g.allCompleted ? 'completed' : 'pending')}</td>
-                  </tr>
-                  <tr class="subpostcode-detail-row ${expanded ? '' : 'collapsed'}">
-                    <td colspan="6">
-                      <div class="postcode-dropdown">
-                        ${g.postcodes.map(p => `
-                          <div class="postcode-dropdown-item">
-                            <span class="postcode-editable" data-stop-id="${p.stops[0].id}" title="Click to edit / substitute">${p.postcode}</span>
-                            ${p.pre12 ? '<span class="status-badge status-badge-pre12">Pre 12</span>' : ''}
-                            <span class="pc-mini-stat">DEL ${p.del}</span>
-                            <span class="pc-mini-stat">PU ${p.pu}</span>
-                          </div>`).join('')}
-                      </div>
-                    </td>
-                  </tr>`;
-                }).join('')}
-              </tbody>
-            </table>
-          </div>
-
-          <div class="route-totals">
-            <div class="total-item">
-              <div class="total-label">Total Deliveries</div>
-              <div class="total-value">${del}</div>
-            </div>
-            <div class="total-item">
-              <div class="total-label">Total Pickups</div>
-              <div class="total-value">${pu}</div>
-            </div>
-            <div class="total-item">
-              <div class="total-label">Total Geral</div>
-              <div class="total-value">${stops.length}</div>
-            </div>
-          </div>
-
-          <div class="metrics-row">
-            <div class="metric-badge metric-badge--pre12">
-              <div class="metric-label">Pre 12</div>
-              <div class="metric-value">${route.pre12}</div>
-            </div>
-            <div class="metric-badge metric-badge--asr">
-              <div class="metric-label">ASR</div>
-              <div class="metric-value">${route.asr}</div>
-            </div>
-            <div class="metric-badge metric-badge--dsr">
-              <div class="metric-label">DSR</div>
-              <div class="metric-value">${route.dsr}</div>
-            </div>
-          </div>
-
-          <div class="notes-section">
-            <label class="notes-label">Notes</label>
-            <textarea class="notes-textarea" placeholder="Write observations…">${route.notes}</textarea>
-          </div>
-
-          ${this.rebalanceMode ? `
-          <p class="rebalance-hint">
-            <i class="bi bi-info-circle"></i>
-            Drag a subpostcode onto another route to send it whole or split specific postcodes into it.
-          </p>
-          ` : ''}
-
-          <div class="route-buttons">
-            <button class="styled-button styled-button--outline" data-action="see-all-stops">
-              <i class="bi bi-geo-alt"></i> See All Stops
-            </button>
-            <button class="styled-button styled-button--outline" data-action="shipment-details">
-              <i class="bi bi-box2"></i> Shipment Details
-            </button>
-          </div>
-        </div>
-      </section>`;
-      }).join('');
+    if (!route) {
+      container.innerHTML = `
+        <div class="route-detail-empty">
+          <i class="bi bi-signpost-2"></i>
+          <p>Select a route from the list to see its details.</p>
+        </div>`;
+      return;
     }
 
-    this.bindRouteBlockEvents(container);
+    container.innerHTML = this.filterPM
+      ? this.renderMeetingDetail(route)
+      : this.renderRouteDetailCard(route);
+
+    this.bindRouteDetailEvents(route);
   }
 
-  bindRouteBlockEvents(container) {
-    container.querySelectorAll('.route-block').forEach(block => {
-      const route = this.routes.find(r => r.id === Number(block.dataset.routeId));
-      if (!route) return;
+  renderMeetingDetail(route) {
+    const stops = this.visibleStops(route);
 
-      // Editable vendor / vehicle via dropdown
-      block.querySelectorAll('.info-box-select').forEach(el => {
-        el.addEventListener('change', () => {
-          const field = el.dataset.field;
-          route[field] = el.value;
-          this.render();
-          this.showToast(`${field.charAt(0).toUpperCase() + field.slice(1)} updated to ${el.value}`, 'success');
+    if (stops.length === 0) {
+      return `
+        <div class="route-detail-empty">
+          <i class="bi bi-calendar-x"></i>
+          <p>Route ${route.name} has no meeting stops for the PM shift.</p>
+        </div>`;
+    }
+
+    return `
+    <section class="route-block pm-meeting-view" data-route-id="${route.id}">
+      <div class="route-block-header">
+        <h3 class="route-block-title">📅 Route ${route.name} — Meeting View</h3>
+        <div class="route-block-header-right">
+          <span class="shift-badge shift-badge-pm">PM</span>
+        </div>
+      </div>
+
+      <div class="route-block-content">
+        <div class="route-info-grid">
+          <div class="info-box">
+            <span class="info-box-label">Driver</span>
+            <span class="info-box-value">${route.driver}</span>
+          </div>
+          <div class="info-box">
+            <span class="info-box-label">Vendor</span>
+            <span class="info-box-value">${route.vendor}</span>
+          </div>
+        </div>
+
+        <div class="route-table-responsive">
+          <table class="route-table">
+            <thead>
+              <tr>
+                <th>Stop #</th><th>Address</th><th>Postcode</th><th>Customer</th><th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${stops.map((s, idx) => `
+              <tr>
+                <td>#${idx + 1}</td>
+                <td>${s.address}</td>
+                <td>${s.postcode}</td>
+                <td>${s.customer}</td>
+                <td>${this.statusBadge(s.status)}</td>
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="route-totals">
+          <div class="total-item">
+            <div class="total-label">Meeting Stops</div>
+            <div class="total-value">${stops.length}</div>
+          </div>
+        </div>
+
+        <div class="route-buttons">
+          <button class="styled-button styled-button--outline" data-action="see-all-stops">
+            <i class="bi bi-geo-alt"></i> See All Stops
+          </button>
+        </div>
+      </div>
+    </section>`;
+  }
+
+  renderRouteDetailCard(route) {
+    const stops = this.visibleStops(route);
+    const groups = this.groupBySubpostcode(stops);
+    const del = stops.filter(s => s.type === 'DEL').length;
+    const pu = stops.length - del;
+    const rebalanceClass = this.rebalanceMode ? 'rebalance-mode' : '';
+
+    return `
+    <section class="route-block ${rebalanceClass}" data-route-id="${route.id}">
+      <div class="route-block-header">
+        <h3 class="route-block-title">Route ${route.name}</h3>
+        <div class="route-block-header-right">
+          <div class="route-block-completion">${route.completion}%</div>
+          <button class="route-collapse-btn" data-action="collapse-route" data-route-id="${route.id}"
+                  title="Close this route and redistribute its postcodes">
+            <i class="bi bi-box-arrow-in-down"></i> Close route
+          </button>
+        </div>
+      </div>
+
+      <div class="progress-bar-container">
+        <div class="progress-bar-wrapper">
+          <div class="progress-bar-fill" style="width:${route.completion}%"></div>
+        </div>
+      </div>
+
+      <div class="route-block-content">
+        <div class="route-info-grid">
+          <div class="info-box">
+            <span class="info-box-label">Vendor</span>
+            <select class="info-box-select" data-field="vendor" title="Change vendor">
+              ${this.VENDORS.map(v => `<option value="${v}" ${v === route.vendor ? 'selected' : ''}>${v}</option>`).join('')}
+            </select>
+          </div>
+          <div class="info-box">
+            <span class="info-box-label">Driver</span>
+            <span class="info-box-value">${route.driver}</span>
+          </div>
+          <div class="info-box">
+            <span class="info-box-label">Vehicle</span>
+            <select class="info-box-select" data-field="vehicle" title="Change vehicle">
+              ${this.VEHICLES.map(v => `<option value="${v}" ${v === route.vehicle ? 'selected' : ''}>${v}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+
+        <div class="route-table-responsive">
+          <table class="route-table">
+            <thead>
+              <tr>
+                <th>Subpostcode</th><th>DEL</th><th>PU</th><th>Total</th><th>Completion %</th><th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${groups.map(g => {
+                const key = `${route.id}:${g.code}`;
+                const expanded = this.expandedSubpostcodes.has(key);
+                return `
+                <tr class="subpostcode-row ${this.rebalanceMode ? 'rebalance-row' : ''}"
+                    ${this.rebalanceMode ? 'draggable="true"' : ''}
+                    data-subpostcode="${g.code}" data-route-id="${route.id}">
+                  <td class="pc-cell">
+                    ${this.rebalanceMode ? '<i class="bi bi-grip-vertical drag-handle"></i>' : ''}
+                    <button type="button" class="subpostcode-toggle ${expanded ? 'expanded' : ''}"
+                            data-action="toggle-subpostcode" data-subpostcode="${g.code}" data-route-id="${route.id}">
+                      <i class="bi bi-chevron-right"></i> ${g.code}
+                    </button>
+                    <span class="postcode-count-badge">${g.postcodes.length} postcode${g.postcodes.length === 1 ? '' : 's'}</span>
+                    ${g.pre12 ? '<span class="status-badge status-badge-pre12">Pre 12</span>' : ''}
+                  </td>
+                  <td>${g.del}</td>
+                  <td>${g.pu}</td>
+                  <td>${g.total}</td>
+                  <td>${g.completion}%</td>
+                  <td>${this.statusBadge(g.allCompleted ? 'completed' : 'pending')}</td>
+                </tr>
+                <tr class="subpostcode-detail-row ${expanded ? '' : 'collapsed'}">
+                  <td colspan="6">
+                    <div class="postcode-dropdown">
+                      ${g.postcodes.map(p => `
+                        <div class="postcode-dropdown-item">
+                          <span class="postcode-editable" data-stop-id="${p.stops[0].id}" title="Click to edit / substitute">${p.postcode}</span>
+                          ${p.pre12 ? '<span class="status-badge status-badge-pre12">Pre 12</span>' : ''}
+                          <span class="pc-mini-stat">DEL ${p.del}</span>
+                          <span class="pc-mini-stat">PU ${p.pu}</span>
+                        </div>`).join('')}
+                    </div>
+                  </td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="route-totals">
+          <div class="total-item">
+            <div class="total-label">Total Deliveries</div>
+            <div class="total-value">${del}</div>
+          </div>
+          <div class="total-item">
+            <div class="total-label">Total Pickups</div>
+            <div class="total-value">${pu}</div>
+          </div>
+          <div class="total-item">
+            <div class="total-label">Total Geral</div>
+            <div class="total-value">${stops.length}</div>
+          </div>
+        </div>
+
+        <div class="metrics-row">
+          <div class="metric-badge metric-badge--pre12">
+            <div class="metric-label">Pre 12</div>
+            <div class="metric-value">${route.pre12}</div>
+          </div>
+          <div class="metric-badge metric-badge--asr">
+            <div class="metric-label">ASR</div>
+            <div class="metric-value">${route.asr}</div>
+          </div>
+          <div class="metric-badge metric-badge--dsr">
+            <div class="metric-label">DSR</div>
+            <div class="metric-value">${route.dsr}</div>
+          </div>
+        </div>
+
+        <div class="notes-section">
+          <label class="notes-label">Notes</label>
+          <textarea class="notes-textarea" placeholder="Write observations…">${route.notes}</textarea>
+        </div>
+
+        ${this.rebalanceMode ? `
+        <p class="rebalance-hint">
+          <i class="bi bi-info-circle"></i>
+          Drag a subpostcode onto another route in the list on the left to send it whole or split specific postcodes into it.
+        </p>
+        ` : ''}
+
+        <div class="route-buttons">
+          <button class="styled-button styled-button--outline" data-action="see-all-stops">
+            <i class="bi bi-geo-alt"></i> See All Stops
+          </button>
+          <button class="styled-button styled-button--outline" data-action="shipment-details">
+            <i class="bi bi-box2"></i> Shipment Details
+          </button>
+        </div>
+      </div>
+    </section>`;
+  }
+
+  bindRouteDetailEvents(route) {
+    const block = document.querySelector('#routeDetail .route-block');
+    if (!block) return;
+
+    // Editable vendor / vehicle via dropdown
+    block.querySelectorAll('.info-box-select').forEach(el => {
+      el.addEventListener('change', () => {
+        const field = el.dataset.field;
+        route[field] = el.value;
+        this.render();
+        this.showToast(`${field.charAt(0).toUpperCase() + field.slice(1)} updated to ${el.value}`, 'success');
+      });
+    });
+
+    // Editable postcodes (inside an expanded subpostcode dropdown) → Edit Postcode modal
+    block.querySelectorAll('.postcode-editable').forEach(el => {
+      el.addEventListener('click', () => {
+        const stop = this.stops.find(s => s.id === Number(el.dataset.stopId));
+        if (stop) this.showEditStopModal(stop);
+      });
+    });
+
+    // Expand/collapse a subpostcode to reveal its individual postcodes.
+    // Toggled directly in the DOM (no this.render()) so the rest of the
+    // panel doesn't flash/redraw on every expand/collapse click.
+    block.querySelectorAll('.subpostcode-toggle').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const key = `${btn.dataset.routeId}:${btn.dataset.subpostcode}`;
+        const expanded = this.expandedSubpostcodes.has(key);
+        const willExpand = !expanded;
+
+        if (willExpand) this.expandedSubpostcodes.add(key);
+        else this.expandedSubpostcodes.delete(key);
+
+        btn.classList.toggle('expanded', willExpand);
+        const detailRow = btn.closest('tr.subpostcode-row')?.nextElementSibling;
+        if (detailRow && detailRow.classList.contains('subpostcode-detail-row')) {
+          detailRow.classList.toggle('collapsed', !willExpand);
+        }
+      });
+    });
+
+    // Notes persistence
+    block.querySelector('.notes-textarea')?.addEventListener('change', (e) => {
+      route.notes = e.target.value;
+    });
+
+    // Modals
+    block.querySelector('[data-action="see-all-stops"]')
+      ?.addEventListener('click', () => this.showAllStopsModal(route));
+    block.querySelector('[data-action="shipment-details"]')
+      ?.addEventListener('click', () => this.showShipmentDetailsModal(route));
+
+    // Close route: redistribute this route's postcodes across the others
+    block.querySelector('[data-action="collapse-route"]')
+      ?.addEventListener('click', () => this.collapseRoute(route.id));
+
+    // Rebalance mode: drag a subpostcode group out of the detail panel.
+    // The drop targets live in the sidebar (see bindSidebarDropTargets).
+    if (this.rebalanceMode) {
+      block.querySelectorAll('tr.subpostcode-row.rebalance-row').forEach(row => {
+        row.addEventListener('dragstart', (e) => {
+          e.dataTransfer.effectAllowed = 'move';
+          this.dragPayload = {
+            subpostcode: row.dataset.subpostcode,
+            sourceRouteId: Number(row.dataset.routeId),
+          };
+          e.dataTransfer.setData('text/plain', row.dataset.subpostcode);
+          row.classList.add('dragging');
+        });
+
+        row.addEventListener('dragend', () => {
+          row.classList.remove('dragging');
+          this.dragPayload = null;
+          document.querySelectorAll('.route-list-item.drop-target')
+            .forEach(el => el.classList.remove('drop-target'));
         });
       });
+    }
+  }
 
-      // Editable postcodes (inside an expanded subpostcode dropdown) → Edit Postcode modal
-      block.querySelectorAll('.postcode-editable').forEach(el => {
-        el.addEventListener('click', () => {
-          const stop = this.stops.find(s => s.id === Number(el.dataset.stopId));
-          if (stop) this.showEditStopModal(stop);
-        });
+  /** Rebalance mode: each non-selected sidebar item is a drop zone for a
+   *  subpostcode dragged out of the detail panel's table. */
+  bindSidebarDropTargets(container) {
+    container.querySelectorAll('.route-list-item').forEach(item => {
+      const targetRouteId = Number(item.dataset.routeId);
+
+      item.addEventListener('dragover', (e) => {
+        if (!this.dragPayload || this.dragPayload.sourceRouteId === targetRouteId) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        item.classList.add('drop-target');
       });
 
-      // Expand/collapse a subpostcode to reveal its individual postcodes.
-      // Toggled directly in the DOM (no this.render()) so the rest of the
-      // dashboard doesn't flash/redraw on every expand/collapse click.
-      block.querySelectorAll('.subpostcode-toggle').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const key = `${btn.dataset.routeId}:${btn.dataset.subpostcode}`;
-          const expanded = this.expandedSubpostcodes.has(key);
-          const willExpand = !expanded;
-
-          if (willExpand) this.expandedSubpostcodes.add(key);
-          else this.expandedSubpostcodes.delete(key);
-
-          btn.classList.toggle('expanded', willExpand);
-          const detailRow = btn.closest('tr.subpostcode-row')?.nextElementSibling;
-          if (detailRow && detailRow.classList.contains('subpostcode-detail-row')) {
-            detailRow.classList.toggle('collapsed', !willExpand);
-          }
-        });
+      item.addEventListener('dragleave', () => {
+        item.classList.remove('drop-target');
       });
 
-      // Notes persistence
-      block.querySelector('.notes-textarea').addEventListener('change', (e) => {
-        route.notes = e.target.value;
+      item.addEventListener('drop', (e) => {
+        e.preventDefault();
+        item.classList.remove('drop-target');
+        const payload = this.dragPayload;
+        if (!payload || payload.sourceRouteId === targetRouteId) return;
+        this.openTransferModal(payload.sourceRouteId, targetRouteId, payload.subpostcode);
       });
-
-      // Modals
-      block.querySelector('[data-action="see-all-stops"]')
-        .addEventListener('click', () => this.showAllStopsModal(route));
-      block.querySelector('[data-action="shipment-details"]')
-        .addEventListener('click', () => this.showShipmentDetailsModal(route));
-
-      // Close route: redistribute this route's postcodes across the others
-      const collapseBtn = block.querySelector('[data-action="collapse-route"]');
-      if (collapseBtn) {
-        collapseBtn.addEventListener('click', () => this.collapseRoute(route.id));
-      }
-
-      // Rebalance mode: drag a subpostcode group onto another route
-      if (this.rebalanceMode) {
-        // Each subpostcode row (not its expanded detail rows) is a drag source
-        block.querySelectorAll('tr.subpostcode-row.rebalance-row').forEach(row => {
-          row.addEventListener('dragstart', (e) => {
-            e.dataTransfer.effectAllowed = 'move';
-            // stash the payload on the app so drop always has it (dataTransfer
-            // can be unreliable across some browsers / re-renders)
-            this.dragPayload = {
-              subpostcode: row.dataset.subpostcode,
-              sourceRouteId: Number(row.dataset.routeId),
-            };
-            e.dataTransfer.setData('text/plain', row.dataset.subpostcode);
-            row.classList.add('dragging');
-          });
-
-          row.addEventListener('dragend', () => {
-            row.classList.remove('dragging');
-            this.dragPayload = null;
-            document.querySelectorAll('.route-block.drop-target')
-              .forEach(b => b.classList.remove('drop-target'));
-          });
-        });
-
-        // The whole route block is a drop zone — drop a subpostcode onto
-        // another route's block to open the transfer modal.
-        block.addEventListener('dragover', (e) => {
-          if (!this.dragPayload) return;
-          e.preventDefault();
-          e.dataTransfer.dropEffect = 'move';
-          if (this.dragPayload.sourceRouteId !== route.id) {
-            block.classList.add('drop-target');
-          }
-        });
-
-        block.addEventListener('dragleave', (e) => {
-          const rect = block.getBoundingClientRect();
-          if (e.clientX < rect.left || e.clientX > rect.right ||
-              e.clientY < rect.top || e.clientY > rect.bottom) {
-            block.classList.remove('drop-target');
-          }
-        });
-
-        block.addEventListener('drop', (e) => {
-          e.preventDefault();
-          block.classList.remove('drop-target');
-          const payload = this.dragPayload;
-          if (!payload) return;
-          const targetRouteId = route.id;
-          if (payload.sourceRouteId !== targetRouteId) {
-            this.openTransferModal(payload.sourceRouteId, targetRouteId, payload.subpostcode);
-          }
-        });
-      }
     });
   }
 

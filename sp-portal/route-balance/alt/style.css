@@ -442,21 +442,10 @@ body.route-balance-page {
   color: var(--text-dark);
 }
 
-.summary-grid {
+/* Stat cards: full-width strip (no summary table in this layout) */
+.summary-cards--strip {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
-  gap: 1.5rem;
-  align-items: start;
-}
-
-@media (max-width: 1200px) {
-  .summary-grid { grid-template-columns: 1fr; }
-}
-
-/* Stat cards */
-.summary-cards {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 1rem;
 }
 
@@ -527,16 +516,8 @@ body.route-balance-page {
 }
 
 /* =====================================================
-   TABLES
+   TABLES (used by the All Stops modal)
    ===================================================== */
-.summary-table-wrapper {
-  background: var(--card-bg);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius);
-  overflow: hidden;
-  box-shadow: var(--card-shadow);
-}
-
 .table-responsive {
   overflow-x: auto;
   max-height: 480px;
@@ -566,10 +547,6 @@ body.route-balance-page {
   white-space: nowrap;
   user-select: none;
 }
-
-.table th[data-sort] { cursor: pointer; }
-.table th[data-sort]:hover { color: var(--primary-blue); }
-.table th[data-sort] i { font-size: 0.65rem; opacity: 0.5; margin-left: 2px; }
 
 .table td {
   padding: 0.75rem 1rem;
@@ -661,19 +638,8 @@ body.route-balance-page {
 .status-badge-pre12:hover { box-shadow: 0 0 16px rgba(55, 48, 163, 0.35); }
 
 /* =====================================================
-   ROUTE BLOCKS
+   ROUTE DETAIL (single .route-block rendered inside #routeDetail)
    ===================================================== */
-.route-blocks {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(560px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-}
-
-@media (max-width: 640px) {
-  .route-blocks { grid-template-columns: 1fr; }
-}
-
 .route-block {
   background: var(--card-bg);
   border: 1px solid var(--border-color);
@@ -1141,10 +1107,6 @@ body.route-balance-page {
 /* =====================================================
    RESPONSIVE
    ===================================================== */
-@media (max-width: 992px) {
-  .summary-cards { grid-template-columns: repeat(4, 1fr); }
-}
-
 /* ==================== REBALANCE MODE STYLING ==================== */
 
 .toggle-switch input:checked + label .toggle-text { font-weight: 600; }
@@ -1501,16 +1463,10 @@ body.route-balance-page {
 
   .filter-group { justify-content: center; }
 
-  .summary-cards { grid-template-columns: repeat(2, 1fr); }
-
-  .filters-bar { flex-direction: column; }
-  .filter-select { max-width: none; }
-
   .route-info-grid { grid-template-columns: 1fr 1fr; }
 }
 
 @media (max-width: 576px) {
-  .summary-cards { grid-template-columns: 1fr 1fr; }
   .route-info-grid,
   .metrics-row,
   .route-totals { grid-template-columns: 1fr; }

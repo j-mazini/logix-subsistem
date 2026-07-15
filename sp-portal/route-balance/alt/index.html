@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Route Balance (Master-Detail) - Logixsphere</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="route-balance-page">
+
+  <!-- Loading Screen -->
+  <div class="loading-overlay active" id="loadingOverlay">
+    <div class="spinner"></div>
+    <p>Loading operation data…</p>
+  </div>
+
+  <main class="route-balance-container container-fluid px-3 px-lg-4 py-4">
+
+    <!-- ============ HEADER ============ -->
+    <header class="page-header-section">
+      <div class="page-header-welcome-text">
+        <h1 class="page-header-title">Route Balance</h1>
+        <p class="page-header-date"><i class="bi bi-layout-sidebar-inset"></i>Master-detail layout</p>
+      </div>
+      <div class="header-info">
+        <div class="info-item">
+          <span class="label"><i class="bi bi-calendar3"></i> Date</span>
+          <span class="value" id="operationDate">–</span>
+        </div>
+        <div class="info-item">
+          <span class="label"><i class="bi bi-clock"></i> Time</span>
+          <span class="value" id="operationTime">–</span>
+        </div>
+        <div class="info-item">
+          <span class="label"><i class="bi bi-person-circle"></i> User</span>
+          <span class="value" id="currentUser">João Silva</span>
+        </div>
+        <button class="styled-button styled-button--primary btn-refresh" id="btnRefresh" title="Refresh data">
+          <i class="bi bi-arrow-clockwise"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- ============ GENERAL CONTROLS ============ -->
+    <div class="controls-bar">
+      <div class="btn-group-main">
+        <button class="styled-button styled-button--success" id="btnStart">
+          <i class="bi bi-play-fill"></i> Start
+        </button>
+        <button class="styled-button styled-button--danger" id="btnFinish">
+          <i class="bi bi-stop-fill"></i> Finish
+        </button>
+        <button class="styled-button styled-button--primary" id="btnAddRoute">
+          <i class="bi bi-plus-circle"></i> Add New Flex Route
+        </button>
+        <button class="styled-button styled-button--outline" id="btnCollapseRoutes">
+          <i class="bi bi-arrows-collapse"></i> Collapse Routes
+        </button>
+        <button class="styled-button styled-button--outline" id="btnExportCsv">
+          <i class="bi bi-filetype-csv"></i> Export CSV
+        </button>
+      </div>
+
+      <div class="filter-group">
+        <label class="toggle-label" for="ampmToggle">Shift</label>
+        <div class="toggle-switch">
+          <input type="checkbox" id="ampmToggle" />
+          <label for="ampmToggle">
+            <span class="toggle-text am">AM</span>
+            <span class="toggle-slider"></span>
+            <span class="toggle-text pm">PM</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <label class="toggle-label" for="rebalanceToggle">Mode</label>
+        <div class="toggle-switch">
+          <input type="checkbox" id="rebalanceToggle" />
+          <label for="rebalanceToggle">
+            <span class="toggle-text">Operations</span>
+            <span class="toggle-slider"></span>
+            <span class="toggle-text">Rebalance</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ OPERATION SUMMARY (aggregate stats only) ============ -->
+    <section class="operation-summary">
+      <div class="section-header">
+        <h2>Operation Summary</h2>
+      </div>
+
+      <div class="summary-cards summary-cards--strip">
+        <div class="stat-card" data-tooltip="Total stops across all routes">
+          <div class="stat-icon"><i class="bi bi-stack"></i></div>
+          <div class="stat-content">
+            <div class="stat-value" id="totalStopsCard">0</div>
+            <div class="stat-label">Total Stops</div>
+          </div>
+        </div>
+        <div class="stat-card" data-tooltip="Total deliveries">
+          <div class="stat-icon"><i class="bi bi-box-seam"></i></div>
+          <div class="stat-content">
+            <div class="stat-value" id="deliveriesCard">0</div>
+            <div class="stat-label">Deliveries</div>
+          </div>
+        </div>
+        <div class="stat-card" data-tooltip="Total pickups">
+          <div class="stat-icon"><i class="bi bi-arrow-repeat"></i></div>
+          <div class="stat-content">
+            <div class="stat-value" id="pickupsCard">0</div>
+            <div class="stat-label">Pickups</div>
+          </div>
+        </div>
+        <div class="stat-card" data-tooltip="Estimated stops per route">
+          <div class="stat-icon"><i class="bi bi-speedometer2"></i></div>
+          <div class="stat-content">
+            <div class="stat-value" id="sprCard">0</div>
+            <div class="stat-label">SPR (est.)</div>
+          </div>
+        </div>
+        <div class="stat-card" data-tooltip="Average target loop">
+          <div class="stat-icon"><i class="bi bi-bullseye"></i></div>
+          <div class="stat-content">
+            <div class="stat-value" id="targetLoopCard">0%</div>
+            <div class="stat-label">Target Loop</div>
+          </div>
+        </div>
+        <div class="stat-card" data-tooltip="Overall completion">
+          <div class="stat-icon"><i class="bi bi-percent"></i></div>
+          <div class="stat-content">
+            <div class="stat-value" id="completionCard">0%</div>
+            <div class="stat-label">Completion %</div>
+          </div>
+        </div>
+        <div class="stat-card" data-tooltip="Active routes">
+          <div class="stat-icon"><i class="bi bi-diagram-3"></i></div>
+          <div class="stat-content">
+            <div class="stat-value" id="totalRoutesCard">0</div>
+            <div class="stat-label">Total Routes</div>
+          </div>
+        </div>
+        <div class="stat-card" data-tooltip="Drivers currently online">
+          <div class="stat-icon"><i class="bi bi-person-badge"></i></div>
+          <div class="stat-content">
+            <div class="stat-value" id="driversOnlineCard">0</div>
+            <div class="stat-label">Drivers Online</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ MASTER (route list) / DETAIL (selected route) ============ -->
+    <div class="master-detail">
+      <aside class="route-sidebar">
+        <div class="route-sidebar-controls">
+          <div class="search-wrap">
+            <i class="bi bi-search"></i>
+            <input type="text" id="searchRoute" class="form-control" placeholder="Search by route or driver…" />
+          </div>
+          <select class="form-select filter-select" id="filterVendor">
+            <option value="">All vendors</option>
+          </select>
+          <select class="form-select filter-select" id="filterStatus">
+            <option value="">All statuses</option>
+            <option value="running">Running</option>
+            <option value="finished">Finished</option>
+            <option value="pending">Pending</option>
+            <option value="delayed">Delayed</option>
+          </select>
+          <div class="sort-control">
+            <select class="form-select" id="sortKeySelect">
+              <option value="name">Sort: Route</option>
+              <option value="vendor">Sort: Vendor</option>
+              <option value="target">Sort: Target</option>
+              <option value="totalStops">Sort: Total Stops</option>
+              <option value="completion">Sort: Completion</option>
+              <option value="status">Sort: Status</option>
+            </select>
+            <button type="button" class="sort-dir-btn" id="btnSortDir" title="Toggle sort direction">
+              <i class="bi bi-sort-down" id="sortDirIcon"></i>
+            </button>
+          </div>
+        </div>
+        <div class="route-list" id="routeList"></div>
+      </aside>
+
+      <section class="route-detail" id="routeDetail"></section>
+    </div>
+  </main>
+
+  <!-- ============ MODAL: Add New Flex Route ============ -->
+  <div class="modal fade" id="addRouteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>Add New Flex Route</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="addRouteForm">
+            <div class="mb-3">
+              <label for="newRouteName" class="form-label">Route Name</label>
+              <input type="text" class="form-control" id="newRouteName" placeholder="e.g. FX-01" required />
+            </div>
+            <div class="mb-3">
+              <label for="newVendor" class="form-label">Vendor</label>
+              <select class="form-select" id="newVendor" required></select>
+            </div>
+            <div class="mb-3">
+              <label for="newDriver" class="form-label">Driver</label>
+              <select class="form-select" id="newDriver" required></select>
+            </div>
+            <div class="mb-3">
+              <label for="newVehicle" class="form-label">Vehicle</label>
+              <select class="form-select" id="newVehicle" required></select>
+            </div>
+            <div class="mb-3">
+              <label for="newTarget" class="form-label">Target (%)</label>
+              <input type="number" class="form-control" id="newTarget" min="0" max="100" value="85" required />
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="styled-button styled-button--outline" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="styled-button styled-button--primary" id="btnSaveRoute">Save Route</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MODAL: See All Stops ============ -->
+  <div class="modal fade" id="allStopsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="allStopsModalTitle"><i class="bi bi-geo-alt me-2"></i>All Stops</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="modal-metrics" id="allStopsMetrics"></div>
+          <div class="table-responsive">
+            <table class="table table-hover table-sm">
+              <thead>
+                <tr>
+                  <th>Stop</th>
+                  <th>Address</th>
+                  <th>Postcode</th>
+                  <th>Customer</th>
+                  <th>Flag</th>
+                  <th>Status</th>
+                  <th>Route</th>
+                </tr>
+              </thead>
+              <tbody id="allStopsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MODAL: Shipment Details ============ -->
+  <div class="modal fade" id="shipmentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-box2 me-2"></i>Shipment Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="shipment-details">
+            <div class="detail-row"><span class="label">Shipment ID</span><span class="value mono" id="shipmentId">–</span></div>
+            <div class="detail-row"><span class="label">Weight</span><span class="value" id="shipmentWeight">–</span></div>
+            <div class="detail-row"><span class="label">Height</span><span class="value" id="shipmentHeight">–</span></div>
+            <div class="detail-row"><span class="label">Width</span><span class="value" id="shipmentWidth">–</span></div>
+            <div class="detail-row"><span class="label">Length</span><span class="value" id="shipmentLength">–</span></div>
+            <div class="detail-row"><span class="label">Volume</span><span class="value" id="shipmentVolume">–</span></div>
+            <div class="detail-row"><span class="label">Pieces</span><span class="value" id="shipmentPieces">–</span></div>
+            <div class="detail-row"><span class="label">Driver</span><span class="value" id="shipmentDriver">–</span></div>
+            <div class="detail-row"><span class="label">Vehicle</span><span class="value" id="shipmentVehicle">–</span></div>
+            <div class="detail-row"><span class="label">Vendor</span><span class="value" id="shipmentVendor">–</span></div>
+            <div class="detail-row"><span class="label">Status</span><span class="value" id="shipmentStatus">–</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MODAL: Edit Postcode ============ -->
+  <div class="modal fade" id="editStopModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i>Edit Postcode</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="editPostcode" class="form-label">Postcode</label>
+            <input type="text" class="form-control" id="editPostcode" list="postcodeList" placeholder="e.g. ME15 6AB" />
+            <datalist id="postcodeList"></datalist>
+            <div class="form-hint">Type a new postcode or pick an existing one to substitute.</div>
+          </div>
+
+          <div class="mb-3">
+            <span class="form-label d-block">Apply to</span>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="editScope" id="scopeSingle" value="single" checked />
+              <label class="form-check-label" for="scopeSingle">Only this stop</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="editScope" id="scopeAll" value="all" />
+              <label class="form-check-label" for="scopeAll">
+                Replace all stops with postcode <strong id="scopeAllPostcode">–</strong> in this route
+              </label>
+            </div>
+          </div>
+
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="editPre12" />
+            <label class="form-check-label" for="editPre12">
+              <span class="status-badge status-badge-pre12">Pre 12</span> — must be delivered before 12:00
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="styled-button styled-button--outline" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="styled-button styled-button--primary" id="btnSaveStop">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MODAL: Transfer Subpostcode (Rebalance) ============ -->
+  <div class="modal fade" id="transferModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="transferModalTitle"><i class="bi bi-arrow-left-right me-2"></i>Transfer</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="transfer-mode-tabs">
+            <button type="button" class="transfer-mode-tab active" id="sendSubpostcodeBtn">
+              <i class="bi bi-signpost-2"></i> Send Subpostcode
+            </button>
+            <button type="button" class="transfer-mode-tab" id="sendPostcodeBtn">
+              <i class="bi bi-geo-alt"></i> Send Postcode
+            </button>
+          </div>
+          <div id="transferModalBody"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="styled-button styled-button--outline" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="styled-button styled-button--primary" id="btnConfirmTransfer">Confirm Transfer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
