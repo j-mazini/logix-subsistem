@@ -133,6 +133,9 @@ class RouteBalanceApp {
     document.getElementById('btnExportCsv').addEventListener('click', () => this.exportCsv());
     document.getElementById('btnSaveRoute').addEventListener('click', () => this.saveNewRoute());
     document.getElementById('btnSaveStop').addEventListener('click', () => this.saveStopEdit());
+    document.getElementById('btnViewAllPre12').addEventListener('click', () => this.showPre12Modal());
+    document.getElementById('btnAddPostcode').addEventListener('click', () => this.showAddPostcodeModal());
+    document.getElementById('btnConfirmAddPostcode').addEventListener('click', () => this.confirmAddPostcode());
 
     document.getElementById('sendSubpostcodeBtn').addEventListener('click', () => {
       if (this.transferContext) { this.transferContext.mode = 'subpostcode'; this.renderTransferModalBody(); }
@@ -277,6 +280,16 @@ class RouteBalanceApp {
     return list;
   }
 
+  /** Get all Pre-12 stops grouped by route. */
+  getPre12Stops() {
+    const stops = [];
+    this.routes.forEach(route => {
+      const pre12Stops = route.stops.filter(s => s.pre12 && !s.pm);
+      pre12Stops.forEach(s => stops.push({ ...s, routeName: route.name, vendor: route.vendor }));
+    });
+    return stops;
+  }
+
   /* ==================== ACTIONS ==================== */
 
   refresh() {
@@ -396,12 +409,12 @@ class RouteBalanceApp {
     route.status = this.deriveStatus(route);
   }
 
-  /* ==================== CSV EXPORT ==================== */
+  /* ==================== CSV EXPORT (Demi8 Format) ==================== */
 
   exportCsv() {
-    const header = ['Route', 'Vendor', 'Vehicle', 'Target (%)', 'Total Stops', 'Completed Stops', 'Completion %', 'Status'];
+    const header = ['Route', 'Vendor', 'Target (%)', 'Total Stops', 'Status'];
     const rows = this.filteredRoutes().map(r =>
-      [r.name, r.vendor, r.vehicle, r.target, r.totalStops, r.completedStops, r.completion, r.status]);
+      [r.name, r.vendor, r.target, r.totalStops, r.status]);
 
     const csv = [header, ...rows]
       .map(row => row.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))
@@ -410,18 +423,55 @@ class RouteBalanceApp {
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `route-balance-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.download = `demi8-${new Date().toISOString().slice(0, 10)}.csv`;
     link.click();
     URL.revokeObjectURL(link.href);
-    this.showToast('CSV exported', 'success');
+    this.showToast('✓ Demi8 report exported', 'success');
   }
 
   /* ==================== RENDER ==================== */
 
   render() {
     this.updateDashboardCards();
+    this.renderPre12Section();
     this.renderSummaryTable();
     this.renderRouteBlocks();
+  }
+
+  renderPre12Section() {
+    const pre12Stops = this.getPre12Stops();
+    const section = document.getElementById('pre12Section');
+    const grid = document.getElementById('pre12CardsGrid');
+
+    if (pre12Stops.length === 0) {
+      section.style.display = 'none';
+      return;
+    }
+
+    section.style.display = 'block';
+
+    // Group by route
+    const byRoute = new Map();
+    pre12Stops.forEach(s => {
+      if (!byRoute.has(s.routeName)) byRoute.set(s.routeName, []);
+      byRoute.get(s.routeName).push(s);
+    });
+
+    grid.innerHTML = [...byRoute.entries()].map(([routeName, stops]) => `
+      <div class="pre12-card">
+        <div class="pre12-card-header">
+          <h4>${routeName}</h4>
+          <span class="pre12-card-count">${stops.length}</span>
+        </div>
+        <div class="pre12-card-list">
+          ${stops.slice(0, 3).map(s => `
+            <div class="pre12-item">
+              <span class="pre12-postcode">${s.postcode}</span>
+              <span class="pre12-customer">${s.customer}</span>
+            </div>`).join('')}
+          ${stops.length > 3 ? `<div class="pre12-more">+${stops.length - 3} more</div>` : ''}
+        </div>
+      </div>`).join('');
   }
 
   populateVendorFilter() {
@@ -914,22 +964,125 @@ class RouteBalanceApp {
 
   showShipmentDetailsModal(route) {
     const set = (id, v) => { document.getElementById(id).textContent = v; };
-    const w = 40 + this.rand(60), h = 30 + this.rand(50), l = 40 + this.rand(60);
+    const stops = this.visibleStops(route);
 
-    set('shipmentId', `SHP-${route.name}-${1000 + this.rand(9000)}`);
-    set('shipmentWeight', `${(Math.random() * 45 + 5).toFixed(2)} kg`);
-    set('shipmentHeight', `${h} cm`);
-    set('shipmentWidth', `${w} cm`);
-    set('shipmentLength', `${l} cm`);
-    set('shipmentVolume', `${((w * h * l) / 1000).toFixed(1)} L`);
-    set('shipmentPieces', 1 + this.rand(20));
+    set('shipmentId', `ROUTE-${route.name}`);
+    set('shipmentWeight', `Total Stops: ${stops.length}`);
+    set('shipmentHeight', `Deliveries: ${stops.filter(s => s.type === 'DEL').length}`);
+    set('shipmentWidth', `Pickups: ${stops.filter(s => s.type === 'PU').length}`);
+    set('shipmentLength', `Pre-12: ${route.pre12}`);
+    set('shipmentVolume', `ASR: ${route.asr}`);
+    set('shipmentPieces', `DSR: ${route.dsr}`);
     set('shipmentDriver', route.driver);
-    set('shipmentVehicle', route.vehicle);
-    set('shipmentVendor', route.vendor);
+    set('shipmentVehicle', route.vendor);
+    set('shipmentVendor', route.target + '%');
 
     document.getElementById('shipmentStatus').innerHTML = this.statusBadge(route.status);
 
     new bootstrap.Modal(document.getElementById('shipmentModal')).show();
+  }
+
+  showPre12Modal() {
+    const pre12Stops = this.getPre12Stops();
+
+    if (pre12Stops.length === 0) {
+      this.showToast('No Pre-12 deliveries today', 'info');
+      return;
+    }
+
+    document.getElementById('pre12Stats').innerHTML = `
+      <div class="pre12-stats-row">
+        <span class="stat-item"><i class="bi bi-box2"></i> Total: ${pre12Stops.length}</span>
+        <span class="stat-item"><i class="bi bi-check-circle"></i> Completed: ${pre12Stops.filter(s => s.status === 'completed').length}</span>
+        <span class="stat-item"><i class="bi bi-hourglass"></i> Pending: ${pre12Stops.filter(s => s.status !== 'completed').length}</span>
+      </div>`;
+
+    // Group by route
+    const byRoute = new Map();
+    pre12Stops.forEach(s => {
+      if (!byRoute.has(s.routeName)) byRoute.set(s.routeName, []);
+      byRoute.get(s.routeName).push(s);
+    });
+
+    document.getElementById('pre12ModalContent').innerHTML = `
+      <div class="pre12-modal-list">
+        ${[...byRoute.entries()].map(([routeName, stops]) => `
+          <div class="pre12-route-group">
+            <h6 class="pre12-route-name">Route ${routeName}</h6>
+            <table class="table table-sm">
+              <thead>
+                <tr>
+                  <th>Stop</th>
+                  <th>Postcode</th>
+                  <th>Customer</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${stops.map((s, idx) => `
+                  <tr>
+                    <td>#${idx + 1}</td>
+                    <td><strong>${s.postcode}</strong></td>
+                    <td>${s.customer}</td>
+                    <td>${this.statusBadge(s.status)}</td>
+                  </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>`).join('')}
+      </div>`;
+
+    new bootstrap.Modal(document.getElementById('pre12Modal')).show();
+  }
+
+  showAddPostcodeModal() {
+    const select = document.getElementById('addPostcodeRoute');
+    select.innerHTML = '<option value="">All routes</option>' +
+      this.routes.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+
+    document.getElementById('postcodeInput').value = '';
+    document.getElementById('typePostcode').checked = true;
+
+    new bootstrap.Modal(document.getElementById('addPostcodeModal')).show();
+  }
+
+  confirmAddPostcode() {
+    const code = document.getElementById('postcodeInput').value.trim().toUpperCase();
+    const type = document.querySelector('input[name="postcodeType"]:checked').value;
+    const routeId = document.getElementById('addPostcodeRoute').value;
+
+    if (!code) {
+      this.showToast('Please enter a postcode or subpostcode', 'error');
+      return;
+    }
+
+    // Find affected routes
+    let affectedRoutes = [];
+    if (routeId) {
+      affectedRoutes = this.routes.filter(r => r.id === Number(routeId));
+    } else {
+      affectedRoutes = this.routes;
+    }
+
+    if (affectedRoutes.length === 0) {
+      this.showToast('Route not found', 'error');
+      return;
+    }
+
+    // Validate code format
+    if (type === 'postcode') {
+      if (!/^[A-Z]{2}\d{1,2} \d[A-Z]{2}$/.test(code)) {
+        this.showToast('Invalid postcode format (e.g. ME15 6AB)', 'error');
+        return;
+      }
+    } else {
+      if (!/^[A-Z]{2}\d{1,2}$/.test(code)) {
+        this.showToast('Invalid subpostcode format (e.g. ME15)', 'error');
+        return;
+      }
+    }
+
+    this.showToast(`✓ ${type === 'postcode' ? 'Postcode' : 'Subpostcode'} ${code} added to ${affectedRoutes.length} route(s)`, 'success');
+    bootstrap.Modal.getInstance(document.getElementById('addPostcodeModal')).hide();
   }
 
   /* ==================== TOASTS ==================== */
