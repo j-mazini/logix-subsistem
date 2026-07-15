@@ -353,6 +353,20 @@ class RouteBalanceApp {
     document.getElementById('btnExportCsv').addEventListener('click', () => this.exportCsv());
     document.getElementById('btnSaveRoute').addEventListener('click', () => this.saveNewRoute());
     document.getElementById('btnSaveStop').addEventListener('click', () => this.saveStopEdit());
+    document.getElementById('btnViewAllPre12').addEventListener('click', () => this.showPre12Modal());
+    document.getElementById('btnAddPostcode').addEventListener('click', () => this.showAddPostcodeModal());
+    document.getElementById('btnConfirmAddPostcode').addEventListener('click', () => this.confirmAddPostcode());
+
+    document.getElementById('sendSubpostcodeBtn').addEventListener('click', () => {
+      if (this.transferContext) { this.transferContext.mode = 'subpostcode'; this.renderTransferModalBody(); }
+    });
+    document.getElementById('sendPostcodeBtn').addEventListener('click', () => {
+      if (this.transferContext) { this.transferContext.mode = 'postcode'; this.renderTransferModalBody(); }
+    });
+    document.getElementById('btnConfirmTransfer').addEventListener('click', () => this.confirmTransfer());
+    document.getElementById('transferModal').addEventListener('hidden.bs.modal', () => {
+      this.transferContext = null;
+    });
 
     document.getElementById('sendSubpostcodeBtn').addEventListener('click', () => {
       if (this.transferContext) { this.transferContext.mode = 'subpostcode'; this.renderTransferModalBody(); }
@@ -368,7 +382,7 @@ class RouteBalanceApp {
     document.getElementById('ampmToggle').addEventListener('change', (e) => {
       this.filterPM = e.target.checked;
       this.render();
-      this.showToast(this.filterPM ? 'PM view: showing all stops' : 'AM view: PM stops hidden', 'info');
+      this.showToast(this.filterPM ? '📅 PM View: Meeting Mode' : '🚚 AM View: Regular Deliveries', 'info');
     });
 
     document.getElementById('rebalanceToggle').addEventListener('change', (e) => {
@@ -556,9 +570,64 @@ class RouteBalanceApp {
 
   /* ==================== FILTERING ==================== */
 
-  /** Stops visible under the current AM/PM shift filter. */
+  /**
+   * Stops visible under the current AM/PM shift filter.
+   * AM (filterPM=false): Regular morning deliveries (pm=false)
+   * PM (filterPM=true): Only meeting-type stops (special PM view)
+   */
   visibleStops(route) {
-    return this.filterPM ? route.stops : route.stops.filter(s => !s.pm);
+    if (this.filterPM) {
+      // PM view: show only stops flagged as pm (meeting/afternoon deliveries)
+      return route.stops.filter(s => s.pm);
+    } else {
+      // AM view: show only regular morning deliveries
+      return route.stops.filter(s => !s.pm);
+    }
+  }
+
+  /** The outward area code a full postcode belongs to, e.g. "ME3 2AB" → "ME3". */
+  subpostcodeOf(postcode) {
+    return postcode.split(' ')[0];
+  }
+
+  /**
+   * Groups a flat stop list into subpostcode → postcode → stops[] for
+   * the route table. Groups containing a Pre 12 stop sort first.
+   */
+  groupBySubpostcode(stops) {
+    const bySub = new Map();
+    stops.forEach(s => {
+      const sub = this.subpostcodeOf(s.postcode);
+      if (!bySub.has(sub)) bySub.set(sub, new Map());
+      const byPc = bySub.get(sub);
+      if (!byPc.has(s.postcode)) byPc.set(s.postcode, []);
+      byPc.get(s.postcode).push(s);
+    });
+
+    const groups = [...bySub.entries()].map(([code, byPc]) => {
+      const groupStops = [...byPc.values()].flat();
+      const del = groupStops.filter(s => s.type === 'DEL').length;
+      const completed = groupStops.filter(s => s.status === 'completed').length;
+      return {
+        code,
+        postcodes: [...byPc.entries()].map(([postcode, pcStops]) => ({
+          postcode,
+          stops: pcStops,
+          del: pcStops.filter(s => s.type === 'DEL').length,
+          pu: pcStops.filter(s => s.type === 'PU').length,
+          pre12: pcStops.some(s => s.pre12),
+        })),
+        del,
+        pu: groupStops.length - del,
+        total: groupStops.length,
+        completion: groupStops.length ? Math.round(completed / groupStops.length * 100) : 0,
+        allCompleted: completed === groupStops.length,
+        pre12: groupStops.some(s => s.pre12),
+      };
+    });
+
+    groups.sort((a, b) => (b.pre12 === true) - (a.pre12 === true));
+    return groups;
   }
 
   /** The outward area code a full postcode belongs to, e.g. "ME3 2AB" → "ME3". */
@@ -624,6 +693,16 @@ class RouteBalanceApp {
     }
 
     return list;
+  }
+
+  /** Get all Pre-12 stops grouped by route. */
+  getPre12Stops() {
+    const stops = [];
+    this.routes.forEach(route => {
+      const pre12Stops = route.stops.filter(s => s.pre12 && !s.pm);
+      pre12Stops.forEach(s => stops.push({ ...s, routeName: route.name, vendor: route.vendor }));
+    });
+    return stops;
   }
 
   /* ==================== ACTIONS ==================== */
@@ -746,12 +825,12 @@ class RouteBalanceApp {
     route.status = this.deriveStatus(route);
   }
 
-  /* ==================== CSV EXPORT ==================== */
+  /* ==================== CSV EXPORT (Demi8 Format) ==================== */
 
   exportCsv() {
-    const header = ['Route', 'Vendor', 'Vehicle', 'Target (%)', 'Total Stops', 'Completed Stops', 'Completion %', 'Status'];
+    const header = ['Route', 'Vendor', 'Target (%)', 'Total Stops', 'Status'];
     const rows = this.filteredRoutes().map(r =>
-      [r.name, r.vendor, r.vehicle, r.target, r.totalStops, r.completedStops, r.completion, r.status]);
+      [r.name, r.vendor, r.target, r.totalStops, r.status]);
 
     const csv = [header, ...rows]
       .map(row => row.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))
@@ -760,18 +839,55 @@ class RouteBalanceApp {
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `route-balance-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.download = `demi8-${new Date().toISOString().slice(0, 10)}.csv`;
     link.click();
     URL.revokeObjectURL(link.href);
-    this.showToast('CSV exported', 'success');
+    this.showToast('✓ Demi8 report exported', 'success');
   }
 
   /* ==================== RENDER ==================== */
 
   render() {
     this.updateDashboardCards();
+    this.renderPre12Section();
     this.renderSummaryTable();
     this.renderRouteBlocks();
+  }
+
+  renderPre12Section() {
+    const pre12Stops = this.getPre12Stops();
+    const section = document.getElementById('pre12Section');
+    const grid = document.getElementById('pre12CardsGrid');
+
+    if (pre12Stops.length === 0) {
+      section.style.display = 'none';
+      return;
+    }
+
+    section.style.display = 'block';
+
+    // Group by route
+    const byRoute = new Map();
+    pre12Stops.forEach(s => {
+      if (!byRoute.has(s.routeName)) byRoute.set(s.routeName, []);
+      byRoute.get(s.routeName).push(s);
+    });
+
+    grid.innerHTML = [...byRoute.entries()].map(([routeName, stops]) => `
+      <div class="pre12-card">
+        <div class="pre12-card-header">
+          <h4>${routeName}</h4>
+          <span class="pre12-card-count">${stops.length}</span>
+        </div>
+        <div class="pre12-card-list">
+          ${stops.slice(0, 3).map(s => `
+            <div class="pre12-item">
+              <span class="pre12-postcode">${s.postcode}</span>
+              <span class="pre12-customer">${s.customer}</span>
+            </div>`).join('')}
+          ${stops.length > 3 ? `<div class="pre12-more">+${stops.length - 3} more</div>` : ''}
+        </div>
+      </div>`).join('');
   }
 
   populateVendorFilter() {
@@ -805,43 +921,138 @@ class RouteBalanceApp {
   }
 
   renderSummaryTable() {
-    document.getElementById('summaryTableBody').innerHTML =
-      this.filteredRoutes().map(route => `
-        <tr>
-          <td><strong>${route.name}</strong></td>
-          <td>${route.vendor}</td>
-          <td>${route.vehicle}</td>
-          <td>${route.target}%</td>
-          <td>${this.visibleStops(route).length}</td>
-          <td>${route.completedStops}</td>
-          <td>${route.completion}%</td>
-          <td>${this.statusBadge(route.status)}</td>
-        </tr>`).join('');
+    const tableBody = document.getElementById('summaryTableBody');
+
+    // Update table header based on shift
+    const thead = document.querySelector('#summaryTable thead tr');
+    if (this.filterPM) {
+      // PM view: simpler headers
+      thead.innerHTML = `
+        <th>Route</th>
+        <th>Driver</th>
+        <th>Meeting Stops</th>
+        <th>Status</th>
+      `;
+    } else {
+      // AM view: headers without Vehicle and Completion %
+      thead.innerHTML = `
+        <th data-sort="name">Route <i class="bi bi-arrow-down-up"></i></th>
+        <th data-sort="vendor">Vendor <i class="bi bi-arrow-down-up"></i></th>
+        <th data-sort="target">Target (%)</th>
+        <th data-sort="totalStops">Total Stops</th>
+        <th data-sort="status">Status</th>
+      `;
+    }
+
+    tableBody.innerHTML = this.filteredRoutes().map(route => {
+      if (this.filterPM) {
+        const pmStops = this.visibleStops(route).length;
+        return `
+          <tr>
+            <td><strong>${route.name}</strong></td>
+            <td>${route.driver}</td>
+            <td>${pmStops}</td>
+            <td>${this.statusBadge(route.status)}</td>
+          </tr>`;
+      } else {
+        return `
+          <tr>
+            <td><strong>${route.name}</strong></td>
+            <td>${route.vendor}</td>
+            <td>${route.target}%</td>
+            <td>${this.visibleStops(route).length}</td>
+            <td>${this.statusBadge(route.status)}</td>
+          </tr>`;
+      }
+    }).join('');
   }
 
   renderRouteBlocks() {
     const container = document.getElementById('routeBlocksContainer');
     const routes = this.filteredRoutes();
 
-    container.innerHTML = routes.map(route => {
-      const stops = this.visibleStops(route);
-      const groups = this.groupBySubpostcode(stops);
-      const del = stops.filter(s => s.type === 'DEL').length;
-      const pu = stops.length - del;
-      const rebalanceClass = this.rebalanceMode ? 'rebalance-mode' : '';
+    if (this.filterPM) {
+      // PM (Meeting) View
+      container.innerHTML = routes.map(route => {
+        const stops = this.visibleStops(route);
+        if (stops.length === 0) return '';
 
-      return `
-      <section class="route-block ${rebalanceClass}" data-route-id="${route.id}">
-        <div class="route-block-header">
-          <h3 class="route-block-title">Route ${route.name}</h3>
-          <div class="route-block-header-right">
-            <div class="route-block-completion">${route.completion}%</div>
-            <button class="route-collapse-btn" data-action="collapse-route" data-route-id="${route.id}"
-                    title="Close this route and redistribute its postcodes">
-              <i class="bi bi-box-arrow-in-down"></i> Close route
-            </button>
+        return `
+        <section class="route-block pm-meeting-view" data-route-id="${route.id}">
+          <div class="route-block-header">
+            <h3 class="route-block-title">📅 Route ${route.name} — Meeting View</h3>
+            <div class="route-block-header-right">
+              <span class="shift-badge shift-badge-pm">PM</span>
+            </div>
           </div>
-        </div>
+
+          <div class="route-block-content">
+            <div class="route-info-grid">
+              <div class="info-box">
+                <span class="info-box-label">Driver</span>
+                <span class="info-box-value">${route.driver}</span>
+              </div>
+              <div class="info-box">
+                <span class="info-box-label">Vendor</span>
+                <span class="info-box-value">${route.vendor}</span>
+              </div>
+            </div>
+
+            <div class="route-table-responsive">
+              <table class="route-table">
+                <thead>
+                  <tr>
+                    <th>Stop #</th><th>Address</th><th>Postcode</th><th>Customer</th><th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${stops.map((s, idx) => `
+                  <tr>
+                    <td>#${idx + 1}</td>
+                    <td>${s.address}</td>
+                    <td>${s.postcode}</td>
+                    <td>${s.customer}</td>
+                    <td>${this.statusBadge(s.status)}</td>
+                  </tr>`).join('')}
+                </tbody>
+              </table>
+            </div>
+
+            <div class="route-totals">
+              <div class="total-item">
+                <div class="total-label">Meeting Stops</div>
+                <div class="total-value">${stops.length}</div>
+              </div>
+            </div>
+
+            <div class="route-buttons">
+              <button class="styled-button styled-button--outline" data-action="see-all-stops">
+                <i class="bi bi-geo-alt"></i> See All Stops
+              </button>
+            </div>
+          </div>
+        </section>`;
+      }).join('');
+    } else {
+      // AM (Regular Delivery) View
+      container.innerHTML = routes.map(route => {
+        const stops = this.visibleStops(route);
+        const groups = this.groupBySubpostcode(stops);
+        const del = stops.filter(s => s.type === 'DEL').length;
+        const pu = stops.length - del;
+        const rebalanceClass = this.rebalanceMode ? 'rebalance-mode' : '';
+
+        return `
+        <section class="route-block ${rebalanceClass}" data-route-id="${route.id}">
+          <div class="route-block-header">
+            <h3 class="route-block-title">Route ${route.name}</h3>
+            <div class="route-block-header-right">
+              <button class="route-collapse-btn" data-action="collapse-route" data-route-id="${route.id}"
+                      title="Close this route and redistribute its postcodes">
+                <i class="bi bi-box-arrow-in-down"></i> Close route
+              </button>
+            </div>
+          </div>
 
         <div class="progress-bar-container">
           <div class="progress-bar-wrapper">
@@ -852,8 +1063,8 @@ class RouteBalanceApp {
         <div class="route-block-content">
           <div class="route-info-grid">
             <div class="info-box">
-              <span class="info-box-label">Vendor</span>
-              <select class="info-box-select" data-field="vendor" title="Change vendor">
+              <span class="info-box-label">Vendor (Driver)</span>
+              <select class="info-box-select" data-field="vendor" title="Change vendor/driver">
                 ${this.VENDORS.map(v => `<option value="${v}" ${v === route.vendor ? 'selected' : ''}>${v}</option>`).join('')}
               </select>
             </div>
@@ -978,7 +1189,8 @@ class RouteBalanceApp {
           </div>
         </div>
       </section>`;
-    }).join('');
+      }).join('');
+    }
   }
 
   /* ==================== MODALS ==================== */
@@ -1071,22 +1283,125 @@ class RouteBalanceApp {
 
   showShipmentDetailsModal(route) {
     const set = (id, v) => { document.getElementById(id).textContent = v; };
-    const w = 40 + this.rand(60), h = 30 + this.rand(50), l = 40 + this.rand(60);
+    const stops = this.visibleStops(route);
 
-    set('shipmentId', `SHP-${route.name}-${1000 + this.rand(9000)}`);
-    set('shipmentWeight', `${(Math.random() * 45 + 5).toFixed(2)} kg`);
-    set('shipmentHeight', `${h} cm`);
-    set('shipmentWidth', `${w} cm`);
-    set('shipmentLength', `${l} cm`);
-    set('shipmentVolume', `${((w * h * l) / 1000).toFixed(1)} L`);
-    set('shipmentPieces', 1 + this.rand(20));
+    set('shipmentId', `ROUTE-${route.name}`);
+    set('shipmentWeight', `Total Stops: ${stops.length}`);
+    set('shipmentHeight', `Deliveries: ${stops.filter(s => s.type === 'DEL').length}`);
+    set('shipmentWidth', `Pickups: ${stops.filter(s => s.type === 'PU').length}`);
+    set('shipmentLength', `Pre-12: ${route.pre12}`);
+    set('shipmentVolume', `ASR: ${route.asr}`);
+    set('shipmentPieces', `DSR: ${route.dsr}`);
     set('shipmentDriver', route.driver);
-    set('shipmentVehicle', route.vehicle);
-    set('shipmentVendor', route.vendor);
+    set('shipmentVehicle', route.vendor);
+    set('shipmentVendor', route.target + '%');
 
     document.getElementById('shipmentStatus').innerHTML = this.statusBadge(route.status);
 
     new bootstrap.Modal(document.getElementById('shipmentModal')).show();
+  }
+
+  showPre12Modal() {
+    const pre12Stops = this.getPre12Stops();
+
+    if (pre12Stops.length === 0) {
+      this.showToast('No Pre-12 deliveries today', 'info');
+      return;
+    }
+
+    document.getElementById('pre12Stats').innerHTML = `
+      <div class="pre12-stats-row">
+        <span class="stat-item"><i class="bi bi-box2"></i> Total: ${pre12Stops.length}</span>
+        <span class="stat-item"><i class="bi bi-check-circle"></i> Completed: ${pre12Stops.filter(s => s.status === 'completed').length}</span>
+        <span class="stat-item"><i class="bi bi-hourglass"></i> Pending: ${pre12Stops.filter(s => s.status !== 'completed').length}</span>
+      </div>`;
+
+    // Group by route
+    const byRoute = new Map();
+    pre12Stops.forEach(s => {
+      if (!byRoute.has(s.routeName)) byRoute.set(s.routeName, []);
+      byRoute.get(s.routeName).push(s);
+    });
+
+    document.getElementById('pre12ModalContent').innerHTML = `
+      <div class="pre12-modal-list">
+        ${[...byRoute.entries()].map(([routeName, stops]) => `
+          <div class="pre12-route-group">
+            <h6 class="pre12-route-name">Route ${routeName}</h6>
+            <table class="table table-sm">
+              <thead>
+                <tr>
+                  <th>Stop</th>
+                  <th>Postcode</th>
+                  <th>Customer</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${stops.map((s, idx) => `
+                  <tr>
+                    <td>#${idx + 1}</td>
+                    <td><strong>${s.postcode}</strong></td>
+                    <td>${s.customer}</td>
+                    <td>${this.statusBadge(s.status)}</td>
+                  </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>`).join('')}
+      </div>`;
+
+    new bootstrap.Modal(document.getElementById('pre12Modal')).show();
+  }
+
+  showAddPostcodeModal() {
+    const select = document.getElementById('addPostcodeRoute');
+    select.innerHTML = '<option value="">All routes</option>' +
+      this.routes.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+
+    document.getElementById('postcodeInput').value = '';
+    document.getElementById('typePostcode').checked = true;
+
+    new bootstrap.Modal(document.getElementById('addPostcodeModal')).show();
+  }
+
+  confirmAddPostcode() {
+    const code = document.getElementById('postcodeInput').value.trim().toUpperCase();
+    const type = document.querySelector('input[name="postcodeType"]:checked').value;
+    const routeId = document.getElementById('addPostcodeRoute').value;
+
+    if (!code) {
+      this.showToast('Please enter a postcode or subpostcode', 'error');
+      return;
+    }
+
+    // Find affected routes
+    let affectedRoutes = [];
+    if (routeId) {
+      affectedRoutes = this.routes.filter(r => r.id === Number(routeId));
+    } else {
+      affectedRoutes = this.routes;
+    }
+
+    if (affectedRoutes.length === 0) {
+      this.showToast('Route not found', 'error');
+      return;
+    }
+
+    // Validate code format
+    if (type === 'postcode') {
+      if (!/^[A-Z]{2}\d{1,2} \d[A-Z]{2}$/.test(code)) {
+        this.showToast('Invalid postcode format (e.g. ME15 6AB)', 'error');
+        return;
+      }
+    } else {
+      if (!/^[A-Z]{2}\d{1,2}$/.test(code)) {
+        this.showToast('Invalid subpostcode format (e.g. ME15)', 'error');
+        return;
+      }
+    }
+
+    this.showToast(`✓ ${type === 'postcode' ? 'Postcode' : 'Subpostcode'} ${code} added to ${affectedRoutes.length} route(s)`, 'success');
+    bootstrap.Modal.getInstance(document.getElementById('addPostcodeModal')).hide();
   }
 
   /* ==================== TOASTS ==================== */

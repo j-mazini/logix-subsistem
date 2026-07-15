@@ -442,21 +442,10 @@ body.route-balance-page {
   color: var(--text-dark);
 }
 
-.summary-grid {
+/* Stat cards: full-width strip (no summary table in this layout) */
+.summary-cards--strip {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
-  gap: 1.5rem;
-  align-items: start;
-}
-
-@media (max-width: 1200px) {
-  .summary-grid { grid-template-columns: 1fr; }
-}
-
-/* Stat cards */
-.summary-cards {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 1rem;
 }
 
@@ -527,16 +516,8 @@ body.route-balance-page {
 }
 
 /* =====================================================
-   TABLES
+   TABLES (used by the All Stops modal)
    ===================================================== */
-.summary-table-wrapper {
-  background: var(--card-bg);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius);
-  overflow: hidden;
-  box-shadow: var(--card-shadow);
-}
-
 .table-responsive {
   overflow-x: auto;
   max-height: 480px;
@@ -567,10 +548,6 @@ body.route-balance-page {
   user-select: none;
 }
 
-.table th[data-sort] { cursor: pointer; }
-.table th[data-sort]:hover { color: var(--primary-blue); }
-.table th[data-sort] i { font-size: 0.65rem; opacity: 0.5; margin-left: 2px; }
-
 .table td {
   padding: 0.75rem 1rem;
   border-bottom: 1px solid var(--border-color);
@@ -580,6 +557,11 @@ body.route-balance-page {
 
 .table tbody tr { transition: background var(--transition-fast); }
 .table tbody tr:hover { background: rgba(13, 110, 253, 0.04); }
+
+/* Route Overview modal: rows are clickable and select a route */
+.route-overview-row { cursor: pointer; }
+.route-overview-row.selected { background: rgba(13, 110, 253, 0.08); }
+.route-overview-row.selected:hover { background: rgba(13, 110, 253, 0.1); }
 
 /* =====================================================
    STATUS BADGES  (Logixsphere status-badge.css)
@@ -661,19 +643,8 @@ body.route-balance-page {
 .status-badge-pre12:hover { box-shadow: 0 0 16px rgba(55, 48, 163, 0.35); }
 
 /* =====================================================
-   ROUTE BLOCKS
+   ROUTE DETAIL (single .route-block rendered inside #routeDetail)
    ===================================================== */
-.route-blocks {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(560px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-}
-
-@media (max-width: 640px) {
-  .route-blocks { grid-template-columns: 1fr; }
-}
-
 .route-block {
   background: var(--card-bg);
   border: 1px solid var(--border-color);
@@ -733,7 +704,7 @@ body.route-balance-page {
 
 .route-info-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 0.75rem;
   margin-bottom: 1rem;
   padding-bottom: 1rem;
@@ -788,36 +759,6 @@ body.route-balance-page {
   border-bottom-color: var(--primary-blue);
   outline: none;
 }
-
-/* Sort attendance select: color-coded like a status badge (yes/late/no) */
-.sort-attendance-select {
-  padding: 0.1rem 0.4rem;
-  border-radius: 6px;
-  border-bottom-width: 1px;
-  font-weight: 700;
-}
-
-.sort-attendance-yes {
-  background: #d1fae5;
-  color: #065f46;
-  border-color: transparent;
-}
-
-.sort-attendance-late {
-  background: #fef3c7;
-  color: #92400e;
-  border-color: transparent;
-}
-
-.sort-attendance-no {
-  background: #fee2e2;
-  color: #991b1b;
-  border-color: transparent;
-}
-
-.sort-attendance-yes:hover, .sort-attendance-yes:focus { color: #065f46; filter: brightness(0.96); border-color: transparent; }
-.sort-attendance-late:hover, .sort-attendance-late:focus { color: #92400e; filter: brightness(0.96); border-color: transparent; }
-.sort-attendance-no:hover, .sort-attendance-no:focus { color: #991b1b; filter: brightness(0.96); border-color: transparent; }
 
 /* Route inner table */
 .route-table-responsive {
@@ -1041,6 +982,76 @@ body.route-balance-page {
 
 .form-check-label { font-size: 0.88rem; color: var(--text-dark); }
 
+/* =====================================================
+   ROUTE OVERVIEW: All Deliveries / All Pickups by Route
+   (collapsible groups — shared by both lists)
+   ===================================================== */
+.overview-list-title {
+  margin: 0 0 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.overview-list-title i { color: var(--primary-blue); margin-right: 0.35rem; }
+
+.overview-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.overview-group {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.overview-group summary {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem 0.9rem;
+  background: var(--main-bg);
+  cursor: pointer;
+  font-size: 0.85rem;
+  list-style: none;
+}
+
+.overview-group summary::-webkit-details-marker { display: none; }
+
+.overview-group summary:hover { background: #eef2f7; }
+
+.overview-chevron {
+  font-size: 0.7rem;
+  color: var(--text-light);
+  transition: transform var(--transition-fast);
+}
+
+.overview-group[open] .overview-chevron { transform: rotate(90deg); }
+
+.overview-group-name {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.overview-group-driver { color: var(--text-secondary); }
+
+.overview-group-count {
+  margin-left: auto;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--primary-blue);
+  background: rgba(13, 110, 253, 0.1);
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+  white-space: nowrap;
+}
+
+.overview-group table {
+  border-top: 1px solid var(--border-color);
+}
+
 .form-check-input:checked {
   background-color: var(--primary-blue);
   border-color: var(--primary-blue);
@@ -1171,103 +1182,23 @@ body.route-balance-page {
 /* =====================================================
    RESPONSIVE
    ===================================================== */
-@media (max-width: 992px) {
-  .summary-cards { grid-template-columns: repeat(4, 1fr); }
+/* ==================== REBALANCE MODE STYLING ==================== */
+
+.toggle-switch input:checked + label .toggle-text { font-weight: 600; }
+
+/* Rebalance mode toggle - special styling */
+.filter-group:has(#rebalanceToggle) .toggle-switch label {
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
 }
 
-/* =====================================================
-   MODE SWITCH — Operations / Rebalance segmented control
-   A real two-word segmented control (not a pill switch —
-   "Operations"/"Rebalance" need room the AM/PM slider can't give).
-   Flipping it previews the admin state: the track itself glows
-   the same blue used on .route-block.rebalance-mode below, so the
-   control foreshadows what the page is about to do.
-   ===================================================== */
-.mode-switch { display: inline-flex; }
-
-.mode-switch-input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
+.filter-group:has(#rebalanceToggle) .toggle-switch input:checked + label {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
 }
 
-.mode-switch-track {
-  position: relative;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(102px, 1fr));
-  align-items: stretch;
-  background: var(--main-bg);
-  border: 1px solid var(--border-color);
-  border-radius: 10px;
-  padding: 3px;
-  cursor: pointer;
-  margin: 0;
-  transition: border-color var(--transition-base), box-shadow var(--transition-base);
-}
-
-.mode-switch-thumb {
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: calc(50% - 3px);
-  height: calc(100% - 6px);
-  background: var(--card-bg);
-  border-radius: 7px;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background var(--transition-base);
-}
-
-.mode-switch-option {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  padding: 0.4rem 0.75rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--text-light);
-  white-space: nowrap;
-  transition: color var(--transition-base);
-}
-
-.mode-switch-option i { font-size: 0.85rem; }
-
-/* Operations selected (default) */
-.mode-switch-option:first-child { color: var(--text-dark); }
-
-/* Rebalance selected */
-.mode-switch-input:checked ~ .mode-switch-track .mode-switch-thumb {
-  transform: translateX(calc(100% + 0px));
-  background: var(--primary-blue);
-  box-shadow: 0 4px 10px rgba(13, 110, 253, 0.35);
-}
-
-.mode-switch-input:checked ~ .mode-switch-track .mode-switch-option:first-child { color: var(--text-light); }
-.mode-switch-input:checked ~ .mode-switch-track .mode-switch-option:last-child { color: #ffffff; }
-
-.mode-switch-input:checked ~ .mode-switch-track {
-  border-color: rgba(13, 110, 253, 0.4);
-  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.12);
-}
-
-.mode-switch-input:focus-visible ~ .mode-switch-track {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.3);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .mode-switch-track:hover { border-color: var(--text-light); }
-}
-
-@media (max-width: 480px) {
-  .mode-switch-option span:last-child { display: none; }
-  .mode-switch-track { grid-template-columns: repeat(2, minmax(44px, 1fr)); }
-}
+.filter-group:has(#rebalanceToggle) .toggle-text { color: var(--text-secondary); }
+.filter-group:has(#rebalanceToggle) .toggle-text:nth-of-type(1) { color: var(--text-light); }
+.filter-group:has(#rebalanceToggle) .toggle-switch input:checked + label .toggle-text:nth-of-type(1) { color: var(--text-light); }
+.filter-group:has(#rebalanceToggle) .toggle-switch input:checked + label .toggle-text:nth-of-type(2) { color: #0d6efd; font-weight: 700; }
 
 /* ==================== ROUTE BLOCKS - REBALANCE MODE ==================== */
 
@@ -1607,16 +1538,10 @@ body.route-balance-page {
 
   .filter-group { justify-content: center; }
 
-  .summary-cards { grid-template-columns: repeat(2, 1fr); }
-
-  .filters-bar { flex-direction: column; }
-  .filter-select { max-width: none; }
-
   .route-info-grid { grid-template-columns: 1fr 1fr; }
 }
 
 @media (max-width: 576px) {
-  .summary-cards { grid-template-columns: 1fr 1fr; }
   .route-info-grid,
   .metrics-row,
   .route-totals { grid-template-columns: 1fr; }
@@ -1639,204 +1564,6 @@ body.route-balance-page {
     transition: none !important;
   }
   .styled-button:hover:not(:disabled) { transform: none !important; }
-}
-
-/* =====================================================
-   INTAKE VIEW — manifest upload / mock data entry gate
-   ===================================================== */
-
-.intake-view {
-  max-width: 960px;
-  margin: 2.5rem auto;
-  padding: 0 0.5rem;
-}
-
-.intake-header {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.intake-title {
-  font-size: 1.75rem;
-  font-weight: 800;
-  color: var(--text-primary);
-  margin: 0 0 0.4rem;
-}
-
-.intake-subtitle {
-  color: var(--text-secondary);
-  font-size: 0.95rem;
-  margin: 0;
-}
-
-.intake-grid {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  gap: 1.5rem;
-  align-items: stretch;
-}
-
-.intake-divider {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-}
-
-.intake-divider::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 50%;
-  width: 1px;
-  background: var(--border-color);
-}
-
-.intake-divider span {
-  position: relative;
-  background: var(--card-bg);
-  color: var(--text-light);
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 0.35rem 0.6rem;
-  border: 1px solid var(--border-color);
-  border-radius: 999px;
-}
-
-.intake-card {
-  background: var(--card-bg);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius);
-  box-shadow: var(--card-shadow);
-  padding: 1.75rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-}
-
-.intake-card-icon {
-  width: 3rem;
-  height: 3rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 999px;
-  background: rgb(13 110 253 / 0.1);
-  color: var(--primary-blue);
-  font-size: 1.35rem;
-  margin-bottom: 0.9rem;
-}
-
-.intake-card-title {
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0 0 0.4rem;
-}
-
-.intake-card-text {
-  color: var(--text-secondary);
-  font-size: 0.85rem;
-  margin: 0 0 1.1rem;
-}
-
-.intake-dropzone {
-  width: 100%;
-  border: 2px dashed var(--border-color);
-  border-radius: var(--radius);
-  padding: 1.75rem 1rem;
-  cursor: pointer;
-  transition: border-color var(--transition-fast), background var(--transition-fast);
-  margin-bottom: 0.85rem;
-}
-
-.intake-dropzone:hover,
-.intake-dropzone:focus-visible {
-  border-color: var(--primary-blue);
-  background: rgb(13 110 253 / 0.04);
-  outline: none;
-}
-
-.intake-dropzone.is-dragover {
-  border-color: var(--primary-blue);
-  background: rgb(13 110 253 / 0.08);
-}
-
-.intake-dropzone.has-file {
-  border-style: solid;
-  border-color: var(--success-green);
-  background: rgb(22 163 74 / 0.06);
-}
-
-.intake-dropzone-icon {
-  font-size: 1.6rem;
-  color: var(--text-light);
-  margin-bottom: 0.5rem;
-  display: block;
-}
-
-.intake-dropzone.has-file .intake-dropzone-icon {
-  color: var(--success-green);
-}
-
-.intake-dropzone-primary {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--text-dark);
-  margin: 0 0 0.2rem;
-}
-
-.intake-dropzone-formats {
-  font-size: 0.75rem;
-  color: var(--text-light);
-  margin: 0;
-}
-
-.intake-status {
-  width: 100%;
-  font-size: 0.8rem;
-  border-radius: var(--radius);
-  padding: 0.6rem 0.8rem;
-  margin-bottom: 0.85rem;
-  text-align: left;
-}
-
-.intake-status.is-error {
-  background: rgb(220 38 38 / 0.08);
-  color: var(--danger-red);
-  border: 1px solid rgb(220 38 38 / 0.25);
-}
-
-.intake-status.is-success {
-  background: rgb(22 163 74 / 0.08);
-  color: var(--success-green-hover);
-  border: 1px solid rgb(22 163 74 / 0.25);
-}
-
-.intake-btn {
-  width: 100%;
-  justify-content: center;
-}
-
-@media (max-width: 767px) {
-  .intake-grid {
-    grid-template-columns: 1fr;
-  }
-  .intake-divider {
-    padding: 0.25rem 0;
-  }
-  .intake-divider::before {
-    top: 50%;
-    bottom: auto;
-    left: 0;
-    right: 0;
-    width: auto;
-    height: 1px;
-  }
 }
 
 /* =====================================================
@@ -1890,152 +1617,157 @@ body.route-balance-page {
 }
 
 /* =====================================================
-   PRE-12 PRIORITY SECTION
+   MASTER-DETAIL LAYOUT
    ===================================================== */
-
-.pre12-section {
-  background: linear-gradient(135deg, #fff7ed 0%, #ffe8d6 100%);
-  border: 1px solid #fed7aa;
-  border-radius: var(--radius);
-  padding: 1.5rem;
-  margin-bottom: 2rem;
-  box-shadow: 0 4px 6px rgba(194, 65, 12, 0.1);
-}
-
-.pre12-section .section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-
-.pre12-section h2 {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #92400e;
-  margin: 0;
-}
-
-.pre12-cards-grid {
+.master-detail {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 1rem;
+  grid-template-columns: 340px minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+  margin-bottom: 2rem;
 }
 
-.pre12-card {
+@media (max-width: 992px) {
+  .master-detail { grid-template-columns: 1fr; }
+}
+
+/* ---- Sidebar (master list) ---- */
+.route-sidebar {
   background: var(--card-bg);
-  border: 1px solid #fcd34d;
-  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  box-shadow: var(--card-shadow);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 220px);
+  position: sticky;
+  top: 1rem;
+}
+
+@media (max-width: 992px) {
+  .route-sidebar { position: static; max-height: 480px; }
+}
+
+.route-sidebar-controls {
   padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  background: var(--main-bg);
+}
+
+.route-sidebar-controls .filter-select { max-width: none; }
+
+.sort-control {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.sort-control select { flex: 1; }
+
+.sort-dir-btn {
+  width: 38px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-dark);
+  cursor: pointer;
   transition: all var(--transition-fast);
 }
 
-.pre12-card:hover {
-  box-shadow: 0 4px 12px rgba(194, 65, 12, 0.15);
-  border-color: #f59e0b;
+.sort-dir-btn:hover { border-color: var(--primary-blue); color: var(--primary-blue); }
+.sort-dir-btn.desc i { transform: scaleY(-1); }
+
+.route-list {
+  overflow-y: auto;
+  flex: 1;
 }
 
-.pre12-card-header {
+.route-list-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.85rem 1rem;
+  border: none;
+  border-bottom: 1px solid var(--border-color);
+  background: transparent;
+  cursor: pointer;
+  transition: background var(--transition-fast), box-shadow var(--transition-fast);
+  font-family: inherit;
+}
+
+.route-list-item:last-child { border-bottom: none; }
+.route-list-item:hover { background: var(--main-bg); }
+
+.route-list-item.selected {
+  background: rgba(13, 110, 253, 0.08);
+  box-shadow: inset 3px 0 0 var(--primary-blue);
+}
+
+.route-list-item-top {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.75rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 2px solid #fcd34d;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.3rem;
 }
 
-.pre12-card-header h4 {
+.route-list-item-name {
+  font-weight: 700;
   font-size: 0.95rem;
-  font-weight: 700;
-  color: #92400e;
-  margin: 0;
+  color: var(--text-primary);
 }
 
-.pre12-card-count {
-  background: #fed7aa;
-  color: #92400e;
-  padding: 0.25rem 0.5rem;
-  border-radius: 6px;
-  font-weight: 700;
+.route-list-item-meta {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.route-list-item-meta .dot { color: var(--text-light); }
+
+.route-list-item-stats {
+  margin-top: 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-light);
+}
+
+.route-list-item-stats strong { color: var(--text-dark); }
+
+.route-list-empty {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--text-light);
   font-size: 0.85rem;
 }
 
-.pre12-card-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+/* Rebalance mode: sidebar item as a drop zone for a dragged subpostcode */
+.route-list-item.drop-target {
+  background: #eff6ff;
+  box-shadow: inset 3px 0 0 #3b82f6;
 }
 
-.pre12-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-  font-size: 0.8rem;
-}
+/* ---- Detail panel ---- */
+.route-detail { min-width: 0; }
 
-.pre12-postcode {
-  font-weight: 700;
-  color: #92400e;
-}
-
-.pre12-customer {
-  color: var(--text-light);
-  font-size: 0.75rem;
-}
-
-.pre12-more {
+.route-detail-empty {
+  background: var(--card-bg);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius);
+  padding: 3.5rem 1.5rem;
   text-align: center;
-  color: #f59e0b;
-  font-weight: 600;
-  font-size: 0.75rem;
-  margin-top: 0.25rem;
+  color: var(--text-light);
 }
 
-.pre12-stats {
-  display: flex;
-  gap: 2rem;
-  margin-bottom: 1.5rem;
-  padding: 1rem;
-  background: var(--main-bg);
-  border-radius: 8px;
-}
-
-.pre12-stats-row {
-  display: flex;
-  gap: 2rem;
-  margin-bottom: 1.5rem;
-  padding: 1rem;
-  background: var(--main-bg);
-  border-radius: 8px;
-}
-
-.stat-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-weight: 600;
-  color: var(--text-dark);
-  font-size: 0.9rem;
-}
-
-.stat-item i {
-  color: #f59e0b;
-  font-size: 1.1rem;
-}
-
-.pre12-modal-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.pre12-route-group {
-  border-left: 3px solid #fcd34d;
-  padding-left: 1rem;
-}
-
-.pre12-route-name {
-  font-weight: 700;
-  color: #92400e;
-  margin-bottom: 0.75rem;
-}
+.route-detail-empty i { font-size: 1.8rem; }
+.route-detail-empty p { margin: 0.75rem 0 0; font-size: 0.9rem; }
