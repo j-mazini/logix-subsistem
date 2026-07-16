@@ -9,10 +9,10 @@
 (function () {
   'use strict';
 
-  var ROUTE_POOL = ['MD7A', 'MD7B', 'MD7C', 'MD7D', 'MD7E', 'MD7X', 'MD7Q', 'MD9A'];
+  var ROUTE_POOL = ['MD7A', 'MD7B', 'MD7C', 'MD7D', 'MD7E', 'MD7F'];
   var state = {
     items: [],          // [{sub, count}]
-    routeCount: 4,
+    routeCount: 6,
     assign: {},         // sub -> route index
     picked: null,       // sub da ficha "na mão" (click-to-move)
     compare: []         // até 2 índices de rota
@@ -126,7 +126,7 @@
         '<div class="rb-board-controls">' +
           '<label class="rb-board-count">Rotas ' +
             '<select id="rbRouteCount">' +
-              [2, 3, 4, 5, 6, 7, 8].map(function (n) {
+              [2, 3, 4, 5, 6].map(function (n) {
                 return '<option value="' + n + '"' + (n === state.routeCount ? ' selected' : '') + '>' + n + '</option>';
               }).join('') +
             '</select>' +

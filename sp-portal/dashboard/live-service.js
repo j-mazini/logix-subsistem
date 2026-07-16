@@ -62,7 +62,7 @@
     liveRoute('MD7C', 'Pre-12', 'bi-sunrise', 'pre12', LIVE_SERVICE_STOPS[0].stops.slice(4, 6)),
     liveRoute('MD7D', 'Pre-12', 'bi-sunrise', 'pre12', LIVE_SERVICE_STOPS[0].stops.slice(6, 8)),
     liveRoute('MD7E', 'Pre-12', 'bi-sunrise', 'pre12', LIVE_SERVICE_STOPS[0].stops.slice(8, 10)),
-    liveRoute('MD7X', 'Pre-12', 'bi-sunrise', 'pre12', LIVE_SERVICE_STOPS[0].stops.slice(10, 12))
+    liveRoute('MD7F', 'Pre-12', 'bi-sunrise', 'pre12', LIVE_SERVICE_STOPS[0].stops.slice(10, 12))
   ];
 
   /* progresso inicial simulado: parte de cada rota já concluída */
