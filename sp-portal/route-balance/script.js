@@ -507,6 +507,11 @@ class RouteBalanceApp {
         case 'shipment-details': this.showShipmentDetailsModal(route); break;
         case 'collapse-route': this.collapseRoute(route.id); break;
         case 'toggle-pre12-filter': this.togglePre12Filter(); break;
+        case 'flip-card': this.toggleFlipCard(route); break;
+        case 'close-flip':
+          const block = actionBtn.closest('.route-block');
+          if (block) block.classList.remove('flipped');
+          break;
       }
     });
 
@@ -1027,15 +1032,22 @@ class RouteBalanceApp {
 
         return `
         <section class="route-block status-${route.status} ${rebalanceClass}" data-route-id="${route.id}">
-          <div class="route-block-header">
-            <h3 class="route-block-title">Route ${route.name}</h3>
-            <div class="route-block-header-right">
-              <button class="route-collapse-btn" data-action="collapse-route" data-route-id="${route.id}"
-                      title="Close this route and redistribute its postcodes">
-                <i class="bi bi-box-arrow-in-down"></i> Close route
-              </button>
-            </div>
-          </div>
+          <div class="route-block-flipper">
+            <div class="route-block-face route-block-front">
+              <div class="route-block-header">
+                <h3 class="route-block-title">Route ${route.name}</h3>
+                <div class="route-block-header-right">
+                  ${route.pre12 > 0 ? `
+                  <button class="flip-btn" data-action="flip-card" title="View Pre-12 Stops">
+                    <i class="bi bi-fire"></i> Pre 12
+                  </button>
+                  ` : ''}
+                  <button class="route-collapse-btn" data-action="collapse-route" data-route-id="${route.id}"
+                          title="Close this route and redistribute its postcodes">
+                    <i class="bi bi-box-arrow-in-down"></i> Close route
+                  </button>
+                </div>
+              </div>
 
 
         <div class="route-block-content">
@@ -1190,6 +1202,42 @@ class RouteBalanceApp {
             </button>
           </div>
         </div>
+            </div>
+
+            <div class="route-block-face route-block-back">
+              <button class="flip-close-btn" data-action="close-flip" title="Close Pre-12 View">
+                <i class="bi bi-x-lg"></i>
+              </button>
+              <div class="pre12-flip-title">
+                <i class="bi bi-fire"></i>
+                Pre 12 Priority Deliveries
+              </div>
+              ${route.pre12 > 0 ? `
+              <div class="pre12-flip-list">
+                ${groups.filter(g => g.pre12).map(g => `
+                <div class="pre12-flip-group">
+                  <div class="pre12-flip-group-name">${g.code}</div>
+                  <div class="pre12-flip-items">
+                    ${g.postcodes.filter(p => p.pre12).map(p => `
+                    <div class="pre12-flip-item">
+                      <span class="pre12-flip-pc">${p.postcode}</span>
+                      <span class="pre12-flip-customer">${p.stops[0]?.customer || 'N/A'}</span>
+                      <span class="pre12-flip-count">DEL ${p.del} / PU ${p.pu}</span>
+                    </div>
+                    `).join('')}
+                  </div>
+                </div>
+                `).join('')}
+              </div>
+              ` : `
+              <div class="pre12-empty-state">
+                <i class="bi bi-check-circle-fill"></i>
+                <p>No Pre-12 Priority Deliveries</p>
+                <p style="font-size: 0.85rem; opacity: 0.7; margin-top: 0.5rem;">All stops are scheduled after 12:00</p>
+              </div>
+              `}
+            </div>
+          </div>
       </section>`;
       }).join('');
     }
@@ -1366,6 +1414,14 @@ class RouteBalanceApp {
       toast.classList.add('hiding');
       setTimeout(() => toast.remove(), 300);
     }, 3000);
+  }
+
+  /* ==================== FLIP CARD 3D ==================== */
+
+  toggleFlipCard(route) {
+    const block = document.querySelector(`[data-route-id="${route.id}"]`);
+    if (!block) return;
+    block.classList.toggle('flipped');
   }
 
   /* ==================== REBALANCE MODE ==================== */
