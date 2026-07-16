@@ -12,8 +12,10 @@
   --text-light: #8491a1;
   --text-primary: #0f172a;
   --text-secondary: #64748b;
-  --primary-blue: #0d6efd;
-  --primary-blue-hover: #0b5ed7;
+  --primary-blue: #6366f1;
+  --primary-blue-hover: #4f46e5;
+  --accent-purple: #8b5cf6;
+  --primary-gradient: linear-gradient(135deg, var(--primary-blue) 0%, var(--accent-purple) 100%);
   --success-green: #16a34a;
   --success-green-hover: #15803d;
   --danger-red: #dc2626;
@@ -70,7 +72,7 @@ body.va-page {
 
 @media (min-width: 768px) {
   .page-header-title {
-    background: linear-gradient(to bottom right, #1e293b 0%, #0d6efd 100%);
+    background: linear-gradient(to bottom right, #1e293b 0%, #6366f1 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -201,7 +203,7 @@ body.va-page {
 }
 .form-select.filter-select:focus {
   border-color: var(--primary-blue);
-  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.12);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
 }
 
 /* =====================================================
@@ -248,7 +250,7 @@ body.va-page {
 }
 
 .va-table tbody tr:last-child td { border-bottom: none; }
-.va-table tbody tr:hover { background: rgba(13, 110, 253, 0.04); }
+.va-table tbody tr:hover { background: rgba(99, 102, 241, 0.04); }
 
 .va-cell-empty { color: var(--text-light); }
 
@@ -356,7 +358,7 @@ body.va-page {
 .va-form-field textarea:focus {
   outline: none;
   border-color: var(--primary-blue);
-  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.12);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
 }
 .va-form-hint { font-size: 0.72rem; color: var(--text-light); margin: 0.2rem 0 0; }
 

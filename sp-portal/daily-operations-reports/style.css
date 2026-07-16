@@ -15,8 +15,10 @@
   --text-light: #8491a1;
   --text-primary: #0f172a;
   --text-secondary: #64748b;
-  --primary-blue: #0d6efd;
-  --primary-blue-hover: #0b5ed7;
+  --primary-blue: #6366f1;
+  --primary-blue-hover: #4f46e5;
+  --accent-purple: #8b5cf6;
+  --primary-gradient: linear-gradient(135deg, var(--primary-blue) 0%, var(--accent-purple) 100%);
   --primary-indigo: #6366f1;
   --success-green: #16a34a;
   --success-green-hover: #15803d;
@@ -219,7 +221,7 @@ body.dor-page {
 .form-control:focus,
 .form-select:focus {
   border-color: var(--primary-blue);
-  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.12);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
 }
 
 .date-nav-input {
@@ -234,7 +236,7 @@ body.dor-page {
 .date-nav-input:focus {
   outline: none;
   border-color: var(--primary-blue);
-  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.12);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
 }
 
 .dor-period-group { display: flex; align-items: center; gap: 0.45rem; }

@@ -12,8 +12,10 @@
   --text-light: #8491a1;
   --text-primary: #0f172a;
   --text-secondary: #64748b;
-  --primary-blue: #0d6efd;
-  --primary-blue-hover: #0b5ed7;
+  --primary-blue: #6366f1;
+  --primary-blue-hover: #4f46e5;
+  --accent-purple: #8b5cf6;
+  --primary-gradient: linear-gradient(135deg, var(--primary-blue) 0%, var(--accent-purple) 100%);
   --success-green: #16a34a;
   --success-green-hover: #15803d;
   --danger-red: #dc2626;
@@ -70,7 +72,7 @@ body.am-page {
 
 @media (min-width: 768px) {
   .page-header-title {
-    background: linear-gradient(to bottom right, #1e293b 0%, #0d6efd 100%);
+    background: linear-gradient(to bottom right, #1e293b 0%, #6366f1 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -237,7 +239,7 @@ body.am-page {
 .form-select:focus {
   outline: none;
   border-color: var(--primary-blue);
-  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.12);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
 }
 
 .am-cards-col { display: flex; flex-direction: column; gap: 0.6rem; }
@@ -280,7 +282,7 @@ body.am-page {
   left: 0; top: 0; bottom: 0;
   width: 4px;
   border-radius: 0 4px 4px 0;
-  background: linear-gradient(to bottom, var(--accent-from, #0d6efd), var(--accent-to, #3b82f6));
+  background: linear-gradient(to bottom, var(--accent-from, #6366f1), var(--accent-to, #3b82f6));
 }
 .am-card--blue { --accent-from: #1d4ed8; --accent-to: #3b82f6; }
 .am-card--green { --accent-from: #15803d; --accent-to: #22c55e; }
@@ -413,7 +415,7 @@ body.am-page {
 .am-form-field textarea:focus {
   outline: none;
   border-color: var(--primary-blue);
-  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.12);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
 }
 .am-form-hint { font-size: 0.72rem; color: var(--text-light); margin: 0; }
 
