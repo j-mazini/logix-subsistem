@@ -319,6 +319,52 @@
   cursor: not-allowed;
 }
 
+.sop-create-post-hint {
+  color: #64748b;
+  font-size: 0.82rem;
+  flex: 1;
+}
+
+.sop-feed-toolbar {
+  margin: 0 0 1rem;
+}
+
+.sop-feed-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.sop-feed-tab {
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: #475569;
+  padding: 0.45rem 0.8rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.sop-feed-tab:hover,
+.sop-feed-tab.active {
+  background: linear-gradient(135deg, #4338ca 0%, #6366f1 100%);
+  color: #fff;
+  border-color: transparent;
+}
+
+.sop-post-badge--source,
+.sop-post-badge--audience {
+  background: #eef2ff;
+  color: #4338ca;
+  margin-left: 0.35rem;
+}
+
+.sop-post-badge--audience {
+  background: #ecfeff;
+  color: #0f766e;
+}
+
 /* Layout create post – flex column */
 .sop-create-post-inner {
   display: flex;

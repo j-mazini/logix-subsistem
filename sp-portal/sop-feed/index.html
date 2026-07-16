@@ -58,16 +58,54 @@
           <main class="sop-main">
             <div class="admin-header sop-header">
               <div class="sop-header-top">
-                <h1 class="admin-header-title">Standard Operating Procedures</h1>
+                <h1 class="admin-header-title">Announcements & Feed</h1>
                 <div class="admin-header-user-pill d-flex align-items-center" title="">
                   <span id="spHeaderAvatarFallback" class="admin-header-user-avatar admin-header-user-avatar-fallback" style="display:none;"></span>
                   <img id="spHeaderAvatar" src="" alt="" class="admin-header-user-avatar admin-header-user-avatar--img" style="display:none;" />
                   <span class="admin-header-user-name" id="spHeaderName">—</span>
                 </div>
               </div>
-              <p class="text-muted small mb-2">Read-only feed. Only DHL can create posts.</p>
+              <p class="text-muted small mb-2">Publish updates to your drivers and share DHL guidance directly in the company feed.</p>
               <div class="admin-header-search sop-header-search">
-                <input type="search" id="sopSearch" class="form-control" placeholder="Search tutorials, posts, keywords..." autocomplete="off" />
+                <input type="search" id="sopSearch" class="form-control" placeholder="Search company updates, DHL posts, keywords..." autocomplete="off" />
+              </div>
+            </div>
+
+            <form class="sop-create-post" id="companyPostForm">
+              <div class="sop-create-post-inner">
+                <div class="d-flex align-items-start gap-3">
+                  <div class="sop-create-post-avatar">
+                    <img src="../../assets/atlas-transport-logo.png" alt="" />
+                  </div>
+                  <div class="sop-create-post-input-wrap">
+                    <input type="text" id="companyPostTitle" class="sop-create-post-title-input" maxlength="90" placeholder="Post title for your drivers" />
+                    <textarea id="companyPostContent" class="sop-create-post-input" rows="3" maxlength="500" placeholder="Write an update, reminder or guideline for your team..."></textarea>
+                    <div class="sop-create-post-type-row">
+                      <label class="sop-create-post-type-label" for="companyPostAudience">Audience</label>
+                      <select id="companyPostAudience" class="sop-create-post-type-select">
+                        <option value="drivers">Drivers</option>
+                        <option value="company">Company team</option>
+                      </select>
+                      <label class="sop-create-post-type-label" for="companyPostDhlSource">Share DHL post</label>
+                      <select id="companyPostDhlSource" class="sop-create-post-type-select">
+                        <option value="">No DHL post selected</option>
+                      </select>
+                    </div>
+                    <div class="sop-create-post-actions">
+                      <span class="sop-create-post-hint">Your message will appear in the company feed for the selected audience.</span>
+                      <button type="submit" class="sop-create-action-btn sop-post-btn">Publish update</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </form>
+
+            <div class="sop-feed-toolbar">
+              <div class="sop-feed-tabs" role="tablist" aria-label="Feed filters">
+                <button type="button" class="sop-feed-tab active" data-feed-tab="all">All updates</button>
+                <button type="button" class="sop-feed-tab" data-feed-tab="drivers">Drivers</button>
+                <button type="button" class="sop-feed-tab" data-feed-tab="company">Company</button>
+                <button type="button" class="sop-feed-tab" data-feed-tab="dhl">DHL</button>
               </div>
             </div>
 

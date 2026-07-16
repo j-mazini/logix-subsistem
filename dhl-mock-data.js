@@ -75,7 +75,7 @@
     'MSE|MD7C': ['ME7 8CA', 'ME8 9CB', 'ME8 0CC'],
     'MSE|MD7D': ['ME9 1DA', 'ME9 2DB', 'ME9 3DC'],
     'MSE|MD7E': ['ME9 4EA', 'ME9 5EB', 'ME10 6EC'],
-    'MSE|MD7X': ['ME7 0XA', 'ME8 0XB', 'ME9 0XC']
+    'MSE|MD7F': ['ME10 7FD', 'ME10 8FE', 'ME10 9FF']
   };
 
   var CONTRACT_DEPOTS_STRUCTURE = [
@@ -88,7 +88,7 @@
           { name: 'MD7C', type: 'Child', targetDel: 80, targetPu: 10, postcodes: ROUTE_POSTCODES['MSE|MD7C'] },
           { name: 'MD7D', type: 'Child', targetDel: 80, targetPu: 10, postcodes: ROUTE_POSTCODES['MSE|MD7D'] },
           { name: 'MD7E', type: 'Child', targetDel: 80, targetPu: 10, postcodes: ROUTE_POSTCODES['MSE|MD7E'] },
-          { name: 'MD7X', type: 'Flex', targetDel: 80, targetPu: 10, postcodes: ROUTE_POSTCODES['MSE|MD7X'] }
+          { name: 'MD7F', type: 'Child', targetDel: 80, targetPu: 10, postcodes: ROUTE_POSTCODES['MSE|MD7F'] }
         ]}
       ]
     }
@@ -131,7 +131,7 @@
     { name: 'MD7C', service: 'Pre-12', icon: 'bi-sunrise', tone: 'pre12', totalVolume: 108, pace: 'delayed' },
     { name: 'MD7D', service: 'Pre-12', icon: 'bi-sunrise', tone: 'pre12', totalVolume: 101, pace: 'complete' },
     { name: 'MD7E', service: 'Pre-12', icon: 'bi-sunrise', tone: 'pre12', totalVolume: 116, pace: 'ontrack' },
-    { name: 'MD7X', service: 'Pre-12', icon: 'bi-sunrise', tone: 'pre12', totalVolume: 73, pace: 'attention' }
+    { name: 'MD7F', service: 'Pre-12', icon: 'bi-sunrise', tone: 'pre12', totalVolume: 73, pace: 'attention' }
   ];
 
   function liveShiftExpectedFraction() {
