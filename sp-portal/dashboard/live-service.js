@@ -62,13 +62,7 @@
     liveRoute('MD7C', 'Pre-12', 'bi-sunrise', 'pre12', LIVE_SERVICE_STOPS[0].stops.slice(4, 6)),
     liveRoute('MD7D', 'Pre-12', 'bi-sunrise', 'pre12', LIVE_SERVICE_STOPS[0].stops.slice(6, 8)),
     liveRoute('MD7E', 'Pre-12', 'bi-sunrise', 'pre12', LIVE_SERVICE_STOPS[0].stops.slice(8, 10)),
-    liveRoute('MD7X', 'Pre-12', 'bi-sunrise', 'pre12', LIVE_SERVICE_STOPS[0].stops.slice(10, 12)),
-    liveRoute('MD7Q', 'Pre-12', 'bi-sunrise', 'pre12', LIVE_SERVICE_STOPS[0].stops.slice(12, 14)),
-    liveRoute('MD9A', 'ASR / DSR', 'bi-arrow-repeat', 'asr', [LIVE_SERVICE_STOPS[1].stops[0], LIVE_SERVICE_STOPS[2].stops[0]]),
-    liveRoute('MD9B', 'ASR / DSR', 'bi-arrow-repeat', 'asr', [LIVE_SERVICE_STOPS[1].stops[1], LIVE_SERVICE_STOPS[2].stops[1]]),
-    liveRoute('MD9C', 'ASR / DSR', 'bi-arrow-repeat', 'asr', [LIVE_SERVICE_STOPS[1].stops[2], LIVE_SERVICE_STOPS[2].stops[2]]),
-    liveRoute('MD9D', 'ASR / DSR', 'bi-arrow-repeat', 'asr', [LIVE_SERVICE_STOPS[1].stops[3], LIVE_SERVICE_STOPS[2].stops[3]]),
-    liveRoute('MD9X', 'ASR', 'bi-arrow-repeat', 'asr', LIVE_SERVICE_STOPS[1].stops.slice(4, 5))
+    liveRoute('MD7X', 'Pre-12', 'bi-sunrise', 'pre12', LIVE_SERVICE_STOPS[0].stops.slice(10, 12))
   ];
 
   /* progresso inicial simulado: parte de cada rota já concluída */

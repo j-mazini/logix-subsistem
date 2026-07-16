@@ -1,9 +1,76 @@
+/* Ported from dhl-vetting-tracker (BA Express Driver Vetting SOP v2.0 — Checklist Master Data).
+ * Extended with editing, notes, history, bulk actions, export, and officer assignment. */
+const CHECKLIST_TEMPLATE = [
+  {
+    title: 'Driver Registration & Application Form',
+    subtitle: 'Application Form data capture, conditional DVLA/Right to Work rules, first review and confirmation email.',
+    sla: 'Same day',
+    items: [
+      { title: 'Application Form data collected', required: true, detail: 'Name, phone, email, role type, date of birth, UK postcode/address, National Insurance Number, Right to Work and DVLA Share Code captured from the Application Form.' },
+      { title: 'Right to Work check', required: true, conditional: true, conditionNote: 'British/Irish does not require a Share Code. Online RTW routes require the Share Code.' },
+      { title: 'Driving Licence check', required: true, conditional: true, conditionNote: 'DVLA is not required when Role Type = Bicycle Courier.' },
+      { title: 'Registration data reviewed and exported', required: true, detail: 'Review the captured registration information against the Central Driver Record before sending confirmation.' },
+      { title: 'Confirmation e-mail sent to candidate', required: true, detail: 'Send the approved access message through the agreed communication channel.' },
+      { title: 'BA Application Form downloaded and signature status confirmed', required: true },
+      { title: 'Driver registration completed', required: true, detail: 'Create or confirm the driver record before starting vetting.' }
+    ]
+  },
+  {
+    title: 'Interview',
+    subtitle: 'Pre-interview information, interview scoring, work history review, DBS/reference checks and final interview decision.',
+    sla: 'Before or on interview day',
+    items: [
+      { sectionHeader: '2.1 Pre-Interview', title: 'Interview Information Recorded', required: true, detail: 'Interview Date, Start Time, End Time, Location, Interviewer and Supervisor recorded.' },
+      { title: 'Payment mode and company behaviour document downloaded', required: true, detail: 'Placeholder for the payment mode and company behaviour briefing document.' },
+      { sectionHeader: '2.2 Interview', title: 'Core Competencies Scored', required: true },
+      { title: 'Online test released and score reviewed', required: true, detail: 'Redirect to the online test module. Once the candidate completes the released test, the score appears in this checklist.' },
+      { title: 'DBS collected or requested', required: true },
+      { title: 'Work References recorded', required: true, detail: 'Employment history is submitted by the driver in the candidate portal (Work history form). References can be collected orally or by letter/e-mail; gaps of 28 days or more are flagged in the 5-year history review.' },
+      { title: '5 years history reviewed', required: true },
+      { title: 'Interview Notes recorded', required: true },
+      { title: 'Red Flags reviewed', required: true },
+      { title: 'Finish interview', required: true },
+      { sectionHeader: '2.3 Post Interview', title: 'Work Reference Check', required: true },
+      { title: 'DBS', required: true },
+      { title: 'APHIDS', conditional: true, conditionNote: 'Required for depots or routes that require aviation/security clearance.' },
+      { title: 'Final decision', required: true },
+      { title: 'Approval e-mail', required: true, detail: 'Copy and send the approval e-mail after the final decision is approved.' }
+    ]
+  },
+  {
+    title: 'Suitability Assessment',
+    subtitle: 'Criminal declaration, declaration of suitability and observations.',
+    sla: 'Same day as interview',
+    items: [
+      { title: 'Criminal record declaration recorded', required: true },
+      { title: 'Declaration of Suitability signed', required: true },
+      { title: 'Observations recorded', required: true }
+    ]
+  },
+  {
+    title: 'DHL Courses & Finalisation',
+    subtitle: 'DHL courses, original document collection, payment mode, DHL folder and final application completion.',
+    sla: 'Before driver start',
+    items: [
+      { title: 'Training courses booked and status recorded', required: true },
+      { title: 'Original documents collected and recorded', required: true },
+      { title: 'Cost model recorded', required: true },
+      { title: 'DHL folder organised, physical copies present and delivered', required: true },
+      { title: 'Driver application completed', required: true }
+    ]
+  }
+];
+
+const CHECKLIST_TOTAL_ITEMS = CHECKLIST_TEMPLATE.reduce((total, step) => total + step.items.length, 0);
+const VETTING_OFFICERS = ['Sarah Thompson', 'Michael Chen', 'Emma Rodriguez', 'James Wilson', 'Priya Patel'];
+
 class VettingAdmin {
   constructor() {
     this.candidates = [];
     this.currentStageFilter = 'All';
     this.searchQuery = '';
     this.currentCandidate = null;
+    this.selectedCandidates = new Set();
     this.checklistState = {};
     this.init();
   }
@@ -28,27 +95,37 @@ class VettingAdmin {
     this.checklistBody = document.getElementById('checklistBody');
     this.modalCandidateName = document.getElementById('modalCandidateName');
     this.btnSaveChecklist = document.getElementById('btnSaveChecklist');
+
+    // Additional modals
+    this.editModal = new bootstrap.Modal(document.getElementById('editModal'));
+    this.notesModal = new bootstrap.Modal(document.getElementById('notesModal'));
+    this.timelineModal = new bootstrap.Modal(document.getElementById('timelineModal'));
+    this.approvalModal = new bootstrap.Modal(document.getElementById('approvalModal'));
   }
 
   bindEvents() {
-    // Filter buttons
     document.querySelectorAll('.filter-btn').forEach(btn => {
       btn.addEventListener('click', (e) => this.setStageFilter(e.target.dataset.stage));
     });
 
-    // Search input
     this.searchInput.addEventListener('input', (e) => {
       this.searchQuery = e.target.value.toLowerCase();
       this.render();
     });
 
-    // Stat cards
     document.querySelectorAll('.stat-card[data-filter]').forEach(card => {
       card.addEventListener('click', (e) => this.setStageFilter(e.currentTarget.dataset.filter));
     });
 
-    // Save checklist
     this.btnSaveChecklist.addEventListener('click', () => this.saveChecklist());
+
+    // Export button
+    document.getElementById('btnExport')?.addEventListener('click', () => this.exportCSV());
+
+    // Bulk action buttons
+    document.getElementById('btnBulkApprove')?.addEventListener('click', () => this.bulkApprove());
+    document.getElementById('btnBulkReject')?.addEventListener('click', () => this.bulkReject());
+    document.getElementById('btnClearSelection')?.addEventListener('click', () => this.clearSelection());
   }
 
   setStageFilter(stage) {
@@ -68,24 +145,39 @@ class VettingAdmin {
     const vendors = ['FedEx', 'UPS', 'DPD', 'TNT'];
     const stages = ['Application', 'Pre-screen', 'Interview', 'Documents', 'Active', 'Rejected'];
 
-    this.candidates = names.map((name, i) => ({
-      id: `driver-${i + 1}`,
-      name,
-      email: `${name.toLowerCase().replace(' ', '.')}@email.com`,
-      phone: `+44 7${Math.floor(Math.random() * 900000000 + 100000000)}`,
-      vendor: vendors[Math.floor(Math.random() * vendors.length)],
-      stage: stages[Math.floor(Math.random() * stages.length)],
-      submittedAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-      daysInStage: Math.floor(Math.random() * 30),
-      slaBreached: Math.random() > 0.7,
-      checklist: [
-        { item: 'ID Verification', complete: Math.random() > 0.3 },
-        { item: 'Address Verification', complete: Math.random() > 0.3 },
-        { item: 'Background Check', complete: Math.random() > 0.4 },
-        { item: 'Driving License Check', complete: Math.random() > 0.2 },
-        { item: 'Insurance Verification', complete: Math.random() > 0.5 },
-        { item: 'Reference Check', complete: Math.random() > 0.4 },
-      ]
+    this.candidates = names.map((name, i) => {
+      const stage = stages[Math.floor(Math.random() * stages.length)];
+      const submittedAt = new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000);
+      return {
+        id: `driver-${i + 1}`,
+        name,
+        email: `${name.toLowerCase().replace(' ', '.')}@email.com`,
+        phone: `+44 7${Math.floor(Math.random() * 900000000 + 100000000)}`,
+        vendor: vendors[Math.floor(Math.random() * vendors.length)],
+        stage,
+        submittedAt: submittedAt.toISOString(),
+        daysInStage: Math.floor(Math.random() * 30),
+        slaBreached: Math.random() > 0.7,
+        checklist: this.buildChecklist(stage),
+        notes: [
+          { text: 'Initial review completed', author: 'Sarah Thompson', timestamp: new Date(submittedAt.getTime() + 86400000).toISOString() }
+        ],
+        history: [
+          { action: 'Created', field: 'stage', oldValue: null, newValue: 'Application', author: 'System', timestamp: submittedAt.toISOString() }
+        ],
+        assignedOfficer: VETTING_OFFICERS[Math.floor(Math.random() * VETTING_OFFICERS.length)],
+        tags: ['priority' + (i % 3 === 0 ? '-high' : i % 3 === 1 ? '-medium' : '-low')]
+      };
+    });
+  }
+
+  buildChecklist(stage) {
+    const progressRatio = { 'Application': 0.15, 'Pre-screen': 0.35, 'Interview': 0.6, 'Documents': 0.85, 'Active': 1, 'Rejected': 0.45 }[stage] || 0.3;
+    return CHECKLIST_TEMPLATE.map(step => ({
+      title: step.title,
+      subtitle: step.subtitle,
+      sla: step.sla,
+      items: step.items.map(item => ({ ...item, complete: Math.random() < progressRatio }))
     }));
   }
 
@@ -118,20 +210,21 @@ class VettingAdmin {
     const filtered = this.getFilteredCandidates();
     const stats = this.getStats();
 
-    // Update stats
     this.statTotal.textContent = stats.total;
     this.statInProgress.textContent = stats.inProgress;
     this.statApproved.textContent = stats.approved;
     this.statRejected.textContent = stats.rejected;
 
-    // Render table
     if (filtered.length === 0) {
-      this.candidatesBody.innerHTML = `<tr><td colspan="6" class="empty-cell">No candidates found</td></tr>`;
+      this.candidatesBody.innerHTML = `<tr><td colspan="8" class="empty-cell">No candidates found</td></tr>`;
       return;
     }
 
     this.candidatesBody.innerHTML = filtered.map(c => `
       <tr>
+        <td>
+          <input type="checkbox" class="candidate-checkbox" data-id="${c.id}" onchange="vettingApp.toggleCandidate('${c.id}')" />
+        </td>
         <td>
           <div class="candidate-cell">
             <div class="candidate-initials">${this.initials(c.name)}</div>
@@ -151,13 +244,19 @@ class VettingAdmin {
               `<span class="sla-breached"><span class="sla-dot-danger"></span>${c.daysInStage}d</span>` :
               `<span class="sla-normal"><span class="sla-dot-ok"></span>${c.daysInStage}d</span>`)}
         </td>
+        <td class="th-hidden"><span class="officer-badge">${c.assignedOfficer}</span></td>
         <td>
           <div class="actions-cell">
+            <button class="btn-action btn-edit" onclick="vettingApp.openEditModal('${c.id}')" title="Edit">✎</button>
+            <button class="btn-action btn-notes" onclick="vettingApp.openNotesModal('${c.id}')" title="Notes">💬</button>
+            <button class="btn-action btn-timeline" onclick="vettingApp.openTimelineModal('${c.id}')" title="Timeline">⏱</button>
             <button class="btn-checklist" onclick="vettingApp.showChecklist('${c.id}')">Checklist</button>
           </div>
         </td>
       </tr>
     `).join('');
+
+    this.updateBulkActionButtons();
   }
 
   initials(name) {
@@ -168,433 +267,254 @@ class VettingAdmin {
     return new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   }
 
+  formatDatetime(iso) {
+    return new Date(iso).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  }
+
+  toggleCandidate(candidateId) {
+    if (this.selectedCandidates.has(candidateId)) {
+      this.selectedCandidates.delete(candidateId);
+    } else {
+      this.selectedCandidates.add(candidateId);
+    }
+    this.updateBulkActionButtons();
+  }
+
+  updateBulkActionButtons() {
+    const bulkPanel = document.getElementById('bulkPanel');
+    const selectionCount = document.getElementById('selectionCount');
+    if (bulkPanel) {
+      bulkPanel.style.display = this.selectedCandidates.size > 0 ? 'block' : 'none';
+      if (selectionCount) selectionCount.textContent = this.selectedCandidates.size;
+    }
+  }
+
+  clearSelection() {
+    this.selectedCandidates.clear();
+    document.querySelectorAll('.candidate-checkbox').forEach(cb => cb.checked = false);
+    this.updateBulkActionButtons();
+  }
+
+  openEditModal(candidateId) {
+    this.currentCandidate = this.candidates.find(c => c.id === candidateId);
+    if (!this.currentCandidate) return;
+
+    document.getElementById('editName').value = this.currentCandidate.name;
+    document.getElementById('editEmail').value = this.currentCandidate.email;
+    document.getElementById('editPhone').value = this.currentCandidate.phone;
+    document.getElementById('editVendor').value = this.currentCandidate.vendor;
+    document.getElementById('editStage').value = this.currentCandidate.stage;
+    document.getElementById('editOfficer').value = this.currentCandidate.assignedOfficer;
+
+    this.editModal.show();
+  }
+
+  saveEdit() {
+    if (!this.currentCandidate) return;
+
+    const oldStage = this.currentCandidate.stage;
+    this.currentCandidate.name = document.getElementById('editName').value;
+    this.currentCandidate.email = document.getElementById('editEmail').value;
+    this.currentCandidate.phone = document.getElementById('editPhone').value;
+    this.currentCandidate.vendor = document.getElementById('editVendor').value;
+    this.currentCandidate.stage = document.getElementById('editStage').value;
+    this.currentCandidate.assignedOfficer = document.getElementById('editOfficer').value;
+
+    if (oldStage !== this.currentCandidate.stage) {
+      this.currentCandidate.history.push({
+        action: 'Updated',
+        field: 'stage',
+        oldValue: oldStage,
+        newValue: this.currentCandidate.stage,
+        author: 'Current User',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    this.editModal.hide();
+    this.render();
+  }
+
+  openNotesModal(candidateId) {
+    this.currentCandidate = this.candidates.find(c => c.id === candidateId);
+    if (!this.currentCandidate) return;
+
+    const notesList = document.getElementById('notesList');
+    notesList.innerHTML = (this.currentCandidate.notes || []).map(note => `
+      <div class="note-item">
+        <p class="note-text">${note.text}</p>
+        <p class="note-meta">${note.author} • ${this.formatDatetime(note.timestamp)}</p>
+      </div>
+    `).join('');
+
+    document.getElementById('newNoteText').value = '';
+    this.notesModal.show();
+  }
+
+  addNote() {
+    if (!this.currentCandidate) return;
+    const text = document.getElementById('newNoteText').value.trim();
+    if (!text) return;
+
+    if (!this.currentCandidate.notes) this.currentCandidate.notes = [];
+    this.currentCandidate.notes.push({
+      text,
+      author: 'Current User',
+      timestamp: new Date().toISOString()
+    });
+
+    this.openNotesModal(this.currentCandidate.id);
+  }
+
+  openTimelineModal(candidateId) {
+    this.currentCandidate = this.candidates.find(c => c.id === candidateId);
+    if (!this.currentCandidate) return;
+
+    const timeline = document.getElementById('timelineContent');
+    timeline.innerHTML = (this.currentCandidate.history || []).map(entry => `
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="timeline-content">
+          <p class="timeline-action"><strong>${entry.action}</strong> ${entry.field}</p>
+          <p class="timeline-detail">${entry.oldValue || '—'} → ${entry.newValue || '—'}</p>
+          <p class="timeline-meta">${entry.author} • ${this.formatDatetime(entry.timestamp)}</p>
+        </div>
+      </div>
+    `).join('');
+
+    this.timelineModal.show();
+  }
+
   showChecklist(candidateId) {
     this.currentCandidate = this.candidates.find(c => c.id === candidateId);
     if (!this.currentCandidate) return;
 
-    this.modalCandidateName.textContent = `${this.currentCandidate.name} — ${this.currentCandidate.email}`;
-    this.checklistBody.innerHTML = `
-      <div class="checklist-items">
-        ${this.currentCandidate.checklist.map((item, i) => `
-          <label class="checklist-item">
-            <input type="checkbox" data-item="${i}" ${item.complete ? 'checked' : ''} />
-            <div class="checklist-label">
-              <p class="checklist-title">${item.item}</p>
+    const steps = this.currentCandidate.checklist;
+    const doneCount = steps.reduce((n, step) => n + step.items.filter(it => it.complete).length, 0);
+
+    this.modalCandidateName.textContent = `${this.currentCandidate.name} — ${this.currentCandidate.email} · ${doneCount}/${CHECKLIST_TOTAL_ITEMS} complete`;
+    this.checklistBody.innerHTML = steps.map((step, s) => {
+      const stepDone = step.items.filter(it => it.complete).length;
+      return `
+        <div class="checklist-step">
+          <div class="checklist-step-header">
+            <div>
+              <p class="checklist-step-title">${step.title}</p>
+              <p class="checklist-step-subtitle">${step.subtitle}</p>
             </div>
-          </label>
-        `).join('')}
-      </div>
-    `;
+            <div class="checklist-step-meta">
+              ${step.sla ? `<span class="checklist-sla-badge">SLA: ${step.sla}</span>` : ''}
+              <span class="checklist-step-progress">${stepDone}/${step.items.length}</span>
+            </div>
+          </div>
+          <div class="checklist-items">
+            ${step.items.map((item, i) => `
+              ${item.sectionHeader ? `<p class="checklist-section-header">${item.sectionHeader}</p>` : ''}
+              <label class="checklist-item">
+                <input type="checkbox" data-step="${s}" data-item="${i}" ${item.complete ? 'checked' : ''} />
+                <div class="checklist-label">
+                  <p class="checklist-title">
+                    ${item.title}
+                    ${item.required ? '<span class="checklist-badge checklist-badge-required">Required</span>' : ''}
+                    ${item.conditional ? '<span class="checklist-badge checklist-badge-conditional">Conditional</span>' : ''}
+                  </p>
+                  ${item.detail ? `<p class="checklist-desc">${item.detail}</p>` : ''}
+                  ${item.conditional && item.conditionNote ? `<p class="checklist-condition-note">${item.conditionNote}</p>` : ''}
+                </div>
+              </label>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }).join('');
     this.checklistModal.show();
   }
 
   saveChecklist() {
     if (!this.currentCandidate) return;
     const checkboxes = document.querySelectorAll('#checklistBody input[type="checkbox"]');
-    checkboxes.forEach((cb, i) => {
-      if (this.currentCandidate.checklist[i]) {
-        this.currentCandidate.checklist[i].complete = cb.checked;
-      }
+    checkboxes.forEach(cb => {
+      const step = this.currentCandidate.checklist[Number(cb.dataset.step)];
+      const item = step && step.items[Number(cb.dataset.item)];
+      if (item) item.complete = cb.checked;
     });
     this.checklistModal.hide();
   }
-}
 
-// Initialize app when DOM is ready
-let vettingApp;
-document.addEventListener('DOMContentLoaded', () => {
-  vettingApp = new VettingAdmin();
-});
+  exportCSV() {
+    const filtered = this.getFilteredCandidates();
+    const headers = ['Name', 'Email', 'Phone', 'Vendor', 'Stage', 'Days in Stage', 'Assigned Officer', 'Submitted At'];
+    const rows = filtered.map(c => [
+      c.name,
+      c.email,
+      c.phone,
+      c.vendor,
+      c.stage,
+      c.daysInStage,
+      c.assignedOfficer,
+      this.formatDate(c.submittedAt)
+    ]);
 
-/* --- OLD CODE BELOW REMOVED --- */
-class OldVettingAdmin_Deprecated {
-  loadApplications() {
-    // Mock data - in production, fetch from API/database
-    this.applications = [
-      {
-        id: 'APP-001',
-        driverName: 'John Smith',
-        vendorId: 'DHL',
-        vendor: 'DHL Express',
-        appliedDate: '2026-07-10',
-        status: 'pending',
-        backgroundCheck: { status: 'clear', date: '2026-07-12' },
-        documents: {
-          drivingLicense: { status: 'verified', date: '2026-07-10' },
-          insurance: { status: 'pending', date: null },
-          crb: { status: 'clear', date: '2026-07-11' },
-          references: { status: 'verified', date: '2026-07-12' }
-        },
-        email: 'john.smith@email.com',
-        phone: '+44 7700 900 123',
-        experienceYears: 8,
-        licenseExpiry: '2028-03-15'
-      },
-      {
-        id: 'APP-002',
-        driverName: 'Sarah Johnson',
-        vendorId: 'FEDEX',
-        vendor: 'FedEx',
-        appliedDate: '2026-07-08',
-        status: 'in-review',
-        backgroundCheck: { status: 'pending', date: null },
-        documents: {
-          drivingLicense: { status: 'verified', date: '2026-07-08' },
-          insurance: { status: 'verified', date: '2026-07-09' },
-          crb: { status: 'pending', date: null },
-          references: { status: 'pending', date: null }
-        },
-        email: 'sarah.j@email.com',
-        phone: '+44 7700 900 456',
-        experienceYears: 5,
-        licenseExpiry: '2027-09-22'
-      },
-      {
-        id: 'APP-003',
-        driverName: 'Michael Chen',
-        vendorId: 'DHL',
-        vendor: 'DHL Express',
-        appliedDate: '2026-07-05',
-        status: 'approved',
-        backgroundCheck: { status: 'clear', date: '2026-07-06' },
-        documents: {
-          drivingLicense: { status: 'verified', date: '2026-07-05' },
-          insurance: { status: 'verified', date: '2026-07-05' },
-          crb: { status: 'clear', date: '2026-07-06' },
-          references: { status: 'verified', date: '2026-07-07' }
-        },
-        email: 'm.chen@email.com',
-        phone: '+44 7700 900 789',
-        experienceYears: 12,
-        licenseExpiry: '2029-01-10'
-      },
-      {
-        id: 'APP-004',
-        driverName: 'Emma Wilson',
-        vendorId: 'AMAZON',
-        vendor: 'Amazon Logistics',
-        appliedDate: '2026-07-01',
-        status: 'rejected',
-        backgroundCheck: { status: 'failed', date: '2026-07-02' },
-        documents: {
-          drivingLicense: { status: 'verified', date: '2026-07-01' },
-          insurance: { status: 'expired', date: null },
-          crb: { status: 'failed', date: '2026-07-02' },
-          references: { status: 'incomplete', date: null }
-        },
-        email: 'emma.w@email.com',
-        phone: '+44 7700 900 321',
-        experienceYears: 2,
-        licenseExpiry: '2025-11-30',
-        rejectionReason: 'Failed background check'
+    const csv = [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `vetting-candidates-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+  }
+
+  bulkApprove() {
+    if (this.selectedCandidates.size === 0) return;
+    this.selectedCandidates.forEach(id => {
+      const c = this.candidates.find(x => x.id === id);
+      if (c) {
+        const oldStage = c.stage;
+        c.stage = 'Active';
+        c.history.push({
+          action: 'Bulk Updated',
+          field: 'stage',
+          oldValue: oldStage,
+          newValue: 'Active',
+          author: 'Current User',
+          timestamp: new Date().toISOString()
+        });
       }
-    ];
-
-    this.populateVendorFilter();
-    this.updateStats();
-    this.applyFilters();
-  }
-
-  populateVendorFilter() {
-    const vendors = [...new Set(this.applications.map(app => app.vendor))];
-    this.filterVendor.innerHTML = '<option value="">All vendors</option>';
-    vendors.forEach(vendor => {
-      const option = document.createElement('option');
-      option.value = this.applications.find(a => a.vendor === vendor).vendorId;
-      option.textContent = vendor;
-      this.filterVendor.appendChild(option);
     });
+    this.clearSelection();
+    this.render();
   }
 
-  updateStats() {
-    this.pendingCount.textContent = this.applications.filter(a => a.status === 'pending').length;
-    this.approvedCount.textContent = this.applications.filter(a => a.status === 'approved').length;
-    this.rejectedCount.textContent = this.applications.filter(a => a.status === 'rejected').length;
-  }
-
-  applyFilters() {
-    const status = this.filterStatus.value;
-    const vendor = this.filterVendor.value;
-    const search = this.searchDriver.value.toLowerCase();
-
-    this.filteredApplications = this.applications.filter(app => {
-      const matchStatus = !status || app.status === status;
-      const matchVendor = !vendor || app.vendorId === vendor;
-      const matchSearch = !search ||
-        app.driverName.toLowerCase().includes(search) ||
-        app.id.toLowerCase().includes(search);
-
-      return matchStatus && matchVendor && matchSearch;
+  bulkReject() {
+    if (this.selectedCandidates.size === 0) return;
+    this.selectedCandidates.forEach(id => {
+      const c = this.candidates.find(x => x.id === id);
+      if (c) {
+        const oldStage = c.stage;
+        c.stage = 'Rejected';
+        c.history.push({
+          action: 'Bulk Updated',
+          field: 'stage',
+          oldValue: oldStage,
+          newValue: 'Rejected',
+          author: 'Current User',
+          timestamp: new Date().toISOString()
+        });
+      }
     });
-
-    this.renderTable();
-  }
-
-  renderTable() {
-    if (this.filteredApplications.length === 0) {
-      this.emptyState.removeAttribute('hidden');
-      this.applicationsTableBody.innerHTML = '';
-      return;
-    }
-
-    this.emptyState.setAttribute('hidden', '');
-    this.applicationsTableBody.innerHTML = '';
-
-    this.filteredApplications.forEach(app => {
-      const row = document.createElement('tr');
-      row.innerHTML = `
-        <td class="driver-info">
-          <div class="driver-name">${this.escapeHtml(app.driverName)}</div>
-          <div class="driver-id">${app.id}</div>
-        </td>
-        <td>${this.escapeHtml(app.vendor)}</td>
-        <td>${this.formatDate(app.appliedDate)}</td>
-        <td>
-          <span class="status-badge ${app.status}">
-            ${app.status.replace('-', ' ')}
-          </span>
-        </td>
-        <td>
-          <div class="check-badge ${this.getBackgroundCheckClass(app.backgroundCheck.status)}">
-            <i class="bi bi-${this.getBackgroundCheckIcon(app.backgroundCheck.status)}"></i>
-            <span>${this.capitalizeFirst(app.backgroundCheck.status)}</span>
-          </div>
-        </td>
-        <td>
-          <span class="doc-count">${this.countVerifiedDocs(app.documents)}/4</span>
-        </td>
-        <td>
-          <div class="actions-cell">
-            <button class="styled-button styled-button--primary btn-view" data-app-id="${app.id}">
-              <i class="bi bi-eye"></i> View
-            </button>
-            ${app.status === 'pending' || app.status === 'in-review' ? `
-              <button class="styled-button styled-button--success btn-approve" data-app-id="${app.id}">
-                <i class="bi bi-check-circle"></i> Approve
-              </button>
-              <button class="styled-button styled-button--danger btn-reject" data-app-id="${app.id}">
-                <i class="bi bi-x-circle"></i> Reject
-              </button>
-            ` : ''}
-          </div>
-        </td>
-      `;
-
-      row.querySelector('.btn-view').addEventListener('click', () => this.viewApplication(app.id));
-      row.querySelector('.btn-approve')?.addEventListener('click', () => this.quickApprove(app.id));
-      row.querySelector('.btn-reject')?.addEventListener('click', () => this.quickReject(app.id));
-
-      this.applicationsTableBody.appendChild(row);
-    });
-  }
-
-  viewApplication(appId) {
-    this.currentApplication = this.applications.find(a => a.id === appId);
-    if (!this.currentApplication) return;
-
-    const app = this.currentApplication;
-    this.vettingModalTitle.textContent = `${app.driverName} - ${app.id}`;
-
-    this.vettingModalBody.innerHTML = `
-      <div class="vetting-details">
-        <div class="detail-card">
-          <div class="detail-card-title">Driver Name</div>
-          <div class="detail-card-value">${this.escapeHtml(app.driverName)}</div>
-        </div>
-        <div class="detail-card">
-          <div class="detail-card-title">Vendor</div>
-          <div class="detail-card-value">${this.escapeHtml(app.vendor)}</div>
-        </div>
-        <div class="detail-card">
-          <div class="detail-card-title">Email</div>
-          <div class="detail-card-value"><a href="mailto:${app.email}">${app.email}</a></div>
-        </div>
-        <div class="detail-card">
-          <div class="detail-card-title">Phone</div>
-          <div class="detail-card-value"><a href="tel:${app.phone}">${app.phone}</a></div>
-        </div>
-        <div class="detail-card">
-          <div class="detail-card-title">Experience</div>
-          <div class="detail-card-value">${app.experienceYears} years</div>
-        </div>
-        <div class="detail-card">
-          <div class="detail-card-title">License Expiry</div>
-          <div class="detail-card-value">${this.formatDate(app.licenseExpiry)}</div>
-        </div>
-      </div>
-
-      <div style="margin-top: 1.5rem;">
-        <h6 style="font-weight: 600; margin-bottom: 1rem;">Background Checks</h6>
-        <div class="vetting-details">
-          ${this.renderBackgroundChecks(app.documents)}
-        </div>
-      </div>
-
-      ${app.status === 'rejected' ? `
-        <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(239, 68, 68, 0.1); border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.2);">
-          <strong style="color: #dc2626;">Rejection Reason:</strong>
-          <p style="margin: 0.5rem 0 0;">${this.escapeHtml(app.rejectionReason)}</p>
-        </div>
-      ` : ''}
-    `;
-
-    // Update modal buttons visibility
-    const isActionable = app.status === 'pending' || app.status === 'in-review';
-    this.btnApprove.hidden = !isActionable;
-    this.btnReject.hidden = !isActionable;
-
-    this.vettingModal.show();
-  }
-
-  renderBackgroundChecks(documents) {
-    return Object.entries(documents).map(([key, doc]) => `
-      <div class="detail-card">
-        <div class="detail-card-title">${this.formatDocName(key)}</div>
-        <div class="check-badge ${this.getCheckClass(doc.status)}">
-          <i class="bi bi-${this.getCheckIcon(doc.status)}"></i>
-          <span>${this.capitalizeFirst(doc.status)}</span>
-        </div>
-        ${doc.date ? `<div style="font-size: 0.8rem; color: var(--text-light); margin-top: 0.5rem;">${this.formatDate(doc.date)}</div>` : ''}
-      </div>
-    `).join('');
-  }
-
-  approveApplication() {
-    if (!this.currentApplication) return;
-    this.currentApplication.status = 'approved';
-    this.updateStats();
-    this.applyFilters();
-    this.vettingModal.hide();
-    this.showNotification('Application approved successfully', 'success');
-  }
-
-  rejectApplication() {
-    if (!this.currentApplication) return;
-    const reason = prompt('Please provide a rejection reason:');
-    if (!reason) return;
-
-    this.currentApplication.status = 'rejected';
-    this.currentApplication.rejectionReason = reason;
-    this.updateStats();
-    this.applyFilters();
-    this.vettingModal.hide();
-    this.showNotification('Application rejected', 'danger');
-  }
-
-  quickApprove(appId) {
-    const app = this.applications.find(a => a.id === appId);
-    if (!app) return;
-    this.currentApplication = app;
-    this.approveApplication();
-  }
-
-  quickReject(appId) {
-    const app = this.applications.find(a => a.id === appId);
-    if (!app) return;
-    this.currentApplication = app;
-    this.rejectApplication();
-  }
-
-  // Utility methods
-  formatDate(date) {
-    return new Date(date).toLocaleDateString('en-GB', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  }
-
-  formatDocName(key) {
-    const names = {
-      drivingLicense: 'Driving License',
-      insurance: 'Insurance',
-      crb: 'CRB Check',
-      references: 'References'
-    };
-    return names[key] || key;
-  }
-
-  capitalizeFirst(str) {
-    return str.charAt(0).toUpperCase() + str.slice(1);
-  }
-
-  escapeHtml(text) {
-    const map = {
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#039;'
-    };
-    return text.replace(/[&<>"']/g, m => map[m]);
-  }
-
-  countVerifiedDocs(documents) {
-    return Object.values(documents).filter(d => d.status === 'verified' || d.status === 'clear').length;
-  }
-
-  getBackgroundCheckClass(status) {
-    const map = {
-      'clear': 'complete',
-      'failed': 'failed',
-      'pending': 'incomplete'
-    };
-    return map[status] || 'incomplete';
-  }
-
-  getBackgroundCheckIcon(status) {
-    const map = {
-      'clear': 'check-circle-fill',
-      'failed': 'x-circle-fill',
-      'pending': 'hourglass-split'
-    };
-    return map[status] || 'question-circle';
-  }
-
-  getCheckClass(status) {
-    const map = {
-      'verified': 'complete',
-      'clear': 'complete',
-      'failed': 'failed',
-      'expired': 'failed',
-      'incomplete': 'incomplete',
-      'pending': 'incomplete'
-    };
-    return map[status] || 'incomplete';
-  }
-
-  getCheckIcon(status) {
-    const map = {
-      'verified': 'check-circle-fill',
-      'clear': 'check-circle-fill',
-      'failed': 'x-circle-fill',
-      'expired': 'exclamation-circle-fill',
-      'incomplete': 'hourglass-split',
-      'pending': 'hourglass-split'
-    };
-    return map[status] || 'question-circle';
-  }
-
-  showNotification(message, type) {
-    const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
-    const alert = document.createElement('div');
-    alert.className = `alert ${alertClass} alert-dismissible fade show`;
-    alert.innerHTML = `
-      ${message}
-      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-    document.body.insertBefore(alert, document.body.firstChild);
-    setTimeout(() => alert.remove(), 5000);
+    this.clearSelection();
+    this.render();
   }
 }
 
-// Initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-  new VettingAdmin();
-});
-
-// Initialize app when DOM is ready
 let vettingApp;
 document.addEventListener('DOMContentLoaded', () => {
   vettingApp = new VettingAdmin();
+
+  // Additional event listeners for modals
+  document.getElementById('btnSaveEdit')?.addEventListener('click', () => vettingApp.saveEdit());
+  document.getElementById('btnAddNote')?.addEventListener('click', () => vettingApp.addNote());
+  document.getElementById('newNoteText')?.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter' && e.ctrlKey) vettingApp.addNote();
+  });
 });

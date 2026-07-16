@@ -12,10 +12,6 @@ from collections import OrderedDict
 # Rotas por depot (igual CONTRACT_DEPOTS_STRUCTURE). targetDel=80, targetPu=10
 ROUTES = [
     ("MSE", "MD7A"), ("MSE", "MD7B"), ("MSE", "MD7C"), ("MSE", "MD7D"), ("MSE", "MD7E"), ("MSE", "MD7X"),
-    ("LCY", "DY1A"), ("LCY", "DY1B"), ("LCY", "DY1C"), ("LCY", "DY1X"),
-    ("LCY", "DY2A"), ("LCY", "DY2B"), ("LCY", "DY2C"), ("LCY", "DY2D"), ("LCY", "DY2X"),
-    ("LSE", "LL3A"), ("LSE", "LL3B"), ("LSE", "LL3C"), ("LSE", "LL3D"), ("LSE", "LL3X"),
-    ("LSE", "LL4A"), ("LSE", "LL4B"), ("LSE", "LL4X"),
 ]
 TARGET_DEL = 80
 TARGET_PU = 10

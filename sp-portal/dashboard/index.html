@@ -178,85 +178,6 @@
                 </div>
               </section>
 
-              <div id="spLegacyBlocks" hidden aria-hidden="true">
-              <!-- Blocos legados preservados (My Deliveries / Operations / Financial / LD).
-                   Cópia de referência em legacy/legacy-dashboard-blocks.html.
-                   Mantidos ocultos no DOM porque dashboard.js referencia estes IDs. -->
-              <!-- Bloco: Disco (dados do Excel DISCO_RouteData) -->
-              <section class="dashboard-section dashboard-block mb-2" id="spDiscoBlock" aria-label="Disco">
-                <div class="card sp-dashboard-module-card overflow-hidden">
-                  <div class="dashboard-block-header d-flex flex-wrap align-items-center justify-content-between gap-3">
-                    <div>
-                      <h2 class="dashboard-block-title mb-1"><i class="bi bi-truck me-2" aria-hidden="true"></i>My deliveries</h2>
-                      <p class="dashboard-block-desc mb-0">These are your operations today! We already organised it for you!</p>
-                    </div>
-                    <div class="disco-header-stops-and-switch d-flex align-items-center gap-2">
-                      <div class="disco-header-stops-kpi rounded-3 px-3 py-2 d-flex flex-column align-items-center justify-content-center" id="discoHeaderStopsKpi" aria-label="Total stops">
-                        <span class="disco-header-stops-label small text-uppercase fw-semibold text-muted">Stops</span>
-                        <span class="disco-header-stops-value fs-4 fw-bold text-primary" id="dashboardStopsValue">—</span>
-                      </div>
-                      <div class="disco-am-pm-switch disco-am-pm-switch--vertical" role="group" aria-label="Morning or Afternoon">
-                        <button type="button" class="disco-gravura disco-gravura-am disco-gravura-on" id="discoGravuraAm" title="Morning (AM)" aria-pressed="true">AM</button>
-                        <button type="button" class="disco-gravura disco-gravura-pm" id="discoGravuraPm" title="Afternoon (PM)" aria-pressed="false">PM</button>
-                      </div>
-                    </div>
-                  </div>
-                  <!-- Filtros no topo do bloco (Bootstrap flex + gap) -->
-                  <div class="disco-filters disco-filters--top d-flex flex-wrap align-items-end gap-3 gap-md-4" id="discoFiltersWrap">
-                    <div class="disco-filter-group flex-shrink-0">
-                      <span class="disco-filter-label d-block mb-1">Depot</span>
-                      <div id="discoDepotChips" class="disco-chips d-flex flex-wrap gap-2" role="group" aria-label="Filter by depot"></div>
-                    </div>
-                    <div class="disco-filter-group flex-shrink-0">
-                      <span class="disco-filter-label d-block mb-1">Loop</span>
-                      <div id="discoLoopChips" class="disco-chips d-flex flex-wrap gap-2" role="group" aria-label="Filter by loop"></div>
-                    </div>
-                  </div>
-                  <div class="dashboard-block-content">
-                    <!-- Resumo geral (Summary) – inclui Network & Delays dentro -->
-                    <div class="disco-summary-block" id="discoSummaryBlock">
-                      <div class="disco-summary-card">
-                        <div class="disco-summary-card-header">
-                          <h3 class="disco-summary-title">Summary</h3>
-                        </div>
-                        <div class="disco-summary-card-body">
-                          <div class="disco-summary-kpi-row">
-                            <div class="disco-summary-grid" id="discoSummaryGrid"></div>
-                            <div id="spNetworkDelayWrap" class="sp-network-delay-box disco-summary-network-delays">
-                              <div class="sp-network-delay-card-inner">
-                                <div class="sp-network-delay-card-header">
-                                  <span class="sp-network-delay-card-title"><i class="bi bi-wifi"></i> Network &amp; Delays</span>
-                                </div>
-                                <div class="sp-network-delay-card-body">
-                                  <ul class="list-group list-group-flush sp-network-delay-list" id="spNetworkDelayList" role="list"></ul>
-                                  <div id="spNetworkDelayEmpty" class="sp-network-delay-empty" role="status">
-                                    <span>No notifications yet.</span>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <!-- Cards por depot (Depot = Todos): um card por depot com Pre-12, ASR e DSR -->
-                    <div class="disco-depot-blocks-wrap hidden" id="discoDepotBlocksWrap">
-                      <div class="disco-route-blocks disco-depot-blocks" id="discoDepotBlocks"></div>
-                    </div>
-                    <!-- Blocos por loop (depot selecionado, loop = Todos): um card por loop com Pre-12, ASR e DSR -->
-                    <div class="disco-loop-summary-block hidden" id="discoLoopSummaryBlock">
-                      <h3 class="disco-loop-summary-title" id="discoLoopSummaryTitle">Depot loops</h3>
-                      <div class="disco-route-blocks" id="discoLoopSummaryGrid"></div>
-                    </div>
-                    <!-- Blocos resumidos das rotas (depot + loop selecionados) -->
-                    <div id="discoRouteBlocks" class="disco-route-blocks"></div>
-                    <div id="discoNoData" class="disco-no-data alert alert-warning mb-0 hidden">
-                      <i class="bi bi-info-circle me-2"></i>No Disco data available. Run the script with the Excel file to generate <code>assets/disco-data.js</code>.
-                    </div>
-                  </div>
-                </div>
-              </section>
-
               <!-- Bloco: Last Day Operations + SPMS (Financials) -->
               <section class="dashboard-section dashboard-block mb-2" id="spDashboardFoldersBlock" aria-label="Last Day Operations / Financials">
                 <div class="card sp-dashboard-module-card sp-dashboard-module-card--operations overflow-hidden">
@@ -625,6 +546,88 @@
                   </div>
                 </div>
               </section>
+
+              <div id="spLegacyBlocks" hidden aria-hidden="true">
+              <!-- Bloco legado preservado (My Deliveries / Disco).
+                   Cópia de referência em legacy/legacy-dashboard-blocks.html.
+                   Mantido oculto no DOM porque dashboard.js referencia estes IDs.
+                   O bloco de Operations/Financial/LD (#spDashboardFoldersBlock) foi
+                   restaurado à homepage em 2026-07-16, abaixo do Live Service. -->
+              <!-- Bloco: Disco (dados do Excel DISCO_RouteData) -->
+              <section class="dashboard-section dashboard-block mb-2" id="spDiscoBlock" aria-label="Disco">
+                <div class="card sp-dashboard-module-card overflow-hidden">
+                  <div class="dashboard-block-header d-flex flex-wrap align-items-center justify-content-between gap-3">
+                    <div>
+                      <h2 class="dashboard-block-title mb-1"><i class="bi bi-truck me-2" aria-hidden="true"></i>My deliveries</h2>
+                      <p class="dashboard-block-desc mb-0">These are your operations today! We already organised it for you!</p>
+                    </div>
+                    <div class="disco-header-stops-and-switch d-flex align-items-center gap-2">
+                      <div class="disco-header-stops-kpi rounded-3 px-3 py-2 d-flex flex-column align-items-center justify-content-center" id="discoHeaderStopsKpi" aria-label="Total stops">
+                        <span class="disco-header-stops-label small text-uppercase fw-semibold text-muted">Stops</span>
+                        <span class="disco-header-stops-value fs-4 fw-bold text-primary" id="dashboardStopsValue">—</span>
+                      </div>
+                      <div class="disco-am-pm-switch disco-am-pm-switch--vertical" role="group" aria-label="Morning or Afternoon">
+                        <button type="button" class="disco-gravura disco-gravura-am disco-gravura-on" id="discoGravuraAm" title="Morning (AM)" aria-pressed="true">AM</button>
+                        <button type="button" class="disco-gravura disco-gravura-pm" id="discoGravuraPm" title="Afternoon (PM)" aria-pressed="false">PM</button>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- Filtros no topo do bloco (Bootstrap flex + gap) -->
+                  <div class="disco-filters disco-filters--top d-flex flex-wrap align-items-end gap-3 gap-md-4" id="discoFiltersWrap">
+                    <div class="disco-filter-group flex-shrink-0">
+                      <span class="disco-filter-label d-block mb-1">Depot</span>
+                      <div id="discoDepotChips" class="disco-chips d-flex flex-wrap gap-2" role="group" aria-label="Filter by depot"></div>
+                    </div>
+                    <div class="disco-filter-group flex-shrink-0">
+                      <span class="disco-filter-label d-block mb-1">Loop</span>
+                      <div id="discoLoopChips" class="disco-chips d-flex flex-wrap gap-2" role="group" aria-label="Filter by loop"></div>
+                    </div>
+                  </div>
+                  <div class="dashboard-block-content">
+                    <!-- Resumo geral (Summary) – inclui Network & Delays dentro -->
+                    <div class="disco-summary-block" id="discoSummaryBlock">
+                      <div class="disco-summary-card">
+                        <div class="disco-summary-card-header">
+                          <h3 class="disco-summary-title">Summary</h3>
+                        </div>
+                        <div class="disco-summary-card-body">
+                          <div class="disco-summary-kpi-row">
+                            <div class="disco-summary-grid" id="discoSummaryGrid"></div>
+                            <div id="spNetworkDelayWrap" class="sp-network-delay-box disco-summary-network-delays">
+                              <div class="sp-network-delay-card-inner">
+                                <div class="sp-network-delay-card-header">
+                                  <span class="sp-network-delay-card-title"><i class="bi bi-wifi"></i> Network &amp; Delays</span>
+                                </div>
+                                <div class="sp-network-delay-card-body">
+                                  <ul class="list-group list-group-flush sp-network-delay-list" id="spNetworkDelayList" role="list"></ul>
+                                  <div id="spNetworkDelayEmpty" class="sp-network-delay-empty" role="status">
+                                    <span>No notifications yet.</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- Cards por depot (Depot = Todos): um card por depot com Pre-12, ASR e DSR -->
+                    <div class="disco-depot-blocks-wrap hidden" id="discoDepotBlocksWrap">
+                      <div class="disco-route-blocks disco-depot-blocks" id="discoDepotBlocks"></div>
+                    </div>
+                    <!-- Blocos por loop (depot selecionado, loop = Todos): um card por loop com Pre-12, ASR e DSR -->
+                    <div class="disco-loop-summary-block hidden" id="discoLoopSummaryBlock">
+                      <h3 class="disco-loop-summary-title" id="discoLoopSummaryTitle">Depot loops</h3>
+                      <div class="disco-route-blocks" id="discoLoopSummaryGrid"></div>
+                    </div>
+                    <!-- Blocos resumidos das rotas (depot + loop selecionados) -->
+                    <div id="discoRouteBlocks" class="disco-route-blocks"></div>
+                    <div id="discoNoData" class="disco-no-data alert alert-warning mb-0 hidden">
+                      <i class="bi bi-info-circle me-2"></i>No Disco data available. Run the script with the Excel file to generate <code>assets/disco-data.js</code>.
+                    </div>
+                  </div>
+                </div>
+              </section>
+
               </div><!-- /#spLegacyBlocks -->
 
               <!-- Navegação por categoria -->

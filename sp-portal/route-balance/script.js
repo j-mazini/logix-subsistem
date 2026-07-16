@@ -214,7 +214,6 @@ class RouteBalanceApp {
           name: routeName,
           vendor: String(row.vendor || '').trim() || this.pick(this.VENDORS),
           driver: String(row.driver || '').trim() || this.pick(this.DRIVERS),
-          vehicle: String(row.vehicle || '').trim() || this.pick(this.VEHICLES),
           target: Number(row.target) || 85,
           totalStops: 0, completedStops: 0, completion: 0,
           deliveries: 0, pickups: 0,
@@ -352,7 +351,6 @@ class RouteBalanceApp {
     document.getElementById('btnExportCsv').addEventListener('click', () => this.exportCsv());
     document.getElementById('btnSaveRoute').addEventListener('click', () => this.saveNewRoute());
     document.getElementById('btnSaveStop').addEventListener('click', () => this.saveStopEdit());
-    document.getElementById('btnViewAllPre12').addEventListener('click', () => this.showPre12Modal());
     document.getElementById('btnAddPostcode').addEventListener('click', () => this.showAddPostcodeModal());
     document.getElementById('btnConfirmAddPostcode').addEventListener('click', () => this.confirmAddPostcode());
 
@@ -476,6 +474,24 @@ class RouteBalanceApp {
         toggleBtn.classList.toggle('expanded', willExpand);
         const detailRow = toggleBtn.closest('tr.subpostcode-row')?.nextElementSibling;
         if (detailRow && detailRow.classList.contains('subpostcode-detail-row')) {
+          detailRow.classList.toggle('collapsed', !willExpand);
+        }
+        return;
+      }
+
+      const pre12Toggle = e.target.closest('.pre12-toggle');
+      if (pre12Toggle) {
+        e.stopPropagation();
+        const routeId = pre12Toggle.dataset.routeId;
+        const key = `pre12:${routeId}`;
+        const willExpand = !this.expandedSubpostcodes.has(key);
+
+        if (willExpand) this.expandedSubpostcodes.add(key);
+        else this.expandedSubpostcodes.delete(key);
+
+        pre12Toggle.classList.toggle('expanded', willExpand);
+        const detailRow = pre12Toggle.closest('tr.pre12-row')?.nextElementSibling;
+        if (detailRow && detailRow.classList.contains('pre12-detail-row')) {
           detailRow.classList.toggle('collapsed', !willExpand);
         }
         return;
@@ -706,15 +722,6 @@ class RouteBalanceApp {
   }
 
   /** Get all Pre-12 stops grouped by route. */
-  getPre12Stops() {
-    const stops = [];
-    this.routes.forEach(route => {
-      const pre12Stops = route.stops.filter(s => s.pre12 && !s.pm);
-      pre12Stops.forEach(s => stops.push({ ...s, routeName: route.name, vendor: route.vendor }));
-    });
-    return stops;
-  }
-
   /* ==================== ACTIONS ==================== */
 
   refresh() {
@@ -747,9 +754,7 @@ class RouteBalanceApp {
       document.getElementById(id).innerHTML =
         arr.map(v => `<option value="${v}">${v}</option>`).join('');
     };
-    fill('newVendor', this.VENDORS);
     fill('newDriver', this.DRIVERS);
-    fill('newVehicle', this.VEHICLES);
     new bootstrap.Modal(document.getElementById('addRouteModal')).show();
   }
 
@@ -765,9 +770,8 @@ class RouteBalanceApp {
     this.routes.push({
       id: Date.now(),
       name,
-      vendor: document.getElementById('newVendor').value,
+      vendor: document.getElementById('newDriver').value,
       driver: document.getElementById('newDriver').value,
-      vehicle: document.getElementById('newVehicle').value,
       target: isNaN(target) ? 85 : target,
       totalStops: 0, completedStops: 0, completion: 0,
       deliveries: 0, pickups: 0,
@@ -866,45 +870,8 @@ class RouteBalanceApp {
 
   render() {
     this.updateDashboardCards();
-    this.renderPre12Section();
     this.renderSummaryTable();
     this.renderRouteBlocks();
-  }
-
-  renderPre12Section() {
-    const pre12Stops = this.getPre12Stops();
-    const section = document.getElementById('pre12Section');
-    const grid = document.getElementById('pre12CardsGrid');
-
-    if (pre12Stops.length === 0) {
-      section.style.display = 'none';
-      return;
-    }
-
-    section.style.display = 'block';
-
-    // Group by route
-    const byRoute = new Map();
-    pre12Stops.forEach(s => {
-      if (!byRoute.has(s.routeName)) byRoute.set(s.routeName, []);
-      byRoute.get(s.routeName).push(s);
-    });
-
-    grid.innerHTML = [...byRoute.entries()].map(([routeName, stops]) => `
-      <div class="pre12-card">
-        <div class="pre12-card-header">
-          <h4>${routeName}</h4>
-          <span class="pre12-card-count">${stops.length}</span>
-        </div>
-        <div class="pre12-card-list">
-          ${stops.slice(0, 3).map(s => `
-            <div class="pre12-item">
-              <span class="pre12-postcode">${s.postcode}</span>
-              <span class="pre12-customer">${s.customer}</span>
-            </div>`).join('')}
-          ${stops.length > 3 ? `<div class="pre12-more">+${stops.length - 3} more</div>` : ''}
-        </div>
-      </div>`).join('');
   }
 
   populateVendorFilter() {
@@ -928,7 +895,6 @@ class RouteBalanceApp {
     set('pickupsCard', pickups);
     set('sprCard', Math.round(avg(routes.map(r => r.spr))));
     set('targetLoopCard', Math.round(avg(routes.map(r => r.target))) + '%');
-    set('completionCard', Math.round(avg(routes.map(r => r.completion))) + '%');
     set('totalRoutesCard', routes.length);
     set('driversOnlineCard', new Set(routes.filter(r => r.status === 'running').map(r => r.driver)).size);
   }
@@ -1060,7 +1026,7 @@ class RouteBalanceApp {
         const rebalanceClass = this.rebalanceMode ? 'rebalance-mode' : '';
 
         return `
-        <section class="route-block ${rebalanceClass}" data-route-id="${route.id}">
+        <section class="route-block status-${route.status} ${rebalanceClass}" data-route-id="${route.id}">
           <div class="route-block-header">
             <h3 class="route-block-title">Route ${route.name}</h3>
             <div class="route-block-header-right">
@@ -1071,11 +1037,6 @@ class RouteBalanceApp {
             </div>
           </div>
 
-        <div class="progress-bar-container">
-          <div class="progress-bar-wrapper">
-            <div class="progress-bar-fill" style="width:${route.completion}%"></div>
-          </div>
-        </div>
 
         <div class="route-block-content">
           <div class="route-info-grid">
@@ -1089,28 +1050,13 @@ class RouteBalanceApp {
               <span class="info-box-label">Driver</span>
               <span class="info-box-value">${route.driver}</span>
             </div>
-            <div class="info-box">
-              <span class="info-box-label">Vehicle</span>
-              <select class="info-box-select" data-field="vehicle" title="Change vehicle">
-                ${this.VEHICLES.map(v => `<option value="${v}" ${v === route.vehicle ? 'selected' : ''}>${v}</option>`).join('')}
-              </select>
-            </div>
-            <div class="info-box">
-              <span class="info-box-label">Sort</span>
-              <select class="info-box-select sort-attendance-select sort-attendance-${route.sortAttendance}"
-                      data-field="sortAttendance" title="Driver attendance at the sort">
-                <option value="yes" ${route.sortAttendance === 'yes' ? 'selected' : ''}>Attended</option>
-                <option value="late" ${route.sortAttendance === 'late' ? 'selected' : ''}>Late</option>
-                <option value="no" ${route.sortAttendance === 'no' ? 'selected' : ''}>No-show</option>
-              </select>
-            </div>
           </div>
 
           <div class="route-table-responsive">
             <table class="route-table">
               <thead>
                 <tr>
-                  <th>Subpostcode</th><th>DEL</th><th>PU</th><th>Total</th><th>Completion %</th><th>Status</th>
+                  <th>Subpostcode</th><th>DEL</th><th>PU</th><th>Total</th><th>Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -1133,11 +1079,10 @@ class RouteBalanceApp {
                     <td>${g.del}</td>
                     <td>${g.pu}</td>
                     <td>${g.total}</td>
-                    <td>${g.completion}%</td>
                     <td>${this.statusBadge(g.allCompleted ? 'completed' : 'pending')}</td>
                   </tr>
                   <tr class="subpostcode-detail-row ${expanded ? '' : 'collapsed'}">
-                    <td colspan="6">
+                    <td colspan="5">
                       <div class="postcode-dropdown">
                         ${g.postcodes.map(p => `
                           <div class="postcode-dropdown-item">
@@ -1181,32 +1126,46 @@ class RouteBalanceApp {
           </div>
 
           ${route.pre12 > 0 ? `
-          <div class="pre12-block ${this.filterPre12 ? 'pre12-block--active' : ''}" data-action="toggle-pre12-filter" data-route-id="${route.id}">
-            <div class="pre12-block-header">
-              <h4 class="pre12-block-title">
-                <i class="bi bi-clock-history"></i> Pre 12 Stops (${route.pre12})
-              </h4>
-              <span class="pre12-filter-hint">Click to filter</span>
-            </div>
-            <div class="pre12-block-content">
-              ${groups.filter(g => g.pre12).map(g => `
-                <div class="pre12-group">
-                  <div class="pre12-group-header">
-                    <span class="pre12-group-code">${g.code}</span>
-                    <span class="pre12-group-count">${g.postcodes.filter(p => p.pre12).length} postcode${g.postcodes.filter(p => p.pre12).length === 1 ? '' : 's'}</span>
-                  </div>
-                  <div class="pre12-items">
-                    ${g.postcodes.filter(p => p.pre12).map(p => `
-                      <div class="pre12-item">
-                        <span class="pre12-postcode">${p.postcode}</span>
-                        <span class="pre12-customer">${p.stops[0]?.customer || 'N/A'}</span>
-                        <span class="pre12-count">${p.del + p.pu} stop${(p.del + p.pu) === 1 ? '' : 's'}</span>
-                      </div>
-                    `).join('')}
-                  </div>
-                </div>
-              `).join('')}
-            </div>
+          <!-- Pre-12 row (collapsible within table) -->
+          <div class="pre12-table-wrapper" style="margin-top: 1rem; margin-bottom: 1rem;">
+            <table class="route-table pre12-sub-table">
+              <tbody>
+                <tr class="pre12-row" data-route-id="${route.id}">
+                  <td class="pc-cell">
+                    <button type="button" class="pre12-toggle" data-action="toggle-pre12" data-route-id="${route.id}">
+                      <i class="bi bi-chevron-right"></i> Pre 12 Stops
+                    </button>
+                    <span class="postcode-count-badge">${route.pre12} postcode${route.pre12 === 1 ? '' : 's'}</span>
+                  </td>
+                  <td></td>
+                  <td></td>
+                  <td>${route.pre12}</td>
+                  <td></td>
+                </tr>
+                <tr class="pre12-detail-row collapsed" data-route-id="${route.id}">
+                  <td colspan="5">
+                    <div class="pre12-dropdown">
+                      ${groups.filter(g => g.pre12).map(g => `
+                        <div class="pre12-group-item">
+                          <div class="pre12-group-header">
+                            <strong>${g.code}</strong> - ${g.postcodes.filter(p => p.pre12).length} postcode${g.postcodes.filter(p => p.pre12).length === 1 ? '' : 's'}
+                          </div>
+                          <div class="pre12-postcodes-list">
+                            ${g.postcodes.filter(p => p.pre12).map(p => `
+                              <div class="pre12-postcode-item">
+                                <span class="pre12-pc">${p.postcode}</span>
+                                <span class="pre12-customer">${p.stops[0]?.customer || 'N/A'}</span>
+                                <span class="pre12-stops">DEL ${p.del} / PU ${p.pu}</span>
+                              </div>
+                            `).join('')}
+                          </div>
+                        </div>
+                      `).join('')}
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
           ` : ''}
 
@@ -1336,64 +1295,11 @@ class RouteBalanceApp {
     set('shipmentVolume', `ASR: ${route.asr}`);
     set('shipmentPieces', `DSR: ${route.dsr}`);
     set('shipmentDriver', route.driver);
-    set('shipmentVehicle', route.vendor);
-    set('shipmentVendor', route.target + '%');
+    set('shipmentVendor', route.vendor);
 
     document.getElementById('shipmentStatus').innerHTML = this.statusBadge(route.status);
 
     new bootstrap.Modal(document.getElementById('shipmentModal')).show();
-  }
-
-  showPre12Modal() {
-    const pre12Stops = this.getPre12Stops();
-
-    if (pre12Stops.length === 0) {
-      this.showToast('No Pre-12 deliveries today', 'info');
-      return;
-    }
-
-    document.getElementById('pre12Stats').innerHTML = `
-      <div class="pre12-stats-row">
-        <span class="stat-item"><i class="bi bi-box2"></i> Total: ${pre12Stops.length}</span>
-        <span class="stat-item"><i class="bi bi-check-circle"></i> Completed: ${pre12Stops.filter(s => s.status === 'completed').length}</span>
-        <span class="stat-item"><i class="bi bi-hourglass"></i> Pending: ${pre12Stops.filter(s => s.status !== 'completed').length}</span>
-      </div>`;
-
-    // Group by route
-    const byRoute = new Map();
-    pre12Stops.forEach(s => {
-      if (!byRoute.has(s.routeName)) byRoute.set(s.routeName, []);
-      byRoute.get(s.routeName).push(s);
-    });
-
-    document.getElementById('pre12ModalContent').innerHTML = `
-      <div class="pre12-modal-list">
-        ${[...byRoute.entries()].map(([routeName, stops]) => `
-          <div class="pre12-route-group">
-            <h6 class="pre12-route-name">Route ${routeName}</h6>
-            <table class="table table-sm">
-              <thead>
-                <tr>
-                  <th>Stop</th>
-                  <th>Postcode</th>
-                  <th>Customer</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${stops.map((s, idx) => `
-                  <tr>
-                    <td>#${idx + 1}</td>
-                    <td><strong>${s.postcode}</strong></td>
-                    <td>${s.customer}</td>
-                    <td>${this.statusBadge(s.status)}</td>
-                  </tr>`).join('')}
-              </tbody>
-            </table>
-          </div>`).join('')}
-      </div>`;
-
-    new bootstrap.Modal(document.getElementById('pre12Modal')).show();
   }
 
   showAddPostcodeModal() {

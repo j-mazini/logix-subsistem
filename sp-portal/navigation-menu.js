@@ -13,7 +13,7 @@
           title: 'Week Planner',
           description: 'Plan routes and crews for the week',
           icon: 'bi-calendar-week',
-          soon: true,
+          link: '../week-planner/index.html',
         },
         {
           id: 'route-balance',
@@ -107,10 +107,10 @@
         },
         {
           id: 'vetting',
-          title: 'Vetting',
+          title: 'Driver Vetting',
           description: 'Driver vetting and checks',
-          icon: 'bi-search',
-          soon: true,
+          icon: 'bi-check-circle',
+          link: '../vetting-admin/index.html',
         },
       ],
     },

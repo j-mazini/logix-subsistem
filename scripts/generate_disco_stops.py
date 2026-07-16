@@ -21,14 +21,6 @@ ASSETS_DIR = os.path.join(REPO_ROOT, "assets")
 
 # Organização: depot -> list of (loop_id, list of route names)
 DISCO_STRUCTURE = [
-    ("LCY", [
-        ("DY1", ["DY1A", "DY1B", "DY1C", "DY1X", "DY1P"]),
-        ("DY2", ["DY2A", "DY2B", "DY2C", "DY2D", "DY2X", "DY2P"]),
-    ]),
-    ("LSE", [
-        ("LL3", ["LL3A", "LL3B", "LL3C", "LL3D", "LL3X"]),
-        ("LL4", ["LL4A", "LL4B", "LL4X"]),
-    ]),
     ("MSE", [
         ("MD7", ["MD7A", "MD7B", "MD7C", "MD7D", "MD7E", "MD7X"]),
     ]),
@@ -238,7 +230,7 @@ def main():
     }
     dashboard_disco = disco_to_dashboard_json(disco_data)
     write_disco_assets(dashboard_disco)
-    print("Depots: LCY, LSE, MSE | Loops: DY1, DY2, LL3, LL4, MD7 | Total stops:", len(raw))
+    print("Depots: MSE | Loops: MD7 | Total stops:", len(raw))
 
 
 if __name__ == "__main__":

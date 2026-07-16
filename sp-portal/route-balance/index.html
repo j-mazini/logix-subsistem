@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../../sidebar-beam.css" />
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -67,7 +67,7 @@
           <span class="label"><i class="bi bi-calendar3"></i> Date</span>
           <span class="value" id="operationDate">–</span>
         </div>
-        <div class="info-item">
+        <div class="info-item info-item--clock">
           <span class="label"><i class="bi bi-clock"></i> Time</span>
           <span class="value" id="operationTime">–</span>
         </div>
@@ -152,18 +152,6 @@
         <option value="delayed">Delayed</option>
       </select>
     </div>
-
-    <!-- ============ PRE-12 DELIVERIES SECTION ============ -->
-    <section class="pre12-section" id="pre12Section" style="display:none;">
-      <div class="section-header">
-        <h2>🚀 Pre-12 Priority Deliveries</h2>
-        <button class="styled-button styled-button--primary" id="btnViewAllPre12">
-          <i class="bi bi-eye"></i> View All
-        </button>
-      </div>
-      <div class="pre12-cards-grid" id="pre12CardsGrid"></div>
-    </section>
-
     <!-- ============ OPERATION SUMMARY ============ -->
     <section class="operation-summary">
       <div class="section-header">
@@ -178,11 +166,9 @@
                 <tr>
                   <th data-sort="name">Route <i class="bi bi-arrow-down-up"></i></th>
                   <th data-sort="vendor">Vendor <i class="bi bi-arrow-down-up"></i></th>
-                  <th data-sort="vehicle">Vehicle</th>
                   <th data-sort="target">Target (%)</th>
                   <th data-sort="totalStops">Total Stops</th>
                   <th data-sort="completedStops">Completed</th>
-                  <th data-sort="completion">Completion %</th>
                   <th data-sort="status">Status</th>
                 </tr>
               </thead>
@@ -225,13 +211,6 @@
             <div class="stat-content">
               <div class="stat-value" id="targetLoopCard">0%</div>
               <div class="stat-label">Target Loop</div>
-            </div>
-          </div>
-          <div class="stat-card" data-tooltip="Overall completion">
-            <div class="stat-icon"><i class="bi bi-percent"></i></div>
-            <div class="stat-content">
-              <div class="stat-value" id="completionCard">0%</div>
-              <div class="stat-label">Completion %</div>
             </div>
           </div>
           <div class="stat-card" data-tooltip="Active routes">
@@ -320,16 +299,8 @@
               <input type="text" class="form-control" id="newRouteName" placeholder="e.g. FX-01" required />
             </div>
             <div class="mb-3">
-              <label for="newVendor" class="form-label">Vendor</label>
-              <select class="form-select" id="newVendor" required></select>
-            </div>
-            <div class="mb-3">
               <label for="newDriver" class="form-label">Driver</label>
               <select class="form-select" id="newDriver" required></select>
-            </div>
-            <div class="mb-3">
-              <label for="newVehicle" class="form-label">Vehicle</label>
-              <select class="form-select" id="newVehicle" required></select>
             </div>
             <div class="mb-3">
               <label for="newTarget" class="form-label">Target (%)</label>
@@ -394,7 +365,6 @@
             <div class="detail-row"><span class="label">Volume</span><span class="value" id="shipmentVolume">–</span></div>
             <div class="detail-row"><span class="label">Pieces</span><span class="value" id="shipmentPieces">–</span></div>
             <div class="detail-row"><span class="label">Driver</span><span class="value" id="shipmentDriver">–</span></div>
-            <div class="detail-row"><span class="label">Vehicle</span><span class="value" id="shipmentVehicle">–</span></div>
             <div class="detail-row"><span class="label">Vendor</span><span class="value" id="shipmentVendor">–</span></div>
             <div class="detail-row"><span class="label">Status</span><span class="value" id="shipmentStatus">–</span></div>
           </div>
