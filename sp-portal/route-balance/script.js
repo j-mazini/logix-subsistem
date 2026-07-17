@@ -9,12 +9,8 @@ class RouteBalanceApp {
     this.routes = [];
     this.stops = [];
     this.currentUser = 'João Silva';
-    this.operationStatus = 'pending';
     this.filterPM = false;          // false = AM view (hide PM), true = PM view (show all)
-    this.filterPre12 = false;       // toggle to filter only Pre 12 stops
     this.searchQuery = '';
-    this.vendorFilter = '';
-    this.statusFilter = '';
     this.sortKey = null;
     this.sortAsc = true;
     this.editingStopId = null;      // stop currently open in the Edit Postcode modal
@@ -22,9 +18,11 @@ class RouteBalanceApp {
     this.dragPayload = null;        // { subpostcode, sourceRouteId } during a drag
     this.expandedSubpostcodes = new Set(); // `${routeId}:${subcode}` keys currently expanded
     this.transferContext = null;    // state for the Send Subpostcode/Postcode modal
+    this.sentRoutes = new Set();    // route ids whose manifest was sent to the driver
+    this.flippedRoutes = new Set(); // route ids currently showing the Special Deliveries face
+    this.specialView = {};          // routeId -> 'all' | 'pre12' | 'asr' | 'dsr' (Special Deliveries filter)
 
     // ---- Static datasets for fake data generation ----
-    this.VENDORS = ['FedEx', 'UPS', 'DPD', 'TNT', 'Logixsphere'];
     this.DRIVERS = ['Carlos Silva', 'Ana Costa', 'João Martins', 'Maria Santos', 'Pedro Oliveira',
                     'Lucas Pereira', 'Sofia Alves', 'Ricardo Dias', 'Juliana Ribeiro', 'Felipe Costa'];
     this.VEHICLES = ['Van-001', 'Van-002', 'Van-003', 'Truck-001', 'Truck-002', 'Truck-003', 'Bike-001', 'Car-001'];
@@ -56,7 +54,6 @@ class RouteBalanceApp {
   enterDashboard() {
     this.loadRebalanceState();
     this.setupEventListeners();
-    this.populateVendorFilter();
     this.updateDateTime();
     setInterval(() => this.updateDateTime(), 1000);
     this.render();
@@ -166,7 +163,6 @@ class RouteBalanceApp {
       customer: ['customer', 'customer name', 'client'],
       type: ['type', 'stop type', 'delivery type'],
       driver: ['driver', 'driver name'],
-      vendor: ['vendor', 'carrier'],
       vehicle: ['vehicle', 'vehicle id'],
       target: ['target', 'target %', 'target percent'],
       pm: ['pm', 'pm flag', 'afternoon'],
@@ -212,7 +208,6 @@ class RouteBalanceApp {
         routesByName.set(routeName, {
           id: routesByName.size + 1,
           name: routeName,
-          vendor: String(row.vendor || '').trim() || this.pick(this.VENDORS),
           driver: String(row.driver || '').trim() || this.pick(this.DRIVERS),
           target: Number(row.target) || 85,
           totalStops: 0, completedStops: 0, completion: 0,
@@ -221,7 +216,6 @@ class RouteBalanceApp {
           spr: 90 + this.rand(80),
           sortAttendance: 'yes',
           notes: '',
-          status: 'pending',
           stops: [],
         });
       }
@@ -256,7 +250,6 @@ class RouteBalanceApp {
       route.dsr = route.stops.length;
       route.completedStops = 0;
       route.completion = 0;
-      route.status = this.deriveStatus(route);
       return route;
     });
 
@@ -289,7 +282,6 @@ class RouteBalanceApp {
       const route = {
         id: i,
         name: `A-${String(i).padStart(2, '0')}`,
-        vendor: this.pick(this.VENDORS),
         driver: this.DRIVERS[(i - 1) % this.DRIVERS.length],
         vehicle: this.pick(this.VEHICLES),
         target: 80 + this.rand(16),
@@ -302,11 +294,8 @@ class RouteBalanceApp {
         spr: 90 + this.rand(80),
         sortAttendance: this.pick(['yes', 'yes', 'yes', 'late', 'no']), // driver showed up to the sort: yes/no/late
         notes: '',
-        status: 'pending',
         stops: [],
       };
-
-      route.status = this.deriveStatus(route);
 
       for (let j = 0; j < totalStops; j++) {
         route.stops.push({
@@ -333,25 +322,14 @@ class RouteBalanceApp {
     }
   }
 
-  deriveStatus(route) {
-    if (route.completion >= 100) return 'finished';
-    if (route.completion === 0) return 'pending';
-    if (route.completion < route.target - 30) return 'delayed';
-    return 'running';
-  }
-
   /* ==================== EVENTS ==================== */
 
   setupEventListeners() {
     document.getElementById('btnRefresh').addEventListener('click', () => this.refresh());
-    document.getElementById('btnStart').addEventListener('click', () => this.startOperation());
-    document.getElementById('btnFinish').addEventListener('click', () => this.finishOperation());
     document.getElementById('btnAddRoute').addEventListener('click', () => this.showAddRouteModal());
-    document.getElementById('btnCollapseRoutes').addEventListener('click', () => this.collapseRoute());
-    document.getElementById('btnExportCsv').addEventListener('click', () => this.exportCsv());
+    document.getElementById('btnSendDrivers').addEventListener('click', () => this.sendToDrivers());
     document.getElementById('btnSaveRoute').addEventListener('click', () => this.saveNewRoute());
     document.getElementById('btnSaveStop').addEventListener('click', () => this.saveStopEdit());
-    document.getElementById('btnAddPostcode').addEventListener('click', () => this.showAddPostcodeModal());
     document.getElementById('btnConfirmAddPostcode').addEventListener('click', () => this.confirmAddPostcode());
 
     document.getElementById('sendSubpostcodeBtn').addEventListener('click', () => {
@@ -392,16 +370,6 @@ class RouteBalanceApp {
     document.getElementById('searchRoute').addEventListener('input', (e) => {
       this.searchQuery = e.target.value.toLowerCase();
       debouncedSearchRender();
-    });
-
-    document.getElementById('filterVendor').addEventListener('change', (e) => {
-      this.vendorFilter = e.target.value;
-      this.render();
-    });
-
-    document.getElementById('filterStatus').addEventListener('change', (e) => {
-      this.statusFilter = e.target.value;
-      this.render();
     });
 
     // Table sorting on summary table headers
@@ -479,23 +447,6 @@ class RouteBalanceApp {
         return;
       }
 
-      const pre12Toggle = e.target.closest('.pre12-toggle');
-      if (pre12Toggle) {
-        e.stopPropagation();
-        const routeId = pre12Toggle.dataset.routeId;
-        const key = `pre12:${routeId}`;
-        const willExpand = !this.expandedSubpostcodes.has(key);
-
-        if (willExpand) this.expandedSubpostcodes.add(key);
-        else this.expandedSubpostcodes.delete(key);
-
-        pre12Toggle.classList.toggle('expanded', willExpand);
-        const detailRow = pre12Toggle.closest('tr.pre12-row')?.nextElementSibling;
-        if (detailRow && detailRow.classList.contains('pre12-detail-row')) {
-          detailRow.classList.toggle('collapsed', !willExpand);
-        }
-        return;
-      }
 
       const actionBtn = e.target.closest('[data-action]');
       if (!actionBtn) return;
@@ -505,12 +456,17 @@ class RouteBalanceApp {
       switch (actionBtn.dataset.action) {
         case 'see-all-stops': this.showAllStopsModal(route); break;
         case 'shipment-details': this.showShipmentDetailsModal(route); break;
+        case 'add-postcode': this.showAddPostcodeModal(route); break;
+        case 'export-route': this.exportRouteCsv(route); break;
         case 'collapse-route': this.collapseRoute(route.id); break;
-        case 'toggle-pre12-filter': this.togglePre12Filter(); break;
         case 'flip-card': this.toggleFlipCard(route); break;
         case 'close-flip':
-          const block = actionBtn.closest('.route-block');
-          if (block) block.classList.remove('flipped');
+          this.flippedRoutes.delete(route.id);
+          actionBtn.closest('.route-block')?.classList.remove('flipped');
+          break;
+        case 'special-filter':
+          this.specialView[route.id] = actionBtn.dataset.cat;
+          this.renderRouteBlocks();
           break;
       }
     });
@@ -608,11 +564,6 @@ class RouteBalanceApp {
       stops = stops.filter(s => !s.pm);
     }
 
-    // Apply Pre 12 filter
-    if (this.filterPre12) {
-      stops = stops.filter(s => s.pre12);
-    }
-
     return stops;
   }
 
@@ -706,7 +657,7 @@ class RouteBalanceApp {
     return groups;
   }
 
-  /** Routes that pass search + vendor + status filters. */
+  /** Routes that pass the search filter. */
   filteredRoutes() {
     let list = [...this.routes];
 
@@ -715,8 +666,6 @@ class RouteBalanceApp {
         r.name.toLowerCase().includes(this.searchQuery) ||
         r.driver.toLowerCase().includes(this.searchQuery));
     }
-    if (this.vendorFilter) list = list.filter(r => r.vendor === this.vendorFilter);
-    if (this.statusFilter) list = list.filter(r => r.status === this.statusFilter);
 
     if (this.sortKey) {
       const k = this.sortKey, dir = this.sortAsc ? 1 : -1;
@@ -734,24 +683,29 @@ class RouteBalanceApp {
     this.showToast('Data refreshed', 'info');
   }
 
-  startOperation() {
-    this.operationStatus = 'running';
-    this.routes.forEach(r => { if (r.status === 'pending') r.status = 'running'; });
-    this.render();
-    this.showToast('Operation started — routes set to Running', 'success');
+  sendToDrivers() {
+    const routes = this.filteredRoutes().filter(r => this.visibleStops(r).length > 0);
+    if (!routes.length) { this.showToast('No routes to send', 'error'); return; }
+    const resend = routes.every(r => this.sentRoutes.has(r.id));
+    routes.forEach(r => this.sentRoutes.add(r.id));
+    const drivers = new Set(routes.map(r => r.driver)).size;
+    this.updateSendButton();
+    this.showToast(
+      `${routes.length} route manifest${routes.length === 1 ? '' : 's'} ${resend ? 're-sent' : 'sent'} to ${drivers} driver${drivers === 1 ? '' : 's'}`,
+      'success');
   }
 
-  finishOperation() {
-    if (!confirm('Are you sure?')) return;
-    this.operationStatus = 'finished';
-    this.routes.forEach(r => {
-      r.status = 'finished';
-      r.completion = 100;
-      r.completedStops = r.totalStops;
-      r.stops.forEach(s => s.status = 'completed');
-    });
-    this.render();
-    this.showToast('Operation finished', 'success');
+  updateSendButton() {
+    const btn = document.getElementById('btnSendDrivers');
+    if (!btn) return;
+    const routes = this.filteredRoutes().filter(r => this.visibleStops(r).length > 0);
+    const allSent = routes.length > 0 && routes.every(r => this.sentRoutes.has(r.id));
+    btn.classList.toggle('styled-button--primary', !allSent);
+    btn.classList.toggle('styled-button--sent', allSent);
+    btn.innerHTML = allSent
+      ? '<i class="bi bi-check2-circle"></i> Sent to Drivers'
+      : '<i class="bi bi-send"></i> Send to Driver';
+    btn.title = allSent ? 'All visible manifests sent — click to resend' : 'Send all visible route manifests to their drivers';
   }
 
   showAddRouteModal() {
@@ -775,14 +729,13 @@ class RouteBalanceApp {
     this.routes.push({
       id: Date.now(),
       name,
-      vendor: document.getElementById('newDriver').value,
       driver: document.getElementById('newDriver').value,
       target: isNaN(target) ? 85 : target,
       totalStops: 0, completedStops: 0, completion: 0,
       deliveries: 0, pickups: 0,
       pre12: 0, asr: 0, dsr: 0, spr: 0,
       sortAttendance: 'yes',
-      notes: '', status: 'pending', stops: [],
+      notes: '', stops: [],
     });
 
     bootstrap.Modal.getInstance(document.getElementById('addRouteModal')).hide();
@@ -794,19 +747,15 @@ class RouteBalanceApp {
 
   /**
    * Close a route and redistribute its postcodes/stops evenly across the
-   * remaining routes. Pass a routeId to close that specific route (from the
-   * per-block "Close route" button); with no id, closes the route with the
-   * fewest stops (from the toolbar "Collapse Routes" button).
+   * remaining routes (per-block "Close route" button).
    */
-  collapseRoute(routeId = null) {
+  collapseRoute(routeId) {
     if (this.routes.length <= 1) {
       this.showToast('At least two routes are required to collapse', 'error');
       return;
     }
 
-    const removed = routeId != null
-      ? this.routes.find(r => r.id === Number(routeId))
-      : this.routes.reduce((min, r) => r.totalStops < min.totalStops ? r : min);
+    const removed = this.routes.find(r => r.id === Number(routeId));
 
     if (!removed) {
       this.showToast('Route not found', 'error');
@@ -831,13 +780,6 @@ class RouteBalanceApp {
     this.showToast(`Route ${removed.name} closed — postcodes redistributed`, 'success');
   }
 
-  togglePre12Filter() {
-    this.filterPre12 = !this.filterPre12;
-    this.render();
-    const status = this.filterPre12 ? 'enabled' : 'disabled';
-    this.showToast(`Pre 12 filter ${status}`, 'info');
-  }
-
   recomputeRoute(route) {
     route.totalStops = route.stops.length;
     route.deliveries = route.stops.filter(s => s.type === 'DEL').length;
@@ -848,15 +790,17 @@ class RouteBalanceApp {
     route.dsr = route.stops.filter(s => s.dsr).length;
     route.completion = route.totalStops
       ? Math.round(route.completedStops / route.totalStops * 100) : 0;
-    route.status = this.deriveStatus(route);
   }
 
   /* ==================== CSV EXPORT (Demi8 Format) ==================== */
 
-  exportCsv() {
-    const header = ['Route', 'Vendor', 'Target (%)', 'Total Stops', 'Status'];
-    const rows = this.filteredRoutes().map(r =>
-      [r.name, r.vendor, r.target, r.totalStops, r.status]);
+  exportRouteCsv(route) {
+    const stops = this.visibleStops(route);
+    if (!stops.length) { this.showToast('No stops to export on this route', 'error'); return; }
+
+    const header = ['Route', 'Driver', 'Stop #', 'Address', 'Postcode', 'Customer', 'Type', 'Pre 12'];
+    const rows = stops.map((s, i) =>
+      [route.name, route.driver, i + 1, s.address, s.postcode, s.customer, s.type, s.pre12 ? 'Yes' : 'No']);
 
     const csv = [header, ...rows]
       .map(row => row.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))
@@ -865,10 +809,10 @@ class RouteBalanceApp {
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `demi8-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.download = `demi8-${route.name}-${new Date().toISOString().slice(0, 10)}.csv`;
     link.click();
     URL.revokeObjectURL(link.href);
-    this.showToast('✓ Demi8 report exported', 'success');
+    this.showToast(`✓ Demi8 export for route ${route.name} (${stops.length} stops)`, 'success');
   }
 
   /* ==================== RENDER ==================== */
@@ -877,12 +821,7 @@ class RouteBalanceApp {
     this.updateDashboardCards();
     this.renderSummaryTable();
     this.renderRouteBlocks();
-  }
-
-  populateVendorFilter() {
-    document.getElementById('filterVendor').innerHTML =
-      '<option value="">All vendors</option>' +
-      this.VENDORS.map(v => `<option value="${v}">${v}</option>`).join('');
+    this.updateSendButton();
   }
 
   updateDashboardCards() {
@@ -901,346 +840,247 @@ class RouteBalanceApp {
     set('sprCard', Math.round(avg(routes.map(r => r.spr))));
     set('targetLoopCard', Math.round(avg(routes.map(r => r.target))) + '%');
     set('totalRoutesCard', routes.length);
-    set('driversOnlineCard', new Set(routes.filter(r => r.status === 'running').map(r => r.driver)).size);
-  }
-
-  statusBadge(status) {
-    return `<span class="status-badge status-badge-${status}">${status}</span>`;
   }
 
   renderSummaryTable() {
     const tableBody = document.getElementById('summaryTableBody');
-
-    // Update table header based on shift
-    const thead = document.querySelector('#summaryTable thead tr');
-    if (this.filterPM) {
-      // PM view: simpler headers
-      thead.innerHTML = `
-        <th>Route</th>
-        <th>Driver</th>
-        <th>Meeting Stops</th>
-        <th>Status</th>
-      `;
-    } else {
-      // AM view: headers without Vehicle and Completion %
-      thead.innerHTML = `
-        <th data-sort="name">Route <i class="bi bi-arrow-down-up"></i></th>
-        <th data-sort="vendor">Vendor <i class="bi bi-arrow-down-up"></i></th>
-        <th data-sort="target">Target (%)</th>
-        <th data-sort="totalStops">Total Stops</th>
-        <th data-sort="status">Status</th>
-      `;
-    }
-
-    tableBody.innerHTML = this.filteredRoutes().map(route => {
-      if (this.filterPM) {
-        const pmStops = this.visibleStops(route).length;
-        return `
+    tableBody.innerHTML = this.filteredRoutes().map(route => `
           <tr>
             <td><strong>${route.name}</strong></td>
             <td>${route.driver}</td>
-            <td>${pmStops}</td>
-            <td>${this.statusBadge(route.status)}</td>
-          </tr>`;
-      } else {
-        return `
-          <tr>
-            <td><strong>${route.name}</strong></td>
-            <td>${route.vendor}</td>
             <td>${route.target}%</td>
             <td>${this.visibleStops(route).length}</td>
-            <td>${this.statusBadge(route.status)}</td>
-          </tr>`;
-      }
-    }).join('');
+          </tr>`).join('');
   }
 
   renderRouteBlocks() {
     const container = document.getElementById('routeBlocksContainer');
-    const routes = this.filteredRoutes();
+    const shiftBadge = this.filterPM
+      ? '<span class="shift-badge shift-badge-pm">PM</span>'
+      : '<span class="shift-badge shift-badge-am">AM</span>';
 
-    if (this.filterPM) {
-      // PM (Meeting) View
-      container.innerHTML = routes.map(route => {
-        const stops = this.visibleStops(route);
-        if (stops.length === 0) return '';
+    container.innerHTML = this.filteredRoutes().map(route => {
+      const stops = this.visibleStops(route);
+      const groups = this.groupBySubpostcode(stops);
+      const del = stops.filter(s => s.type === 'DEL').length;
+      const pu = stops.length - del;
+      const doneStops = stops.filter(s => s.status === 'completed').length;
+      const progressPct = stops.length ? Math.round(doneStops / stops.length * 100) : 0;
+      const rebalanceClass = this.rebalanceMode ? 'rebalance-mode' : '';
+      const flippedClass = this.flippedRoutes.has(route.id) ? 'flipped' : '';
 
-        return `
-        <section class="route-block pm-meeting-view" data-route-id="${route.id}">
-          <div class="route-block-header">
-            <h3 class="route-block-title">📅 Route ${route.name} — Meeting View</h3>
-            <div class="route-block-header-right">
-              <span class="shift-badge shift-badge-pm">PM</span>
-            </div>
-          </div>
+      // ---- Special Deliveries (back face) ----
+      const cat = this.specialView[route.id] || 'all';
+      const matches = {
+        all:   (s) => s.pre12 || s.asr || s.dsr,
+        pre12: (s) => s.pre12,
+        asr:   (s) => s.asr,
+        dsr:   (s) => s.dsr,
+      };
+      const counts = {
+        all:   stops.filter(matches.all).length,
+        pre12: stops.filter(matches.pre12).length,
+        asr:   stops.filter(matches.asr).length,
+        dsr:   stops.filter(matches.dsr).length,
+      };
+      const specialStops = stops.filter(matches[cat]);
+      const specialGroups = this.groupBySubpostcode(specialStops);
+      const chip = (key, label) => `
+        <button type="button" class="special-chip ${cat === key ? 'active' : ''}"
+                data-action="special-filter" data-cat="${key}">
+          ${label} <span class="special-chip-count">${counts[key]}</span>
+        </button>`;
 
-          <div class="route-block-content">
-            <div class="route-info-grid">
-              <div class="info-box">
-                <span class="info-box-label">Driver</span>
-                <span class="info-box-value">${route.driver}</span>
+      return `
+      <section class="route-block ${rebalanceClass} ${flippedClass}" data-route-id="${route.id}">
+        <div class="route-block-flipper">
+          <div class="route-block-face route-block-front">
+            <div class="route-block-header">
+              <div class="route-block-ident">
+                <span class="route-eyebrow">Route ${route.name} · Manifest</span>
+                <h3 class="route-driver-name">${route.driver}</h3>
               </div>
-              <div class="info-box">
-                <span class="info-box-label">Vendor</span>
-                <span class="info-box-value">${route.vendor}</span>
+              <div class="route-block-header-right">
+                ${shiftBadge}
+                <button class="flip-btn" data-action="flip-card" title="View Special Deliveries (Pre 12 / ASR / DSR)">
+                  <i class="bi bi-stars"></i> Special Deliveries
+                </button>
+                <button class="route-icon-btn" data-action="add-postcode" title="Add a postcode to this route" aria-label="Add postcode">
+                  <i class="bi bi-geo-alt-fill"></i>
+                </button>
+                <button class="route-icon-btn" data-action="export-route" title="Export this route's manifest (Demi8 format)" aria-label="Export manifest">
+                  <i class="bi bi-filetype-csv"></i>
+                </button>
+                <button class="route-icon-btn route-icon-btn--danger" data-action="collapse-route" data-route-id="${route.id}"
+                        title="Close this route and redistribute its postcodes" aria-label="Close route">
+                  <i class="bi bi-box-arrow-in-down"></i>
+                </button>
               </div>
             </div>
 
-            <div class="route-table-responsive">
-              <table class="route-table">
-                <thead>
-                  <tr>
-                    <th>Stop #</th><th>Address</th><th>Postcode</th><th>Customer</th><th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${stops.map((s, idx) => `
-                  <tr>
-                    <td>#${idx + 1}</td>
-                    <td>${s.address}</td>
-                    <td>${s.postcode}</td>
-                    <td>${s.customer}</td>
-                    <td>${this.statusBadge(s.status)}</td>
-                  </tr>`).join('')}
-                </tbody>
-              </table>
-            </div>
-
-            <div class="route-totals">
-              <div class="total-item">
-                <div class="total-label">Meeting Stops</div>
-                <div class="total-value">${stops.length}</div>
+            <div class="route-progress" role="progressbar" aria-valuenow="${progressPct}" aria-valuemin="0" aria-valuemax="100"
+                 aria-label="Route progress: ${doneStops} of ${stops.length} stops completed">
+              <div class="route-progress-track">
+                <div class="route-progress-fill" style="width: ${progressPct}%"></div>
               </div>
+              <span class="route-progress-label">${doneStops}/${stops.length} stops · ${progressPct}%</span>
             </div>
 
-            <div class="route-buttons">
-              <button class="styled-button styled-button--outline" data-action="see-all-stops">
-                <i class="bi bi-geo-alt"></i> See All Stops
-              </button>
-            </div>
-          </div>
-        </section>`;
-      }).join('');
-    } else {
-      // AM (Regular Delivery) View
-      container.innerHTML = routes.map(route => {
-        const stops = this.visibleStops(route);
-        const groups = this.groupBySubpostcode(stops);
-        const del = stops.filter(s => s.type === 'DEL').length;
-        const pu = stops.length - del;
-        const rebalanceClass = this.rebalanceMode ? 'rebalance-mode' : '';
+            <div class="route-block-content">
+              <div class="route-table-responsive">
+                <table class="route-table">
+                  <thead>
+                    <tr>
+                      <th>Subpostcode</th><th>DEL</th><th>PU</th><th>Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${groups.map(g => {
+                      const key = `${route.id}:${g.code}`;
+                      const expanded = this.expandedSubpostcodes.has(key);
+                      return `
+                      <tr class="subpostcode-row ${this.rebalanceMode ? 'rebalance-row' : ''}"
+                          ${this.rebalanceMode ? 'draggable="true"' : ''}
+                          data-subpostcode="${g.code}" data-route-id="${route.id}">
+                        <td class="pc-cell">
+                          ${this.rebalanceMode ? '<i class="bi bi-grip-vertical drag-handle"></i>' : ''}
+                          <button type="button" class="subpostcode-toggle ${expanded ? 'expanded' : ''}"
+                                  data-action="toggle-subpostcode" data-subpostcode="${g.code}" data-route-id="${route.id}">
+                            <i class="bi bi-chevron-right"></i> ${g.code}
+                          </button>
+                          <span class="postcode-count-badge">${g.postcodes.length} postcode${g.postcodes.length === 1 ? '' : 's'}</span>
+                          ${g.pre12 ? '<span class="status-badge status-badge-pre12">Pre 12</span>' : ''}
+                        </td>
+                        <td>${g.del}</td>
+                        <td>${g.pu}</td>
+                        <td>${g.total}</td>
+                      </tr>
+                      <tr class="subpostcode-detail-row ${expanded ? '' : 'collapsed'}">
+                        <td colspan="4">
+                          <div class="postcode-dropdown">
+                            ${g.postcodes.map(p => `
+                              <div class="postcode-dropdown-item">
+                                <span class="postcode-editable" data-stop-id="${p.stops[0].id}" title="Click to edit / substitute">${p.postcode}</span>
+                                ${p.pre12 ? '<span class="status-badge status-badge-pre12">Pre 12</span>' : ''}
+                                <span class="pc-mini-stat">DEL ${p.del}</span>
+                                <span class="pc-mini-stat">PU ${p.pu}</span>
+                              </div>`).join('')}
+                          </div>
+                        </td>
+                      </tr>`;
+                    }).join('')}
+                  </tbody>
+                </table>
+              </div>
 
-        return `
-        <section class="route-block status-${route.status} ${rebalanceClass}" data-route-id="${route.id}">
-          <div class="route-block-flipper">
-            <div class="route-block-face route-block-front">
-              <div class="route-block-header">
-                <h3 class="route-block-title">Route ${route.name}</h3>
-                <div class="route-block-header-right">
-                  ${route.pre12 > 0 ? `
-                  <button class="flip-btn" data-action="flip-card" title="View Pre-12 Stops">
-                    <i class="bi bi-fire"></i> Pre 12
-                  </button>
-                  ` : ''}
-                  <button class="route-collapse-btn" data-action="collapse-route" data-route-id="${route.id}"
-                          title="Close this route and redistribute its postcodes">
-                    <i class="bi bi-box-arrow-in-down"></i> Close route
-                  </button>
+              <div class="route-dash">
+                <div class="dash-tile">
+                  <span class="dash-label">Deliveries</span>
+                  <span class="dash-value">${del}</span>
+                </div>
+                <div class="dash-tile">
+                  <span class="dash-label">Pickups</span>
+                  <span class="dash-value">${pu}</span>
+                </div>
+                <div class="dash-tile">
+                  <span class="dash-label">Pre 12</span>
+                  <span class="dash-value">${stops.filter(s => s.pre12).length}</span>
+                </div>
+                <div class="dash-tile">
+                  <span class="dash-label">Total Stops</span>
+                  <span class="dash-value">${stops.length}</span>
+                </div>
+                <div class="dash-tile">
+                  <span class="dash-label">Target</span>
+                  <span class="dash-value">${route.target}<span class="dash-unit">%</span></span>
                 </div>
               </div>
 
+              ${this.rebalanceMode ? `
+              <p class="rebalance-hint">
+                <i class="bi bi-info-circle"></i>
+                Drag a subpostcode onto another route to send it whole or split specific postcodes into it.
+              </p>
+              ` : ''}
 
-        <div class="route-block-content">
-          <div class="route-info-grid">
-            <div class="info-box">
-              <span class="info-box-label">Vendor (Driver)</span>
-              <select class="info-box-select" data-field="vendor" title="Change vendor/driver">
-                ${this.VENDORS.map(v => `<option value="${v}" ${v === route.vendor ? 'selected' : ''}>${v}</option>`).join('')}
-              </select>
-            </div>
-            <div class="info-box">
-              <span class="info-box-label">Driver</span>
-              <span class="info-box-value">${route.driver}</span>
-            </div>
-          </div>
+              <div class="route-buttons">
+                <button class="styled-button styled-button--outline" data-action="shipment-details">
+                  <i class="bi bi-box2"></i> See Shipment Details
+                </button>
+                <button class="styled-button styled-button--outline" data-action="see-all-stops">
+                  <i class="bi bi-geo-alt"></i> See All Stops
+                </button>
+              </div>
 
-          <div class="route-table-responsive">
-            <table class="route-table">
-              <thead>
-                <tr>
-                  <th>Subpostcode</th><th>DEL</th><th>PU</th><th>Total</th><th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${groups.map(g => {
-                  const key = `${route.id}:${g.code}`;
-                  const expanded = this.expandedSubpostcodes.has(key);
-                  return `
-                  <tr class="subpostcode-row ${this.rebalanceMode ? 'rebalance-row' : ''}"
-                      ${this.rebalanceMode ? 'draggable="true"' : ''}
-                      data-subpostcode="${g.code}" data-route-id="${route.id}">
-                    <td class="pc-cell">
-                      ${this.rebalanceMode ? '<i class="bi bi-grip-vertical drag-handle"></i>' : ''}
-                      <button type="button" class="subpostcode-toggle ${expanded ? 'expanded' : ''}"
-                              data-action="toggle-subpostcode" data-subpostcode="${g.code}" data-route-id="${route.id}">
-                        <i class="bi bi-chevron-right"></i> ${g.code}
-                      </button>
-                      <span class="postcode-count-badge">${g.postcodes.length} postcode${g.postcodes.length === 1 ? '' : 's'}</span>
-                      ${g.pre12 ? '<span class="status-badge status-badge-pre12">Pre 12</span>' : ''}
-                    </td>
-                    <td>${g.del}</td>
-                    <td>${g.pu}</td>
-                    <td>${g.total}</td>
-                    <td>${this.statusBadge(g.allCompleted ? 'completed' : 'pending')}</td>
-                  </tr>
-                  <tr class="subpostcode-detail-row ${expanded ? '' : 'collapsed'}">
-                    <td colspan="5">
-                      <div class="postcode-dropdown">
-                        ${g.postcodes.map(p => `
-                          <div class="postcode-dropdown-item">
-                            <span class="postcode-editable" data-stop-id="${p.stops[0].id}" title="Click to edit / substitute">${p.postcode}</span>
-                            ${p.pre12 ? '<span class="status-badge status-badge-pre12">Pre 12</span>' : ''}
-                            <span class="pc-mini-stat">DEL ${p.del}</span>
-                            <span class="pc-mini-stat">PU ${p.pu}</span>
-                          </div>`).join('')}
-                      </div>
-                    </td>
-                  </tr>`;
-                }).join('')}
-              </tbody>
-            </table>
-          </div>
-
-          <div class="route-totals">
-            <div class="total-item">
-              <div class="total-label">Total Deliveries</div>
-              <div class="total-value">${del}</div>
-            </div>
-            <div class="total-item">
-              <div class="total-label">Total Pickups</div>
-              <div class="total-value">${pu}</div>
-            </div>
-            <div class="total-item">
-              <div class="total-label">Total Geral</div>
-              <div class="total-value">${stops.length}</div>
+              <div class="notes-section">
+                <label class="notes-label">Notes</label>
+                <textarea class="notes-textarea" placeholder="Write observations…">${route.notes}</textarea>
+              </div>
             </div>
           </div>
 
-          <div class="metrics-row">
-            <div class="metric-badge metric-badge--asr">
-              <div class="metric-label">ASR</div>
-              <div class="metric-value">${route.asr}</div>
-            </div>
-            <div class="metric-badge metric-badge--dsr">
-              <div class="metric-label">DSR</div>
-              <div class="metric-value">${route.dsr}</div>
-            </div>
-          </div>
-
-          ${route.pre12 > 0 ? `
-          <!-- Pre-12 row (collapsible within table) -->
-          <div class="pre12-table-wrapper" style="margin-top: 1rem; margin-bottom: 1rem;">
-            <table class="route-table pre12-sub-table">
-              <tbody>
-                <tr class="pre12-row" data-route-id="${route.id}">
-                  <td class="pc-cell">
-                    <button type="button" class="pre12-toggle" data-action="toggle-pre12" data-route-id="${route.id}">
-                      <i class="bi bi-chevron-right"></i> Pre 12 Stops
-                    </button>
-                    <span class="postcode-count-badge">${route.pre12} postcode${route.pre12 === 1 ? '' : 's'}</span>
-                  </td>
-                  <td></td>
-                  <td></td>
-                  <td>${route.pre12}</td>
-                  <td></td>
-                </tr>
-                <tr class="pre12-detail-row collapsed" data-route-id="${route.id}">
-                  <td colspan="5">
-                    <div class="pre12-dropdown">
-                      ${groups.filter(g => g.pre12).map(g => `
-                        <div class="pre12-group-item">
-                          <div class="pre12-group-header">
-                            <strong>${g.code}</strong> - ${g.postcodes.filter(p => p.pre12).length} postcode${g.postcodes.filter(p => p.pre12).length === 1 ? '' : 's'}
-                          </div>
-                          <div class="pre12-postcodes-list">
-                            ${g.postcodes.filter(p => p.pre12).map(p => `
-                              <div class="pre12-postcode-item">
-                                <span class="pre12-pc">${p.postcode}</span>
-                                <span class="pre12-customer">${p.stops[0]?.customer || 'N/A'}</span>
-                                <span class="pre12-stops">DEL ${p.del} / PU ${p.pu}</span>
-                              </div>
-                            `).join('')}
-                          </div>
-                        </div>
-                      `).join('')}
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          ` : ''}
-
-          <div class="notes-section">
-            <label class="notes-label">Notes</label>
-            <textarea class="notes-textarea" placeholder="Write observations…">${route.notes}</textarea>
-          </div>
-
-          ${this.rebalanceMode ? `
-          <p class="rebalance-hint">
-            <i class="bi bi-info-circle"></i>
-            Drag a subpostcode onto another route to send it whole or split specific postcodes into it.
-          </p>
-          ` : ''}
-
-          <div class="route-buttons">
-            <button class="styled-button styled-button--outline" data-action="see-all-stops">
-              <i class="bi bi-geo-alt"></i> See All Stops
+          <div class="route-block-face route-block-back">
+            <button class="flip-close-btn" data-action="close-flip" title="Close Special Deliveries">
+              <i class="bi bi-x-lg"></i>
             </button>
-            <button class="styled-button styled-button--outline" data-action="shipment-details">
-              <i class="bi bi-box2"></i> Shipment Details
-            </button>
+            <div class="pre12-flip-title">
+              <i class="bi bi-stars"></i>
+              Special Deliveries
+            </div>
+            <div class="special-chips">
+              ${chip('all', 'All')}
+              ${chip('pre12', 'Pre 12')}
+              ${chip('asr', 'ASR')}
+              ${chip('dsr', 'DSR')}
+            </div>
+            ${specialStops.length ? `
+            <div class="pre12-flip-list">
+              ${specialGroups.map(g => `
+              <div class="pre12-flip-group">
+                <div class="pre12-flip-group-name">${g.code}</div>
+                <div class="pre12-flip-items">
+                  ${g.postcodes.map(p => `
+                  <div class="pre12-flip-item">
+                    <span class="pre12-flip-pc">${p.postcode}</span>
+                    <span class="pre12-flip-customer">${p.stops[0]?.customer || 'N/A'}</span>
+                    <span class="special-tags">
+                      ${p.stops.some(s => s.pre12) ? '<span class="status-badge status-badge-pre12">Pre 12</span>' : ''}
+                      ${p.stops.some(s => s.asr) ? '<span class="status-badge special-tag-asr">ASR</span>' : ''}
+                      ${p.stops.some(s => s.dsr) ? '<span class="status-badge special-tag-dsr">DSR</span>' : ''}
+                    </span>
+                    <span class="pre12-flip-count">DEL ${p.del} / PU ${p.pu}</span>
+                  </div>
+                  `).join('')}
+                </div>
+              </div>
+              `).join('')}
+            </div>
+            ` : `
+            <div class="pre12-empty-state">
+              <i class="bi bi-check-circle-fill"></i>
+              <p>No special deliveries in this view</p>
+              <p style="font-size: 0.85rem; opacity: 0.7; margin-top: 0.5rem;">No stops match the selected category</p>
+            </div>
+            `}
           </div>
         </div>
-            </div>
-
-            <div class="route-block-face route-block-back">
-              <button class="flip-close-btn" data-action="close-flip" title="Close Pre-12 View">
-                <i class="bi bi-x-lg"></i>
-              </button>
-              <div class="pre12-flip-title">
-                <i class="bi bi-fire"></i>
-                Pre 12 Priority Deliveries
-              </div>
-              ${route.pre12 > 0 ? `
-              <div class="pre12-flip-list">
-                ${groups.filter(g => g.pre12).map(g => `
-                <div class="pre12-flip-group">
-                  <div class="pre12-flip-group-name">${g.code}</div>
-                  <div class="pre12-flip-items">
-                    ${g.postcodes.filter(p => p.pre12).map(p => `
-                    <div class="pre12-flip-item">
-                      <span class="pre12-flip-pc">${p.postcode}</span>
-                      <span class="pre12-flip-customer">${p.stops[0]?.customer || 'N/A'}</span>
-                      <span class="pre12-flip-count">DEL ${p.del} / PU ${p.pu}</span>
-                    </div>
-                    `).join('')}
-                  </div>
-                </div>
-                `).join('')}
-              </div>
-              ` : `
-              <div class="pre12-empty-state">
-                <i class="bi bi-check-circle-fill"></i>
-                <p>No Pre-12 Priority Deliveries</p>
-                <p style="font-size: 0.85rem; opacity: 0.7; margin-top: 0.5rem;">All stops are scheduled after 12:00</p>
-              </div>
-              `}
-            </div>
-          </div>
       </section>`;
-      }).join('');
-    }
+    }).join('');
+
+    this.syncFlipHeights();
+  }
+
+  /**
+   * The back face is absolutely positioned over the front (so it never adds blank
+   * space of its own to the card), which means it has no intrinsic height. Match it
+   * to the front face's rendered height so the flip never clips or overlaps.
+   */
+  syncFlipHeights() {
+    document.querySelectorAll('.route-block').forEach(block => {
+      const front = block.querySelector('.route-block-front');
+      const back = block.querySelector('.route-block-back');
+      if (front && back) back.style.height = `${front.offsetHeight}px`;
+    });
   }
 
   /* ==================== MODALS ==================== */
@@ -1324,7 +1164,6 @@ class RouteBalanceApp {
           <span class="status-badge status-badge-${s.pm ? 'pm' : 'am'}">${s.pm ? 'PM' : 'AM'}</span>
           ${s.pre12 ? '<span class="status-badge status-badge-pre12">Pre 12</span>' : ''}
         </td>
-        <td>${this.statusBadge(s.status)}</td>
         <td>${s.routeName}</td>
       </tr>`).join('');
 
@@ -1343,17 +1182,15 @@ class RouteBalanceApp {
     set('shipmentVolume', `ASR: ${route.asr}`);
     set('shipmentPieces', `DSR: ${route.dsr}`);
     set('shipmentDriver', route.driver);
-    set('shipmentVendor', route.vendor);
-
-    document.getElementById('shipmentStatus').innerHTML = this.statusBadge(route.status);
 
     new bootstrap.Modal(document.getElementById('shipmentModal')).show();
   }
 
-  showAddPostcodeModal() {
+  showAddPostcodeModal(route = null) {
     const select = document.getElementById('addPostcodeRoute');
     select.innerHTML = '<option value="">All routes</option>' +
       this.routes.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+    if (route) select.value = String(route.id);
 
     document.getElementById('postcodeInput').value = '';
     document.getElementById('typePostcode').checked = true;
@@ -1419,9 +1256,10 @@ class RouteBalanceApp {
   /* ==================== FLIP CARD 3D ==================== */
 
   toggleFlipCard(route) {
-    const block = document.querySelector(`[data-route-id="${route.id}"]`);
-    if (!block) return;
-    block.classList.toggle('flipped');
+    if (this.flippedRoutes.has(route.id)) this.flippedRoutes.delete(route.id);
+    else this.flippedRoutes.add(route.id);
+    const block = document.querySelector(`section.route-block[data-route-id="${route.id}"]`);
+    if (block) block.classList.toggle('flipped', this.flippedRoutes.has(route.id));
   }
 
   /* ==================== REBALANCE MODE ==================== */
@@ -1548,7 +1386,7 @@ class RouteBalanceApp {
     }
 
     // Recompute every aggregate for both routes (stops, deliveries, pickups,
-    // completion, pre12, asr, dsr, status)
+    // completion, pre12, asr, dsr)
     this.recomputeRoute(sourceRoute);
     this.recomputeRoute(targetRoute);
 
