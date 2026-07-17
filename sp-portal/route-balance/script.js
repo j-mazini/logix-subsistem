@@ -831,16 +831,13 @@ class RouteBalanceApp {
     const deliveries = stops.filter(s => s.type === 'DEL').length;
     const pickups = totalStops - deliveries;
     const avg = (arr) => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
-    const totalTarget = routes.reduce((sum, r) => sum + r.target, 0);
-    const stopsVsTargetPct = totalTarget > 0 ? Math.round((totalStops / totalTarget) * 100) : 0;
 
     const set = (id, v) => { document.getElementById(id).textContent = v; };
+    set('totalStopsCard', totalStops);
     set('targetLoopCard', Math.round(avg(routes.map(r => r.target))) + '%');
     set('deliveriesCard', deliveries);
     set('pickupsCard', pickups);
     set('sprCard', Math.round(avg(routes.map(r => r.spr))));
-    set('stopsTargetPctCard', stopsVsTargetPct + '%');
-    set('totalStopsCard', totalStops);
     set('totalRoutesCard', routes.length);
   }
 
