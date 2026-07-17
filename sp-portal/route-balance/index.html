@@ -111,12 +111,6 @@
     <!-- ============ GENERAL CONTROLS ============ -->
     <div class="controls-bar">
       <div class="btn-group-main">
-        <button class="styled-button styled-button--success" id="btnStart">
-          <i class="bi bi-play-fill"></i> Start
-        </button>
-        <button class="styled-button styled-button--danger" id="btnFinish">
-          <i class="bi bi-stop-fill"></i> Finish
-        </button>
         <button class="styled-button styled-button--primary" id="btnAddRoute">
           <i class="bi bi-plus-circle"></i> Add New Flex Route
         </button>
@@ -168,16 +162,6 @@
         <i class="bi bi-search"></i>
         <input type="text" id="searchRoute" class="form-control" placeholder="Search by route or driver…" />
       </div>
-      <select class="form-select filter-select" id="filterVendor">
-        <option value="">All vendors</option>
-      </select>
-      <select class="form-select filter-select" id="filterStatus">
-        <option value="">All statuses</option>
-        <option value="running">Running</option>
-        <option value="finished">Finished</option>
-        <option value="pending">Pending</option>
-        <option value="delayed">Delayed</option>
-      </select>
     </div>
     <!-- ============ OPERATION SUMMARY ============ -->
     <section class="operation-summary">
@@ -192,11 +176,9 @@
               <thead>
                 <tr>
                   <th data-sort="name">Route <i class="bi bi-arrow-down-up"></i></th>
-                  <th data-sort="vendor">Vendor <i class="bi bi-arrow-down-up"></i></th>
+                  <th data-sort="driver">Driver <i class="bi bi-arrow-down-up"></i></th>
                   <th data-sort="target">Target (%)</th>
                   <th data-sort="totalStops">Total Stops</th>
-                  <th data-sort="completedStops">Completed</th>
-                  <th data-sort="status">Status</th>
                 </tr>
               </thead>
               <tbody id="summaryTableBody"></tbody>
@@ -355,7 +337,6 @@
                   <th>Postcode</th>
                   <th>Customer</th>
                   <th>Flag</th>
-                  <th>Status</th>
                   <th>Route</th>
                 </tr>
               </thead>
@@ -385,8 +366,6 @@
             <div class="detail-row"><span class="label">Volume</span><span class="value" id="shipmentVolume">–</span></div>
             <div class="detail-row"><span class="label">Pieces</span><span class="value" id="shipmentPieces">–</span></div>
             <div class="detail-row"><span class="label">Driver</span><span class="value" id="shipmentDriver">–</span></div>
-            <div class="detail-row"><span class="label">Vendor</span><span class="value" id="shipmentVendor">–</span></div>
-            <div class="detail-row"><span class="label">Status</span><span class="value" id="shipmentStatus">–</span></div>
           </div>
         </div>
       </div>

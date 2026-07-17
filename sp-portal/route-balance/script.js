@@ -21,6 +21,9 @@ class RouteBalanceApp {
     this.sentRoutes = new Set();    // route ids whose manifest was sent to the driver
     this.flippedRoutes = new Set(); // route ids currently showing the Special Deliveries face
     this.specialView = {};          // routeId -> 'all' | 'pre12' | 'asr' | 'dsr' (Special Deliveries filter)
+    this.rebalanceExpanded = new Set(); // route ids currently expanded to show their deliveries (Rebalance mode)
+    this.compareTarget = {};        // routeId -> routeId currently being compared against (mutual)
+    this.comparePickerOpen = null;  // routeId whose "compare with…" route picker is open
 
     // ---- Static datasets for fake data generation ----
     this.DRIVERS = ['Carlos Silva', 'Ana Costa', 'João Martins', 'Maria Santos', 'Pedro Oliveira',
@@ -361,6 +364,7 @@ class RouteBalanceApp {
 
     document.getElementById('rebalanceToggle').addEventListener('change', (e) => {
       this.rebalanceMode = e.target.checked;
+      document.body.classList.toggle('rebalance-mode-active', this.rebalanceMode);
       this.render();
       this.showToast(this.rebalanceMode ? '🔄 Rebalance mode: select postcodes to transfer' : 'Operations mode: standard view', 'info');
     });
@@ -448,43 +452,98 @@ class RouteBalanceApp {
 
 
       const actionBtn = e.target.closest('[data-action]');
-      if (!actionBtn) return;
-      const route = this.routeFromEl(actionBtn);
-      if (!route) return;
+      if (actionBtn) {
+        const route = this.routeFromEl(actionBtn);
+        if (!route) return;
 
-      switch (actionBtn.dataset.action) {
-        case 'see-all-stops': this.showAllStopsModal(route); break;
-        case 'shipment-details': this.showShipmentDetailsModal(route); break;
-        case 'add-postcode': this.showAddPostcodeModal(route); break;
-        case 'export-route': this.exportRouteCsv(route); break;
-        case 'collapse-route': this.collapseRoute(route.id); break;
-        case 'flip-card': this.toggleFlipCard(route); break;
-        case 'close-flip':
-          this.flippedRoutes.delete(route.id);
-          actionBtn.closest('.route-block')?.classList.remove('flipped');
-          break;
-        case 'special-filter':
-          this.specialView[route.id] = actionBtn.dataset.cat;
-          this.renderRouteBlocks();
-          break;
+        switch (actionBtn.dataset.action) {
+          case 'see-all-stops': this.showAllStopsModal(route); break;
+          case 'shipment-details': this.showShipmentDetailsModal(route); break;
+          case 'add-postcode': this.showAddPostcodeModal(route); break;
+          case 'export-route': this.exportRouteCsv(route); break;
+          case 'collapse-route': this.collapseRoute(route.id); break;
+          case 'flip-card': this.toggleFlipCard(route); break;
+          case 'close-flip':
+            this.flippedRoutes.delete(route.id);
+            actionBtn.closest('.route-block')?.classList.remove('flipped');
+            break;
+          case 'special-filter':
+            this.specialView[route.id] = actionBtn.dataset.cat;
+            this.renderRouteBlocks();
+            break;
+          case 'toggle-expand':
+            this.toggleRebalanceExpand(route.id);
+            break;
+          case 'toggle-compare':
+            this.comparePickerOpen = this.comparePickerOpen === route.id ? null : route.id;
+            this.renderRouteBlocks();
+            break;
+          case 'pick-compare-target': {
+            const targetId = Number(actionBtn.dataset.targetId);
+            const target = this.routes.find(r => r.id === targetId);
+            if (!target) break;
+            this.compareTarget[route.id] = targetId;
+            this.compareTarget[targetId] = route.id;
+            this.comparePickerOpen = null;
+            this.rebalanceExpanded.add(route.id);
+            this.rebalanceExpanded.add(targetId);
+            this.renderRouteBlocks();
+            this.showToast(`Comparing Route ${route.name} with Route ${target.name}`, 'info');
+            break;
+          }
+          case 'swap-compare': this.swapCompareRoutes(route.id); break;
+          case 'cancel-compare': {
+            const otherId = this.compareTarget[route.id];
+            delete this.compareTarget[route.id];
+            if (otherId != null) delete this.compareTarget[otherId];
+            this.renderRouteBlocks();
+            break;
+          }
+        }
+        return;
+      }
+
+      // Rebalance mode: clicking anywhere else on the card header expands/collapses it.
+      if (this.rebalanceMode) {
+        const header = e.target.closest('.route-block-header');
+        const block = header?.closest('.route-block');
+        if (block) this.toggleRebalanceExpand(Number(block.dataset.routeId));
       }
     });
 
-    // Rebalance mode: drag a subpostcode row onto another route's block.
+    // Closes the "compare with…" picker when clicking anywhere outside of it.
+    document.addEventListener('click', (e) => {
+      if (this.comparePickerOpen !== null && !e.target.closest('.compare-wrap')) {
+        this.comparePickerOpen = null;
+        this.renderRouteBlocks();
+      }
+    });
+
+    // Rebalance mode: drag a postcode row (or a whole subpostcode group) onto another route's block.
     container.addEventListener('dragstart', (e) => {
+      if (!this.rebalanceMode) return;
+      const pcRow = e.target.closest('.rebalance-postcode-row');
+      if (pcRow) {
+        e.dataTransfer.effectAllowed = 'move';
+        this.dragPayload = { postcode: pcRow.dataset.postcode, sourceRouteId: Number(pcRow.dataset.routeId) };
+        e.dataTransfer.setData('text/plain', pcRow.dataset.postcode);
+        pcRow.classList.add('dragging');
+        return;
+      }
       const row = e.target.closest('tr.subpostcode-row.rebalance-row');
-      if (!this.rebalanceMode || !row) return;
-      e.dataTransfer.effectAllowed = 'move';
-      this.dragPayload = {
-        subpostcode: row.dataset.subpostcode,
-        sourceRouteId: Number(row.dataset.routeId),
-      };
-      e.dataTransfer.setData('text/plain', row.dataset.subpostcode);
-      row.classList.add('dragging');
+      if (row) {
+        e.dataTransfer.effectAllowed = 'move';
+        this.dragPayload = {
+          subpostcode: row.dataset.subpostcode,
+          sourceRouteId: Number(row.dataset.routeId),
+        };
+        e.dataTransfer.setData('text/plain', row.dataset.subpostcode);
+        row.classList.add('dragging');
+      }
     });
 
     container.addEventListener('dragend', (e) => {
-      const row = e.target.closest('tr.subpostcode-row.rebalance-row');
+      const row = e.target.closest('tr.subpostcode-row.rebalance-row, .rebalance-postcode-row');
       if (row) row.classList.remove('dragging');
       this.dragPayload = null;
       container.querySelectorAll('.route-block.drop-target')
@@ -520,7 +579,10 @@ class RouteBalanceApp {
       const payload = this.dragPayload;
       if (!payload) return;
       const targetRouteId = Number(block.dataset.routeId);
-      if (payload.sourceRouteId !== targetRouteId) {
+      if (payload.sourceRouteId === targetRouteId) return;
+      if (payload.postcode) {
+        this.transferSinglePostcodeByCode(payload.sourceRouteId, targetRouteId, payload.postcode);
+      } else {
         this.openTransferModal(payload.sourceRouteId, targetRouteId, payload.subpostcode);
       }
     });
@@ -564,51 +626,6 @@ class RouteBalanceApp {
     }
 
     return stops;
-  }
-
-  /** The outward area code a full postcode belongs to, e.g. "ME3 2AB" → "ME3". */
-  subpostcodeOf(postcode) {
-    return postcode.split(' ')[0];
-  }
-
-  /**
-   * Groups a flat stop list into subpostcode → postcode → stops[] for
-   * the route table. Groups containing a Pre 12 stop sort first.
-   */
-  groupBySubpostcode(stops) {
-    const bySub = new Map();
-    stops.forEach(s => {
-      const sub = this.subpostcodeOf(s.postcode);
-      if (!bySub.has(sub)) bySub.set(sub, new Map());
-      const byPc = bySub.get(sub);
-      if (!byPc.has(s.postcode)) byPc.set(s.postcode, []);
-      byPc.get(s.postcode).push(s);
-    });
-
-    const groups = [...bySub.entries()].map(([code, byPc]) => {
-      const groupStops = [...byPc.values()].flat();
-      const del = groupStops.filter(s => s.type === 'DEL').length;
-      const completed = groupStops.filter(s => s.status === 'completed').length;
-      return {
-        code,
-        postcodes: [...byPc.entries()].map(([postcode, pcStops]) => ({
-          postcode,
-          stops: pcStops,
-          del: pcStops.filter(s => s.type === 'DEL').length,
-          pu: pcStops.filter(s => s.type === 'PU').length,
-          pre12: pcStops.some(s => s.pre12),
-        })),
-        del,
-        pu: groupStops.length - del,
-        total: groupStops.length,
-        completion: groupStops.length ? Math.round(completed / groupStops.length * 100) : 0,
-        allCompleted: completed === groupStops.length,
-        pre12: groupStops.some(s => s.pre12),
-      };
-    });
-
-    groups.sort((a, b) => (b.pre12 === true) - (a.pre12 === true));
-    return groups;
   }
 
   /** The outward area code a full postcode belongs to, e.g. "ME3 2AB" → "ME3". */
@@ -854,6 +871,7 @@ class RouteBalanceApp {
 
   renderRouteBlocks() {
     const container = document.getElementById('routeBlocksContainer');
+    container.classList.toggle('route-blocks--rebalance', this.rebalanceMode);
     const shiftBadge = this.filterPM
       ? '<span class="shift-badge shift-badge-pm">PM</span>'
       : '<span class="shift-badge shift-badge-am">AM</span>';
@@ -890,6 +908,90 @@ class RouteBalanceApp {
           ${label} <span class="special-chip-count">${counts[key]}</span>
         </button>`;
 
+      // ---- Rebalance mode: compact/expand + route-to-route comparison ----
+      const rebalanceExpanded = this.rebalanceMode && this.rebalanceExpanded.has(route.id);
+      const compareWithId = this.compareTarget[route.id];
+      const compareWithRoute = compareWithId != null ? this.routes.find(r => r.id === compareWithId) : null;
+      const comparePickerOpen = this.comparePickerOpen === route.id;
+
+      const compareControlHtml = compareWithRoute ? `
+        <div class="compare-bar">
+          <span class="compare-bar-label"><i class="bi bi-arrow-left-right"></i> vs ${compareWithRoute.name}</span>
+          <button class="compare-bar-btn compare-bar-btn--swap" data-action="swap-compare" title="Swap all postcodes between these two routes">
+            <i class="bi bi-arrow-repeat"></i> Swap
+          </button>
+          <button class="compare-bar-btn compare-bar-btn--cancel" data-action="cancel-compare" title="Cancel comparison" aria-label="Cancel comparison">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+      ` : `
+        <div class="compare-wrap">
+          <button class="route-icon-btn ${comparePickerOpen ? 'active' : ''}" data-action="toggle-compare" title="Compare with another route" aria-label="Compare with another route">
+            <i class="bi bi-arrow-left-right"></i>
+          </button>
+          ${comparePickerOpen ? `
+          <div class="compare-picker">
+            <div class="compare-picker-title">Compare Route ${route.name} with…</div>
+            ${this.routes.filter(r => r.id !== route.id).map(r => `
+              <button type="button" class="compare-picker-item" data-action="pick-compare-target" data-target-id="${r.id}">
+                <span class="compare-picker-route">${r.name}</span>
+                <span class="compare-picker-driver">${r.driver}</span>
+              </button>`).join('')}
+          </div>
+          ` : ''}
+        </div>
+      `;
+
+      const headerRightHtml = this.rebalanceMode ? `
+        ${shiftBadge}
+        ${compareControlHtml}
+        <button class="route-icon-btn route-icon-btn--danger" data-action="collapse-route" data-route-id="${route.id}"
+                title="Close this route and redistribute its postcodes" aria-label="Close route">
+          <i class="bi bi-box-arrow-in-down"></i>
+        </button>
+        <button class="route-expand-chevron" data-action="toggle-expand" title="${rebalanceExpanded ? 'Collapse' : 'Expand'} deliveries" aria-label="Toggle deliveries list">
+          <i class="bi bi-chevron-${rebalanceExpanded ? 'up' : 'down'}"></i>
+        </button>
+      ` : `
+        ${shiftBadge}
+        <button class="flip-btn" data-action="flip-card" title="View Special Deliveries (Pre 12 / ASR / DSR)">
+          <i class="bi bi-stars"></i> Special Deliveries
+        </button>
+        <button class="route-icon-btn" data-action="add-postcode" title="Add a postcode to this route" aria-label="Add postcode">
+          <i class="bi bi-geo-alt-fill"></i>
+        </button>
+        <button class="route-icon-btn" data-action="export-route" title="Export this route's manifest (Demi8 format)" aria-label="Export manifest">
+          <i class="bi bi-filetype-csv"></i>
+        </button>
+        <button class="route-icon-btn route-icon-btn--danger" data-action="collapse-route" data-route-id="${route.id}"
+                title="Close this route and redistribute its postcodes" aria-label="Close route">
+          <i class="bi bi-box-arrow-in-down"></i>
+        </button>
+      `;
+
+      const rebalancePostcodeListHtml = `
+        <div class="route-block-content">
+          <div class="route-table-responsive rebalance-postcode-list">
+            ${groups.flatMap(g => g.postcodes).map(p => `
+              <div class="pre12-flip-item rebalance-postcode-row" draggable="true"
+                   data-postcode="${p.postcode}" data-route-id="${route.id}">
+                <i class="bi bi-grip-vertical drag-handle"></i>
+                <span class="pre12-flip-pc">${p.postcode}</span>
+                <span class="special-tags">
+                  ${p.pre12 ? '<span class="status-badge status-badge-pre12">Pre 12</span>' : ''}
+                  ${p.stops.some(s => s.asr) ? '<span class="status-badge special-tag-asr">ASR</span>' : ''}
+                  ${p.stops.some(s => s.dsr) ? '<span class="status-badge special-tag-dsr">DSR</span>' : ''}
+                </span>
+                <span class="pre12-flip-count">DEL ${p.del} / PU ${p.pu}</span>
+              </div>
+            `).join('')}
+          </div>
+          <p class="rebalance-hint">
+            <i class="bi bi-info-circle"></i>
+            Drag a postcode onto another route to move it.
+          </p>
+        </div>`;
+
       return `
       <section class="route-block ${rebalanceClass} ${flippedClass}" data-route-id="${route.id}">
         <div class="route-block-flipper">
@@ -900,20 +1002,7 @@ class RouteBalanceApp {
                 <h3 class="route-driver-name">${route.driver}</h3>
               </div>
               <div class="route-block-header-right">
-                ${shiftBadge}
-                <button class="flip-btn" data-action="flip-card" title="View Special Deliveries (Pre 12 / ASR / DSR)">
-                  <i class="bi bi-stars"></i> Special Deliveries
-                </button>
-                <button class="route-icon-btn" data-action="add-postcode" title="Add a postcode to this route" aria-label="Add postcode">
-                  <i class="bi bi-geo-alt-fill"></i>
-                </button>
-                <button class="route-icon-btn" data-action="export-route" title="Export this route's manifest (Demi8 format)" aria-label="Export manifest">
-                  <i class="bi bi-filetype-csv"></i>
-                </button>
-                <button class="route-icon-btn route-icon-btn--danger" data-action="collapse-route" data-route-id="${route.id}"
-                        title="Close this route and redistribute its postcodes" aria-label="Close route">
-                  <i class="bi bi-box-arrow-in-down"></i>
-                </button>
+                ${headerRightHtml}
               </div>
             </div>
 
@@ -925,6 +1014,7 @@ class RouteBalanceApp {
               <span class="route-progress-label">${doneStops}/${stops.length} stops · ${progressPct}%</span>
             </div>
 
+            ${this.rebalanceMode ? (rebalanceExpanded ? rebalancePostcodeListHtml : '') : `
             <div class="route-block-content">
               <div class="route-table-responsive">
                 <table class="route-table">
@@ -938,11 +1028,9 @@ class RouteBalanceApp {
                       const key = `${route.id}:${g.code}`;
                       const expanded = this.expandedSubpostcodes.has(key);
                       return `
-                      <tr class="subpostcode-row ${this.rebalanceMode ? 'rebalance-row' : ''}"
-                          ${this.rebalanceMode ? 'draggable="true"' : ''}
+                      <tr class="subpostcode-row"
                           data-subpostcode="${g.code}" data-route-id="${route.id}">
                         <td class="pc-cell">
-                          ${this.rebalanceMode ? '<i class="bi bi-grip-vertical drag-handle"></i>' : ''}
                           <button type="button" class="subpostcode-toggle ${expanded ? 'expanded' : ''}"
                                   data-action="toggle-subpostcode" data-subpostcode="${g.code}" data-route-id="${route.id}">
                             <i class="bi bi-chevron-right"></i> ${g.code}
@@ -995,13 +1083,6 @@ class RouteBalanceApp {
                 </div>
               </div>
 
-              ${this.rebalanceMode ? `
-              <p class="rebalance-hint">
-                <i class="bi bi-info-circle"></i>
-                Drag a subpostcode onto another route to send it whole or split specific postcodes into it.
-              </p>
-              ` : ''}
-
               <div class="route-buttons">
                 <button class="styled-button styled-button--outline" data-action="shipment-details">
                   <i class="bi bi-box2"></i> See Shipment Details
@@ -1016,6 +1097,7 @@ class RouteBalanceApp {
                 <textarea class="notes-textarea" placeholder="Write observations…">${route.notes}</textarea>
               </div>
             </div>
+            `}
           </div>
 
           <div class="route-block-face route-block-back">
@@ -1073,12 +1155,30 @@ class RouteBalanceApp {
    * The back face is absolutely positioned over the front (so it never adds blank
    * space of its own to the card), which means it has no intrinsic height. Match it
    * to the front face's rendered height so the flip never clips or overlaps.
+   *
+   * Also watches for size changes on the front face — in Rebalance mode the card is
+   * user-resizable (CSS `resize`), and dragging it changes the front's height without
+   * triggering a re-render, so the back face would otherwise fall out of sync.
    */
   syncFlipHeights() {
+    if (!this.flipResizeObserver) {
+      this.flipResizeObserver = new ResizeObserver(entries => {
+        for (const entry of entries) {
+          const front = entry.target;
+          const back = front.closest('.route-block')?.querySelector('.route-block-back');
+          if (back) back.style.height = `${front.offsetHeight}px`;
+        }
+      });
+    } else {
+      this.flipResizeObserver.disconnect();
+    }
+
     document.querySelectorAll('.route-block').forEach(block => {
       const front = block.querySelector('.route-block-front');
       const back = block.querySelector('.route-block-back');
-      if (front && back) back.style.height = `${front.offsetHeight}px`;
+      if (!front || !back) return;
+      back.style.height = `${front.offsetHeight}px`;
+      this.flipResizeObserver.observe(front);
     });
   }
 
@@ -1393,6 +1493,46 @@ class RouteBalanceApp {
     this.persistRebalance();
     this.render();
     this.showToast(`✓ Moved ${moved} postcode(s): ${sourceRoute.name} → ${targetRoute.name}`, 'success');
+  }
+
+  /** Instant single-postcode move, used when dragging a row in the Rebalance-mode flat list. */
+  transferSinglePostcodeByCode(sourceRouteId, targetRouteId, postcode) {
+    const sourceRoute = this.routes.find(r => r.id === sourceRouteId);
+    if (!sourceRoute) return;
+    const stopIds = sourceRoute.stops.filter(s => s.postcode === postcode).map(s => s.id);
+    this.transferPostcodesToRoute(sourceRouteId, targetRouteId, stopIds);
+  }
+
+  toggleRebalanceExpand(routeId) {
+    if (this.rebalanceExpanded.has(routeId)) this.rebalanceExpanded.delete(routeId);
+    else this.rebalanceExpanded.add(routeId);
+    this.renderRouteBlocks();
+  }
+
+  /** Swaps every stop between the two routes currently being compared — a full route substitution. */
+  swapCompareRoutes(routeId) {
+    const otherId = this.compareTarget[routeId];
+    const a = this.routes.find(r => r.id === routeId);
+    const b = this.routes.find(r => r.id === otherId);
+    if (!a || !b) return;
+
+    const aStops = a.stops;
+    const bStops = b.stops;
+    aStops.forEach(s => { s.routeName = b.name; });
+    bStops.forEach(s => { s.routeName = a.name; });
+    a.stops = bStops;
+    b.stops = aStops;
+    a.stops.forEach((s, i) => { s.stopNumber = i + 1; });
+    b.stops.forEach((s, i) => { s.stopNumber = i + 1; });
+
+    this.recomputeRoute(a);
+    this.recomputeRoute(b);
+    delete this.compareTarget[a.id];
+    delete this.compareTarget[b.id];
+
+    this.persistRebalance();
+    this.render();
+    this.showToast(`✓ Swapped Route ${a.name} ↔ Route ${b.name}`, 'success');
   }
 
   persistRebalance() {

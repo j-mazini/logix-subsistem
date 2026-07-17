@@ -784,7 +784,25 @@ body.route-balance-page {
 
 /* ============ ROUTE TABLE + WAYPOINTS ============ */
 
-.route-table-responsive { overflow-x: auto; }
+/* Fixed height so every route card reads the same regardless of stop count —
+   the list scrolls internally instead of stretching the card. */
+.route-table-responsive {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 320px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  scrollbar-width: thin;
+  scrollbar-color: var(--hairline-strong) transparent;
+}
+
+.route-table-responsive::-webkit-scrollbar { width: 8px; height: 8px; }
+.route-table-responsive::-webkit-scrollbar-track { background: transparent; }
+.route-table-responsive::-webkit-scrollbar-thumb {
+  background: var(--hairline-strong);
+  border-radius: 999px;
+}
+.route-table-responsive::-webkit-scrollbar-thumb:hover { background: var(--ink-faint); }
 
 .route-table {
   width: 100%;
@@ -792,6 +810,9 @@ body.route-balance-page {
 }
 
 .route-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
   font-family: var(--font-mono);
   font-size: 0.6rem;
   font-weight: 700;
@@ -800,6 +821,7 @@ body.route-balance-page {
   color: var(--ink-faint);
   text-align: left;
   padding: 0.5rem 0.75rem;
+  background: var(--surface);
   border-bottom: 1px solid var(--hairline-strong);
   white-space: nowrap;
 }
@@ -1201,6 +1223,209 @@ body.route-balance-page {
 }
 
 /* ============ REBALANCE MODE ============ */
+
+/* Summary table + dashboard cards drop out — they're operational reporting,
+   not needed while moving postcodes between routes. */
+body.rebalance-mode-active .operation-summary { display: none; }
+
+/* Dense multi-column overview: cards are small and collapsed by default so the
+   whole operation is visible at a glance; clicking one reveals its deliveries. */
+.route-blocks--rebalance {
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
+.route-block.rebalance-mode .route-dash,
+.route-block.rebalance-mode .notes-section,
+.route-block.rebalance-mode .route-buttons {
+  display: none;
+}
+
+/* User-resizable: drag the card's bottom-right corner to make it as tall/wide as needed.
+   No min-height — a collapsed card is just its header, an expanded one grows with content. */
+.route-block.rebalance-mode {
+  resize: both;
+  overflow: auto;
+  min-width: 280px;
+  max-width: 100%;
+}
+
+.route-block.rebalance-mode .route-block-flipper { height: 100%; }
+
+.route-block.rebalance-mode .route-block-front {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.route-block.rebalance-mode .route-block-header { cursor: pointer; }
+
+.route-block.rebalance-mode .route-block-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding-top: 0;
+}
+
+.route-block.rebalance-mode .route-table-responsive {
+  flex: 1;
+  min-height: 120px;
+  max-height: none;
+  border: none;
+}
+
+.route-expand-chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.8rem;
+  height: 1.8rem;
+  color: var(--ink-faint);
+  background: transparent;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+
+.route-expand-chevron:hover { background: var(--surface-2); color: var(--ink); }
+
+/* ---- Compare: pick another route, review side by side, swap or cancel ---- */
+
+.compare-wrap { position: relative; }
+
+.route-icon-btn.active { color: var(--accent-ink); background: var(--accent-soft); }
+
+.compare-picker {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  right: 0;
+  z-index: 20;
+  width: 220px;
+  padding: 0.5rem;
+  background: var(--surface);
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-hover);
+  cursor: default;
+}
+
+.compare-picker-title {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-faint);
+  padding: 0.3rem 0.5rem 0.5rem;
+}
+
+.compare-picker-item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.45rem 0.5rem;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.compare-picker-item:hover { background: var(--accent-soft); }
+
+.compare-picker-route {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: var(--ink);
+}
+
+.compare-picker-driver { font-size: 0.76rem; color: var(--ink-soft); }
+
+.compare-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.3rem 0.3rem 0.7rem;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  cursor: default;
+}
+
+.compare-bar-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--accent-ink);
+  white-space: nowrap;
+}
+
+.compare-bar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.28rem 0.6rem;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  color: #fff;
+  background: var(--accent);
+  transition: background var(--t-fast);
+}
+
+.compare-bar-btn--swap:hover { background: var(--accent-ink); }
+
+.compare-bar-btn--cancel {
+  color: var(--ink-soft);
+  background: rgba(255, 255, 255, 0.6);
+  padding: 0.28rem 0.45rem;
+}
+
+.compare-bar-btn--cancel:hover { color: var(--danger); background: var(--danger-soft); }
+
+/* ---- Flat postcode list (Rebalance mode's expanded card body) ---- */
+
+.rebalance-postcode-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding-top: 0.9rem;
+}
+
+.rebalance-postcode-row {
+  cursor: grab;
+  flex-wrap: wrap;
+  row-gap: 0.35rem;
+  column-gap: 0.5rem;
+}
+
+.rebalance-postcode-row .drag-handle { flex-shrink: 0; }
+
+.rebalance-postcode-row .pre12-flip-pc { min-width: 0; }
+
+.rebalance-postcode-row .special-tags { flex-wrap: wrap; row-gap: 0.3rem; }
+
+.rebalance-postcode-row .pre12-flip-count { margin-left: auto; }
+
+.rebalance-postcode-row.dragging {
+  opacity: 0.45;
+  outline: 2px dashed var(--warn);
+  outline-offset: -2px;
+}
 
 .rebalance-hint {
   display: flex;
