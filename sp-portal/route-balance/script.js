@@ -327,7 +327,6 @@ class RouteBalanceApp {
   setupEventListeners() {
     document.getElementById('btnRefresh').addEventListener('click', () => this.refresh());
     document.getElementById('btnAddRoute').addEventListener('click', () => this.showAddRouteModal());
-    document.getElementById('btnSendDrivers').addEventListener('click', () => this.sendToDrivers());
     document.getElementById('btnSaveRoute').addEventListener('click', () => this.saveNewRoute());
     document.getElementById('btnSaveStop').addEventListener('click', () => this.saveStopEdit());
     document.getElementById('btnConfirmAddPostcode').addEventListener('click', () => this.confirmAddPostcode());
