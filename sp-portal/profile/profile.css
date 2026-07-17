@@ -3,6 +3,21 @@
  */
 
 /* ========== Page layout ========== */
+.sp-profile-page {
+  /* Single source of truth for cover/avatar sizing so the avatar's overlap
+     position and the body's clearance padding are derived from the same
+     numbers instead of separately hand-tuned (which is how they drifted
+     out of sync and started overlapping other cards). */
+  --sp-cover-h: 280px;
+  --sp-avatar-d: 140px;
+  /* How far the avatar climbs above the cover/body seam. Desktop: half the
+     avatar sits beside the name text, so only half needs clearing. */
+  --sp-avatar-peek: calc(var(--sp-avatar-d) / 2);
+  --sp-fb-body-pt: calc(var(--sp-avatar-peek) + 1rem);
+  --sp-fb-body-pr: calc(var(--sp-avatar-d) + 1rem);
+  --sp-fb-body-pl: 1.25rem;
+}
+
 .sp-profile-page .page-inner {
   padding: 0.85rem 1rem;
   background: transparent;
@@ -55,7 +70,7 @@
 /* Cover photo */
 .sp-profile-cover-wrap {
   position: relative;
-  height: 280px;
+  height: var(--sp-cover-h);
   overflow: hidden;
   border-radius: 1rem 1rem 0 0;
 }
@@ -92,7 +107,9 @@
 .sp-profile-cover-upload {
   position: absolute;
   bottom: 1rem;
-  right: 1rem;
+  /* Left side: the right side of the cover is reserved for the avatar,
+     which overlaps down onto the seam below the cover. */
+  left: 1rem;
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
@@ -111,16 +128,22 @@
   color: #fff;
 }
 
-/* Profile avatar */
+/* Profile avatar
+   Anchored from the TOP of the card (= top of the cover photo) rather than
+   from the bottom of the whole card. The card's bottom edge moves with the
+   body text length (owner, description), so anchoring from there let the
+   avatar drift down and overlap the section card underneath it. Anchoring
+   from the fixed cover height keeps it pinned to the cover/body seam. */
 .sp-profile-avatar-wrap {
   position: absolute;
   right: 1.5rem;
-  bottom: -3.5rem;
+  top: calc(var(--sp-cover-h) - var(--sp-avatar-peek));
+  z-index: 2;
 }
 
 .sp-profile-avatar {
-  width: 140px;
-  height: 140px;
+  width: var(--sp-avatar-d);
+  height: var(--sp-avatar-d);
   border-radius: 50%;
   background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   color: #fff;
@@ -169,9 +192,12 @@
   display: none;
 }
 
-/* Profile body (name below cover) */
+/* Profile body (name below cover).
+   Top padding clears the avatar's overlap onto the card (half its height,
+   plus a breathing gap); right padding keeps long company names from
+   running underneath the circle instead of wrapping. */
 .sp-profile-fb-body {
-  padding: 3.5rem 1.25rem 2rem;
+  padding: var(--sp-fb-body-pt) var(--sp-fb-body-pr) 2rem var(--sp-fb-body-pl);
 }
 
 .sp-profile-fb-name {
@@ -238,9 +264,16 @@
   border-color: rgba(226, 232, 240, 0.9) !important;
 }
 
-/* Save button */
+/* Save button.
+   Kept left-aligned (matches the rest of the form), but nudged right of the
+   app's floating menu trigger (sidebar-beam.css: a circle pinned to the
+   bottom-left of the viewport on every page, ~88px footprint at its
+   largest breakpoint). Without this gap the button — the last thing in
+   the page's flow — ends up sitting behind that circle once scrolled to
+   the bottom, which is exactly where a user lands right before saving. */
 .sp-profile-save-btn {
   align-self: flex-start;
+  margin-left: 6rem;
   padding: 0.6rem 1.5rem;
   border-radius: 0.75rem;
   font-weight: 600;
@@ -260,25 +293,34 @@
 }
 
 @media (max-width: 576px) {
-  .sp-profile-cover-wrap {
-    height: 190px;
+  .sp-profile-page {
+    --sp-cover-h: 190px;
+    --sp-avatar-d: 100px;
+    /* On narrow screens the avatar sits to the left with the name stacked
+       fully underneath it (not beside it), so the seam only needs a small
+       peek instead of a half-avatar overlap, and the body must clear the
+       avatar's *whole* remaining height, not just half. */
+    --sp-avatar-peek: 2.5rem;
+    --sp-fb-body-pt: calc(var(--sp-avatar-d) - var(--sp-avatar-peek) + 0.75rem);
+    --sp-fb-body-pr: 1rem;
+    --sp-fb-body-pl: 1rem;
   }
   .sp-profile-avatar {
-    width: 100px;
-    height: 100px;
     font-size: 1.75rem;
   }
   .sp-profile-avatar-wrap {
-    bottom: -2.5rem;
+    right: auto;
     left: 1rem;
+  }
+  .sp-profile-cover-upload {
+    /* Avatar now owns the left side of the cover on mobile. */
+    left: auto;
+    right: 1rem;
   }
   .sp-profile-avatar-upload {
     width: 32px;
     height: 32px;
     font-size: 0.85rem;
-  }
-  .sp-profile-fb-body {
-    padding: 3rem 1rem 1rem;
   }
   .sp-profile-fb-name {
     font-size: 1.35rem;
@@ -288,5 +330,47 @@
   }
   .sp-profile-section-header {
     padding: 0.9rem 1rem;
+  }
+}
+
+/* ========== Save toast ==========
+   This page loaded no stylesheet that defines .alert-toast (that class only
+   exists in dashboard.css, which this page doesn't include), so it was
+   previously relying solely on Bootstrap's position-fixed/bottom-0/end-0
+   utilities for placement and had no visual styling at all — a save
+   confirmation that was effectively invisible. Styled it here, keeping the
+   conventional bottom-right placement used elsewhere in the app; the Save
+   button's left-side margin (above) is what keeps that same corner clear. */
+#profileToast.alert-toast {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 10000;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: #0f172a;
+  color: #fff;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  box-shadow: 0 10px 40px rgba(15, 23, 42, 0.25);
+}
+
+#profileToast.alert-toast[hidden] {
+  display: none;
+}
+
+#profileToast i {
+  color: #4ade80;
+  font-size: 1.1rem;
+}
+
+@media (max-width: 576px) {
+  #profileToast.alert-toast {
+    bottom: 1rem;
+    right: 1rem;
+    left: 1rem;
   }
 }
