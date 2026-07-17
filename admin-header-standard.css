@@ -1,0 +1,113 @@
+/**
+ * Admin header — standardized user-menu pattern.
+ *
+ * `.admin-header`/`.admin-header-title`/`.admin-header-user-pill` already
+ * exist (base layout in vendor-admin-view.css, glass skin in
+ * liquid-glass.css). This file only adds what didn't exist anywhere yet:
+ * a click/keyboard-openable user menu under the pill, modeled on the
+ * reference Next.js app's NavUser dropdown, but styled to match this
+ * site's existing liquid-glass card language instead of a flat menu.
+ * Behavior is wired by admin-header.js.
+ */
+
+.admin-header-user-pill {
+  position: relative;
+  cursor: pointer;
+  padding: 0.35rem 0.65rem 0.35rem 0.35rem;
+  border-radius: 999px;
+  outline: none;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.admin-header-user-pill:hover,
+.admin-header-user-pill:focus-visible {
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.admin-header-user-pill:focus-visible {
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+}
+
+.admin-header-user-pill[aria-expanded="true"] {
+  background: rgba(99, 102, 241, 0.1);
+}
+
+.admin-header-user-caret {
+  margin-left: 0.5rem;
+  font-size: 0.7rem;
+  color: #94a3b8;
+  transition: transform 0.2s ease;
+}
+
+.admin-header-user-pill[aria-expanded="true"] .admin-header-user-caret {
+  transform: rotate(180deg);
+}
+
+/* Dropdown panel — same glass-card language as the rest of the site.
+   `.admin-header` has `overflow: hidden` (needed elsewhere to clip its
+   decorative corner-glow to its rounded corners), which would silently
+   clip an absolutely-positioned descendant that pokes out below it —
+   the exact bug already found/fixed once today on the SP Profile page's
+   avatar. Since this menu ships to every page, it's positioned `fixed`
+   instead, with top/left computed in admin-header.js from the pill's own
+   position — that structurally can't be clipped by any ancestor. */
+.admin-header-user-menu {
+  position: fixed;
+  min-width: 12rem;
+  z-index: 9999;
+  padding: 0.4rem;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.82) 100%);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.16), 0 0 0 1px rgba(255, 255, 255, 0.4) inset;
+  border-radius: 0.75rem;
+}
+
+.admin-header-user-menu[hidden] {
+  display: none;
+}
+
+.admin-header-user-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  border: none;
+  background: transparent;
+  color: #1e293b;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.admin-header-user-menu-item:hover,
+.admin-header-user-menu-item:focus-visible {
+  background: rgba(99, 102, 241, 0.1);
+  color: #1e293b;
+}
+
+.admin-header-user-menu-item i {
+  font-size: 1rem;
+  color: #6366f1;
+  width: 1.1rem;
+  text-align: center;
+}
+
+.admin-header-user-menu-item--danger i {
+  color: #ef4444;
+}
+
+.admin-header-user-menu-item--danger:hover {
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.admin-header-user-menu-divider {
+  height: 1px;
+  margin: 0.3rem 0.4rem;
+  background: rgba(226, 232, 240, 0.8);
+}

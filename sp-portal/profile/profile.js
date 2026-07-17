@@ -1,26 +1,13 @@
     (function () {
       'use strict';
-      var SP_STORAGE_KEY = 'dhl_sp_portal_current_sp';
       var COVER_STORAGE_KEY = 'dhl_sp_profile_cover';
       var AVATAR_STORAGE_KEY = 'dhl_sp_profile_avatar';
 
+      // getCurrentSp()/appendSpToLinks()/header-pill population used to be
+      // duplicated here; they now live once in sp-header-identity.js (loaded
+      // before this file), which also fills #spHeaderName/#spHeaderAvatar.
       function getCurrentSp() {
-        var params = new URLSearchParams(window.location.search);
-        var sp = (params.get('sp') || '').trim();
-        if (sp) {
-          try { sessionStorage.setItem(SP_STORAGE_KEY, sp); } catch (e) {}
-          return sp;
-        }
-        try { return sessionStorage.getItem(SP_STORAGE_KEY) || ''; } catch (e) { return ''; }
-      }
-
-      function appendSpToLinks() {
-        var sp = getCurrentSp();
-        if (!sp) return;
-        document.querySelectorAll('.beam-plate[href]').forEach(function (a) {
-          var href = a.getAttribute('href');
-          if (href && href.indexOf('?') === -1) a.setAttribute('href', href + '?sp=' + encodeURIComponent(sp));
-        });
+        return window.SpHeaderIdentity.getCurrentSp();
       }
 
       function getSpMeta(spName) {
@@ -135,25 +122,11 @@
         document.getElementById('spNotFound').classList.remove('hidden');
         document.getElementById('profileForm').classList.add('hidden');
       } else {
-        document.getElementById('spHeaderName').textContent = spName;
+        // #spHeaderName/#spHeaderAvatar/#spHeaderAvatarFallback are now
+        // populated by sp-header-identity.js. `logoMap` is kept here (still
+        // empty, as before) because it's also read further below for the
+        // profile's own avatar-photo fallback logic.
         var logoMap = {};
-        var avatar = document.getElementById('spHeaderAvatar');
-        if (avatar) {
-          var fallback = document.getElementById('spHeaderAvatarFallback');
-          var showFallback = function (txt) {
-            if (fallback) { fallback.textContent = (txt || spName || '').split(' ').map(function (w) { return w[0]; }).join('').slice(0, 2).toUpperCase(); fallback.style.display = 'flex'; }
-            if (avatar) avatar.style.display = 'none';
-          };
-          if (logoMap[spName]) {
-            avatar.onerror = function () { showFallback(spName); };
-            avatar.src = '../../assets/' + logoMap[spName];
-            avatar.alt = spName;
-            avatar.style.display = 'block';
-          } else {
-            showFallback(spName);
-          }
-        }
-        appendSpToLinks();
 
         document.getElementById('profileForm').classList.remove('hidden');
 

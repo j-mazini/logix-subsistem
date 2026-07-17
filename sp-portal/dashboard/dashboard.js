@@ -1,24 +1,11 @@
     (function () {
       'use strict';
-      var SP_STORAGE_KEY = 'dhl_sp_portal_current_sp';
 
+      // getCurrentSp()/appendSpToLinks()/header-pill population used to be
+      // duplicated here; they now live once in sp-header-identity.js (loaded
+      // before this file), which also fills #spHeaderName/#spHeaderAvatar.
       function getCurrentSp() {
-        var params = new URLSearchParams(window.location.search);
-        var sp = (params.get('sp') || '').trim();
-        if (sp) {
-          try { sessionStorage.setItem(SP_STORAGE_KEY, sp); } catch (e) {}
-          return sp;
-        }
-        try { return sessionStorage.getItem(SP_STORAGE_KEY) || ''; } catch (e) { return ''; }
-      }
-
-      function appendSpToLinks() {
-        var sp = getCurrentSp();
-        if (!sp) return;
-        document.querySelectorAll('.beam-plate[href]').forEach(function (a) {
-          var href = a.getAttribute('href');
-          if (href && href.indexOf('?') === -1) a.setAttribute('href', href + '?sp=' + encodeURIComponent(sp));
-        });
+        return window.SpHeaderIdentity.getCurrentSp();
       }
 
       var data = window.DHL_MOCK_DATA || {};
@@ -361,26 +348,6 @@
       } else {
         var welcomeEl = document.getElementById('welcomeMsg');
         if (welcomeEl) welcomeEl.textContent = 'Welcome, ' + spName + '. Here is your operations summary.';
-        document.getElementById('spHeaderName').textContent = spName;
-        document.getElementById('spHeaderPill').setAttribute('title', spName);
-        var logoMap = {};
-        var avatar = document.getElementById('spHeaderAvatar');
-        if (avatar) {
-          var fallback = document.getElementById('spHeaderAvatarFallback');
-          var showFallback = function (txt) {
-            if (fallback) { fallback.textContent = (txt || spName || '').split(' ').map(function (w) { return w[0]; }).join('').slice(0, 2).toUpperCase(); fallback.style.display = 'flex'; }
-            if (avatar) avatar.style.display = 'none';
-          };
-          if (logoMap[spName]) {
-            avatar.onerror = function () { showFallback(spName); };
-            avatar.src = '../../assets/' + logoMap[spName];
-            avatar.alt = spName;
-            avatar.style.display = 'block';
-          } else {
-            showFallback(spName);
-          }
-        }
-        appendSpToLinks();
       }
 
       function filterVendors() {

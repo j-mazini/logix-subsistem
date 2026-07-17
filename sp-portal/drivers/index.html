@@ -18,6 +18,7 @@
   <script src="../sp-portal-responsive.js" defer></script>
   <link rel="stylesheet" href="../../refinements-v2.css" />
   <link rel="stylesheet" href="../../refinements-v3-motion.css" />
+  <link rel="stylesheet" href="../../admin-header-standard.css" />
 </head>
 <body class="has-beam-sidebar sp-portal">
   <div class="sidebar-wrapper" id="sidebarWrapper">
@@ -59,12 +60,31 @@
             <div id="spNotFound" class="alert alert-warning hidden">Service Provider not set. Open with <code>?sp=YourCompany</code>.</div>
 
             <div id="spVendorContent" class="hidden">
-              <!-- ModernPageHeader: title + subtitle + metrics -->
+              <!-- ============ HEADER (standardized: title + user menu) ============ -->
+              <div class="admin-header d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                <h1 class="admin-header-title">Vendors</h1>
+                <div class="admin-header-user-pill d-flex align-items-center">
+                  <span id="spHeaderAvatarFallback" class="admin-header-user-avatar admin-header-user-avatar-fallback" style="display:none;"></span>
+                  <img id="spHeaderAvatar" src="" alt="" class="admin-header-user-avatar admin-header-user-avatar--img" style="display:none;" />
+                  <span class="admin-header-user-name" id="spHeaderName">—</span>
+                  <i class="bi bi-chevron-down admin-header-user-caret" aria-hidden="true"></i>
+                </div>
+              </div>
+              <!-- Outside .admin-header on purpose: that element has backdrop-filter
+                   (for its glass skin), which makes it a containing block for
+                   position:fixed descendants — trapping this menu right back inside
+                   its overflow:hidden bounds if nested within. See admin-header.js. -->
+              <div class="admin-header-user-menu" hidden>
+                <a href="../../dhl/access-select/index.html" class="admin-header-user-menu-item"><i class="bi bi-arrow-left-right"></i> Select access</a>
+                <div class="admin-header-user-menu-divider"></div>
+                <a href="../login/index.html" class="admin-header-user-menu-item admin-header-user-menu-item--danger" data-action="logout"><i class="bi bi-box-arrow-right"></i> Log out</a>
+              </div>
+
+              <!-- ============ PAGE INFO (kept from the original header; not part of the standardized pattern) ============ -->
               <div class="vendor-page-header mb-4">
                 <div class="vendor-page-header-inner">
                   <div class="vendor-page-header-row">
                     <div class="vendor-page-header-title-block">
-                      <h1 class="vendor-page-title">Vendors</h1>
                       <p class="vendor-page-subtitle">Vendor management and information</p>
                       <div class="vendor-page-metrics">
                         <div class="vendor-page-metric"><span class="vendor-page-metric-label">Total</span><span class="vendor-page-metric-value" id="metricTotal">0</span></div>
@@ -72,11 +92,6 @@
                         <div class="vendor-page-metric"><span class="vendor-page-metric-label">Inactive</span><span class="vendor-page-metric-value" id="metricInactive">0</span></div>
                         <div class="vendor-page-metric"><span class="vendor-page-metric-label">Pending</span><span class="vendor-page-metric-value" id="metricPending">0</span></div>
                       </div>
-                    </div>
-                    <div class="vendor-page-header-user">
-                      <span id="spHeaderAvatarFallback" class="admin-header-user-avatar admin-header-user-avatar-fallback" style="display:none;"></span>
-                      <img id="spHeaderAvatar" src="" alt="" class="admin-header-user-avatar admin-header-user-avatar--img" style="display:none;" />
-                      <span class="admin-header-user-name" id="spHeaderName">—</span>
                     </div>
                   </div>
                 </div>
@@ -278,6 +293,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
   <script src="../../dhl-mock-data.js" defer></script>
   <script src="../../beam-sidebar.js" defer></script>
+  <script src="../../sp-header-identity.js" defer></script>
+  <script src="../../admin-header.js" defer></script>
   <script src="drivers.js" defer></script>
   <script src="../../refinements-v3-motion.js" defer></script>
 </body>

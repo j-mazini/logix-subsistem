@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="../modern-ui.css" />
   <link rel="stylesheet" href="../refinements-v2.css" />
   <link rel="stylesheet" href="../refinements-v3-motion.css" />
+  <link rel="stylesheet" href="../admin-header-standard.css" />
 </head>
 <body class="has-beam-sidebar">
   <div class="sidebar-wrapper" id="sidebarWrapper">
@@ -66,7 +67,17 @@
                 <span class="admin-header-user-avatar admin-header-user-avatar-fallback" id="dhlHeaderAvatarFallback" style="display:none;">DHL</span>
                 <img src="../assets/dhl-uk-logo.png" alt="DHL Uk" class="admin-header-user-avatar admin-header-user-avatar--img" id="dhlHeaderAvatarImg" onerror="this.style.display='none'; document.getElementById('dhlHeaderAvatarFallback').style.display='flex';" />
                 <span class="admin-header-user-name">DHL Uk</span>
+                <i class="bi bi-chevron-down admin-header-user-caret" aria-hidden="true"></i>
               </div>
+            </div>
+            <!-- Outside .admin-header on purpose: that element has backdrop-filter
+                 (for its glass skin), which makes it a containing block for
+                 position:fixed descendants — trapping this menu right back inside
+                 its overflow:hidden bounds if nested within. See admin-header.js. -->
+            <div class="admin-header-user-menu" hidden>
+              <a href="../dhl/access-select/index.html" class="admin-header-user-menu-item"><i class="bi bi-arrow-left-right"></i> Select access</a>
+              <div class="admin-header-user-menu-divider"></div>
+              <a href="../dhl/login/index.html" class="admin-header-user-menu-item admin-header-user-menu-item--danger" data-action="logout"><i class="bi bi-box-arrow-right"></i> Log out</a>
             </div>
 
             <p class="text-secondary mb-4">Select a Service Provider to view the full profile with vehicles and vendors.</p>
@@ -90,6 +101,7 @@
 
   <script src="../dhl-mock-data.js"></script>
   <script src="../beam-sidebar.js"></script>
+  <script src="../admin-header.js"></script>
   <script>
     (function () {
       'use strict';
