@@ -324,32 +324,33 @@
     </div>
   </div>
 
-  <!-- ============ MODAL: See All Stops ============ -->
-  <div class="modal fade" id="allStopsModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="allStopsModalTitle"><i class="bi bi-geo-alt me-2"></i>All Stops</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <div class="modal-metrics" id="allStopsMetrics"></div>
-          <div class="table-responsive">
-            <table class="table table-hover table-sm">
-              <thead>
-                <tr>
-                  <th>Stop</th>
-                  <th>Address</th>
-                  <th>Postcode</th>
-                  <th>Customer</th>
-                  <th>Flag</th>
-                  <th>Route</th>
-                </tr>
-              </thead>
-              <tbody id="allStopsTableBody"></tbody>
-            </table>
-          </div>
-        </div>
+  <!-- ============ DRAWER: See All Stops ============ -->
+  <!-- Top-docked, non-blocking panel — mirrors the Week Planner "Show Drivers"
+       drawer (gradient toggle + sliding top panel) instead of a centered
+       Bootstrap modal. Never dims or blocks the route grid underneath. -->
+  <div class="stops-drawer" id="allStopsDrawer">
+    <div class="stops-drawer-header">
+      <h5 id="allStopsModalTitle"><i class="bi bi-geo-alt"></i>All Stops</h5>
+      <button type="button" class="stops-drawer-close" id="allStopsDrawerClose" aria-label="Close">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    <div class="stops-drawer-body">
+      <div class="modal-metrics" id="allStopsMetrics"></div>
+      <div class="table-responsive">
+        <table class="table table-hover table-sm">
+          <thead>
+            <tr>
+              <th>Stop</th>
+              <th>Address</th>
+              <th>Postcode</th>
+              <th>Customer</th>
+              <th>Flag</th>
+              <th>Route</th>
+            </tr>
+          </thead>
+          <tbody id="allStopsTableBody"></tbody>
+        </table>
       </div>
     </div>
   </div>

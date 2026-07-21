@@ -19,6 +19,7 @@ class RouteBalanceApp {
     this.expandedSubpostcodes = new Set(); // `${routeId}:${subcode}` keys currently expanded
     this.expandedRebalancePostcodes = new Set(); // `${routeId}:${postcode}` keys expanded to individual deliveries (Rebalance mode)
     this.moveStopMenuOpen = null;   // { routeId, stopId } whose per-delivery "Move to…" picker is open (Rebalance mode)
+    this.allPostcodesDrawerOpen = false; // whether the "All Postcodes" drawer is currently open
     this.allPostcodesSearch = '';   // filter text for the "All Postcodes" modal
     this.expandedAllPostcodes = new Set(); // `${routeId}:${postcode}` keys expanded in the "All Postcodes" modal
     this.moveApStopMenuOpen = null; // stop id whose per-delivery "Move to…" picker is open in the "All Postcodes" modal
@@ -30,6 +31,7 @@ class RouteBalanceApp {
     this.comparePickerOpen = null;  // routeId whose "compare with…" route picker is open
     this.moveGroupMenuOpen = null;  // { routeId, subcode } whose whole-subpostcode "Move to…" picker is open (Rebalance mode)
     this.selectedRouteId = null;    // route id currently selected for preview modal (Operations mode)
+    this.allStopsRouteId = null;    // route id currently shown in the "All Stops" drawer
 
     // ---- Static datasets for fake data generation ----
     this.DRIVERS = ['Carlos Silva', 'Ana Costa', 'João Martins', 'Maria Santos', 'Pedro Oliveira',
@@ -391,8 +393,26 @@ class RouteBalanceApp {
       this.showToast(this.rebalanceMode ? '🔄 Rebalance mode: select postcodes to transfer' : 'Operations mode: standard view', 'info');
     });
 
+    document.getElementById('allStopsDrawerClose')?.addEventListener('click', () => this.closeStopsDrawer());
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && this.allStopsRouteId !== null) this.closeStopsDrawer();
+    });
+    document.addEventListener('click', (e) => {
+      if (this.allStopsRouteId === null) return;
+      if (e.target.closest('#allStopsDrawer') || e.target.closest('[data-action="see-all-stops"]')) return;
+      this.closeStopsDrawer();
+    });
+
     document.getElementById('btnShowAllPostcodes')?.addEventListener('click', () => this.toggleAllPostcodesDrawer());
     document.getElementById('btnCloseAllPostcodes')?.addEventListener('click', () => this.closeAllPostcodesDrawer());
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && this.allPostcodesDrawerOpen) this.closeAllPostcodesDrawer();
+    });
+    document.addEventListener('click', (e) => {
+      if (!this.allPostcodesDrawerOpen) return;
+      if (e.target.closest('#allPostcodesDrawer') || e.target.closest('#btnShowAllPostcodes')) return;
+      this.closeAllPostcodesDrawer();
+    });
     const debouncedApRender = this.debounce(() => this.renderAllPostcodesModal(), 150);
     document.getElementById('allPostcodesSearch')?.addEventListener('input', (e) => {
       this.allPostcodesSearch = e.target.value;
@@ -500,7 +520,7 @@ class RouteBalanceApp {
         if (!route) return;
 
         switch (actionBtn.dataset.action) {
-          case 'see-all-stops': this.showAllStopsModal(route); break;
+          case 'see-all-stops': this.showAllStopsModal(route, actionBtn); break;
           case 'shipment-details': this.showShipmentDetailsModal(route); break;
           case 'add-postcode': this.showAddPostcodeModal(route); break;
           case 'export-route': this.exportRouteCsv(route); break;
@@ -733,8 +753,8 @@ class RouteBalanceApp {
       }
     });
 
-    // Closes an open per-delivery picker when clicking anywhere else in the modal.
-    document.getElementById('allPostcodesModal')?.addEventListener('click', (e) => {
+    // Closes an open per-delivery picker when clicking anywhere else in the drawer.
+    document.getElementById('allPostcodesDrawer')?.addEventListener('click', (e) => {
       if (this.moveApStopMenuOpen !== null && !e.target.closest('.ap-move-wrap')) {
         this.moveApStopMenuOpen = null;
         this.renderAllPostcodesModal();
@@ -742,9 +762,28 @@ class RouteBalanceApp {
     });
   }
 
-  showAllPostcodesModal() {
-    new bootstrap.Modal(document.getElementById('allPostcodesModal')).show();
+  toggleAllPostcodesDrawer() {
+    if (this.allPostcodesDrawerOpen) this.closeAllPostcodesDrawer();
+    else this.openAllPostcodesDrawer();
+  }
+
+  openAllPostcodesDrawer() {
+    this.allPostcodesDrawerOpen = true;
+    document.getElementById('allPostcodesDrawer')?.classList.add('open');
+    document.getElementById('allPostcodesDrawer')?.setAttribute('aria-hidden', 'false');
+    document.getElementById('btnShowAllPostcodes')?.classList.add('open');
+    const label = document.getElementById('btnShowAllPostcodesLabel');
+    if (label) label.textContent = 'Hide All Postcodes';
     this.renderAllPostcodesModal();
+  }
+
+  closeAllPostcodesDrawer() {
+    this.allPostcodesDrawerOpen = false;
+    document.getElementById('allPostcodesDrawer')?.classList.remove('open');
+    document.getElementById('allPostcodesDrawer')?.setAttribute('aria-hidden', 'true');
+    document.getElementById('btnShowAllPostcodes')?.classList.remove('open');
+    const label = document.getElementById('btnShowAllPostcodesLabel');
+    if (label) label.textContent = 'Show All Postcodes';
   }
 
   renderAllPostcodesModal() {
@@ -1651,8 +1690,8 @@ class RouteBalanceApp {
                 <button class="styled-button styled-button--outline" data-action="shipment-details">
                   <i class="bi bi-box2"></i> See Shipment Details
                 </button>
-                <button class="styled-button styled-button--outline" data-action="see-all-stops">
-                  <i class="bi bi-geo-alt"></i> See All Stops
+                <button class="styled-button styled-button--outline btn-see-all-stops${this.allStopsRouteId === route.id ? ' is-open' : ''}" data-action="see-all-stops">
+                  <i class="bi bi-geo-alt"></i> <span class="btn-see-all-stops-label">${this.allStopsRouteId === route.id ? 'Hide' : 'See'}</span> All Stops
                 </button>
               </div>
 
@@ -1826,9 +1865,9 @@ class RouteBalanceApp {
     this.render();
   }
 
-  showAllStopsModal(route) {
+  showAllStopsModal(route, triggerEl) {
     document.getElementById('allStopsModalTitle').innerHTML =
-      `<i class="bi bi-geo-alt me-2"></i>All Stops — Route ${route.name}`;
+      `<i class="bi bi-geo-alt"></i>All Stops — Route ${route.name}`;
 
     const sortLabels = { yes: 'Sort: Attended', late: 'Sort: Late', no: 'Sort: No-show' };
     const sortColors = {
@@ -1858,7 +1897,32 @@ class RouteBalanceApp {
         <td>${s.routeName}</td>
       </tr>`).join('');
 
-    new bootstrap.Modal(document.getElementById('allStopsModal')).show();
+    this.openStopsDrawer(route.id, triggerEl);
+  }
+
+  openStopsDrawer(routeId, triggerEl) {
+    this.allStopsRouteId = routeId;
+    document.getElementById('allStopsDrawer').classList.add('is-open');
+    document.querySelectorAll('.btn-see-all-stops.is-open').forEach(el => {
+      el.classList.remove('is-open');
+      const label = el.querySelector('.btn-see-all-stops-label');
+      if (label) label.textContent = 'See';
+    });
+    if (triggerEl) {
+      triggerEl.classList.add('is-open');
+      const label = triggerEl.querySelector('.btn-see-all-stops-label');
+      if (label) label.textContent = 'Hide';
+    }
+  }
+
+  closeStopsDrawer() {
+    this.allStopsRouteId = null;
+    document.getElementById('allStopsDrawer').classList.remove('is-open');
+    document.querySelectorAll('.btn-see-all-stops.is-open').forEach(el => {
+      el.classList.remove('is-open');
+      const label = el.querySelector('.btn-see-all-stops-label');
+      if (label) label.textContent = 'See';
+    });
   }
 
   showShipmentDetailsModal(route) {
