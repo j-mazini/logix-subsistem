@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Announcements – DHL Subsystem</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../vendor-admin-view.css" />
+  <link rel="stylesheet" href="../../sidebar-beam.css" />
+  <link rel="stylesheet" href="../../dashboard.css" />
+  <link rel="stylesheet" href="../../liquid-glass.css" />
+  <link rel="stylesheet" href="../../modern-ui.css" />
+  <link rel="stylesheet" href="../../refinements-v2.css" />
+  <link rel="stylesheet" href="../../refinements-v3-motion.css" />
+  <link rel="stylesheet" href="../../admin-header-standard.css" />
+  <style>
+    /* ============ Announcements (scoped: every selector below lives under .ann-page,
+       and no bare tag/Bootstrap-class names are touched, so this can't leak into or
+       collide with the shared chrome loaded above). ============ */
+    .ann-page { animation: slideUp 0.5s var(--ease-out-expo, ease) 0.05s both; }
+
+    .ann-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin: 0 0 20px;
+    }
+    .ann-toolbar h2 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--ink, #1e293b);
+      margin: 0;
+    }
+    .ann-btn-primary {
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 500;
+      font-size: 15px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: 0.2s;
+      white-space: nowrap;
+    }
+    .ann-btn-primary:hover { background: #1d4ed8; transform: scale(1.02); }
+    .ann-btn-secondary {
+      background: #e2e8f0;
+      color: #1e293b;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .ann-btn-secondary:hover { background: #cbd5e1; }
+
+    .ann-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px 20px;
+      background: #f8fafc;
+      padding: 16px 20px;
+      border-radius: 12px;
+      margin-bottom: 24px;
+      align-items: flex-end;
+      border: 1px solid #e9edf2;
+    }
+    .ann-filter-group { display: flex; flex-direction: column; gap: 4px; min-width: 130px; }
+    .ann-filter-group label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .ann-filter-group input,
+    .ann-filter-group select {
+      padding: 7px 10px;
+      border: 1px solid #d1d9e6;
+      border-radius: 6px;
+      background: #fff;
+      font-size: 14px;
+      outline: none;
+      transition: 0.2s;
+    }
+    .ann-filter-group input:focus,
+    .ann-filter-group select:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+    .ann-checkbox-group { display: flex; gap: 12px; flex-wrap: wrap; padding-top: 4px; }
+    .ann-checkbox-group label {
+      font-size: 13px;
+      font-weight: 400;
+      text-transform: none;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: #1e293b;
+    }
+    .ann-filter-actions { display: flex; gap: 10px; align-items: center; margin-left: auto; padding-top: 6px; }
+
+    .ann-table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid #e9edf2; }
+    .ann-table { width: 100%; border-collapse: collapse; font-size: 14px; background: #fff; }
+    .ann-table thead { background: #f1f5f9; }
+    .ann-table th {
+      text-align: left;
+      padding: 14px 16px;
+      font-weight: 600;
+      color: #334155;
+      border-bottom: 2px solid #e2e8f0;
+      white-space: nowrap;
+    }
+    .ann-table td { padding: 14px 16px; border-bottom: 1px solid #edf2f7; vertical-align: middle; }
+    .ann-table tr:last-child td { border-bottom: none; }
+    .ann-table tbody tr:hover td { background: #fafcff; }
+
+    .ann-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .ann-badge-type-announcement { background: #dbeafe; color: #1e40af; }
+    .ann-badge-type-delay { background: #fef9c3; color: #854d0e; }
+    .ann-badge-type-warning { background: #fecaca; color: #991b1b; }
+    .ann-badge-urgency-low { background: #e2e8f0; color: #475569; }
+    .ann-badge-urgency-normal { background: #dcfce7; color: #166534; }
+    .ann-badge-urgency-high { background: #fed7aa; color: #9a3412; }
+    .ann-badge-urgency-critical { background: #fecaca; color: #991b1b; }
+    .ann-badge-status-scheduled { background: #e0e7ff; color: #3730a3; }
+    .ann-badge-status-active { background: #dcfce7; color: #166534; }
+    .ann-badge-status-expired { background: #f1f3f4; color: #6b7280; }
+
+    .ann-audience-tag {
+      background: #eef2f6;
+      color: #1e293b;
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      margin-right: 4px;
+      display: inline-block;
+    }
+
+    .ann-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .ann-actions button {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-size: 18px;
+      padding: 4px;
+      border-radius: 6px;
+      transition: 0.15s;
+      line-height: 1;
+      color: #475569;
+    }
+    .ann-actions button:hover { background: #e9edf2; color: #0f172a; }
+    .ann-actions .ann-delete-btn:hover { color: #dc2626; background: #fee2e2; }
+
+    .ann-modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(4px);
+      justify-content: center;
+      align-items: center;
+      z-index: 1050;
+      padding: 20px;
+    }
+    .ann-modal-overlay.open { display: flex; }
+    .ann-modal-box {
+      background: #fff;
+      border-radius: 20px;
+      max-width: 820px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 28px 32px;
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.2);
+      animation: annSlideUp 0.25s ease;
+    }
+    @keyframes annSlideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .ann-modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; }
+    .ann-modal-header h3 { font-size: 22px; font-weight: 600; margin: 0; }
+    .ann-modal-close {
+      background: none;
+      border: none;
+      font-size: 28px;
+      cursor: pointer;
+      color: #94a3b8;
+      transition: 0.2s;
+      line-height: 1;
+    }
+    .ann-modal-close:hover { color: #1e293b; }
+
+    .ann-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 24px; }
+    .ann-form-group { display: flex; flex-direction: column; gap: 5px; }
+    .ann-form-group--full { grid-column: 1 / -1; }
+    .ann-form-group label { font-weight: 500; font-size: 14px; color: #334155; }
+    .ann-form-group label .ann-required { color: #ef4444; margin-left: 2px; }
+    .ann-form-group input,
+    .ann-form-group select,
+    .ann-form-group textarea {
+      padding: 9px 12px;
+      border: 1px solid #d1d9e6;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: 0.2s;
+      font-family: inherit;
+      background: #fff;
+    }
+    .ann-form-group input:focus,
+    .ann-form-group select:focus,
+    .ann-form-group textarea:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+      outline: none;
+    }
+    .ann-form-group textarea { resize: vertical; min-height: 80px; }
+    .ann-checkbox-inline { display: flex; gap: 16px; flex-wrap: wrap; padding-top: 4px; }
+    .ann-checkbox-inline label { font-weight: 400; font-size: 14px; display: flex; align-items: center; gap: 5px; }
+
+    .ann-preview-section { margin-top: 24px; border-top: 1px solid #e9edf2; padding-top: 20px; }
+    .ann-preview-section h4 { font-size: 16px; font-weight: 500; color: #475569; margin: 0 0 10px; }
+    .ann-preview-card {
+      background: #f8fafc;
+      border-radius: 12px;
+      padding: 18px 22px;
+      border-left: 6px solid #2563eb;
+      transition: border-color 0.2s;
+    }
+    .ann-preview-card .ann-preview-title { font-size: 18px; font-weight: 600; margin-bottom: 6px; }
+    .ann-preview-card .ann-preview-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 20px;
+      font-size: 13px;
+      color: #475569;
+      margin-bottom: 8px;
+    }
+    .ann-preview-card .ann-preview-content { color: #1e293b; line-height: 1.5; }
+
+    .ann-modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid #e9edf2;
+    }
+    .ann-btn-cancel {
+      background: #e2e8f0;
+      color: #1e293b;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 8px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .ann-btn-cancel:hover { background: #cbd5e1; }
+    .ann-btn-save {
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      padding: 10px 28px;
+      border-radius: 8px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .ann-btn-save:hover { background: #1d4ed8; }
+
+    .ann-error-msg { color: #dc2626; font-size: 13px; margin-top: 4px; display: none; }
+    .ann-form-group.ann-error input,
+    .ann-form-group.ann-error select,
+    .ann-form-group.ann-error textarea { border-color: #dc2626; }
+    .ann-form-group.ann-error .ann-error-msg { display: block; }
+
+    .ann-empty-state { text-align: center; padding: 40px 20px; color: #64748b; font-size: 16px; }
+
+    @media (max-width: 768px) {
+      .ann-filters { flex-direction: column; align-items: stretch; }
+      .ann-filter-actions { margin-left: 0; justify-content: flex-end; }
+      .ann-form-grid { grid-template-columns: 1fr; }
+      .ann-modal-box { padding: 20px; }
+      .ann-toolbar { flex-direction: column; align-items: stretch; }
+    }
+  </style>
+</head>
+<body class="has-beam-sidebar">
+  <div class="sidebar-wrapper" id="sidebarWrapper">
+    <div class="sidebar-gap" id="sidebarGap" aria-hidden="true"></div>
+    <aside class="sidebar-container" id="sidebarContainer" aria-hidden="true"></aside>
+    <div class="floating-sidebar-toggle" id="floatingSidebarToggle" aria-hidden="true"></div>
+
+    <!-- Beam Sidebar -->
+    <div class="beam-overlay" id="beamOverlay" aria-hidden="true"></div>
+    <nav class="beam-sidebar" id="beamSidebar" data-state="closed" role="navigation" aria-label="Main menu">
+      <button type="button" class="beam-trigger" id="beamTrigger" aria-label="Open menu" aria-expanded="false">
+        <i class="bi bi-list beam-icon-menu"></i>
+        <i class="bi bi-x-lg beam-icon-close"></i>
+      </button>
+      <div class="beam-rail" aria-hidden="true"></div>
+      <div class="beam-plates">
+        <a href="../dashboard/index.html" class="beam-plate">
+          <i class="bi bi-house-door-fill beam-plate-icon"></i>
+          <span>Home</span>
+        </a>
+        <a href="../../service-providers/index.html" class="beam-plate">
+          <i class="bi bi-person-badge beam-plate-icon"></i>
+          <span>Service Providers</span>
+        </a>
+        <a href="../vendor-admin-view/index.html" class="beam-plate">
+          <i class="bi bi-building beam-plate-icon"></i>
+          <span>Vendors</span>
+        </a>
+        <a href="../vehicles-admin-view/index.html" class="beam-plate">
+          <i class="bi bi-truck beam-plate-icon"></i>
+          <span>Vehicles</span>
+        </a>
+        <a href="../contract-management/index.html" class="beam-plate">
+          <i class="bi bi-file-earmark-text beam-plate-icon"></i>
+          <span>Contract Management</span>
+        </a>
+        <a href="../standard-operating-procedures/index.html" class="beam-plate">
+          <i class="bi bi-journal-bookmark-fill beam-plate-icon"></i>
+          <span>SOP Feed</span>
+        </a>
+        <a href="index.html" class="beam-plate active">
+          <i class="bi bi-megaphone-fill beam-plate-icon"></i>
+          <span>Announcements</span>
+        </a>
+        <a href="../compliance/index.html" class="beam-plate">
+          <i class="bi bi-shield-check beam-plate-icon"></i>
+          <span>Compliance</span>
+        </a>
+        <a href="../../sp-portal/invoices/index.html" class="beam-plate">
+          <i class="bi bi-receipt beam-plate-icon"></i>
+          <span>Invoices</span>
+        </a>
+        <a href="../access-select/index.html" class="beam-plate beam-plate--switch">
+          <i class="bi bi-arrow-left-right beam-plate-icon"></i>
+          <span>Select access</span>
+        </a>
+      </div>
+    </nav>
+
+    <div class="sidebar-inset" id="sidebarInset">
+      <div class="liquid-glass-page-bg" aria-hidden="true"></div>
+      <div class="page-container">
+        <div class="page-inner">
+          <main class="vendor-admin-main ann-page">
+
+            <!-- ============ HEADER (standardized: title + user menu) ============ -->
+            <div class="admin-header d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+              <h1 class="admin-header-title">Announcements</h1>
+              <div class="admin-header-user-pill d-flex align-items-center">
+                <img src="../../assets/dhl-uk-logo.png" alt="DHL Uk" class="admin-header-user-avatar admin-header-user-avatar--img" />
+                <span class="admin-header-user-name">DHL Uk</span>
+                <i class="bi bi-chevron-down admin-header-user-caret" aria-hidden="true"></i>
+              </div>
+            </div>
+            <!-- Outside .admin-header on purpose: see admin-header.js. -->
+            <div class="admin-header-user-menu" hidden>
+              <a href="../access-select/index.html" class="admin-header-user-menu-item"><i class="bi bi-arrow-left-right"></i> Select access</a>
+              <div class="admin-header-user-menu-divider"></div>
+              <a href="../login/index.html" class="admin-header-user-menu-item admin-header-user-menu-item--danger" data-action="logout"><i class="bi bi-box-arrow-right"></i> Log out</a>
+            </div>
+
+            <!-- ============ PAGE CONTENT ============ -->
+            <div class="ann-toolbar">
+              <h2>Manage announcements broadcast to depots, loops and routes</h2>
+              <button type="button" class="ann-btn-primary" id="btnNewAnnouncement"><i class="bi bi-plus-lg"></i> New Announcement</button>
+            </div>
+
+            <div class="ann-filters" id="annFilters">
+              <div class="ann-filter-group">
+                <label>Search</label>
+                <input type="text" id="searchInput" placeholder="Title..." />
+              </div>
+              <div class="ann-filter-group">
+                <label>Type</label>
+                <select id="filterType">
+                  <option value="all">All</option>
+                  <option value="Announcement">📢 Announcement</option>
+                  <option value="Delay">⏳ Delay</option>
+                  <option value="Warning">⚠️ Warning</option>
+                </select>
+              </div>
+              <div class="ann-filter-group">
+                <label>Status</label>
+                <select id="filterStatus">
+                  <option value="all">All</option>
+                  <option value="Scheduled">🗓️ Scheduled</option>
+                  <option value="Active">✅ Active</option>
+                  <option value="Expired">⏰ Expired</option>
+                </select>
+              </div>
+              <div class="ann-filter-group">
+                <label>Urgency</label>
+                <select id="filterUrgency">
+                  <option value="all">All</option>
+                  <option value="Low">🔵 Low</option>
+                  <option value="Normal">🟢 Normal</option>
+                  <option value="High">🟠 High</option>
+                  <option value="Critical">🔴 Critical</option>
+                </select>
+              </div>
+              <div class="ann-filter-group">
+                <label>Audience</label>
+                <div class="ann-checkbox-group">
+                  <label><input type="checkbox" class="filter-audience" value="Depot" checked /> Depot</label>
+                  <label><input type="checkbox" class="filter-audience" value="Loop" checked /> Loop</label>
+                  <label><input type="checkbox" class="filter-audience" value="Route" checked /> Route</label>
+                </div>
+              </div>
+              <div class="ann-filter-actions">
+                <button type="button" class="ann-btn-secondary" id="clearFilters">Clear filters</button>
+              </div>
+            </div>
+
+            <div class="ann-table-wrap">
+              <table class="ann-table">
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Type</th>
+                    <th>Urgency</th>
+                    <th>Audience</th>
+                    <th>Publish</th>
+                    <th>Expires</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="tableBody">
+                  <!-- rendered by JS -->
+                </tbody>
+              </table>
+            </div>
+
+          </main>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: create / edit announcement -->
+  <div class="ann-modal-overlay" id="modalOverlay">
+    <div class="ann-modal-box">
+      <div class="ann-modal-header">
+        <h3 id="modalTitle">New Announcement</h3>
+        <button type="button" class="ann-modal-close" id="modalClose">&times;</button>
+      </div>
+
+      <form id="announcementForm" novalidate>
+        <input type="hidden" id="editId" value="" />
+        <div class="ann-form-grid">
+          <div class="ann-form-group ann-form-group--full">
+            <label>Title <span class="ann-required">*</span></label>
+            <input type="text" id="formTitle" placeholder="E.g. Scheduled maintenance" required />
+            <div class="ann-error-msg">Title is required</div>
+          </div>
+          <div class="ann-form-group ann-form-group--full">
+            <label>Content <span class="ann-required">*</span></label>
+            <textarea id="formContent" placeholder="Announcement details..." required></textarea>
+            <div class="ann-error-msg">Content is required</div>
+          </div>
+          <div class="ann-form-group">
+            <label>Type <span class="ann-required">*</span></label>
+            <select id="formType" required>
+              <option value="Announcement">📢 Announcement</option>
+              <option value="Delay">⏳ Delay</option>
+              <option value="Warning">⚠️ Warning</option>
+            </select>
+          </div>
+          <div class="ann-form-group">
+            <label>Urgency <span class="ann-required">*</span></label>
+            <select id="formUrgency" required>
+              <option value="Low">🔵 Low</option>
+              <option value="Normal" selected>🟢 Normal</option>
+              <option value="High">🟠 High</option>
+              <option value="Critical">🔴 Critical</option>
+            </select>
+          </div>
+          <div class="ann-form-group ann-form-group--full">
+            <label>Audience <span class="ann-required">*</span> (select one or more)</label>
+            <div class="ann-checkbox-inline">
+              <label><input type="checkbox" class="form-audience" value="Depot" checked /> Depot</label>
+              <label><input type="checkbox" class="form-audience" value="Loop" checked /> Loop</label>
+              <label><input type="checkbox" class="form-audience" value="Route" checked /> Route</label>
+            </div>
+            <div class="ann-error-msg" id="audienceError">Select at least one audience</div>
+          </div>
+          <div class="ann-form-group">
+            <label>Publish Date <span class="ann-required">*</span></label>
+            <input type="date" id="formPublishDate" required />
+            <div class="ann-error-msg">Publish date is required</div>
+          </div>
+          <div class="ann-form-group">
+            <label>Expiration Date <span class="ann-required">*</span></label>
+            <input type="date" id="formExpirationDate" required />
+            <div class="ann-error-msg" id="expirationError">Must be after the publish date</div>
+          </div>
+        </div>
+
+        <!-- Preview -->
+        <div class="ann-preview-section">
+          <h4>Preview</h4>
+          <div class="ann-preview-card" id="previewCard">
+            <div class="ann-preview-title" id="previewTitle">Announcement title</div>
+            <div class="ann-preview-meta">
+              <span id="previewType">📢 Announcement</span>
+              <span id="previewUrgency">🟢 Normal</span>
+              <span id="previewAudience">Depot, Loop, Route</span>
+              <span id="previewDates">Publish: --/--/---- | Expires: --/--/----</span>
+            </div>
+            <div class="ann-preview-content" id="previewContent">Announcement content will appear here.</div>
+          </div>
+        </div>
+
+        <div class="ann-modal-footer">
+          <button type="button" class="ann-btn-cancel" id="modalCancel">Cancel</button>
+          <button type="submit" class="ann-btn-save">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="../../avisos-storage.js"></script>
+  <script>
+    (function () {
+      "use strict";
+
+      // ---------- STORAGE ADAPTER ----------
+      // Announcements are avisos (see ../../avisos-storage.js) with extra optional
+      // fields (type, urgency, audience, publishDate) that the dashboard's own
+      // "Notices" reader simply ignores. One shared source of truth either way.
+      function loadAnnouncements() {
+        var raw = window.AvisosStorage ? AvisosStorage.getAllAvisos() : [];
+        return raw.filter(function (a) { return !a.deleted; }).map(function (a) {
+          return {
+            id: a.id,
+            title: a.title || '',
+            content: a.message || '',
+            type: a.type || 'Announcement',
+            urgency: a.urgency || 'Normal',
+            audience: (Array.isArray(a.audience) && a.audience.length) ? a.audience : ['Depot', 'Loop', 'Route'],
+            publishDate: a.publishDate ? new Date(a.publishDate + 'T00:00:00') : new Date(a.createdAt || Date.now()),
+            expirationDate: a.expireDate ? new Date(a.expireDate + 'T23:59:59') : new Date(Date.now() + 7 * 86400000),
+          };
+        });
+      }
+
+      function toDateStr(d) {
+        var year = d.getFullYear();
+        var month = String(d.getMonth() + 1).padStart(2, '0');
+        var day = String(d.getDate()).padStart(2, '0');
+        return year + '-' + month + '-' + day;
+      }
+
+      // ---------- AUX FUNCTIONS ----------
+      function getStatus(ann) {
+        var now = new Date();
+        if (ann.expirationDate <= now) return 'Expired';
+        if (ann.publishDate <= now) return 'Active';
+        return 'Scheduled';
+      }
+
+      function formatDate(d) {
+        return d.toLocaleDateString('en-GB');
+      }
+
+      // ---------- RENDER TABLE ----------
+      function renderTable() {
+        var announcements = loadAnnouncements();
+        var tbody = document.getElementById('tableBody');
+        var search = document.getElementById('searchInput').value.toLowerCase().trim();
+        var typeFilter = document.getElementById('filterType').value;
+        var statusFilter = document.getElementById('filterStatus').value;
+        var urgencyFilter = document.getElementById('filterUrgency').value;
+        var selectedAudience = Array.from(document.querySelectorAll('.filter-audience:checked')).map(function (cb) { return cb.value; });
+        var dateFrom = document.getElementById('filterDateFrom') ? document.getElementById('filterDateFrom').value : '';
+        var dateTo = document.getElementById('filterDateTo') ? document.getElementById('filterDateTo').value : '';
+
+        var filtered = announcements.filter(function (ann) {
+          if (search && ann.title.toLowerCase().indexOf(search) === -1) return false;
+          if (typeFilter !== 'all' && ann.type !== typeFilter) return false;
+          var status = getStatus(ann);
+          if (statusFilter !== 'all' && status !== statusFilter) return false;
+          if (urgencyFilter !== 'all' && ann.urgency !== urgencyFilter) return false;
+          if (selectedAudience.length > 0) {
+            var hasAudience = ann.audience.some(function (a) { return selectedAudience.indexOf(a) !== -1; });
+            if (!hasAudience) return false;
+          }
+          if (dateFrom && ann.publishDate < new Date(dateFrom + 'T00:00:00')) return false;
+          if (dateTo && ann.publishDate > new Date(dateTo + 'T23:59:59')) return false;
+          return true;
+        });
+
+        var urgencyOrder = { Critical: 0, High: 1, Normal: 2, Low: 3 };
+        filtered.sort(function (a, b) {
+          var diff = urgencyOrder[a.urgency] - urgencyOrder[b.urgency];
+          if (diff !== 0) return diff;
+          return b.publishDate - a.publishDate;
+        });
+
+        if (filtered.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="8" class="ann-empty-state">No announcements found</td></tr>';
+          return;
+        }
+
+        var typeIcons = { Announcement: '📢', Delay: '⏳', Warning: '⚠️' };
+        var urgencyIcons = { Low: '🔵', Normal: '🟢', High: '🟠', Critical: '🔴' };
+        var statusIcons = { Scheduled: '🗓️', Active: '✅', Expired: '⏰' };
+
+        var html = '';
+        filtered.forEach(function (ann) {
+          var status = getStatus(ann);
+          var typeLabel = typeIcons[ann.type] + ' ' + ann.type;
+          var urgencyLabel = urgencyIcons[ann.urgency] + ' ' + ann.urgency;
+          var audienceStr = ann.audience.map(function (a) { return '<span class="ann-audience-tag">' + a + '</span>'; }).join('');
+          var statusClass = status === 'Scheduled' ? 'ann-badge-status-scheduled' : status === 'Active' ? 'ann-badge-status-active' : 'ann-badge-status-expired';
+
+          html += '<tr>' +
+            '<td><strong>' + escapeHtml(ann.title) + '</strong></td>' +
+            '<td><span class="ann-badge ann-badge-type-' + ann.type.toLowerCase() + '">' + typeLabel + '</span></td>' +
+            '<td><span class="ann-badge ann-badge-urgency-' + ann.urgency.toLowerCase() + '">' + urgencyLabel + '</span></td>' +
+            '<td>' + audienceStr + '</td>' +
+            '<td>' + formatDate(ann.publishDate) + '</td>' +
+            '<td>' + formatDate(ann.expirationDate) + '</td>' +
+            '<td><span class="ann-badge ' + statusClass + '">' + statusIcons[status] + ' ' + status + '</span></td>' +
+            '<td class="ann-actions">' +
+              '<button type="button" class="ann-edit-btn" data-id="' + ann.id + '" title="Edit"><i class="bi bi-pencil"></i></button>' +
+              '<button type="button" class="ann-delete-btn" data-id="' + ann.id + '" title="Delete"><i class="bi bi-trash"></i></button>' +
+              '<button type="button" class="ann-duplicate-btn" data-id="' + ann.id + '" title="Duplicate"><i class="bi bi-copy"></i></button>' +
+            '</td>' +
+          '</tr>';
+        });
+        tbody.innerHTML = html;
+
+        tbody.querySelectorAll('.ann-edit-btn').forEach(function (btn) {
+          btn.addEventListener('click', function () { openModal(btn.dataset.id); });
+        });
+        tbody.querySelectorAll('.ann-delete-btn').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            if (confirm('Delete this announcement? This cannot be undone.')) {
+              if (window.AvisosStorage) AvisosStorage.deleteAviso(btn.dataset.id);
+              renderTable();
+            }
+          });
+        });
+        tbody.querySelectorAll('.ann-duplicate-btn').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            var original = announcements.find(function (a) { return a.id === btn.dataset.id; });
+            if (!original || !window.AvisosStorage) return;
+            var pub = new Date(original.publishDate.getTime() + 86400000);
+            var exp = new Date(original.expirationDate.getTime() + 86400000);
+            AvisosStorage.addAviso({
+              title: original.title + ' (copy)',
+              message: original.content,
+              type: original.type,
+              urgency: original.urgency,
+              audience: original.audience,
+              publishDate: toDateStr(pub),
+              expireDate: toDateStr(exp),
+            });
+            renderTable();
+          });
+        });
+      }
+
+      function escapeHtml(s) {
+        var d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+      }
+
+      // ---------- MODAL ----------
+      var modalOverlay = document.getElementById('modalOverlay');
+      var modalTitle = document.getElementById('modalTitle');
+      var form = document.getElementById('announcementForm');
+      var editIdInput = document.getElementById('editId');
+      var formTitle = document.getElementById('formTitle');
+      var formContent = document.getElementById('formContent');
+      var formType = document.getElementById('formType');
+      var formUrgency = document.getElementById('formUrgency');
+      var formAudience = document.querySelectorAll('.form-audience');
+      var formPublishDate = document.getElementById('formPublishDate');
+      var formExpirationDate = document.getElementById('formExpirationDate');
+
+      var previewTitle = document.getElementById('previewTitle');
+      var previewType = document.getElementById('previewType');
+      var previewUrgency = document.getElementById('previewUrgency');
+      var previewAudience = document.getElementById('previewAudience');
+      var previewContent = document.getElementById('previewContent');
+      var previewDates = document.getElementById('previewDates');
+      var previewCard = document.getElementById('previewCard');
+
+      function updatePreview() {
+        var typeIcons = { Announcement: '📢', Delay: '⏳', Warning: '⚠️' };
+        var urgencyIcons = { Low: '🔵', Normal: '🟢', High: '🟠', Critical: '🔴' };
+        var urgencyColors = { Low: '#94a3b8', Normal: '#22c55e', High: '#f59e0b', Critical: '#ef4444' };
+
+        previewTitle.textContent = formTitle.value || 'Announcement title';
+        previewType.textContent = typeIcons[formType.value] + ' ' + formType.value;
+        previewUrgency.textContent = urgencyIcons[formUrgency.value] + ' ' + formUrgency.value;
+        var audience = Array.from(formAudience).filter(function (cb) { return cb.checked; }).map(function (cb) { return cb.value; });
+        previewAudience.textContent = audience.length ? audience.join(', ') : 'No audience selected';
+        previewContent.textContent = formContent.value || 'Announcement content will appear here.';
+
+        var pubStr = formPublishDate.value ? formatDate(new Date(formPublishDate.value + 'T00:00:00')) : '--/--/----';
+        var expStr = formExpirationDate.value ? formatDate(new Date(formExpirationDate.value + 'T00:00:00')) : '--/--/----';
+        previewDates.textContent = 'Publish: ' + pubStr + ' | Expires: ' + expStr;
+        previewCard.style.borderColor = urgencyColors[formUrgency.value] || '#2563eb';
+      }
+
+      [formTitle, formContent].forEach(function (el) { el.addEventListener('input', updatePreview); });
+      [formType, formUrgency, formPublishDate, formExpirationDate].forEach(function (el) { el.addEventListener('change', updatePreview); });
+      formAudience.forEach(function (cb) { cb.addEventListener('change', updatePreview); });
+
+      function openModal(id) {
+        document.querySelectorAll('.ann-form-group.ann-error').forEach(function (el) { el.classList.remove('ann-error'); });
+        document.getElementById('audienceError').style.display = 'none';
+        document.getElementById('expirationError').style.display = 'none';
+
+        if (id) {
+          var ann = loadAnnouncements().find(function (a) { return a.id === id; });
+          if (!ann) return;
+          modalTitle.textContent = 'Edit Announcement';
+          editIdInput.value = id;
+          formTitle.value = ann.title;
+          formContent.value = ann.content;
+          formType.value = ann.type;
+          formUrgency.value = ann.urgency;
+          formAudience.forEach(function (cb) { cb.checked = ann.audience.indexOf(cb.value) !== -1; });
+          formPublishDate.value = toDateStr(ann.publishDate);
+          formExpirationDate.value = toDateStr(ann.expirationDate);
+        } else {
+          modalTitle.textContent = 'New Announcement';
+          editIdInput.value = '';
+          formTitle.value = '';
+          formContent.value = '';
+          formType.value = 'Announcement';
+          formUrgency.value = 'Normal';
+          formAudience.forEach(function (cb) { cb.checked = true; });
+          var now = new Date();
+          var later = new Date(now.getTime() + 7 * 86400000);
+          formPublishDate.value = toDateStr(now);
+          formExpirationDate.value = toDateStr(later);
+        }
+        updatePreview();
+        modalOverlay.classList.add('open');
+      }
+
+      function closeModal() { modalOverlay.classList.remove('open'); }
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var valid = true;
+
+        toggleFieldError(formTitle, !formTitle.value.trim());
+        if (!formTitle.value.trim()) valid = false;
+
+        toggleFieldError(formContent, !formContent.value.trim());
+        if (!formContent.value.trim()) valid = false;
+
+        var selectedAudience = Array.from(formAudience).filter(function (cb) { return cb.checked; }).map(function (cb) { return cb.value; });
+        document.getElementById('audienceError').style.display = selectedAudience.length === 0 ? 'block' : 'none';
+        if (selectedAudience.length === 0) valid = false;
+
+        var pub = formPublishDate.value ? new Date(formPublishDate.value + 'T00:00:00') : null;
+        var exp = formExpirationDate.value ? new Date(formExpirationDate.value + 'T00:00:00') : null;
+        toggleFieldError(formPublishDate, !pub);
+        toggleFieldError(formExpirationDate, !exp);
+        if (!pub || !exp) valid = false;
+
+        if (valid && exp <= pub) {
+          document.getElementById('expirationError').style.display = 'block';
+          valid = false;
+        } else {
+          document.getElementById('expirationError').style.display = 'none';
+        }
+
+        if (!valid || !window.AvisosStorage) return;
+
+        var payload = {
+          title: formTitle.value.trim(),
+          message: formContent.value.trim(),
+          type: formType.value,
+          urgency: formUrgency.value,
+          audience: selectedAudience,
+          publishDate: formPublishDate.value,
+          expireDate: formExpirationDate.value,
+        };
+
+        if (editIdInput.value) {
+          AvisosStorage.updateAviso(editIdInput.value, payload);
+        } else {
+          AvisosStorage.addAviso(payload);
+        }
+
+        renderTable();
+        closeModal();
+      });
+
+      function toggleFieldError(el, hasError) {
+        el.closest('.ann-form-group').classList.toggle('ann-error', hasError);
+      }
+
+      document.getElementById('btnNewAnnouncement').addEventListener('click', function () { openModal(null); });
+      document.getElementById('modalClose').addEventListener('click', closeModal);
+      document.getElementById('modalCancel').addEventListener('click', closeModal);
+      modalOverlay.addEventListener('click', function (e) { if (e.target === modalOverlay) closeModal(); });
+
+      document.querySelectorAll('#annFilters input, #annFilters select').forEach(function (el) {
+        el.addEventListener('change', renderTable);
+        el.addEventListener('input', renderTable);
+      });
+      document.getElementById('clearFilters').addEventListener('click', function () {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('filterType').value = 'all';
+        document.getElementById('filterStatus').value = 'all';
+        document.getElementById('filterUrgency').value = 'all';
+        document.querySelectorAll('.filter-audience').forEach(function (cb) { cb.checked = true; });
+        renderTable();
+      });
+
+      renderTable();
+    })();
+  </script>
+  <script src="../../beam-sidebar.js"></script>
+  <script src="../../admin-header.js"></script>
+  <script src="../../refinements-v3-motion.js" defer></script>
+</body>
+</html>

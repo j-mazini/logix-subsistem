@@ -123,6 +123,12 @@
         <button class="styled-button styled-button--outline" id="btnExportCsv">
           <i class="bi bi-filetype-csv"></i> Export Demi8
         </button>
+        <button class="styled-button styled-button--outline" id="btnSendDrivers">
+          <i class="bi bi-send"></i> Send to Driver
+        </button>
+        <button class="styled-button styled-button--outline" id="btnPmAsrDsrListing">
+          <i class="bi bi-clipboard-data"></i> PM ASR/DSR Listing
+        </button>
       </div>
 
       <div class="filter-group">
@@ -457,6 +463,69 @@
           <button type="button" class="styled-button styled-button--primary" id="btnConfirmTransfer">Confirm Transfer</button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- ============ MODAL: Route Preview (Rebalance Navigation) ============ -->
+  <div class="modal fade" id="previewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <h5 class="modal-title"><i class="bi bi-shuffle"></i> Route Preview</h5>
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <button type="button" class="styled-button styled-button--outline btn-preview-prev" onclick="app.navigatePreview('prev')">
+              <i class="bi bi-chevron-left"></i> Previous
+            </button>
+            <span class="preview-position" style="font-size: 0.85rem; font-weight: 600; color: var(--ink-soft); min-width: 50px; text-align: center;">
+              1 / 1
+            </span>
+            <button type="button" class="styled-button styled-button--outline btn-preview-next" onclick="app.navigatePreview('next')">
+              Next <i class="bi bi-chevron-right"></i>
+            </button>
+            <button type="button" class="btn-close" onclick="app.closePreviewModal()" aria-label="Close"></button>
+          </div>
+        </div>
+        <div class="modal-body">
+          <!-- Content filled by renderPreviewModal() -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MODAL: PM ASR/DSR Listing ============ -->
+  <div class="modal fade" id="pmListingModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-clipboard-data me-2"></i>PM ASR/DSR Listing</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="pmListingBody"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ FAB: Show All Postcodes (Rebalance mode only) ============ -->
+  <button type="button" class="fab-all-postcodes" id="btnShowAllPostcodes" title="Show every postcode across all routes">
+    <i class="bi bi-list-ul"></i> <span id="btnShowAllPostcodesLabel">Show All Postcodes</span>
+  </button>
+
+  <!-- ============ DRAWER: All Postcodes ============
+       A docked panel, not a modal — it never dims or blocks the rest of the
+       screen. Toggled by the FAB above, same interaction as the "Show
+       Vendors" drawer in Week Planner: slides in over part of the viewport,
+       the route grid underneath stays visible and usable. -->
+  <div class="ap-drawer" id="allPostcodesDrawer" aria-hidden="true">
+    <div class="ap-drawer-header">
+      <h3><i class="bi bi-list-ul"></i> All Postcodes</h3>
+      <button type="button" class="ap-drawer-close" id="btnCloseAllPostcodes" aria-label="Close">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    <div class="ap-drawer-body">
+      <input type="text" class="form-control ap-search" id="allPostcodesSearch"
+             placeholder="Search postcode, subpostcode, route or driver…" autocomplete="off" />
+      <div id="allPostcodesBody"></div>
     </div>
   </div>
 

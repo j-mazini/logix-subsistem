@@ -60,6 +60,13 @@
       "rationale": "Success: 3/6, failures: 3, threshold: 75%",
       "date": "2026-07-14",
       "commit": "8bdc5adcb6b7380adee9dba0f8977a332f79c3b7"
+    },
+    {
+      "phase": "design_review_ceremony",
+      "decision": "Design review completed for: Adicionar botão de Revert que volta 1 ação. Descrição: Adici",
+      "rationale": "## Synthesis Result\n\n**CONFLICTS:** None identifiable — only Sonnet produced output. Codex (CLI unavailable) and Gemini (API key missing) generated no approach to compare.\n\n**GAPS:** \n1. **Missing inp",
+      "date": "2026-07-20",
+      "commit": "9d9b0d68a7cfae81dfda7f46801f772cbfde2781"
     }
   ],
   "blockers": [],
@@ -73,7 +80,7 @@
     "phases_completed": 0,
     "total_execution_time_minutes": 0,
     "provider_usage": {
-      "codex": 2,
+      "codex": 3,
       "gemini": 0,
       "perplexity": 0,
       "claude": 6

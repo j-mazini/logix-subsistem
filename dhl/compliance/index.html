@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Compliance – DHL Subsystem</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../vendor-admin-view.css" />
+  <link rel="stylesheet" href="../../sidebar-beam.css" />
+  <link rel="stylesheet" href="../../dashboard.css" />
+  <link rel="stylesheet" href="../../liquid-glass.css" />
+  <link rel="stylesheet" href="../../modern-ui.css" />
+  <link rel="stylesheet" href="../../refinements-v2.css" />
+  <link rel="stylesheet" href="../../refinements-v3-motion.css" />
+  <link rel="stylesheet" href="../../admin-header-standard.css" />
+  <style>
+    /* ============ Compliance (scoped under .cmp-page; no bare tag/Bootstrap-class
+       names are touched, so this can't leak into or collide with the shared chrome
+       loaded above). ============ */
+    :root {
+      --cmp-primary: #1a56db;
+      --cmp-primary-light: #e8effd;
+      --cmp-success: #0e9f6e;
+      --cmp-success-light: #e6f5ef;
+      --cmp-warning: #c27803;
+      --cmp-warning-light: #fef3c7;
+      --cmp-danger: #c81e1e;
+      --cmp-danger-light: #fde8e8;
+      --cmp-gray-100: #f9fafb;
+      --cmp-gray-200: #e5e7eb;
+      --cmp-gray-300: #d1d5db;
+      --cmp-gray-500: #6b7280;
+      --cmp-gray-700: #374151;
+      --cmp-radius: 8px;
+      --cmp-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+      --cmp-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      --cmp-transition: all 0.2s ease;
+    }
+
+    .cmp-page { animation: slideUp 0.5s var(--ease-out-expo, ease) 0.05s both; }
+
+    .cmp-card {
+      background: white;
+      border-radius: var(--cmp-radius);
+      box-shadow: var(--cmp-shadow-sm);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      transition: var(--cmp-transition);
+    }
+
+    .cmp-filter-bar { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+    .cmp-search-input {
+      flex: 2;
+      min-width: 200px;
+      padding: 0.6rem 1rem;
+      border: 1px solid var(--cmp-gray-300);
+      border-radius: var(--cmp-radius);
+      font-size: 0.9rem;
+      transition: var(--cmp-transition);
+    }
+    .cmp-search-input:focus { outline: none; border-color: var(--cmp-primary); box-shadow: 0 0 0 3px var(--cmp-primary-light); }
+    .cmp-filter-select {
+      flex: 1;
+      min-width: 160px;
+      padding: 0.6rem;
+      border: 1px solid var(--cmp-gray-300);
+      border-radius: var(--cmp-radius);
+      background: white;
+      font-size: 0.9rem;
+    }
+
+    .cmp-table { width: 100%; border-collapse: collapse; }
+    .cmp-table th {
+      text-align: left;
+      padding: 0.8rem 1rem;
+      font-weight: 500;
+      color: var(--cmp-gray-500);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--cmp-gray-200);
+    }
+    .cmp-table td { padding: 1rem; border-bottom: 1px solid var(--cmp-gray-200); vertical-align: middle; }
+    .cmp-table tr { cursor: pointer; transition: background 0.15s; }
+    .cmp-table tbody tr:hover { background: var(--cmp-gray-100); }
+
+    .cmp-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      gap: 0.3rem;
+    }
+    .cmp-badge-complete { background: var(--cmp-success-light); color: var(--cmp-success); }
+    .cmp-badge-incomplete { background: #fef3c7; color: #92400f; }
+    .cmp-badge-expiring { background: var(--cmp-warning-light); color: var(--cmp-warning); }
+    .cmp-badge-expired { background: var(--cmp-danger-light); color: var(--cmp-danger); }
+
+    .cmp-modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(2px);
+      z-index: 1050;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 2rem 1rem;
+      overflow-y: auto;
+    }
+    .cmp-modal-backdrop.active { display: flex; }
+    .cmp-vetting-detail {
+      background: white;
+      border-radius: var(--cmp-radius);
+      width: 100%;
+      max-width: 900px;
+      padding: 2rem;
+      box-shadow: var(--cmp-shadow);
+      animation: cmpSlideUp 0.25s ease;
+    }
+    @keyframes cmpSlideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .cmp-detail-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+    .cmp-detail-header h3 { font-size: 1.5rem; font-weight: 600; margin: 0; }
+    .cmp-close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--cmp-gray-500); }
+
+    .cmp-detail-meta { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+    .cmp-vendor-badge { font-size: 0.85rem; color: var(--cmp-gray-700); }
+
+    .cmp-doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.5rem; }
+
+    .cmp-doc-card {
+      border: 1px solid var(--cmp-gray-200);
+      border-radius: var(--cmp-radius);
+      padding: 1.2rem;
+      transition: var(--cmp-transition);
+      position: relative;
+      background: white;
+    }
+    .cmp-doc-card.cmp-missing { border-style: dashed; background: var(--cmp-gray-100); border-color: var(--cmp-gray-300); }
+    .cmp-doc-card.cmp-expired { border-left: 4px solid var(--cmp-danger); background: #fff5f5; }
+    .cmp-doc-card.cmp-expiring { border-left: 4px solid var(--cmp-warning); background: #fffdf5; }
+    .cmp-doc-card.cmp-valid { border-left: 4px solid var(--cmp-success); }
+
+    .cmp-doc-label { font-weight: 600; margin-bottom: 0.5rem; display: flex; justify-content: space-between; }
+    .cmp-mandatory-mark { color: var(--cmp-danger); margin-left: 2px; }
+    .cmp-doc-status { font-size: 0.75rem; font-weight: 600; padding: 0.15rem 0.5rem; border-radius: 999px; }
+    .cmp-doc-dates { font-size: 0.8rem; color: var(--cmp-gray-500); margin: 0.5rem 0; }
+    .cmp-upload-area { margin-top: 0.8rem; display: flex; flex-direction: column; gap: 0.5rem; }
+    .cmp-upload-area input[type="file"] { font-size: 0.8rem; }
+
+    .cmp-btn {
+      padding: 0.4rem 1rem;
+      border-radius: var(--cmp-radius);
+      border: none;
+      font-weight: 500;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: var(--cmp-transition);
+    }
+    .cmp-btn-primary { background: var(--cmp-primary); color: white; }
+    .cmp-btn-primary:hover { background: #1a45b8; }
+    .cmp-btn-outline { background: white; border: 1px solid var(--cmp-gray-300); color: var(--cmp-gray-700); }
+    .cmp-btn-outline:hover { background: var(--cmp-gray-100); }
+
+    .cmp-qr-info {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background: var(--cmp-gray-100);
+      border-radius: var(--cmp-radius);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .cmp-empty-state { text-align: center; padding: 3rem; color: var(--cmp-gray-500); }
+    .cmp-warning-text { color: var(--cmp-warning); font-weight: 600; }
+    .cmp-danger-text { color: var(--cmp-danger); font-weight: 600; }
+  </style>
+</head>
+<body class="has-beam-sidebar">
+  <div class="sidebar-wrapper" id="sidebarWrapper">
+    <div class="sidebar-gap" id="sidebarGap" aria-hidden="true"></div>
+    <aside class="sidebar-container" id="sidebarContainer" aria-hidden="true"></aside>
+    <div class="floating-sidebar-toggle" id="floatingSidebarToggle" aria-hidden="true"></div>
+
+    <!-- Beam Sidebar -->
+    <div class="beam-overlay" id="beamOverlay" aria-hidden="true"></div>
+    <nav class="beam-sidebar" id="beamSidebar" data-state="closed" role="navigation" aria-label="Main menu">
+      <button type="button" class="beam-trigger" id="beamTrigger" aria-label="Open menu" aria-expanded="false">
+        <i class="bi bi-list beam-icon-menu"></i>
+        <i class="bi bi-x-lg beam-icon-close"></i>
+      </button>
+      <div class="beam-rail" aria-hidden="true"></div>
+      <div class="beam-plates">
+        <a href="../dashboard/index.html" class="beam-plate">
+          <i class="bi bi-house-door-fill beam-plate-icon"></i>
+          <span>Home</span>
+        </a>
+        <a href="../../service-providers/index.html" class="beam-plate">
+          <i class="bi bi-person-badge beam-plate-icon"></i>
+          <span>Service Providers</span>
+        </a>
+        <a href="../vendor-admin-view/index.html" class="beam-plate">
+          <i class="bi bi-building beam-plate-icon"></i>
+          <span>Vendors</span>
+        </a>
+        <a href="../vehicles-admin-view/index.html" class="beam-plate">
+          <i class="bi bi-truck beam-plate-icon"></i>
+          <span>Vehicles</span>
+        </a>
+        <a href="../contract-management/index.html" class="beam-plate">
+          <i class="bi bi-file-earmark-text beam-plate-icon"></i>
+          <span>Contract Management</span>
+        </a>
+        <a href="../standard-operating-procedures/index.html" class="beam-plate">
+          <i class="bi bi-journal-bookmark-fill beam-plate-icon"></i>
+          <span>SOP Feed</span>
+        </a>
+        <a href="../announcements/index.html" class="beam-plate">
+          <i class="bi bi-megaphone-fill beam-plate-icon"></i>
+          <span>Announcements</span>
+        </a>
+        <a href="index.html" class="beam-plate active">
+          <i class="bi bi-shield-check beam-plate-icon"></i>
+          <span>Compliance</span>
+        </a>
+        <a href="../../sp-portal/invoices/index.html" class="beam-plate">
+          <i class="bi bi-receipt beam-plate-icon"></i>
+          <span>Invoices</span>
+        </a>
+        <a href="../access-select/index.html" class="beam-plate beam-plate--switch">
+          <i class="bi bi-arrow-left-right beam-plate-icon"></i>
+          <span>Select access</span>
+        </a>
+      </div>
+    </nav>
+
+    <div class="sidebar-inset" id="sidebarInset">
+      <div class="liquid-glass-page-bg" aria-hidden="true"></div>
+      <div class="page-container">
+        <div class="page-inner">
+          <main class="vendor-admin-main cmp-page">
+
+            <!-- ============ HEADER (standardized: title + user menu) ============ -->
+            <div class="admin-header d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+              <h1 class="admin-header-title">Compliance</h1>
+              <div class="admin-header-user-pill d-flex align-items-center">
+                <img src="../../assets/dhl-uk-logo.png" alt="DHL Uk" class="admin-header-user-avatar admin-header-user-avatar--img" />
+                <span class="admin-header-user-name">DHL Uk</span>
+                <i class="bi bi-chevron-down admin-header-user-caret" aria-hidden="true"></i>
+              </div>
+            </div>
+            <!-- Outside .admin-header on purpose: see admin-header.js. -->
+            <div class="admin-header-user-menu" hidden>
+              <a href="../access-select/index.html" class="admin-header-user-menu-item"><i class="bi bi-arrow-left-right"></i> Select access</a>
+              <div class="admin-header-user-menu-divider"></div>
+              <a href="../login/index.html" class="admin-header-user-menu-item admin-header-user-menu-item--danger" data-action="logout"><i class="bi bi-box-arrow-right"></i> Log out</a>
+            </div>
+
+            <!-- ============ PAGE CONTENT ============ -->
+            <div id="listView">
+              <div class="cmp-card">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                  <span class="text-muted" style="font-size:0.9rem;">Driver / operator / manager document compliance</span>
+                  <span class="cmp-badge cmp-badge-complete" id="totalProfiles">Total: 0</span>
+                </div>
+
+                <div class="cmp-filter-bar">
+                  <input type="text" id="searchInput" class="cmp-search-input" placeholder="Search by name or email..." />
+                  <select id="statusFilter" class="cmp-filter-select">
+                    <option value="">All statuses</option>
+                    <option value="COMPLETE">Complete</option>
+                    <option value="INCOMPLETE">Incomplete</option>
+                    <option value="EXPIRING_SOON">Expiring soon</option>
+                    <option value="EXPIRED">Expired</option>
+                  </select>
+                  <select id="roleFilter" class="cmp-filter-select">
+                    <option value="">All roles</option>
+                    <option value="Driver">Driver</option>
+                    <option value="Operator">Operator</option>
+                    <option value="Manager">Manager</option>
+                  </select>
+                </div>
+
+                <table class="cmp-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Email</th>
+                      <th>Role</th>
+                      <th>Status</th>
+                      <th>Docs. Expiring</th>
+                      <th>Pending</th>
+                    </tr>
+                  </thead>
+                  <tbody id="profileTableBody"></tbody>
+                </table>
+                <div id="emptyListMsg" class="cmp-empty-state" style="display:none;">No profiles found.</div>
+              </div>
+            </div>
+
+          </main>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: vetting detail -->
+  <div id="vettingBackdrop" class="cmp-modal-backdrop">
+    <div class="cmp-vetting-detail" id="vettingContent"></div>
+  </div>
+
+  <script>
+    (function () {
+      // ---------- MOCK DATA ----------
+      var profiles = [
+        {
+          id: 'p1',
+          fullName: 'Ana Clara Souza',
+          email: 'ana.souza@logix.com',
+          role: 'Driver',
+          complianceStatus: 'COMPLETE',
+          vendorId: 'v1',
+          qrCodeId: 'qr1',
+          vetting: {
+            id: 'vet-1',
+            status: 'APPROVED',
+            documents: [
+              { code: 'ID_CARD', label: 'ID Card', mandatory: true, status: 'VERIFIED', issuedDate: '2025-01-10', expirationDate: '2030-01-10' },
+              { code: 'DRIVER_LICENSE', label: 'Driver License', mandatory: true, status: 'VERIFIED', issuedDate: '2024-06-01', expirationDate: '2029-06-01' },
+              { code: 'PROOF_OF_ADDRESS', label: 'Proof of Address', mandatory: true, status: 'VERIFIED', issuedDate: '2025-05-10', expirationDate: '2025-08-10' }
+            ]
+          }
+        },
+        {
+          id: 'p2',
+          fullName: 'Carlos Eduardo Lima',
+          email: 'carlos.lima@logix.com',
+          role: 'Operator',
+          complianceStatus: 'EXPIRING_SOON',
+          vendorId: 'v2',
+          qrCodeId: 'qr2',
+          vetting: {
+            id: 'vet-2',
+            status: 'APPROVED',
+            documents: [
+              { code: 'ID_CARD', label: 'ID Card', mandatory: true, status: 'VERIFIED', issuedDate: '2021-03-15', expirationDate: '2026-03-15' },
+              { code: 'TRAINING_CERT', label: 'NR-12 Training', mandatory: true, status: 'VERIFIED', issuedDate: '2025-02-01', expirationDate: '2025-08-01' }
+            ]
+          }
+        },
+        {
+          id: 'p3',
+          fullName: 'Mariana Reis',
+          email: 'mariana.reis@logix.com',
+          role: 'Manager',
+          complianceStatus: 'INCOMPLETE',
+          vendorId: null,
+          qrCodeId: null,
+          vetting: {
+            id: 'vet-3',
+            status: 'UNDER_REVIEW',
+            documents: [
+              { code: 'ID_CARD', label: 'ID Card', mandatory: true, status: 'PENDING', issuedDate: null, expirationDate: null },
+              { code: 'CONTRACT', label: 'Company Contract', mandatory: true, status: 'PENDING', issuedDate: null, expirationDate: null }
+            ]
+          }
+        },
+        {
+          id: 'p4',
+          fullName: 'Roberto Alves',
+          email: 'roberto.alves@logix.com',
+          role: 'Driver',
+          complianceStatus: 'EXPIRED',
+          vendorId: 'v4',
+          qrCodeId: 'qr4',
+          vetting: {
+            id: 'vet-4',
+            status: 'APPROVED',
+            documents: [
+              { code: 'ID_CARD', label: 'ID Card', mandatory: true, status: 'VERIFIED', issuedDate: '2019-05-20', expirationDate: '2024-05-20' },
+              { code: 'MEDICAL_EXAM', label: 'Medical Exam', mandatory: true, status: 'VERIFIED', issuedDate: '2023-07-15', expirationDate: '2024-07-15' }
+            ]
+          }
+        }
+      ];
+
+      var currentData = JSON.parse(JSON.stringify(profiles));
+      var activeProfileId = null;
+
+      // ---------- UTILS ----------
+      function daysUntil(dateStr) {
+        if (!dateStr) return null;
+        var today = new Date(); today.setHours(0, 0, 0, 0);
+        var exp = new Date(dateStr);
+        return Math.ceil((exp - today) / (1000 * 60 * 60 * 24));
+      }
+
+      function getDocStatusInfo(doc) {
+        if (doc.status === 'PENDING') return { cls: 'cmp-missing', text: 'Pending' };
+        var remaining = daysUntil(doc.expirationDate);
+        if (remaining !== null && remaining < 0) return { cls: 'cmp-expired', text: 'Expired' };
+        if (remaining !== null && remaining <= 30) return { cls: 'cmp-expiring', text: 'Expires in ' + remaining + ' days' };
+        return { cls: 'cmp-valid', text: 'Verified' };
+      }
+
+      function recalcProfileStatus(profile) {
+        var docs = profile.vetting.documents;
+        var hasMissing = docs.some(function (d) { return d.mandatory && d.status === 'PENDING'; });
+        if (hasMissing) { profile.complianceStatus = 'INCOMPLETE'; return; }
+        var expired = false, expiring = false;
+        docs.forEach(function (d) {
+          if (d.status !== 'VERIFIED') return;
+          var rem = daysUntil(d.expirationDate);
+          if (rem !== null && rem < 0) expired = true;
+          else if (rem !== null && rem <= 30) expiring = true;
+        });
+        if (expired) profile.complianceStatus = 'EXPIRED';
+        else if (expiring) profile.complianceStatus = 'EXPIRING_SOON';
+        else profile.complianceStatus = 'COMPLETE';
+        if (profile.vendorId) console.log('[Vendor ' + profile.vendorId + '] status updated to ' + profile.complianceStatus);
+        console.log('[QR Code ' + (profile.qrCodeId || 'none') + '] status: ' + ((profile.complianceStatus === 'COMPLETE' || profile.complianceStatus === 'EXPIRING_SOON') ? 'ACTIVE' : 'INACTIVE'));
+      }
+
+      function getComplianceBadge(status) {
+        var map = { COMPLETE: 'cmp-badge-complete', INCOMPLETE: 'cmp-badge-incomplete', EXPIRING_SOON: 'cmp-badge-expiring', EXPIRED: 'cmp-badge-expired' };
+        return 'cmp-badge ' + (map[status] || 'cmp-badge-incomplete');
+      }
+
+      function translateStatus(status) {
+        return { COMPLETE: 'Complete', INCOMPLETE: 'Incomplete', EXPIRING_SOON: 'Expiring', EXPIRED: 'Expired' }[status] || status;
+      }
+
+      // ---------- RENDER ----------
+      function getFilteredProfiles() {
+        var search = document.getElementById('searchInput').value.toLowerCase();
+        var statusFilter = document.getElementById('statusFilter').value;
+        var roleFilter = document.getElementById('roleFilter').value;
+        return currentData.filter(function (p) {
+          var matchSearch = !search || p.fullName.toLowerCase().indexOf(search) !== -1 || p.email.toLowerCase().indexOf(search) !== -1;
+          var matchStatus = !statusFilter || p.complianceStatus === statusFilter;
+          var matchRole = !roleFilter || p.role === roleFilter;
+          return matchSearch && matchStatus && matchRole;
+        });
+      }
+
+      function renderTable() {
+        var filtered = getFilteredProfiles();
+        var tbody = document.getElementById('profileTableBody');
+        var emptyMsg = document.getElementById('emptyListMsg');
+        tbody.innerHTML = '';
+        document.getElementById('totalProfiles').textContent = 'Total: ' + filtered.length;
+
+        if (filtered.length === 0) { emptyMsg.style.display = 'block'; return; }
+        emptyMsg.style.display = 'none';
+
+        filtered.forEach(function (p) {
+          var expiringCount = p.vetting.documents.filter(function (d) {
+            if (d.status === 'PENDING') return false;
+            var rem = daysUntil(d.expirationDate);
+            return rem !== null && rem > 0 && rem <= 30;
+          }).length;
+          var missingCount = p.vetting.documents.filter(function (d) { return d.status === 'PENDING' && d.mandatory; }).length;
+
+          var row = document.createElement('tr');
+          row.innerHTML =
+            '<td><strong>' + p.fullName + '</strong></td>' +
+            '<td>' + p.email + '</td>' +
+            '<td>' + p.role + '</td>' +
+            '<td><span class="' + getComplianceBadge(p.complianceStatus) + '">' + translateStatus(p.complianceStatus) + '</span></td>' +
+            '<td>' + (expiringCount > 0 ? '<span class="cmp-warning-text">' + expiringCount + '</span>' : '0') + '</td>' +
+            '<td>' + (missingCount > 0 ? '<span class="cmp-danger-text">' + missingCount + '</span>' : '0') + '</td>';
+          row.addEventListener('click', function () { openVetting(p.id); });
+          tbody.appendChild(row);
+        });
+      }
+
+      function openVetting(profileId) {
+        var profile = currentData.find(function (p) { return p.id === profileId; });
+        if (!profile) return;
+        activeProfileId = profileId;
+
+        var content = document.getElementById('vettingContent');
+        var docs = profile.vetting.documents;
+
+        var docCards = docs.map(function (doc) {
+          var info = getDocStatusInfo(doc);
+          var datesHtml = '';
+          if (doc.issuedDate) datesHtml += '<div>Issued: ' + new Date(doc.issuedDate).toLocaleDateString('en-GB') + '</div>';
+          if (doc.expirationDate) datesHtml += '<div>Expires: ' + new Date(doc.expirationDate).toLocaleDateString('en-GB') + '</div>';
+
+          var uploadHtml = '';
+          if (doc.status === 'PENDING') {
+            uploadHtml =
+              '<div class="cmp-upload-area">' +
+                '<input type="file" id="file-' + doc.code + '" accept=".pdf,.jpg,.png">' +
+                '<button type="button" class="cmp-btn cmp-btn-primary" data-action="upload" data-doc-code="' + doc.code + '">Upload</button>' +
+              '</div>';
+          }
+
+          var statusBadgeClass = info.cls === 'cmp-expired' ? 'cmp-badge-expired' : info.cls === 'cmp-expiring' ? 'cmp-badge-expiring' : info.cls === 'cmp-missing' ? 'cmp-badge-incomplete' : 'cmp-badge-complete';
+
+          return (
+            '<div class="cmp-doc-card ' + info.cls + '">' +
+              '<div class="cmp-doc-label">' +
+                '<span>' + doc.label + (doc.mandatory ? ' <span class="cmp-mandatory-mark">*</span>' : '') + '</span>' +
+                '<span class="cmp-doc-status ' + statusBadgeClass + '">' + info.text + '</span>' +
+              '</div>' +
+              '<div class="cmp-doc-dates">' + (datesHtml || 'No document uploaded') + '</div>' +
+              uploadHtml +
+            '</div>'
+          );
+        }).join('');
+
+        var qrActive = profile.complianceStatus === 'COMPLETE' || profile.complianceStatus === 'EXPIRING_SOON';
+        content.innerHTML =
+          '<div class="cmp-detail-header">' +
+            '<h3>' + profile.fullName + ' – Vetting</h3>' +
+            '<button type="button" class="cmp-close-btn" id="closeVettingBtn">&times;</button>' +
+          '</div>' +
+          '<div class="cmp-detail-meta">' +
+            '<span class="' + getComplianceBadge(profile.complianceStatus) + '">' + translateStatus(profile.complianceStatus) + '</span>' +
+            '<span class="cmp-vendor-badge">Vendor: ' + (profile.vendorId || 'Not linked') + '</span>' +
+          '</div>' +
+          '<div class="cmp-doc-grid">' + docCards + '</div>' +
+          '<div class="cmp-qr-info">' +
+            '<span>📱 QR Code: </span>' +
+            '<strong style="color:' + (qrActive ? 'var(--cmp-success)' : 'var(--cmp-gray-500)') + '">' +
+              (qrActive ? 'Active (valid)' : 'Inactive (compliance pending)') +
+            '</strong>' +
+          '</div>' +
+          '<button type="button" class="cmp-btn cmp-btn-outline" style="margin-top:1rem;" id="simulateExpireBtn">Simulate document expiration</button>';
+
+        document.getElementById('closeVettingBtn').addEventListener('click', closeVetting);
+        document.getElementById('simulateExpireBtn').addEventListener('click', function () { simulateExpire(profile.id); });
+        content.querySelectorAll('[data-action="upload"]').forEach(function (btn) {
+          btn.addEventListener('click', function (e) {
+            var docCode = e.currentTarget.dataset.docCode;
+            var fileInput = document.getElementById('file-' + docCode);
+            if (fileInput && fileInput.files.length > 0) simulateUpload(profile.id, docCode);
+            else alert('Select a file to upload.');
+          });
+        });
+
+        document.getElementById('vettingBackdrop').classList.add('active');
+      }
+
+      function closeVetting() {
+        document.getElementById('vettingBackdrop').classList.remove('active');
+        activeProfileId = null;
+      }
+
+      document.getElementById('vettingBackdrop').addEventListener('click', function (e) {
+        if (e.target === this) closeVetting();
+      });
+
+      // ---------- SIMULATED ACTIONS ----------
+      function simulateUpload(profileId, docCode) {
+        var profile = currentData.find(function (p) { return p.id === profileId; });
+        if (!profile) return;
+        var doc = profile.vetting.documents.find(function (d) { return d.code === docCode; });
+        if (!doc || doc.status !== 'PENDING') return;
+
+        doc.status = 'VERIFIED';
+        doc.issuedDate = new Date().toISOString().split('T')[0];
+        var exp = new Date();
+        exp.setFullYear(exp.getFullYear() + 1);
+        doc.expirationDate = exp.toISOString().split('T')[0];
+
+        recalcProfileStatus(profile);
+        renderTable();
+        openVetting(profileId);
+      }
+
+      function simulateExpire(profileId) {
+        var profile = currentData.find(function (p) { return p.id === profileId; });
+        if (!profile) return;
+        var doc = profile.vetting.documents.find(function (d) { return d.status === 'VERIFIED'; });
+        if (doc) {
+          doc.expirationDate = '2020-01-01';
+          recalcProfileStatus(profile);
+          renderTable();
+          openVetting(profileId);
+        } else {
+          alert('No verified document to simulate expiration.');
+        }
+      }
+
+      // ---------- GLOBAL EVENTS ----------
+      document.getElementById('searchInput').addEventListener('input', renderTable);
+      document.getElementById('statusFilter').addEventListener('change', renderTable);
+      document.getElementById('roleFilter').addEventListener('change', renderTable);
+
+      renderTable();
+    })();
+  </script>
+  <script src="../../beam-sidebar.js"></script>
+  <script src="../../admin-header.js"></script>
+  <script src="../../refinements-v3-motion.js" defer></script>
+</body>
+</html>

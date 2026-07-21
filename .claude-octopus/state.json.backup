@@ -53,6 +53,20 @@
       "rationale": "Only one of three providers actually produced an approach (codex and gemini CLIs were unavailable). That's the dominant fact here: this is a single-source synthesis, not a three-way reconciliation. I'",
       "date": "2026-07-14",
       "commit": "8bdc5adcb6b7380adee9dba0f8977a332f79c3b7"
+    },
+    {
+      "phase": "validate_tangle_results",
+      "decision": "Quality gate FAILED: 50% success rate (threshold: 75%)",
+      "rationale": "Success: 3/6, failures: 3, threshold: 75%",
+      "date": "2026-07-14",
+      "commit": "8bdc5adcb6b7380adee9dba0f8977a332f79c3b7"
+    },
+    {
+      "phase": "design_review_ceremony",
+      "decision": "Design review completed for: Adicionar botão de Revert que volta 1 ação. Descrição: Adici",
+      "rationale": "## Synthesis Result\n\n**CONFLICTS:** None identifiable — only Sonnet produced output. Codex (CLI unavailable) and Gemini (API key missing) generated no approach to compare.\n\n**GAPS:** \n1. **Missing inp",
+      "date": "2026-07-20",
+      "commit": "9d9b0d68a7cfae81dfda7f46801f772cbfde2781"
     }
   ],
   "blockers": [],

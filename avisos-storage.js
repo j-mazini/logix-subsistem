@@ -2,6 +2,8 @@
  * Avisos – armazenamento partilhado (localStorage).
  * Avisos são lembretes criados pela DHL; só desaparecem quando a DHL exclui ou a data Expire.
  * Chave: dhl_avisos (array de { id, title, message, expireDate, createdAt, deleted? }).
+ * Campos opcionais (usados pela página de Announcements, ignorados pelos demais
+ * consumidores que só leem title/message/expireDate): type, urgency, audience, publishDate.
  */
 (function (global) {
   'use strict';
@@ -39,20 +41,38 @@
     });
   }
 
-  /** Adiciona um aviso (DHL cria). */
+  /** Adiciona um aviso (DHL cria). Aceita metadados opcionais (type/urgency/audience/publishDate). */
   function addAviso(aviso) {
     var list = loadRaw();
-    var id = 'aviso-' + Date.now();
-    list.unshift({
+    var id = 'aviso-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
+    var record = {
       id: id,
       title: (aviso.title || '').trim(),
       message: (aviso.message || '').trim(),
       expireDate: (aviso.expireDate || '').trim(),
       createdAt: new Date().toISOString(),
       deleted: false
-    });
+    };
+    if (aviso.publishDate) record.publishDate = String(aviso.publishDate).trim();
+    if (aviso.type) record.type = aviso.type;
+    if (aviso.urgency) record.urgency = aviso.urgency;
+    if (Array.isArray(aviso.audience)) record.audience = aviso.audience;
+    list.unshift(record);
     saveRaw(list);
     return id;
+  }
+
+  /** Atualiza campos de um aviso existente (edição). Retorna false se o id não existir. */
+  function updateAviso(id, patch) {
+    var list = loadRaw();
+    var found = false;
+    list = list.map(function (a) {
+      if (a.id !== id) return a;
+      found = true;
+      return Object.assign({}, a, patch, { id: a.id });
+    });
+    if (found) saveRaw(list);
+    return found;
   }
 
   /** Marca aviso como excluído pela DHL. */
@@ -73,6 +93,7 @@
     getActiveAvisos: getActiveAvisos,
     getAllAvisos: getAllAvisos,
     addAviso: addAviso,
+    updateAviso: updateAviso,
     deleteAviso: deleteAviso
   };
 })(typeof window !== 'undefined' ? window : this);

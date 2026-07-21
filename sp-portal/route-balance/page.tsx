@@ -11,7 +11,7 @@ type StopType = 'DEL' | 'PU';
 type StopStatus = 'pending' | 'completed';
 type RouteStatus = 'pending' | 'running' | 'delayed' | 'finished';
 type SortAttendance = 'yes' | 'late' | 'no';
-type ToastType = 'success' | 'error' | 'info';
+type ToastType = 'success' | 'error' | 'info' | 'warning';
 
 interface Stop {
   id: number;
@@ -26,6 +26,17 @@ interface Stop {
   asr: boolean;
   dsr: boolean;
   status: StopStatus;
+}
+
+type SendStatus = 'pending' | 'sent';
+
+interface HistoryEntry {
+  action: string;
+  field: string;
+  oldValue: unknown;
+  newValue: unknown;
+  author: string;
+  timestamp: string;
 }
 
 interface Route {
@@ -47,6 +58,8 @@ interface Route {
   sortAttendance: SortAttendance;
   notes: string;
   status: RouteStatus;
+  sendStatus: SendStatus;
+  history: HistoryEntry[];
   stops: Stop[];
 }
 
@@ -155,11 +168,14 @@ function generateFakeData(): Route[] {
       sortAttendance: pick(['yes', 'yes', 'yes', 'late', 'no'] as SortAttendance[]),
       notes: '',
       status: 'pending',
+      sendStatus: 'pending',
+      history: [],
       stops: [],
     };
     route.status = deriveStatus(route);
 
     for (let j = 0; j < totalStops; j++) {
+      const isPM = Math.random() > 0.68;
       route.stops.push({
         id: stopId++,
         routeName: route.name,
@@ -168,8 +184,9 @@ function generateFakeData(): Route[] {
         address: `${1 + rand(200)} ${pick(STREETS)}`,
         customer: `Customer ${100 + rand(900)}`,
         type: j < deliveries ? 'DEL' : 'PU',
-        pm: Math.random() > 0.68,
-        pre12: Math.random() > 0.78,
+        pm: isPM,
+        // Pre-12 ("must deliver before 12:00") is AM-only — never roll it for PM stops.
+        pre12: !isPM && Math.random() > 0.78,
         asr: Math.random() > 0.15,
         dsr: Math.random() > 0.12,
         status: j < completedStops ? 'completed' : 'pending',
@@ -195,7 +212,7 @@ function visibleStops(route: Route, filterPM: boolean, filterPre12: boolean): St
   return stops;
 }
 
-function groupBySubpostcode(stops: Stop[]): SubpostcodeGroup[] {
+function groupBySubpostcode(stops: Stop[], filterPM: boolean): SubpostcodeGroup[] {
   const bySub = new Map<string, Map<string, Stop[]>>();
   stops.forEach((s) => {
     const sub = subpostcodeOf(s.postcode);
@@ -216,14 +233,16 @@ function groupBySubpostcode(stops: Stop[]): SubpostcodeGroup[] {
         stops: pcStops,
         del: pcStops.filter((s) => s.type === 'DEL').length,
         pu: pcStops.filter((s) => s.type === 'PU').length,
-        pre12: pcStops.some((s) => s.pre12),
+        // Pre-12 only applies to the AM shift; never flag it while viewing PM.
+        pre12: !filterPM && pcStops.some((s) => s.pre12),
       })),
       del,
       pu: groupStops.length - del,
       total: groupStops.length,
       completion: groupStops.length ? Math.round((completed / groupStops.length) * 100) : 0,
       allCompleted: completed === groupStops.length,
-      pre12: groupStops.some((s) => s.pre12),
+      // Pre-12 only applies to the AM shift; never flag it while viewing PM.
+      pre12: !filterPM && groupStops.some((s) => s.pre12),
     };
   });
 
@@ -257,6 +276,8 @@ export default function RouteBalancePage() {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [transferContext, setTransferContext] = useState<TransferContext | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const [sentRoutes, setSentRoutes] = useState<Set<number>>(new Set());
+  const [pmListingOpen, setPmListingOpen] = useState(false);
 
   // Modals
   const [addRouteOpen, setAddRouteOpen] = useState(false);
@@ -267,6 +288,7 @@ export default function RouteBalancePage() {
   const [editPostcodeValue, setEditPostcodeValue] = useState('');
   const [editPre12Value, setEditPre12Value] = useState(false);
   const [editScopeAll, setEditScopeAll] = useState(false);
+  const [selectedRouteId, setSelectedRouteId] = useState<number | null>(null);
 
   // Add Route form
   const [newRouteName, setNewRouteName] = useState('');
@@ -314,6 +336,10 @@ export default function RouteBalancePage() {
     }
     if (vendorFilter) list = list.filter((r) => r.vendor === vendorFilter);
     if (statusFilter) list = list.filter((r) => r.status === statusFilter);
+    // A route with no stops under the current AM/PM shift filter is not
+    // relevant to that shift (e.g. an all-Pre-12 route has no PM stops) —
+    // don't show it as an empty card.
+    list = list.filter((r) => visibleStops(r, filterPM, filterPre12).length > 0);
     if (sortKey) {
       const dir = sortAsc ? 1 : -1;
       list.sort((a, b) => {
@@ -323,7 +349,7 @@ export default function RouteBalancePage() {
       });
     }
     return list;
-  }, [routes, searchQuery, vendorFilter, statusFilter, sortKey, sortAsc]);
+  }, [routes, searchQuery, vendorFilter, statusFilter, sortKey, sortAsc, filterPM, filterPre12]);
 
   const dashboardCards = useMemo(() => {
     const stops = routes.flatMap((r) => visibleStops(r, filterPM, filterPre12));
@@ -380,6 +406,127 @@ export default function RouteBalancePage() {
     showToast('Operation finished', 'success');
   }
 
+  /**
+   * Sends all currently visible routes. Individual sends (sendToDriverIndividual) already
+   * mark a route sent with its own history entry, so batch only appends a new entry for
+   * routes not yet sent — unless every visible route is already sent, which is an explicit
+   * "resend all" and gets a fresh entry for each.
+   */
+  function sendToDrivers() {
+    const visible = filteredRoutes.filter((r) => visibleStops(r, filterPM, filterPre12).length > 0);
+    if (!visible.length) {
+      showToast('No routes to send', 'error');
+      return;
+    }
+    const resend = visible.every((r) => sentRoutes.has(r.id));
+    const ids = new Set(visible.map((r) => r.id));
+    setRoutes((prev) =>
+      prev.map((r) => {
+        if (!ids.has(r.id) || (!resend && sentRoutes.has(r.id))) return r;
+        const entry: HistoryEntry = {
+          action: resend ? 'Resend to Driver (batch)' : 'Send to Driver (batch)',
+          field: 'sendStatus',
+          oldValue: r.sendStatus,
+          newValue: 'sent',
+          author: currentUser,
+          timestamp: new Date().toISOString(),
+        };
+        return { ...r, sendStatus: 'sent', history: [...r.history, entry] };
+      }),
+    );
+    setSentRoutes((prev) => {
+      const next = new Set(prev);
+      visible.forEach((r) => next.add(r.id));
+      return next;
+    });
+    const drivers = new Set(visible.map((r) => r.driver)).size;
+    showToast(
+      `${visible.length} route manifest${visible.length === 1 ? '' : 's'} ${resend ? 're-sent' : 'sent'} to ${drivers} driver${drivers === 1 ? '' : 's'}`,
+      'success',
+    );
+  }
+
+  /** Per-route send action, independent of sendToDrivers() and not gated to AM or PM. */
+  function sendToDriverIndividual(routeId: number) {
+    const route = routes.find((r) => r.id === routeId);
+    if (!route) return;
+    if (sentRoutes.has(routeId) && route.sendStatus === 'sent') {
+      showToast(`Route ${route.name} was already sent to ${route.driver}`, 'info');
+      return;
+    }
+    const entry: HistoryEntry = {
+      action: 'Send to Driver',
+      field: 'sendStatus',
+      oldValue: route.sendStatus,
+      newValue: 'sent',
+      author: currentUser,
+      timestamp: new Date().toISOString(),
+    };
+    updateRoute(routeId, (r) => ({ ...r, sendStatus: 'sent', history: [...r.history, entry] }));
+    setSentRoutes((prev) => new Set(prev).add(routeId));
+    showToast(`Manifest sent to ${route.driver} (Route ${route.name})`, 'success');
+  }
+
+  /** Pops the last history entry off a route and restores the changed field to its oldValue, logging the revert itself. */
+  function revertLastAction(routeId: number) {
+    const route = routes.find((r) => r.id === routeId);
+    if (!route || route.history.length === 0) return;
+    if (!confirm(`Revert the last action on route ${route.name}?`)) return;
+
+    const history = [...route.history];
+    const last = history.pop()!;
+    const revertedFrom = (route as unknown as Record<string, unknown>)[last.field];
+    const restored = last.oldValue;
+
+    const revertEntry: HistoryEntry = {
+      action: 'Revert',
+      field: 'status',
+      oldValue: revertedFrom,
+      newValue: restored,
+      author: currentUser,
+      timestamp: new Date().toISOString(),
+    };
+
+    updateRoute(routeId, (r) => ({ ...r, [last.field]: restored, history: [...history, revertEntry] }) as Route);
+
+    if (last.field === 'sendStatus') {
+      setSentRoutes((prev) => {
+        const next = new Set(prev);
+        if (restored === 'sent') next.add(routeId);
+        else next.delete(routeId);
+        return next;
+      });
+    }
+
+    showToast(`Reverted last action on route ${route.name}`, 'success');
+  }
+
+  /** Mock auth gate: reuses the SP-login session flag set by sp-portal/select/login.js — no real security boundary. */
+  function isAuthorizedForPmListing() {
+    try {
+      return !!sessionStorage.getItem('dhl_sp_portal_current_sp');
+    } catch {
+      return false;
+    }
+  }
+
+  const pmAsrDsrRecords = useMemo(() => {
+    // PM has no Pre-12 category (Pre-12 is AM-only) — this listing must only ever surface ASR/DSR.
+    const records: { route: Route; stop: Stop }[] = [];
+    routes.forEach((route) => {
+      route.stops.filter((s) => s.pm && (s.asr || s.dsr)).forEach((stop) => records.push({ route, stop }));
+    });
+    if (sortKey) {
+      const dir = sortAsc ? 1 : -1;
+      records.sort((a, b) => {
+        const av = a.route[sortKey];
+        const bv = b.route[sortKey];
+        return (av > bv ? 1 : av < bv ? -1 : 0) * dir;
+      });
+    }
+    return records;
+  }, [routes, sortKey, sortAsc]);
+
   function openAddRouteModal() {
     setNewRouteName('');
     setNewDriver(DRIVERS[0]);
@@ -416,6 +563,8 @@ export default function RouteBalancePage() {
       sortAttendance: 'yes',
       notes: '',
       status: 'pending',
+      sendStatus: 'pending',
+      history: [],
       stops: [],
     };
     setRoutes((prev) => [...prev, route]);
@@ -491,12 +640,19 @@ export default function RouteBalancePage() {
     const route = routes.find((r) => r.name === editingStop.routeName);
     const oldPostcode = editingStop.postcode;
 
+    // Pre-12 is AM-only — a PM stop can never also be Pre-12.
+    let pre12Value = editPre12Value;
+    if (pre12Value && editingStop.pm) {
+      pre12Value = false;
+      showToast('Pre 12 was cleared: a PM stop cannot also be Pre-12', 'warning');
+    }
+
     if (editScopeAll && route) {
       const affectedCount = route.stops.filter((s) => s.postcode === oldPostcode).length;
       updateRoute(route.id, (r) =>
         recomputeRoute({
           ...r,
-          stops: r.stops.map((s) => (s.postcode === oldPostcode ? { ...s, postcode: newPostcode, pre12: s.id === editingStop.id ? editPre12Value : s.pre12 } : s)),
+          stops: r.stops.map((s) => (s.postcode === oldPostcode ? { ...s, postcode: newPostcode, pre12: s.id === editingStop.id ? pre12Value : s.pre12 } : s)),
         }),
       );
       showToast(`${oldPostcode} → ${newPostcode} on ${affectedCount} stop(s) of route ${route.name}`, 'success');
@@ -504,7 +660,7 @@ export default function RouteBalancePage() {
       updateRoute(route.id, (r) =>
         recomputeRoute({
           ...r,
-          stops: r.stops.map((s) => (s.id === editingStop.id ? { ...s, postcode: newPostcode, pre12: editPre12Value } : s)),
+          stops: r.stops.map((s) => (s.id === editingStop.id ? { ...s, postcode: newPostcode, pre12: pre12Value } : s)),
         }),
       );
       showToast('Stop updated', 'success');
@@ -643,6 +799,22 @@ export default function RouteBalancePage() {
     }
   }
 
+  function openRoutePreview(routeId: number) {
+    setSelectedRouteId(routeId);
+  }
+
+  function navigatePreview(direction: 'prev' | 'next') {
+    if (!selectedRouteId) return;
+    const currentIndex = filteredRoutes.findIndex(r => r.id === selectedRouteId);
+    if (currentIndex === -1) return;
+
+    let nextIndex = direction === 'next' ? currentIndex + 1 : currentIndex - 1;
+    if (nextIndex < 0) nextIndex = filteredRoutes.length - 1;
+    if (nextIndex >= filteredRoutes.length) nextIndex = 0;
+
+    setSelectedRouteId(filteredRoutes[nextIndex].id);
+  }
+
   const allPostcodesInUse = useMemo(() => [...new Set(routes.flatMap((r) => r.stops.map((s) => s.postcode)))].sort(), [routes]);
 
   return (
@@ -702,6 +874,12 @@ export default function RouteBalancePage() {
                 </button>
                 <button className="styled-button styled-button--outline" onClick={exportCsv}>
                   <i className="bi bi-filetype-csv" /> Export Demi8
+                </button>
+                <button className="styled-button styled-button--outline" onClick={sendToDrivers}>
+                  <i className="bi bi-send" /> Send to Driver
+                </button>
+                <button className="styled-button styled-button--outline" onClick={() => setPmListingOpen(true)}>
+                  <i className="bi bi-clipboard-data" /> PM ASR/DSR Listing
                 </button>
               </div>
 
@@ -885,6 +1063,17 @@ export default function RouteBalancePage() {
                           <h3 className="route-block-title">📅 Route {route.name} — Meeting View</h3>
                           <div className="route-block-header-right">
                             <span className="shift-badge shift-badge-pm">PM</span>
+                            <span className={`status-badge status-badge-${route.sendStatus === 'sent' ? 'completed' : 'pending'}`}>
+                              {route.sendStatus === 'sent' ? 'Sent' : 'Pending'}
+                            </span>
+                            <button className="route-collapse-btn" title="Send this route's manifest to the driver" onClick={() => sendToDriverIndividual(route.id)}>
+                              <i className="bi bi-send" /> Send
+                            </button>
+                            {route.history.length > 0 && (
+                              <button className="route-collapse-btn" title="Revert last action on this route" onClick={() => revertLastAction(route.id)}>
+                                <i className="bi bi-arrow-counterclockwise" /> Revert
+                              </button>
+                            )}
                           </div>
                         </div>
                         <div className="route-block-content">
@@ -935,20 +1124,33 @@ export default function RouteBalancePage() {
                   })
                 : filteredRoutes.map((route) => {
                     const stops = visibleStops(route, filterPM, filterPre12);
-                    const groups = groupBySubpostcode(stops);
+                    const groups = groupBySubpostcode(stops, filterPM);
                     const del = stops.filter((s) => s.type === 'DEL').length;
                     const pu = stops.length - del;
                     return (
                       <section
-                        className={`route-block status-${route.status} ${rebalanceMode ? 'rebalance-mode' : ''}`}
+                        className={`route-block status-${route.status} ${rebalanceMode ? 'rebalance-mode' : ''} ${selectedRouteId === route.id ? 'selected' : ''}`}
                         data-route-id={route.id}
                         key={route.id}
                         onDragOver={(e) => handleDragOver(e, route.id)}
                         onDrop={(e) => handleDrop(e, route.id)}
+                        onClick={() => !rebalanceMode && openRoutePreview(route.id)}
+                        style={{ cursor: !rebalanceMode ? 'pointer' : 'default' }}
                       >
                         <div className="route-block-header">
                           <h3 className="route-block-title">Route {route.name}</h3>
                           <div className="route-block-header-right">
+                            <span className={`status-badge status-badge-${route.sendStatus === 'sent' ? 'completed' : 'pending'}`}>
+                              {route.sendStatus === 'sent' ? 'Sent' : 'Pending'}
+                            </span>
+                            <button className="route-collapse-btn" title="Send this route's manifest to the driver" onClick={() => sendToDriverIndividual(route.id)}>
+                              <i className="bi bi-send" /> Send
+                            </button>
+                            {route.history.length > 0 && (
+                              <button className="route-collapse-btn" title="Revert last action on this route" onClick={() => revertLastAction(route.id)}>
+                                <i className="bi bi-arrow-counterclockwise" /> Revert
+                              </button>
+                            )}
                             <button className="route-collapse-btn" title="Close this route and redistribute its postcodes" onClick={() => collapseRoute(route.id)}>
                               <i className="bi bi-box-arrow-in-down" /> Close route
                             </button>
@@ -1279,6 +1481,61 @@ export default function RouteBalancePage() {
         );
       })()}
 
+      {/* ============ MODAL: PM ASR/DSR Listing ============ */}
+      {pmListingOpen && (
+        <div className="modal fade show" style={{ display: 'block' }} tabIndex={-1}>
+          <div className="modal-dialog modal-xl modal-dialog-scrollable">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title"><i className="bi bi-clipboard-data me-2" />PM ASR/DSR Listing</h5>
+                <button type="button" className="btn-close" aria-label="Close" onClick={() => setPmListingOpen(false)} />
+              </div>
+              <div className="modal-body">
+                {!isAuthorizedForPmListing() ? (
+                  <div className="pre12-empty-state">
+                    <i className="bi bi-lock-fill" />
+                    <p>You are not authorized to view the PM ASR/DSR listing.</p>
+                    <p style={{ fontSize: '0.85rem', opacity: 0.7, marginTop: '0.5rem' }}>Sign in through the Service Provider portal to unlock this view.</p>
+                  </div>
+                ) : pmAsrDsrRecords.length === 0 ? (
+                  <div className="pre12-empty-state">
+                    <i className="bi bi-check-circle-fill" />
+                    <p>No ASR/DSR records for the PM period</p>
+                  </div>
+                ) : (
+                  <div className="table-responsive">
+                    <table className="table table-hover table-sm">
+                      <thead>
+                        <tr><th>Route</th><th>Driver</th><th>Postcode</th><th>Customer</th><th>Category</th><th>Status</th></tr>
+                      </thead>
+                      <tbody>
+                        {pmAsrDsrRecords.map(({ route, stop }) => (
+                          <tr key={stop.id}>
+                            <td><strong>{route.name}</strong></td>
+                            <td>{route.driver}</td>
+                            <td>{stop.postcode}</td>
+                            <td>{stop.customer}</td>
+                            <td>
+                              {stop.asr && <span className="status-badge special-tag-asr">ASR</span>}
+                              {stop.dsr && <span className="status-badge special-tag-dsr">DSR</span>}
+                            </td>
+                            <td>
+                              <span className={`status-badge status-badge-${route.sendStatus === 'sent' ? 'completed' : 'pending'}`}>
+                                {route.sendStatus === 'sent' ? 'Sent' : 'Pending'}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ============ MODAL: Edit Postcode ============ */}
       {editingStop && (
         <Modal title="Edit Postcode" icon="bi-pencil-square" onClose={() => setEditingStop(null)} onConfirm={saveStopEdit} confirmLabel="Save Changes">
@@ -1306,9 +1563,17 @@ export default function RouteBalancePage() {
             </div>
           </div>
           <div className="form-check form-switch">
-            <input className="form-check-input" type="checkbox" id="editPre12" checked={editPre12Value} onChange={(e) => setEditPre12Value(e.target.checked)} />
+            <input
+              className="form-check-input"
+              type="checkbox"
+              id="editPre12"
+              checked={editPre12Value}
+              disabled={editingStop.pm}
+              onChange={(e) => setEditPre12Value(e.target.checked)}
+            />
             <label className="form-check-label" htmlFor="editPre12">
               <span className="status-badge status-badge-pre12">Pre 12</span> — must be delivered before 12:00
+              {editingStop.pm && <span className="text-muted"> (unavailable — this is a PM stop)</span>}
             </label>
           </div>
         </Modal>
@@ -1325,9 +1590,90 @@ export default function RouteBalancePage() {
         />
       )}
 
+      {/* ============ ROUTE PREVIEW MODAL ============ */}
+      {selectedRouteId && (() => {
+        const route = routes.find((r) => r.id === selectedRouteId);
+        const currentIndex = filteredRoutes.findIndex((r) => r.id === selectedRouteId);
+        if (!route) return null;
+
+        const stops = visibleStops(route, filterPM, filterPre12);
+        const groups = groupBySubpostcode(stops, filterPM);
+        const del = stops.filter((s) => s.type === 'DEL').length;
+        const pu = stops.length - del;
+
+        return (
+          <div className="modal fade show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }} tabIndex={-1} onClick={() => setSelectedRouteId(null)}>
+            <div className="modal-dialog modal-xl modal-dialog-scrollable" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-content">
+                <div className="modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h5 className="modal-title"><i className="bi bi-shuffle" /> Route {route.name} — Rebalance Preview</h5>
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                    <button type="button" className="styled-button styled-button--outline" onClick={() => navigatePreview('prev')} disabled={filteredRoutes.length <= 1}>
+                      <i className="bi bi-chevron-left" /> Previous
+                    </button>
+                    <span style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--ink-soft)' }}>
+                      {currentIndex + 1} / {filteredRoutes.length}
+                    </span>
+                    <button type="button" className="styled-button styled-button--outline" onClick={() => navigatePreview('next')} disabled={filteredRoutes.length <= 1}>
+                      Next <i className="bi bi-chevron-right" />
+                    </button>
+                    <button type="button" className="btn-close" aria-label="Close" onClick={() => setSelectedRouteId(null)} />
+                  </div>
+                </div>
+                <div className="modal-body">
+                  <div style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: 'var(--surface-2)', borderRadius: 'var(--radius-sm)' }}>
+                    <div style={{ display: 'flex', gap: '2rem', justifyContent: 'space-between', flexWrap: 'wrap' }}>
+                      <div>
+                        <div style={{ fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: 'var(--ink-faint)', marginBottom: '0.3rem' }}>Driver</div>
+                        <div style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--ink)' }}>{route.driver}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: 'var(--ink-faint)', marginBottom: '0.3rem' }}>Total Stops</div>
+                        <div style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--ink)' }}>{stops.length}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: 'var(--ink-faint)', marginBottom: '0.3rem' }}>Deliveries / Pickups</div>
+                        <div style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--ink)' }}>{del} / {pu}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: 'var(--ink-faint)', marginBottom: '0.3rem' }}>Progress</div>
+                        <div style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--accent)' }}>{route.completion}%</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <h6 style={{ fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase', color: 'var(--ink-faint)', marginBottom: '0.75rem' }}>Subpostcodes & Postcodes</h6>
+                  <div className="table-responsive">
+                    <table className="route-table">
+                      <thead>
+                        <tr>
+                          <th>Subpostcode</th><th>Postcodes</th><th>DEL</th><th>PU</th><th>Total</th><th>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {groups.map((g) => (
+                          <tr key={g.code}>
+                            <td><strong>{g.code}</strong></td>
+                            <td>{g.postcodes.length}</td>
+                            <td>{g.del}</td>
+                            <td>{g.pu}</td>
+                            <td>{g.total}</td>
+                            <td><StatusBadge status={g.allCompleted ? 'completed' : 'pending'} /></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       <div className="toast-container" id="toastContainer">
         {toasts.map((t) => {
-          const icons: Record<ToastType, string> = { success: 'bi-check-circle-fill', error: 'bi-x-circle-fill', info: 'bi-info-circle-fill' };
+          const icons: Record<ToastType, string> = { success: 'bi-check-circle-fill', error: 'bi-x-circle-fill', info: 'bi-info-circle-fill', warning: 'bi-exclamation-triangle-fill' };
           return (
             <div className={`app-toast ${t.type}`} key={t.id}>
               <i className={`bi ${icons[t.type]}`} />
