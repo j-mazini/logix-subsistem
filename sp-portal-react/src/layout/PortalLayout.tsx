@@ -8,13 +8,20 @@ interface PortalLayoutProps {
   pageClassName?: string;
   /** Class on <main>, e.g. "sp-profile-main" — mirrors vendor-admin-main + <page>-main from the static markup. */
   mainClassName: string;
-  title: string;
-  /** Extra class on the .admin-header row, e.g. "sp-profile-page-header". */
+  title?: string;
+  /** Extra class on the .admin-header row, e.g. "sp-profile-page-header". Ignored when `header` is passed. */
   headerClassName?: string;
+  /**
+   * Full replacement for the default title+pill `.admin-header` row, for pages
+   * that use a different header pattern (e.g. drivers' `.sp-vendor-header`).
+   * The caller is then responsible for rendering AdminHeaderPill/Menu itself
+   * via useAdminHeaderPill if it still needs the user-menu dropdown.
+   */
+  header?: ReactNode;
   children: ReactNode;
 }
 
-export function PortalLayout({ pageClassName, mainClassName, title, headerClassName, children }: PortalLayoutProps) {
+export function PortalLayout({ pageClassName, mainClassName, title, headerClassName, header, children }: PortalLayoutProps) {
   const sp = useCurrentSp();
   const menuControls = useAdminHeaderPill();
 
@@ -28,11 +35,17 @@ export function PortalLayout({ pageClassName, mainClassName, title, headerClassN
         <div className="page-container">
           <div className="page-inner">
             <main className={`vendor-admin-main ${mainClassName}`}>
-              <div className={`admin-header d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3${headerClassName ? ` ${headerClassName}` : ''}`}>
-                <h1 className="admin-header-title">{title}</h1>
-                <AdminHeaderPill sp={sp} controls={menuControls} />
-              </div>
-              <AdminHeaderMenu sp={sp} controls={menuControls} />
+              {header !== undefined ? (
+                header
+              ) : (
+                <>
+                  <div className={`admin-header d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3${headerClassName ? ` ${headerClassName}` : ''}`}>
+                    <h1 className="admin-header-title">{title}</h1>
+                    <AdminHeaderPill sp={sp} controls={menuControls} />
+                  </div>
+                  <AdminHeaderMenu sp={sp} controls={menuControls} />
+                </>
+              )}
 
               {children}
             </main>
