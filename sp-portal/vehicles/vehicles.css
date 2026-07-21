@@ -302,13 +302,11 @@
 
 .hidden { display: none !important; }
 
-/* ========== Vehicle Detail Modal – Liquid Glass (igual ao perfil do driver) ========== */
+/* ========== Vehicle Detail Modal (igual ao perfil do driver) ========== */
 .vehicle-detail-modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.35);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(15, 23, 42, 0.5);
   z-index: 1040;
 }
 
@@ -339,11 +337,9 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  border: 1px solid rgba(255, 255, 255, 0.26);
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(139, 92, 246, 0.06) 40%, rgba(236, 72, 153, 0.04) 72%, rgba(255, 255, 255, 0.22) 100%);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  box-shadow: 0 24px 64px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  box-shadow: 0 24px 64px rgba(15, 23, 42, 0.18);
   border-radius: 1.25rem;
 }
 
@@ -353,8 +349,8 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.35);
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.06) 0%, rgba(139, 92, 246, 0.05) 100%);
+  border-bottom: 1px solid #e2e8f0;
+  background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
 }
 
 .vehicle-detail-modal-header-inner {
@@ -385,9 +381,8 @@
   width: 2.25rem;
   height: 2.25rem;
   padding: 0;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  background: rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(8px);
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
   border-radius: 0.625rem;
   color: #475569;
   cursor: pointer;
@@ -395,9 +390,9 @@
 }
 
 .vehicle-detail-modal-close:hover {
-  background: rgba(255, 255, 255, 0.4);
+  background: #f1f5f9;
   color: #0f172a;
-  border-color: rgba(255, 255, 255, 0.5);
+  border-color: #cbd5e1;
 }
 
 .vehicle-detail-modal-body {
@@ -415,9 +410,8 @@
 }
 
 .vehicle-detail-section {
-  border: 1px solid rgba(255, 255, 255, 0.26);
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 100%);
-  backdrop-filter: blur(12px);
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
   border-radius: 0.75rem;
   padding: 1rem 1.25rem;
 }
@@ -437,7 +431,7 @@
   align-items: baseline;
   gap: 0.75rem;
   padding: 0.4rem 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 1px solid #e2e8f0;
   font-size: 0.875rem;
 }
 
@@ -457,9 +451,8 @@
 }
 
 .vehicle-detail-qr-wrap {
-  border: 1px solid rgba(255, 255, 255, 0.26);
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
-  backdrop-filter: blur(12px);
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
   border-radius: 0.75rem;
   padding: 1.25rem;
   display: flex;
