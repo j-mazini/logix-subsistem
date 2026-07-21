@@ -1,0 +1,335 @@
+/**
+ * Liquid Glass – estilização glassmorphism nas páginas HTML
+ * Alinhado ao sistema base (Logixsphere). Carrega tokens e fundo de referência.
+ */
+
+@import url('base-system-reference.css');
+
+:root {
+  --glass-bg: rgba(255, 255, 255, 0.25);
+  --glass-bg-strong: rgba(255, 255, 255, 0.4);
+  --glass-border: rgba(255, 255, 255, 0.5);
+  --glass-border-subtle: rgba(255, 255, 255, 0.35);
+  --glass-blur: 20px;
+  --glass-blur-strong: 28px;
+  --glass-radius: 1rem;
+  --glass-radius-lg: 1.25rem;
+  --glass-radius-xl: 1.5rem;
+  --glass-shadow: 0 8px 32px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.4) inset;
+  --glass-shadow-hover: 0 12px 40px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+}
+
+/* ========== Página: fundo alinhado ao sistema base (gradiente + auras no body) ========== */
+body.has-beam-sidebar .sidebar-inset,
+body.has-beam-sidebar .page-inner {
+  background: transparent;
+  min-height: 100vh;
+}
+
+/* ========== Liquid Glass page background (fixo atrás do conteúdo) ========== */
+.liquid-glass-page-bg {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  isolation: isolate;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e8f0f5 35%, #f1f5f9 100%);
+  margin: 0;
+  padding: 0;
+  z-index: -1;
+}
+
+.liquid-glass-page-bg::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  background: radial-gradient(900px 380px at 18% 12%, rgba(99, 102, 241, 0.24), transparent 60%),
+              radial-gradient(880px 360px at 82% 18%, rgba(236, 72, 153, 0.20), transparent 58%),
+              linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.08) 50%, rgba(236, 72, 153, 0.06) 100%);
+  filter: blur(14px) saturate(160%);
+  opacity: 1;
+  animation: liquidGlassBgDriftA 24s ease-in-out infinite alternate;
+}
+
+@keyframes liquidGlassBgDriftA {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(1.2%, -0.9%, 0) scale(1.02); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .liquid-glass-page-bg::before {
+    animation: none !important;
+  }
+}
+
+/* ========== Dashboard header (estilo sistema – liquid-glass-header) ========== */
+.dashboard-header {
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.06) 0%, rgba(139, 92, 246, 0.05) 40%, rgba(236, 72, 153, 0.03) 72%, rgba(255, 255, 255, 0.10) 100%) !important;
+  backdrop-filter: blur(16px) saturate(165%);
+  -webkit-backdrop-filter: blur(16px) saturate(165%);
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.10), 0 0 0 1px rgba(255, 255, 255, 0.08) inset, 0 6px 14px rgba(0, 0, 0, 0.05) !important;
+  border-radius: var(--glass-radius-lg) !important;
+}
+
+/* ========== KPI cards (estilo sistema – liquid-glass-surface) ========== */
+.dashboard-kpi-card {
+  border: 1px solid rgba(255, 255, 255, 0.26) !important;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.10) 0%, rgba(139, 92, 246, 0.08) 40%, rgba(236, 72, 153, 0.05) 72%, rgba(255, 255, 255, 0.18) 100%) !important;
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.10) inset, 0 8px 18px rgba(0, 0, 0, 0.06) !important;
+  border-radius: var(--glass-radius) !important;
+  transition: box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.35s ease !important;
+}
+
+.dashboard-kpi-card:hover {
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.16), 0 0 0 1px rgba(255, 255, 255, 0.14) inset, 0 10px 24px rgba(0, 0, 0, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.35) !important;
+}
+
+/* ========== Compliance cards (estilo sistema) ========== */
+.dashboard-compliance-card {
+  border: 1px solid rgba(255, 255, 255, 0.26) !important;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.10) 0%, rgba(139, 92, 246, 0.08) 40%, rgba(236, 72, 153, 0.05) 72%, rgba(255, 255, 255, 0.18) 100%) !important;
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.10) inset, 0 8px 18px rgba(0, 0, 0, 0.06) !important;
+  border-radius: var(--glass-radius) !important;
+}
+
+.dashboard-compliance-card-header {
+  border-bottom-color: rgba(255, 255, 255, 0.4) !important;
+}
+
+/* ========== Alert box ========== */
+.dashboard-alert-box {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.25) 0%, rgba(245, 158, 11, 0.2) 100%) !important;
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  border-radius: var(--glass-radius) !important;
+  box-shadow: var(--glass-shadow) !important;
+}
+
+/* ========== Tabs ========== */
+.dashboard-tabs-wrap {
+  border-top-color: var(--glass-border-subtle) !important;
+}
+
+.dashboard-tabs {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border-subtle);
+  border-radius: var(--glass-radius) !important;
+  padding: 0.35rem !important;
+}
+
+.dashboard-tab:hover {
+  background: rgba(255, 255, 255, 0.5) !important;
+}
+
+.dashboard-tab.active {
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.3) inset !important;
+}
+
+/* ========== Folder panels (estilo sistema – liquid-glass-surface) ========== */
+.sp-folder-panel,
+.sp-folder-panel-inner {
+  border: 1px solid rgba(255, 255, 255, 0.26) !important;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.10) 0%, rgba(139, 92, 246, 0.08) 40%, rgba(236, 72, 153, 0.05) 72%, rgba(255, 255, 255, 0.18) 100%) !important;
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.10) inset, 0 8px 18px rgba(0, 0, 0, 0.06) !important;
+  border-radius: var(--glass-radius-lg) !important;
+}
+
+/* ========== Tabelas: wrappers (estilo sistema) ========== */
+.last-day-table-wrap,
+.spms-table-wrap,
+.dashboard-vehicles-table-wrap {
+  border: 1px solid rgba(255, 255, 255, 0.26) !important;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.10) 0%, rgba(139, 92, 246, 0.08) 40%, rgba(236, 72, 153, 0.05) 72%, rgba(255, 255, 255, 0.18) 100%) !important;
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.10) inset, 0 8px 18px rgba(0, 0, 0, 0.06) !important;
+  border-radius: var(--glass-radius) !important;
+}
+
+/* ========== Last day goals wrap (estilo sistema) ========== */
+.last-day-goals-wrap {
+  background: transparent;
+}
+
+.last-day-goal-circle {
+  border: 1px solid rgba(255, 255, 255, 0.26) !important;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.10) 0%, rgba(139, 92, 246, 0.08) 40%, rgba(236, 72, 153, 0.05) 72%, rgba(255, 255, 255, 0.18) 100%) !important;
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.10) inset, 0 8px 18px rgba(0, 0, 0, 0.06) !important;
+  border-radius: var(--glass-radius) !important;
+}
+
+.last-day-goal-circle--overall {
+  border: 2px solid rgba(59, 130, 246, 0.5) !important;
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.10) inset, 0 0 24px rgba(59, 130, 246, 0.15) !important;
+}
+
+/* ========== Beam sidebar (estilo sistema – indigo/purple como Next.js) ========== */
+.beam-trigger {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  box-shadow: 0 8px 32px rgba(99, 102, 241, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.2) inset !important;
+}
+
+.beam-plate {
+  background: #fff !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 0.75rem !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08) !important;
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.35s ease, border-color 0.35s ease, background 0.35s ease, color 0.35s ease !important;
+}
+
+.beam-plate:hover {
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.12) !important;
+  border-color: #c7d2fe !important;
+}
+
+.beam-plate.active {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+  border-color: #6366f1 !important;
+  color: #fff !important;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25), 0 8px 24px rgba(99, 102, 241, 0.3) !important;
+}
+
+/* ========== Admin header (estilo sistema – liquid-glass-header) ========== */
+.admin-header {
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.06) 0%, rgba(139, 92, 246, 0.05) 40%, rgba(236, 72, 153, 0.03) 72%, rgba(255, 255, 255, 0.10) 100%) !important;
+  backdrop-filter: blur(16px) saturate(165%);
+  -webkit-backdrop-filter: blur(16px) saturate(165%);
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.10), 0 0 0 1px rgba(255, 255, 255, 0.08) inset, 0 6px 14px rgba(0, 0, 0, 0.05) !important;
+  border-radius: var(--glass-radius) !important;
+}
+
+.sp-vendor-main .sp-vendor-header {
+  border: 1px solid rgba(255, 255, 255, 0.26) !important;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.10) 0%, rgba(139, 92, 246, 0.08) 40%, rgba(236, 72, 153, 0.05) 72%, rgba(255, 255, 255, 0.18) 100%) !important;
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.10) inset, 0 8px 18px rgba(0, 0, 0, 0.06) !important;
+  border-radius: var(--glass-radius-lg) !important;
+}
+
+/* ========== Daily ops slide / Carousel / Modais (estilo sistema) ========== */
+.sp-daily-ops-slide-wrap {
+  border: 1px solid rgba(255, 255, 255, 0.26) !important;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.10) 0%, rgba(139, 92, 246, 0.08) 40%, rgba(236, 72, 153, 0.05) 72%, rgba(255, 255, 255, 0.18) 100%) !important;
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.10) inset, 0 8px 18px rgba(0, 0, 0, 0.06) !important;
+  border-radius: var(--glass-radius) !important;
+}
+
+.sp-dashboard-carousel-block {
+  border: 1px solid rgba(255, 255, 255, 0.26) !important;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.10) 0%, rgba(139, 92, 246, 0.08) 40%, rgba(236, 72, 153, 0.05) 72%, rgba(255, 255, 255, 0.18) 100%) !important;
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.10) inset, 0 8px 18px rgba(0, 0, 0, 0.06) !important;
+  border-radius: var(--glass-radius-lg) !important;
+}
+
+.modal-content {
+  border: 1px solid rgba(15, 23, 42, 0.08) !important;
+  background: #ffffff !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: 0 24px 64px rgba(15, 23, 42, 0.18) !important;
+  border-radius: var(--glass-radius-xl) !important;
+}
+
+.modal-header {
+  border-bottom-color: rgba(15, 23, 42, 0.08) !important;
+}
+
+.modal-footer {
+  border-top-color: rgba(15, 23, 42, 0.08) !important;
+}
+
+/* ========== Form controls (estilo sistema – focus ring indigo) ========== */
+.form-control,
+.form-select {
+  background: rgba(255, 255, 255, 0.6) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  border-radius: 0.625rem !important;
+  transition: border-color 0.3s ease, box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.form-control:focus,
+.form-select:focus {
+  background: rgba(255, 255, 255, 0.85) !important;
+  border-color: rgba(99, 102, 241, 0.5) !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
+  outline: none !important;
+}
+
+/* ========== Botões primários (estilo sistema – indigo/purple) ========== */
+.btn-primary {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.2) inset !important;
+}
+
+.btn-primary:hover {
+  box-shadow: 0 6px 24px rgba(99, 102, 241, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.3) inset !important;
+}
+
+.sp-portal-add-btn {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.2) inset !important;
+}
+
+/* ========== Login card (reforço liquid glass) ========== */
+.login-page .login-card {
+  background: rgba(255, 255, 255, 0.2) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  border-radius: 24px !important;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.3) inset !important;
+}
+
+.login-card__input {
+  background: rgba(255, 255, 255, 0.25) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  border-radius: 14px !important;
+}
+
+/* ========== Tabelas: thead ========== */
+.spms-overview-table thead th,
+.last-day-routes-table thead th {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.5) 0%, rgba(241, 245, 249, 0.6) 100%) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--glass-border-subtle) !important;
+}
+
+.spms-overview-table .spms-overview-tfoot td {
+  background: linear-gradient(135deg, rgba(226, 232, 240, 0.7) 0%, rgba(203, 213, 225, 0.6) 100%) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
