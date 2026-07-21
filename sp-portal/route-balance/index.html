@@ -44,6 +44,7 @@
         <a href="../contracts/index.html" class="beam-plate"><i class="bi bi-file-earmark-text beam-plate-icon"></i><span>Contracts</span></a>
         <a href="../sop-feed/index.html" class="beam-plate"><i class="bi bi-journal-bookmark-fill beam-plate-icon"></i><span>SOP Feed</span></a>
         <a href="index.html" class="beam-plate active"><i class="bi bi-shuffle beam-plate-icon"></i><span>Route Balance</span></a>
+        <a href="../route-balancer/index.html" class="beam-plate"><i class="bi bi-diagram-3-fill beam-plate-icon"></i><span>Route Balancer</span></a>
         <a href="../daily-operations-management/index.html" class="beam-plate"><i class="bi bi-clock-history beam-plate-icon"></i><span>Daily Operations Management</span></a>
         <span class="beam-plate beam-plate--soon" aria-disabled="true" tabindex="-1"><i class="bi bi-calendar-week beam-plate-icon"></i><span>Week Planner</span><span class="beam-plate-soon-badge">Soon</span></span>
         <a href="../assets/index.html" class="beam-plate"><i class="bi bi-phone beam-plate-icon"></i><span>Assets</span></a>
@@ -173,6 +174,12 @@
     <section class="operation-summary">
       <div class="section-header">
         <h2>Operation Summary</h2>
+        <div class="dashboard-filter-status" id="dashboardFilterStatus" hidden>
+          <span class="dashboard-filter-status-label">Filtering Sub Postcodes by <strong id="dashboardFilterStatusName"></strong></span>
+          <button type="button" class="dashboard-filter-clear-btn" data-action="clear-dashboard-filter">
+            <i class="bi bi-x-lg"></i> Clear filter
+          </button>
+        </div>
       </div>
 
       <div class="summary-grid">
@@ -192,8 +199,9 @@
           </div>
         </div>
 
-        <div class="summary-cards">
-          <div class="stat-card" data-tooltip="Total stops across all routes">
+        <div class="summary-cards" id="summaryCards">
+          <div class="stat-card stat-card--filterable" data-tooltip="Total stops across all routes · click to clear any filter"
+               data-action="dashboard-filter" data-filter="all" role="button" tabindex="0">
             <div class="stat-icon"><i class="bi bi-stack"></i></div>
             <div class="stat-content">
               <div class="stat-value" id="totalStopsCard">0</div>
@@ -207,14 +215,16 @@
               <div class="stat-label">Target Loop</div>
             </div>
           </div>
-          <div class="stat-card" data-tooltip="Total deliveries">
+          <div class="stat-card stat-card--filterable" data-tooltip="Total deliveries · click to show only DEL Sub Postcodes"
+               data-action="dashboard-filter" data-filter="del" role="button" tabindex="0">
             <div class="stat-icon"><i class="bi bi-box-seam"></i></div>
             <div class="stat-content">
               <div class="stat-value" id="deliveriesCard">0</div>
               <div class="stat-label">Deliveries</div>
             </div>
           </div>
-          <div class="stat-card" data-tooltip="Total pickups">
+          <div class="stat-card stat-card--filterable" data-tooltip="Total pickups · click to show only PU Sub Postcodes"
+               data-action="dashboard-filter" data-filter="pu" role="button" tabindex="0">
             <div class="stat-icon"><i class="bi bi-arrow-repeat"></i></div>
             <div class="stat-content">
               <div class="stat-value" id="pickupsCard">0</div>
@@ -233,6 +243,38 @@
             <div class="stat-content">
               <div class="stat-value" id="totalRoutesCard">0</div>
               <div class="stat-label">Total Routes</div>
+            </div>
+          </div>
+          <div class="stat-card stat-card--filterable" data-tooltip="Pre 12 deliveries · click to show only Pre 12 Sub Postcodes"
+               data-action="dashboard-filter" data-filter="pre12" role="button" tabindex="0">
+            <div class="stat-icon"><i class="bi bi-rocket-takeoff"></i></div>
+            <div class="stat-content">
+              <div class="stat-value" id="pre12Card">0</div>
+              <div class="stat-label">Pre 12</div>
+            </div>
+          </div>
+          <div class="stat-card stat-card--filterable" data-tooltip="Achieved Service Rate · click to show only ASR Sub Postcodes"
+               data-action="dashboard-filter" data-filter="asr" role="button" tabindex="0">
+            <div class="stat-icon"><i class="bi bi-check-circle"></i></div>
+            <div class="stat-content">
+              <div class="stat-value" id="asrCard">0</div>
+              <div class="stat-label">ASR</div>
+            </div>
+          </div>
+          <div class="stat-card stat-card--filterable" data-tooltip="Delayed Service Rate · click to show only DSR Sub Postcodes"
+               data-action="dashboard-filter" data-filter="dsr" role="button" tabindex="0">
+            <div class="stat-icon"><i class="bi bi-exclamation-circle"></i></div>
+            <div class="stat-content">
+              <div class="stat-value" id="dsrCard">0</div>
+              <div class="stat-label">DSR</div>
+            </div>
+          </div>
+          <div class="stat-card stat-card--filterable" data-tooltip="Pre 12 + ASR + DSR · click to show only Special Delivery Sub Postcodes"
+               data-action="dashboard-filter" data-filter="special" role="button" tabindex="0">
+            <div class="stat-icon"><i class="bi bi-stars"></i></div>
+            <div class="stat-content">
+              <div class="stat-value" id="specialCard">0</div>
+              <div class="stat-label">Special Deliveries</div>
             </div>
           </div>
         </div>
@@ -324,32 +366,33 @@
     </div>
   </div>
 
-  <!-- ============ MODAL: See All Stops ============ -->
-  <div class="modal fade" id="allStopsModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="allStopsModalTitle"><i class="bi bi-geo-alt me-2"></i>All Stops</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <div class="modal-metrics" id="allStopsMetrics"></div>
-          <div class="table-responsive">
-            <table class="table table-hover table-sm">
-              <thead>
-                <tr>
-                  <th>Stop</th>
-                  <th>Address</th>
-                  <th>Postcode</th>
-                  <th>Customer</th>
-                  <th>Flag</th>
-                  <th>Route</th>
-                </tr>
-              </thead>
-              <tbody id="allStopsTableBody"></tbody>
-            </table>
-          </div>
-        </div>
+  <!-- ============ DRAWER: See All Stops ============ -->
+  <!-- Top-docked, non-blocking panel — mirrors the Week Planner "Show Drivers"
+       drawer (gradient toggle + sliding top panel) instead of a centered
+       Bootstrap modal. Never dims or blocks the route grid underneath. -->
+  <div class="stops-drawer" id="allStopsDrawer">
+    <div class="stops-drawer-header">
+      <h5 id="allStopsModalTitle"><i class="bi bi-geo-alt"></i>All Stops</h5>
+      <button type="button" class="stops-drawer-close" id="allStopsDrawerClose" aria-label="Close">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    <div class="stops-drawer-body">
+      <div class="modal-metrics" id="allStopsMetrics"></div>
+      <div class="table-responsive">
+        <table class="table table-hover table-sm">
+          <thead>
+            <tr>
+              <th>Stop</th>
+              <th>Address</th>
+              <th>Postcode</th>
+              <th>Customer</th>
+              <th>Flag</th>
+              <th>Route</th>
+            </tr>
+          </thead>
+          <tbody id="allStopsTableBody"></tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -506,7 +549,7 @@
   </div>
 
   <!-- ============ FAB: Show All Postcodes (Rebalance mode only) ============ -->
-  <button type="button" class="fab-all-postcodes" id="btnShowAllPostcodes" title="Show every postcode across all routes">
+  <button type="button" class="fab-all-postcodes" id="btnShowAllPostcodes" title="Show every subpostcode across all routes — drag one onto a route card to transfer it">
     <i class="bi bi-list-ul"></i> <span id="btnShowAllPostcodesLabel">Show All Postcodes</span>
   </button>
 
@@ -524,7 +567,7 @@
     </div>
     <div class="ap-drawer-body">
       <input type="text" class="form-control ap-search" id="allPostcodesSearch"
-             placeholder="Search postcode, subpostcode, route or driver…" autocomplete="off" />
+             placeholder="Search subpostcode, route or driver…" autocomplete="off" />
       <div id="allPostcodesBody"></div>
     </div>
   </div>

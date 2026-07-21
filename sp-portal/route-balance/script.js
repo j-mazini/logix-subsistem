@@ -19,9 +19,8 @@ class RouteBalanceApp {
     this.expandedSubpostcodes = new Set(); // `${routeId}:${subcode}` keys currently expanded
     this.expandedRebalancePostcodes = new Set(); // `${routeId}:${postcode}` keys expanded to individual deliveries (Rebalance mode)
     this.moveStopMenuOpen = null;   // { routeId, stopId } whose per-delivery "Move to…" picker is open (Rebalance mode)
+    this.allPostcodesDrawerOpen = false; // whether the "All Postcodes" drawer is currently open
     this.allPostcodesSearch = '';   // filter text for the "All Postcodes" modal
-    this.expandedAllPostcodes = new Set(); // `${routeId}:${postcode}` keys expanded in the "All Postcodes" modal
-    this.moveApStopMenuOpen = null; // stop id whose per-delivery "Move to…" picker is open in the "All Postcodes" modal
     this.transferContext = null;    // state for the Send Subpostcode/Postcode modal
     this.sentRoutes = { am: new Set(), pm: new Set() }; // route ids whose manifest was sent to the driver, tracked separately per shift
     this.flippedRoutes = new Set(); // route ids currently showing the Special Deliveries face
@@ -30,6 +29,16 @@ class RouteBalanceApp {
     this.comparePickerOpen = null;  // routeId whose "compare with…" route picker is open
     this.moveGroupMenuOpen = null;  // { routeId, subcode } whose whole-subpostcode "Move to…" picker is open (Rebalance mode)
     this.selectedRouteId = null;    // route id currently selected for preview modal (Operations mode)
+    this.allStopsRouteId = null;    // route id currently shown in the "All Stops" drawer
+    this.dashboardFilter = null;    // null | 'del' | 'pu' | 'pre12' | 'asr' | 'dsr' | 'special' — Operation Summary quick filter
+    this.DASHBOARD_FILTER_MATCHERS = {
+      del: (s) => s.type === 'DEL',
+      pu: (s) => s.type === 'PU',
+      pre12: (s) => s.pre12,
+      asr: (s) => s.asr,
+      dsr: (s) => s.dsr,
+      special: (s) => s.pre12 || s.asr || s.dsr,
+    };
 
     // ---- Static datasets for fake data generation ----
     this.DRIVERS = ['Carlos Silva', 'Ana Costa', 'João Martins', 'Maria Santos', 'Pedro Oliveira',
@@ -391,8 +400,26 @@ class RouteBalanceApp {
       this.showToast(this.rebalanceMode ? '🔄 Rebalance mode: select postcodes to transfer' : 'Operations mode: standard view', 'info');
     });
 
+    document.getElementById('allStopsDrawerClose')?.addEventListener('click', () => this.closeStopsDrawer());
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && this.allStopsRouteId !== null) this.closeStopsDrawer();
+    });
+    document.addEventListener('click', (e) => {
+      if (this.allStopsRouteId === null) return;
+      if (e.target.closest('#allStopsDrawer') || e.target.closest('[data-action="see-all-stops"]')) return;
+      this.closeStopsDrawer();
+    });
+
     document.getElementById('btnShowAllPostcodes')?.addEventListener('click', () => this.toggleAllPostcodesDrawer());
     document.getElementById('btnCloseAllPostcodes')?.addEventListener('click', () => this.closeAllPostcodesDrawer());
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && this.allPostcodesDrawerOpen) this.closeAllPostcodesDrawer();
+    });
+    document.addEventListener('click', (e) => {
+      if (!this.allPostcodesDrawerOpen) return;
+      if (e.target.closest('#allPostcodesDrawer') || e.target.closest('#btnShowAllPostcodes')) return;
+      this.closeAllPostcodesDrawer();
+    });
     const debouncedApRender = this.debounce(() => this.renderAllPostcodesModal(), 150);
     document.getElementById('allPostcodesSearch')?.addEventListener('input', (e) => {
       this.allPostcodesSearch = e.target.value;
@@ -417,6 +444,23 @@ class RouteBalanceApp {
     });
 
     this.setupRouteBlocksDelegation();
+
+    // Operation Summary indicators act as quick filters for the Sub Postcode
+    // listing below (see displayStops/toggleDashboardFilter).
+    document.getElementById('summaryCards')?.addEventListener('click', (e) => {
+      const card = e.target.closest('[data-action="dashboard-filter"]');
+      if (card) this.toggleDashboardFilter(card.dataset.filter);
+    });
+    document.getElementById('summaryCards')?.addEventListener('keydown', (e) => {
+      const card = e.target.closest('[data-action="dashboard-filter"]');
+      if (card && (e.key === 'Enter' || e.key === ' ')) {
+        e.preventDefault();
+        this.toggleDashboardFilter(card.dataset.filter);
+      }
+    });
+    document.getElementById('dashboardFilterStatus')?.addEventListener('click', (e) => {
+      if (e.target.closest('[data-action="clear-dashboard-filter"]')) this.toggleDashboardFilter(this.dashboardFilter);
+    });
   }
 
   /**
@@ -500,7 +544,7 @@ class RouteBalanceApp {
         if (!route) return;
 
         switch (actionBtn.dataset.action) {
-          case 'see-all-stops': this.showAllStopsModal(route); break;
+          case 'see-all-stops': this.showAllStopsModal(route, actionBtn); break;
           case 'shipment-details': this.showShipmentDetailsModal(route); break;
           case 'add-postcode': this.showAddPostcodeModal(route); break;
           case 'export-route': this.exportRouteCsv(route); break;
@@ -682,71 +726,87 @@ class RouteBalanceApp {
       if (payload.sourceRouteId === targetRouteId) return;
       if (payload.stopId != null) {
         this.transferSingleStopById(payload.sourceRouteId, targetRouteId, payload.stopId);
+        if (this.allPostcodesDrawerOpen) this.renderAllPostcodesModal();
       } else if (payload.postcode) {
         this.transferSinglePostcodeByCode(payload.sourceRouteId, targetRouteId, payload.postcode);
+        if (this.allPostcodesDrawerOpen) this.renderAllPostcodesModal();
       } else {
+        // Whole-subpostcode drag (from a route card or the All Postcodes drawer):
+        // opens the Transfer modal instead of moving instantly — confirmTransfer()
+        // refreshes the drawer itself once the user picks subpostcode vs postcode(s).
         this.openTransferModal(payload.sourceRouteId, targetRouteId, payload.subpostcode);
       }
     });
   }
 
   /**
-   * Click delegation for the "All Postcodes" modal — a flat, searchable, route-agnostic
-   * view of every postcode currently visible under the active AM/PM shift, each flagged
-   * with the route it's on. Built for rebalancing on small screens or with many routes,
-   * where scanning across a grid of route cards to find one postcode is impractical.
+   * Click + drag delegation for the "All Postcodes" drawer — a flat, searchable,
+   * route-agnostic view of every subpostcode currently visible under the active
+   * AM/PM shift, each flagged with the route it's on. Built for rebalancing on
+   * small screens or with many routes, where scanning across a grid of route
+   * cards to find one subpostcode is impractical.
    */
   setupAllPostcodesDelegation() {
     const body = document.getElementById('allPostcodesBody');
     if (!body) return;
 
-    body.addEventListener('click', (e) => {
-      const toggleBtn = e.target.closest('.ap-toggle');
-      if (toggleBtn) {
-        const key = `${toggleBtn.dataset.routeId}:${toggleBtn.dataset.postcode}`;
-        if (this.expandedAllPostcodes.has(key)) this.expandedAllPostcodes.delete(key);
-        else this.expandedAllPostcodes.add(key);
-        this.renderAllPostcodesModal();
-        return;
-      }
-
-      const actionBtn = e.target.closest('[data-action]');
-      if (!actionBtn) return;
-      e.stopPropagation();
-
-      switch (actionBtn.dataset.action) {
-        case 'toggle-move-ap-stop-menu': {
-          const stopId = Number(actionBtn.dataset.stopId);
-          this.moveApStopMenuOpen = this.moveApStopMenuOpen === stopId ? null : stopId;
-          this.renderAllPostcodesModal();
-          break;
-        }
-        case 'move-ap-stop-to-route': {
-          const stopId = Number(actionBtn.dataset.stopId);
-          const sourceRouteId = Number(actionBtn.dataset.sourceRouteId);
-          const targetId = Number(actionBtn.dataset.targetId);
-          this.moveApStopMenuOpen = null;
-          this.transferSingleStopById(sourceRouteId, targetId, stopId);
-          this.renderAllPostcodesModal();
-          break;
-        }
-      }
+    // Dragging a subpostcode row out of the drawer reuses the exact same
+    // dragPayload contract as dragging a `.rebalance-subpostcode-label` inside
+    // a route card — the drop handler on #routeBlocksContainer (see
+    // setupRouteBlocksDelegation) already opens the Transfer modal for it.
+    body.addEventListener('dragstart', (e) => {
+      const row = e.target.closest('.all-postcodes-row');
+      if (!row) return;
+      e.dataTransfer.effectAllowed = 'move';
+      this.dragPayload = { subpostcode: row.dataset.subpostcode, sourceRouteId: Number(row.dataset.routeId) };
+      e.dataTransfer.setData('text/plain', row.dataset.subpostcode);
+      row.classList.add('dragging');
+      this.markDragTargets(row);
     });
 
-    // Closes an open per-delivery picker when clicking anywhere else in the modal.
-    document.getElementById('allPostcodesModal')?.addEventListener('click', (e) => {
-      if (this.moveApStopMenuOpen !== null && !e.target.closest('.ap-move-wrap')) {
-        this.moveApStopMenuOpen = null;
-        this.renderAllPostcodesModal();
-      }
+    body.addEventListener('dragend', (e) => {
+      const row = e.target.closest('.all-postcodes-row');
+      if (row) row.classList.remove('dragging');
+      this.dragPayload = null;
+      const container = document.getElementById('routeBlocksContainer');
+      container.classList.remove('rebalance-dragging');
+      container.querySelectorAll('.route-block.drop-target, .route-block.drop-source')
+        .forEach(b => b.classList.remove('drop-target', 'drop-source'));
     });
   }
 
-  showAllPostcodesModal() {
-    new bootstrap.Modal(document.getElementById('allPostcodesModal')).show();
+  toggleAllPostcodesDrawer() {
+    if (this.allPostcodesDrawerOpen) this.closeAllPostcodesDrawer();
+    else this.openAllPostcodesDrawer();
+  }
+
+  openAllPostcodesDrawer() {
+    this.allPostcodesDrawerOpen = true;
+    document.getElementById('allPostcodesDrawer')?.classList.add('open');
+    document.getElementById('allPostcodesDrawer')?.setAttribute('aria-hidden', 'false');
+    document.getElementById('btnShowAllPostcodes')?.classList.add('open');
+    const label = document.getElementById('btnShowAllPostcodesLabel');
+    if (label) label.textContent = 'Hide All Postcodes';
     this.renderAllPostcodesModal();
   }
 
+  closeAllPostcodesDrawer() {
+    this.allPostcodesDrawerOpen = false;
+    document.getElementById('allPostcodesDrawer')?.classList.remove('open');
+    document.getElementById('allPostcodesDrawer')?.setAttribute('aria-hidden', 'true');
+    document.getElementById('btnShowAllPostcodes')?.classList.remove('open');
+    const label = document.getElementById('btnShowAllPostcodesLabel');
+    if (label) label.textContent = 'Show All Postcodes';
+  }
+
+  /**
+   * Flat, searchable, route-agnostic view of every subpostcode currently
+   * visible under the active AM/PM shift, one row per (route, subpostcode)
+   * with its aggregate DEL/PU counts. Dragging a row onto a route card opens
+   * the Transfer modal (see openTransferModal) so the user picks whether to
+   * move the whole subpostcode or just one/some of its postcodes — the same
+   * flow already used when dragging a subpostcode group in Rebalance mode.
+   */
   renderAllPostcodesModal() {
     const body = document.getElementById('allPostcodesBody');
     if (!body) return;
@@ -755,21 +815,18 @@ class RouteBalanceApp {
     this.routes.forEach(route => {
       const groups = this.groupBySubpostcode(this.visibleStops(route));
       groups.forEach(g => {
-        g.postcodes.forEach(p => {
-          entries.push({ subpostcode: g.code, postcode: p.postcode, route, stops: p.stops, del: p.del, pu: p.pu, pre12: p.pre12 });
-        });
+        entries.push({ subpostcode: g.code, route, postcodes: g.postcodes, del: g.del, pu: g.pu, pre12: g.pre12 });
       });
     });
 
     entries.sort((a, b) =>
       a.subpostcode === b.subpostcode
-        ? a.postcode.localeCompare(b.postcode)
+        ? a.route.name.localeCompare(b.route.name)
         : a.subpostcode.localeCompare(b.subpostcode));
 
     const q = this.allPostcodesSearch.trim().toLowerCase();
     if (q) {
       entries = entries.filter(en =>
-        en.postcode.toLowerCase().includes(q) ||
         en.subpostcode.toLowerCase().includes(q) ||
         en.route.name.toLowerCase().includes(q) ||
         en.route.driver.toLowerCase().includes(q));
@@ -779,7 +836,7 @@ class RouteBalanceApp {
       body.innerHTML = `
         <div class="pre12-empty-state">
           <i class="bi bi-search"></i>
-          <p>No postcodes match your search</p>
+          <p>No subpostcodes match your search</p>
         </div>`;
       return;
     }
@@ -787,57 +844,18 @@ class RouteBalanceApp {
     body.innerHTML = `
       <div class="all-postcodes-list">
         ${entries.map(en => {
-          const key = `${en.route.id}:${en.postcode}`;
-          const expanded = this.expandedAllPostcodes.has(key);
-          const otherRoutes = this.routes.filter(r => r.id !== en.route.id);
           return `
-          <div class="all-postcodes-row">
-            <button type="button" class="ap-toggle ${expanded ? 'expanded' : ''}"
-                    data-postcode="${en.postcode}" data-route-id="${en.route.id}"
-                    title="${expanded ? 'Hide' : 'Show'} individual deliveries in ${en.postcode}">
-              <i class="bi bi-chevron-right"></i>
-            </button>
+          <div class="all-postcodes-row" draggable="true" data-subpostcode="${en.subpostcode}" data-route-id="${en.route.id}"
+               title="Drag onto a route to transfer ${en.subpostcode}">
+            <i class="bi bi-grip-vertical drag-handle"></i>
             <span class="ap-subpostcode">${en.subpostcode}</span>
-            <span class="pre12-flip-pc">${en.postcode}</span>
+            <span class="postcode-count-badge">${en.postcodes.length} postcode${en.postcodes.length === 1 ? '' : 's'}</span>
             ${en.pre12 ? '<span class="status-badge status-badge-pre12">Pre 12</span>' : ''}
             <span class="ap-route-flag" title="Currently on Route ${en.route.name} · ${en.route.driver}">
               <i class="bi bi-signpost-split"></i> ${en.route.name} · ${en.route.driver}
             </span>
             <span class="pre12-flip-count">DEL ${en.del} / PU ${en.pu}</span>
           </div>
-          ${expanded ? `
-          <div class="rebalance-stop-list">
-            ${en.stops.map(s => `
-              <div class="rebalance-stop-row ap-stop-row">
-                <span class="rebalance-stop-type rebalance-stop-type--${s.type.toLowerCase()}">${s.type}</span>
-                <span class="rebalance-stop-customer">${s.customer}</span>
-                <span class="special-tags">
-                  ${s.pre12 ? '<span class="status-badge status-badge-pre12">Pre 12</span>' : ''}
-                  ${s.asr ? '<span class="status-badge special-tag-asr">ASR</span>' : ''}
-                  ${s.dsr ? '<span class="status-badge special-tag-dsr">DSR</span>' : ''}
-                </span>
-                <div class="move-to-wrap move-to-wrap--stop ap-move-wrap">
-                  <button type="button" class="move-to-btn ${this.moveApStopMenuOpen === s.id ? 'active' : ''}"
-                          data-action="toggle-move-ap-stop-menu" data-stop-id="${s.id}"
-                          title="Move only this ${s.type === 'PU' ? 'pickup' : 'delivery'} to another route">
-                    <i class="bi bi-send-plus"></i> Move…
-                  </button>
-                  ${this.moveApStopMenuOpen === s.id ? `
-                  <div class="move-to-picker">
-                    <div class="move-to-picker-title">Move this ${s.type === 'PU' ? 'pickup' : 'delivery'} to…</div>
-                    ${otherRoutes.map(r => `
-                      <button type="button" class="move-to-picker-item" data-action="move-ap-stop-to-route"
-                              data-stop-id="${s.id}" data-source-route-id="${en.route.id}" data-target-id="${r.id}">
-                        <span class="compare-picker-route">${r.name}</span>
-                        <span class="compare-picker-driver">${r.driver}</span>
-                      </button>`).join('')}
-                  </div>
-                  ` : ''}
-                </div>
-              </div>
-            `).join('')}
-          </div>
-          ` : ''}
         `; }).join('')}
       </div>`;
   }
@@ -897,6 +915,21 @@ class RouteBalanceApp {
     }
 
     return stops;
+  }
+
+  /**
+   * Stops for a route after the AM/PM shift filter AND the active Operation
+   * Summary quick filter (dashboardFilter) are applied. Used everywhere the
+   * Sub Postcode listing is rendered so clicking an indicator (ASR, DSR,
+   * Special Deliveries, …) narrows the view without a page reload. Business
+   * actions (send to driver, CSV export, detail modals) intentionally keep
+   * using visibleStops() instead, since a view filter shouldn't change what
+   * gets sent or exported.
+   */
+  displayStops(route) {
+    const stops = this.visibleStops(route);
+    const matcher = this.DASHBOARD_FILTER_MATCHERS[this.dashboardFilter];
+    return matcher ? stops.filter(matcher) : stops;
   }
 
   /** The outward area code a full postcode belongs to, e.g. "ME3 2AB" → "ME3". */
@@ -1298,6 +1331,24 @@ class RouteBalanceApp {
     this.updateSendButton();
   }
 
+  /**
+   * Toggles the Operation Summary quick filter that narrows the Sub Postcode
+   * listing below (route blocks + summary table) to only stops matching the
+   * clicked indicator. Clicking the active indicator again — or "Total
+   * Stops" / the Clear filter pill — returns to the full view. No page
+   * reload: everything re-renders from existing in-memory state.
+   */
+  toggleDashboardFilter(filterKey) {
+    const key = filterKey === 'all' ? null : filterKey;
+    this.dashboardFilter = this.dashboardFilter === key ? null : key;
+    this.render();
+
+    const labels = { del: 'Deliveries', pu: 'Pickups', pre12: 'Pre 12', asr: 'ASR', dsr: 'DSR', special: 'Special Deliveries' };
+    this.showToast(
+      this.dashboardFilter ? `Filtering Sub Postcodes by ${labels[this.dashboardFilter]}` : 'Filter cleared',
+      'info');
+  }
+
   updateDashboardCards() {
     const routes = this.routes;
     const stops = routes.flatMap(r => this.visibleStops(r));
@@ -1305,6 +1356,10 @@ class RouteBalanceApp {
     const totalStops = stops.length;
     const deliveries = stops.filter(s => s.type === 'DEL').length;
     const pickups = totalStops - deliveries;
+    const pre12 = stops.filter(s => s.pre12).length;
+    const asr = stops.filter(s => s.asr).length;
+    const dsr = stops.filter(s => s.dsr).length;
+    const special = stops.filter(s => s.pre12 || s.asr || s.dsr).length;
     const avg = (arr) => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
 
     const set = (id, v) => { document.getElementById(id).textContent = v; };
@@ -1314,16 +1369,45 @@ class RouteBalanceApp {
     set('pickupsCard', pickups);
     set('sprCard', Math.round(avg(routes.map(r => r.spr))));
     set('totalRoutesCard', routes.length);
+    set('pre12Card', pre12);
+    set('asrCard', asr);
+    set('dsrCard', dsr);
+    set('specialCard', special);
+
+    // Visual highlight for the active indicator (Total Stops is the "show
+    // all" reset, so it never shows as active itself) + the clear-filter pill.
+    document.querySelectorAll('.stat-card--filterable').forEach(card => {
+      card.classList.toggle('stat-card--active', !!this.dashboardFilter && card.dataset.filter === this.dashboardFilter);
+    });
+
+    const labels = { del: 'Deliveries', pu: 'Pickups', pre12: 'Pre 12', asr: 'ASR', dsr: 'DSR', special: 'Special Deliveries' };
+    const statusEl = document.getElementById('dashboardFilterStatus');
+    if (statusEl) {
+      statusEl.hidden = !this.dashboardFilter;
+      const nameEl = document.getElementById('dashboardFilterStatusName');
+      if (nameEl && this.dashboardFilter) nameEl.textContent = labels[this.dashboardFilter];
+    }
+  }
+
+  /**
+   * filteredRoutes(), further narrowed to routes with at least one stop
+   * matching the active Operation Summary quick filter (dashboardFilter).
+   * Kept separate from filteredRoutes() itself so business actions like
+   * "Send to Driver" or CSV export — which call filteredRoutes() directly —
+   * are never silently restricted by a view-only filter.
+   */
+  dashboardFilteredRoutes() {
+    return this.filteredRoutes().filter(r => this.displayStops(r).length > 0);
   }
 
   renderSummaryTable() {
     const tableBody = document.getElementById('summaryTableBody');
-    tableBody.innerHTML = this.filteredRoutes().map(route => `
+    tableBody.innerHTML = this.dashboardFilteredRoutes().map(route => `
           <tr>
             <td><strong>${route.name}</strong></td>
             <td>${route.driver}</td>
             <td>${route.target}%</td>
-            <td>${this.visibleStops(route).length}</td>
+            <td>${this.displayStops(route).length}</td>
           </tr>`).join('');
   }
 
@@ -1335,8 +1419,21 @@ class RouteBalanceApp {
       ? '<span class="shift-badge shift-badge-pm">PM</span>'
       : '<span class="shift-badge shift-badge-am">AM</span>';
 
-    container.innerHTML = this.filteredRoutes().map(route => {
-      const stops = this.visibleStops(route);
+    const routesToRender = this.rebalanceMode ? this.filteredRoutes() : this.dashboardFilteredRoutes();
+    if (!routesToRender.length && this.dashboardFilter) {
+      container.innerHTML = `
+        <div class="pre12-empty-state dashboard-filter-empty">
+          <i class="bi bi-funnel"></i>
+          <p>No Sub Postcodes match this filter</p>
+          <p style="font-size: 0.85rem; opacity: 0.7; margin-top: 0.5rem;">Try a different indicator or clear the filter to see everything</p>
+        </div>`;
+      this.syncFlipHeights();
+      this.initScrollFades();
+      return;
+    }
+
+    container.innerHTML = routesToRender.map(route => {
+      const stops = this.rebalanceMode ? this.visibleStops(route) : this.displayStops(route);
       const groups = this.groupBySubpostcode(stops);
       const del = stops.filter(s => s.type === 'DEL').length;
       const pu = stops.length - del;
@@ -1651,8 +1748,8 @@ class RouteBalanceApp {
                 <button class="styled-button styled-button--outline" data-action="shipment-details">
                   <i class="bi bi-box2"></i> See Shipment Details
                 </button>
-                <button class="styled-button styled-button--outline" data-action="see-all-stops">
-                  <i class="bi bi-geo-alt"></i> See All Stops
+                <button class="styled-button styled-button--outline btn-see-all-stops${this.allStopsRouteId === route.id ? ' is-open' : ''}" data-action="see-all-stops">
+                  <i class="bi bi-geo-alt"></i> <span class="btn-see-all-stops-label">${this.allStopsRouteId === route.id ? 'Hide' : 'See'}</span> All Stops
                 </button>
               </div>
 
@@ -1826,9 +1923,9 @@ class RouteBalanceApp {
     this.render();
   }
 
-  showAllStopsModal(route) {
+  showAllStopsModal(route, triggerEl) {
     document.getElementById('allStopsModalTitle').innerHTML =
-      `<i class="bi bi-geo-alt me-2"></i>All Stops — Route ${route.name}`;
+      `<i class="bi bi-geo-alt"></i>All Stops — Route ${route.name}`;
 
     const sortLabels = { yes: 'Sort: Attended', late: 'Sort: Late', no: 'Sort: No-show' };
     const sortColors = {
@@ -1858,7 +1955,32 @@ class RouteBalanceApp {
         <td>${s.routeName}</td>
       </tr>`).join('');
 
-    new bootstrap.Modal(document.getElementById('allStopsModal')).show();
+    this.openStopsDrawer(route.id, triggerEl);
+  }
+
+  openStopsDrawer(routeId, triggerEl) {
+    this.allStopsRouteId = routeId;
+    document.getElementById('allStopsDrawer').classList.add('is-open');
+    document.querySelectorAll('.btn-see-all-stops.is-open').forEach(el => {
+      el.classList.remove('is-open');
+      const label = el.querySelector('.btn-see-all-stops-label');
+      if (label) label.textContent = 'See';
+    });
+    if (triggerEl) {
+      triggerEl.classList.add('is-open');
+      const label = triggerEl.querySelector('.btn-see-all-stops-label');
+      if (label) label.textContent = 'Hide';
+    }
+  }
+
+  closeStopsDrawer() {
+    this.allStopsRouteId = null;
+    document.getElementById('allStopsDrawer').classList.remove('is-open');
+    document.querySelectorAll('.btn-see-all-stops.is-open').forEach(el => {
+      el.classList.remove('is-open');
+      const label = el.querySelector('.btn-see-all-stops-label');
+      if (label) label.textContent = 'See';
+    });
   }
 
   showShipmentDetailsModal(route) {
@@ -2057,6 +2179,7 @@ class RouteBalanceApp {
     this.transferPostcodesToRoute(ctx.sourceRouteId, ctx.targetRouteId, stopIds);
     bootstrap.Modal.getInstance(document.getElementById('transferModal'))?.hide();
     this.transferContext = null;
+    if (this.allPostcodesDrawerOpen) this.renderAllPostcodesModal();
   }
 
   transferPostcodesToRoute(sourceRouteId, targetRouteId, stopIds) {
