@@ -273,19 +273,3 @@ body {
     animation: none !important;
   }
 }
-
-/* ========== Center Page Content ========== */
-.page-container {
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.page-inner {
-  margin-left: auto;
-  margin-right: auto;
-}
-
-main {
-  margin-left: auto;
-  margin-right: auto;
-}
