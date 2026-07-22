@@ -1,12 +1,11 @@
 /**
- * Service Provider Portal (TBX) – Login
- * Mesma lógica e animações do login principal; redireciona para o portal BA.
+ * DHL Subsystem – Login
+ * Redireciona para o dashboard independente das credenciais.
  */
 (function () {
   'use strict';
 
-  var SP_NAME = 'TBX';
-  var REDIRECT_URL = '../dashboard/index.html?sp=' + encodeURIComponent(SP_NAME);
+  const REDIRECT_URL = 'dashboard.html';
 
   function initParticles() {
     if (typeof tsParticles === 'undefined') return;
@@ -53,12 +52,12 @@
   function handleSubmit(e) {
     e.preventDefault();
 
-    var form = document.getElementById('loginForm');
-    var button = document.getElementById('loginButton');
-    var card = document.querySelector('.login-card');
-    var overlay = document.getElementById('loadingOverlay');
-    var spinner = document.getElementById('loadingSpinner');
-    var welcome = document.getElementById('welcomeMessage');
+    const form = document.getElementById('loginForm');
+    const button = document.getElementById('loginButton');
+    const card = document.querySelector('.login-card');
+    const overlay = document.getElementById('loadingOverlay');
+    const spinner = document.getElementById('loadingSpinner');
+    const welcome = document.getElementById('welcomeMessage');
 
     button.disabled = true;
     button.textContent = 'Signing in...';
@@ -67,10 +66,6 @@
     overlay.classList.add('login-overlay--visible');
     overlay.setAttribute('aria-hidden', 'false');
     spinner.classList.add('login-overlay__loader--visible');
-
-    try {
-      sessionStorage.setItem('dhl_sp_portal_current_sp', SP_NAME);
-    } catch (err) {}
 
     setTimeout(function () {
       spinner.classList.remove('login-overlay__loader--visible');
