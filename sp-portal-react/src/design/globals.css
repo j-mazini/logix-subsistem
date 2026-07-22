@@ -219,7 +219,6 @@ select:focus-visible {
 .page-container {
   margin-left: auto;
   margin-right: auto;
-  max-width: 1600px;
 }
 
 .page-inner {
@@ -230,5 +229,4 @@ select:focus-visible {
 main {
   margin-left: auto;
   margin-right: auto;
-  max-width: 100%;
 }
