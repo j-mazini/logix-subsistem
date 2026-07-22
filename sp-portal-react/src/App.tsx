@@ -9,6 +9,17 @@ import { Invoices } from './pages/Invoices/Invoices';
 import { RequestsAdmin } from './pages/RequestsAdmin/RequestsAdmin';
 import { VendorPerformance } from './pages/VendorPerformance/VendorPerformance';
 import { AdhocInvoiceManagement } from './pages/AdhocInvoiceManagement/AdhocInvoiceManagement';
+import { Dashboard } from './pages/Dashboard/Dashboard';
+import { DailyFinancialInsights } from './pages/DailyFinancialInsights/DailyFinancialInsights';
+import { DailyOperationsManagement } from './pages/DailyOperationsManagement/DailyOperationsManagement';
+import { DailyOperationsReports } from './pages/DailyOperationsReports/DailyOperationsReports';
+import { Drivers } from './pages/Drivers/Drivers';
+import { RouteBalance } from './pages/RouteBalance/RouteBalance';
+import { RouteBalancer } from './pages/RouteBalancer/RouteBalancer';
+import { SOPFeed } from './pages/SOPFeed/SOPFeed';
+import { Vehicles } from './pages/Vehicles/Vehicles';
+import { VettingAdmin } from './pages/VettingAdmin/VettingAdmin';
+import { WeekPlanner } from './pages/WeekPlanner/WeekPlanner';
 import { useViewportAttribute } from './hooks/useViewportAttribute';
 import { useRefinementsMotion } from './hooks/useRefinementsMotion';
 
@@ -29,6 +40,17 @@ function App() {
         <Route path="/requests-admin" element={<RequestsAdmin />} />
         <Route path="/vendor-performance" element={<VendorPerformance />} />
         <Route path="/adhoc-invoice-management" element={<AdhocInvoiceManagement />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/daily-financial-insights" element={<DailyFinancialInsights />} />
+        <Route path="/daily-operations-management" element={<DailyOperationsManagement />} />
+        <Route path="/daily-operations-reports" element={<DailyOperationsReports />} />
+        <Route path="/drivers" element={<Drivers />} />
+        <Route path="/route-balance" element={<RouteBalance />} />
+        <Route path="/route-balancer" element={<RouteBalancer />} />
+        <Route path="/sop-feed" element={<SOPFeed />} />
+        <Route path="/vehicles" element={<Vehicles />} />
+        <Route path="/vetting-admin" element={<VettingAdmin />} />
+        <Route path="/week-planner" element={<WeekPlanner />} />
       </Routes>
     </HashRouter>
   );

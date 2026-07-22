@@ -3,6 +3,9 @@ import { createRoot } from 'react-dom/client';
 
 import './data/dhlMockData';
 
+// Design tokens and global styles (NEW)
+import './design/globals.css';
+
 // Same cascade order as sp-portal/profile/index.html's <head>. When more
 // pages are migrated, per-route CSS ordering will need its own solution —
 // a single global order can't stay correct for every page at once.
