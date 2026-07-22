@@ -82,9 +82,9 @@
         {
           id: 'announcements',
           title: 'Announcements',
-          description: 'Messages from DHL',
+          description: 'Messages from DHL and your own announcements',
           icon: 'bi-megaphone-fill',
-          soon: true,
+          link: '../announcements/index.html',
         },
       ],
     },
