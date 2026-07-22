@@ -68,7 +68,7 @@ export function Profile() {
 
   if (!sp) {
     return (
-      <PortalLayout mainClassName="sp-profile-main" headerClassName="sp-profile-page-header" title="My Profile">
+      <PortalLayout mainClassName="vendor-admin-main sp-profile-main" headerClassName="sp-profile-page-header" title="My Profile">
         <div id="spNotFound" className="alert alert-warning">
           <strong>Service Provider not set.</strong> Open the portal with <code>?sp=YourCompany</code>.
         </div>
@@ -112,7 +112,7 @@ export function Profile() {
   }
 
   return (
-    <PortalLayout pageClassName="sp-profile-page" mainClassName="sp-profile-main" headerClassName="sp-profile-page-header" title="My Profile">
+    <PortalLayout pageClassName="sp-profile-page" mainClassName="vendor-admin-main sp-profile-main" headerClassName="sp-profile-page-header" title="My Profile">
       <div id="profileForm" className="sp-profile-fb-wrap">
         <div className="sp-profile-fb-card sp-profile-glass-card">
           <div className={`sp-profile-cover-wrap${cover ? ' has-image' : ''}`}>

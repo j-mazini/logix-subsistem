@@ -6,7 +6,7 @@ import { useCurrentSp } from '../hooks/useCurrentSp';
 interface PortalLayoutProps {
   /** Extra class on the outermost wrapper — carries page-scoped selectors like .sp-profile-page (not body-qualified in the source CSS, so any ancestor of .page-inner works). */
   pageClassName?: string;
-  /** Class on <main>, e.g. "sp-profile-main" — mirrors vendor-admin-main + <page>-main from the static markup. */
+  /** Full class list for <main>, taken verbatim from the original page's <main> element — not every page uses "vendor-admin-main", so callers must include it themselves when the source markup does. */
   mainClassName: string;
   title?: string;
   /** Extra class on the .admin-header row, e.g. "sp-profile-page-header". Ignored when `header` is passed. */
@@ -34,7 +34,7 @@ export function PortalLayout({ pageClassName, mainClassName, title, headerClassN
         <div className="liquid-glass-page-bg" aria-hidden="true" />
         <div className="page-container">
           <div className="page-inner">
-            <main className={`vendor-admin-main ${mainClassName}`}>
+            <main className={mainClassName}>
               {header !== undefined ? (
                 header
               ) : (
