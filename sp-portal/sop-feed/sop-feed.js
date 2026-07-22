@@ -82,12 +82,43 @@
         return d.innerHTML;
       }
 
+      function getAudienceLabel(audience) {
+        if (audience === 'everyone') return 'Everyone';
+        if (audience === 'drivers') return 'Drivers';
+        if (audience === 'supervisors') return 'Supervisors';
+        return 'Company';
+      }
+
+      function getAvailableDepots() {
+        if (window.DHL_MOCK_DATA && window.DHL_MOCK_DATA.contractDepots) {
+          return window.DHL_MOCK_DATA.contractDepots.map(function (d) { return d.name; });
+        }
+        return ['MSE', 'LCY', 'LSE'];
+      }
+
+      function getCurrentUserDepot() {
+        var spName = getCurrentSp();
+        if (!spName || !window.DHL_MOCK_DATA || !window.DHL_MOCK_DATA.serviceProviders) return null;
+        var sp = window.DHL_MOCK_DATA.serviceProviders.find(function (p) { return p.name === spName; });
+        if (sp && sp.depotManagers) {
+          return Object.keys(sp.depotManagers)[0] || null;
+        }
+        return null;
+      }
+
+      function isPostVisibleToUser(post, userDepot) {
+        if (!post.depots || post.depots.length === 0) return true;
+        if (!userDepot) return false;
+        return post.depots.indexOf(userDepot) !== -1;
+      }
+
       function getPostPreviewHtml(p) {
         var typeLabel = p.type === 'tutorial' ? 'Tutorial' : p.type === 'update' ? 'Update' : 'Info';
         var contentPreview = (p.content || '').length > 90 ? (p.content.substring(0, 90) + '…') : (p.content || '');
         var thumbHtml = '';
         var sourceLabel = p.source === 'dhl' ? 'DHL' : (p.sharedFromDhlId ? 'Shared from DHL' : 'Company');
-        var audienceLabel = p.audience === 'drivers' ? 'Drivers' : 'Company';
+        var audienceLabel = getAudienceLabel(p.audience);
+        var depotBadgesHtml = (p.depots && p.depots.length > 0) ? '<div class="sop-post-depot-info">Depots: ' + (p.depots.map(function (d) { return '<span class="sop-depot-badge">' + escapeHtml(d) + '</span>'; }).join('')) + '</div>' : '';
         if (p.youtubeVideoId) {
           var thumbUrl = 'https://img.youtube.com/vi/' + escapeHtml(p.youtubeVideoId) + '/hqdefault.jpg';
           thumbHtml = '<span class="sop-post-preview-thumb sop-post-preview-thumb--video" style="background-image:url(\'' + thumbUrl + '\')"><i class="bi bi-play-fill"></i></span>';
@@ -100,6 +131,7 @@
           '<span class="sop-post-badge sop-post-badge--source">' + escapeHtml(sourceLabel) + '</span>' +
           '<span class="sop-post-badge sop-post-badge--audience">' + escapeHtml(audienceLabel) + '</span>' +
           '<span class="sop-post-time">' + escapeHtml(p.timeAgo) + '</span></div></div>' +
+          depotBadgesHtml +
           '<div class="sop-post-body">' +
           (p.title ? '<h3 class="sop-post-title">' + escapeHtml(p.title) + '</h3>' : '') +
           '<p class="sop-post-content sop-post-content--preview">' + escapeHtml(contentPreview) + '</p>' +
@@ -112,7 +144,8 @@
         var likeClass = p.liked ? 'sop-action-btn sop-action-btn--active' : 'sop-action-btn';
         var mediaHtml = '';
         var sourceLabel = p.source === 'dhl' ? 'DHL' : (p.sharedFromDhlId ? 'Shared from DHL' : 'Company');
-        var audienceLabel = p.audience === 'drivers' ? 'Drivers' : 'Company';
+        var audienceLabel = getAudienceLabel(p.audience);
+        var isOwnPost = p.source === 'company' && p.id >= 1000;
         if (p.youtubeVideoId) {
           var vid = escapeHtml(p.youtubeVideoId);
           mediaHtml = '<a href="https://www.youtube.com/watch?v=' + vid + '" target="_blank" rel="noopener noreferrer" class="sop-post-media sop-post-media--youtube sop-youtube-link" title="Watch on YouTube"><span class="sop-youtube-thumb" style="background-image:url(\'https://img.youtube.com/vi/' + vid + '/hqdefault.jpg\')"></span><span class="sop-youtube-play"><i class="bi bi-play-circle-fill"></i></span><span class="sop-youtube-label">Watch on YouTube</span></a>';
@@ -133,13 +166,20 @@
           '</div>' +
           '<button type="submit" class="sop-comments-submit">Comment</button>' +
           '</form>';
+        var menuHtml = isOwnPost ? '<div class="sop-post-header-actions"><button type="button" class="sop-post-menu-btn" data-menu-toggle="' + p.id + '" aria-label="Post menu"><i class="bi bi-three-dots-vertical"></i></button><div class="sop-post-menu" id="menu-' + p.id + '"><button type="button" class="sop-post-menu-item" data-action="edit" data-id="' + p.id + '"><i class="bi bi-pencil-square"></i> Edit</button><button type="button" class="sop-post-menu-item sop-post-menu-item--delete" data-action="delete" data-id="' + p.id + '"><i class="bi bi-trash"></i> Delete</button></div></div>' : '';
+        var audienceBadgeClass = p.audience === 'supervisors' ? 'supervisors' : p.audience === 'everyone' ? 'everyone' : 'audience';
+        var depotBadgesHtml = (p.depots && p.depots.length > 0) ? '<span class="sop-post-depot-info">Depots: ' + (p.depots.map(function (d) { return '<span class="sop-depot-badge">' + escapeHtml(d) + '</span>'; }).join('')) + '</span>' : '';
         return '<div class="sop-post-header">' +
+          '<div class="sop-post-meta-wrapper">' +
           '<div class="sop-post-avatar"><img src="' + ASSET(p.authorAvatar) + '" alt="" width="40" height="40" /></div>' +
-          '<div class="sop-post-meta"><strong class="sop-post-author">' + escapeHtml(p.author) + '</strong>' +
+          '<div class="sop-post-meta-flex"><strong class="sop-post-author">' + escapeHtml(p.author) + '</strong>' +
           '<span class="sop-post-badge sop-post-badge--' + p.type + '">' + escapeHtml(typeLabel) + '</span>' +
           '<span class="sop-post-badge sop-post-badge--source">' + escapeHtml(sourceLabel) + '</span>' +
-          '<span class="sop-post-badge sop-post-badge--audience">' + escapeHtml(audienceLabel) + '</span>' +
-          '<span class="sop-post-time">' + escapeHtml(p.timeAgo) + '</span></div></div>' +
+          '<span class="sop-post-badge sop-post-badge--' + audienceBadgeClass + '">' + escapeHtml(audienceLabel) + '</span>' +
+          '<span class="sop-post-time">' + escapeHtml(p.timeAgo) + '</span></div>' +
+          menuHtml +
+          '</div></div>' +
+          depotBadgesHtml +
           '<div class="sop-post-body">' + (p.title ? '<h3 class="sop-post-title">' + escapeHtml(p.title) + '</h3>' : '') +
           '<p class="sop-post-content">' + escapeHtml(p.content) + '</p>' + mediaHtml + '</div>' +
           '<div class="sop-post-actions">' +
@@ -151,12 +191,16 @@
 
       function render(search) {
         var q = (search || '').toLowerCase().trim();
+        var userDepot = getCurrentUserDepot();
         var list = MOCK_POSTS.filter(function (p) {
+          if (!isPostVisibleToUser(p, userDepot)) return false;
+          if (activeFeedFilter === 'everyone' && p.audience !== 'everyone') return false;
           if (activeFeedFilter === 'drivers' && p.audience !== 'drivers') return false;
           if (activeFeedFilter === 'company' && p.audience !== 'company') return false;
+          if (activeFeedFilter === 'supervisors' && p.audience !== 'supervisors') return false;
           if (activeFeedFilter === 'dhl' && p.source !== 'dhl') return false;
           if (!q) return true;
-          var t = (p.title || '') + ' ' + (p.content || '') + ' ' + (p.type || '') + ' ' + (p.author || '') + ' ' + (p.audience || '');
+          var t = (p.title || '') + ' ' + (p.content || '') + ' ' + (p.type || '') + ' ' + (p.author || '') + ' ' + (p.audience || '') + ' ' + ((p.depots || []).join(' '));
           return t.toLowerCase().indexOf(q) !== -1;
         });
         var feed = document.getElementById('sopFeed');
@@ -204,7 +248,29 @@
         }).join('');
       }
 
+      function populateDepotCheckboxes() {
+        var container = document.getElementById('companyPostDepotList');
+        if (!container) return;
+        var depots = getAvailableDepots();
+        container.innerHTML = depots.map(function (depot) {
+          return '<div class="sop-depot-checkbox">' +
+            '<input type="checkbox" id="depot-' + escapeHtml(depot) + '" name="depots" value="' + escapeHtml(depot) + '" />' +
+            '<label for="depot-' + escapeHtml(depot) + '">' + escapeHtml(depot) + '</label>' +
+            '</div>';
+        }).join('');
+      }
+
+      function getSelectedDepots() {
+        var checkboxes = document.querySelectorAll('input[name="depots"]:checked');
+        var selected = [];
+        checkboxes.forEach(function (cb) {
+          selected.push(cb.value);
+        });
+        return selected.length > 0 ? selected : null;
+      }
+
       populateDhlPostSelect();
+      populateDepotCheckboxes();
       render();
 
       document.getElementById('sopSearch').addEventListener('input', debounce(function () { render(this.value); }, SEARCH_DEBOUNCE_MS));
@@ -229,36 +295,61 @@
           var dhlInput = document.getElementById('companyPostDhlSource');
           var title = titleInput && titleInput.value ? titleInput.value.trim() : '';
           var content = contentInput && contentInput.value ? contentInput.value.trim() : '';
-          var audience = audienceInput && audienceInput.value ? audienceInput.value : 'drivers';
+          var audience = audienceInput && audienceInput.value ? audienceInput.value : 'everyone';
           var selectedDhlId = dhlInput && dhlInput.value ? parseInt(dhlInput.value, 10) : null;
           var selectedDhlPost = selectedDhlId != null ? DHL_POSTS.find(function (p) { return p.id === selectedDhlId; }) : null;
+          var selectedDepots = getSelectedDepots();
           if (!title && !content && !selectedDhlPost) return;
-          var newPost = {
-            id: Date.now(),
-            author: 'Service Provider Admin',
-            authorAvatar: 'assets/atlas-transport-logo.png',
-            timeAgo: 'Just now',
-            type: 'update',
-            title: title || (selectedDhlPost ? selectedDhlPost.title : 'Company update'),
-            content: content || (selectedDhlPost ? selectedDhlPost.content : 'Please review this important update.'),
-            video: null,
-            image: null,
-            youtubeVideoId: null,
-            likes: 0,
-            comments: 0,
-            liked: false,
-            commentList: [],
-            source: 'company',
-            audience: audience,
-            sharedFromDhlId: selectedDhlPost ? selectedDhlPost.id : null
-          };
-          MOCK_POSTS.unshift(newPost);
-          saveCompanyPosts();
-          if (titleInput) titleInput.value = '';
-          if (contentInput) contentInput.value = '';
-          if (dhlInput) dhlInput.value = '';
-          render();
-          openPost(newPost.id);
+
+          var editingPost = null;
+          if (MOCK_POSTS[0] && MOCK_POSTS[0]._isEditing) {
+            editingPost = MOCK_POSTS.find(function (p) { return p._isEditing; });
+          }
+
+          if (editingPost) {
+            editingPost.title = title || (selectedDhlPost ? selectedDhlPost.title : 'Company update');
+            editingPost.content = content || (selectedDhlPost ? selectedDhlPost.content : 'Please review this important update.');
+            editingPost.audience = audience;
+            editingPost.depots = selectedDepots;
+            delete editingPost._isEditing;
+            delete editingPost._editId;
+            saveCompanyPosts();
+            if (titleInput) titleInput.value = '';
+            if (contentInput) contentInput.value = '';
+            if (dhlInput) dhlInput.value = '';
+            document.querySelectorAll('input[name="depots"]').forEach(function (cb) { cb.checked = false; });
+            render(document.getElementById('sopSearch').value);
+            openPost(editingPost.id);
+          } else {
+            var newPost = {
+              id: Date.now(),
+              author: 'Service Provider Admin',
+              authorAvatar: 'assets/atlas-transport-logo.png',
+              timeAgo: 'Just now',
+              type: 'update',
+              title: title || (selectedDhlPost ? selectedDhlPost.title : 'Company update'),
+              content: content || (selectedDhlPost ? selectedDhlPost.content : 'Please review this important update.'),
+              video: null,
+              image: null,
+              youtubeVideoId: null,
+              likes: 0,
+              comments: 0,
+              liked: false,
+              commentList: [],
+              source: 'company',
+              audience: audience,
+              depots: selectedDepots,
+              sharedFromDhlId: selectedDhlPost ? selectedDhlPost.id : null
+            };
+            MOCK_POSTS.unshift(newPost);
+            saveCompanyPosts();
+            if (titleInput) titleInput.value = '';
+            if (contentInput) contentInput.value = '';
+            if (dhlInput) dhlInput.value = '';
+            document.querySelectorAll('input[name="depots"]').forEach(function (cb) { cb.checked = false; });
+            render();
+            openPost(newPost.id);
+          }
         });
       }
 
@@ -296,6 +387,59 @@
         post.comments = (post.commentList || []).length;
         input.value = '';
         openPost(postId);
+      });
+
+      document.addEventListener('click', function (e) {
+        var menuBtn = e.target.closest('[data-menu-toggle]');
+        if (menuBtn) {
+          e.preventDefault();
+          e.stopPropagation();
+          var postId = menuBtn.dataset.menuToggle;
+          var menu = document.getElementById('menu-' + postId);
+          if (menu) {
+            var allMenus = document.querySelectorAll('.sop-post-menu.open');
+            allMenus.forEach(function (m) { if (m !== menu) m.classList.remove('open'); });
+            menu.classList.toggle('open');
+          }
+          return;
+        }
+        var deleteBtn = e.target.closest('[data-action="delete"]');
+        if (deleteBtn) {
+          e.preventDefault();
+          var postId = parseInt(deleteBtn.dataset.id, 10);
+          if (confirm('Are you sure you want to delete this post?')) {
+            var idx = MOCK_POSTS.findIndex(function (p) { return p.id === postId; });
+            if (idx !== -1) {
+              MOCK_POSTS.splice(idx, 1);
+              saveCompanyPosts();
+              closePost();
+              render(document.getElementById('sopSearch').value);
+            }
+          }
+          return;
+        }
+        var editBtn = e.target.closest('[data-action="edit"]');
+        if (editBtn) {
+          e.preventDefault();
+          var postId = parseInt(editBtn.dataset.id, 10);
+          var post = MOCK_POSTS.find(function (p) { return p.id === postId; });
+          if (post) {
+            var titleInput = document.getElementById('companyPostTitle');
+            var contentInput = document.getElementById('companyPostContent');
+            var audienceInput = document.getElementById('companyPostAudience');
+            if (titleInput) titleInput.value = post.title || '';
+            if (contentInput) contentInput.value = post.content || '';
+            if (audienceInput) audienceInput.value = post.audience || 'drivers';
+            post._isEditing = true;
+            post._editId = postId;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            if (titleInput) titleInput.focus();
+            closePost();
+          }
+          return;
+        }
+        var allMenus = document.querySelectorAll('.sop-post-menu.open');
+        allMenus.forEach(function (m) { m.classList.remove('open'); });
       });
 
     })();

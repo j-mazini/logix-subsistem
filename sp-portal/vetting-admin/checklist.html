@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Driver Vetting Admin - Logixsphere</title>
+  <title>Candidate Review - Driver Vetting - Logixsphere</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
@@ -23,7 +23,7 @@
   <!-- Loading Screen -->
   <div class="loading-overlay active" id="loadingOverlay">
     <div class="spinner"></div>
-    <p>Loading vetting data…</p>
+    <p>Loading candidate…</p>
   </div>
 
   <!-- ============ BEAM SIDEBAR ============ -->
@@ -64,7 +64,7 @@
 
         <!-- ============ HEADER (standardized: title + user menu) ============ -->
         <div class="admin-header d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
-          <h1 class="admin-header-title">Driver Vetting</h1>
+          <h1 class="admin-header-title">Candidate Review</h1>
           <div class="admin-header-user-pill d-flex align-items-center">
             <span id="spHeaderAvatarFallback" class="admin-header-user-avatar admin-header-user-avatar-fallback" style="display:none;"></span>
             <img id="spHeaderAvatar" src="" alt="" class="admin-header-user-avatar admin-header-user-avatar--img" style="display:none;" />
@@ -82,87 +82,117 @@
           <a href="../login/index.html" class="admin-header-user-menu-item admin-header-user-menu-item--danger" data-action="logout"><i class="bi bi-box-arrow-right"></i> Log out</a>
         </div>
 
-        <!-- ============ PAGE INFO (kept from the original header; not part of the standardized pattern) ============ -->
-        <div class="page-header-section">
-          <div class="page-header-welcome-text">
-            <p class="page-header-date"><i class="bi bi-check-circle"></i><span>Manage driver applications and vetting status.</span></p>
-          </div>
-        </div>
-
-        <!-- ============ STATS GRID ============ -->
-        <section class="stats-grid">
-          <button class="stat-card stat-card-active" data-filter="All">
-            <p class="stat-value" id="statTotal">0</p>
-            <p class="stat-label">All candidates</p>
-          </button>
-          <button class="stat-card">
-            <p class="stat-value stat-amber" id="statInProgress">0</p>
-            <p class="stat-label">In progress</p>
-          </button>
-          <button class="stat-card" data-filter="Active">
-            <p class="stat-value stat-success" id="statApproved">0</p>
-            <p class="stat-label">Approved</p>
-          </button>
-          <button class="stat-card" data-filter="Rejected">
-            <p class="stat-value stat-danger" id="statRejected">0</p>
-            <p class="stat-label">Rejected</p>
-          </button>
-        </section>
-
-        <!-- ============ FILTERS & SEARCH ============ -->
-        <div class="filters-section">
-          <div class="filter-buttons-wrap">
-            <button class="filter-btn filter-btn-active" data-stage="All">All</button>
-            <button class="filter-btn" data-stage="Application">Application</button>
-            <button class="filter-btn" data-stage="Pre-screen">Pre-screen</button>
-            <button class="filter-btn" data-stage="Interview">Interview</button>
-            <button class="filter-btn" data-stage="Documents">Documents</button>
-            <button class="filter-btn" data-stage="Active">Active</button>
-            <button class="filter-btn" data-stage="Rejected">Rejected</button>
-          </div>
-          <div class="search-wrap">
-            <i class="bi bi-search"></i>
-            <input type="text" id="searchInput" class="search-input" placeholder="Search name, email, phone…" />
-          </div>
-          <button class="styled-button styled-button--primary" id="btnExport" style="margin-left: auto;">
-            <i class="bi bi-download"></i> Export
-          </button>
-        </div>
-
-        <!-- ============ BULK ACTIONS PANEL ============ -->
-        <div class="bulk-panel" id="bulkPanel" style="display: none;">
-          <div class="bulk-info">
-            <span id="selectionCount">0</span> candidate(s) selected
-          </div>
-          <div class="bulk-actions">
-            <button class="styled-button styled-button--success" id="btnBulkApprove">✓ Approve</button>
-            <button class="styled-button styled-button--danger" id="btnBulkReject">✕ Reject</button>
-            <button class="styled-button styled-button--outline" id="btnClearSelection">Clear</button>
-          </div>
-        </div>
-
-        <!-- ============ CANDIDATES TABLE ============ -->
-        <div class="table-shell">
-          <table class="candidates-table">
-            <thead>
-              <tr>
-                <th style="width: 40px;"><input type="checkbox" id="selectAll" /></th>
-                <th>Candidate</th>
-                <th class="th-hidden">Phone</th>
-                <th>Stage</th>
-                <th class="th-hidden">Submitted</th>
-                <th>SLA</th>
-                <th class="th-hidden">Officer</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="candidatesBody">
-              <tr><td colspan="8" class="empty-cell">Loading candidates…</td></tr>
-            </tbody>
-          </table>
-        </div>
+        <!-- ============ CANDIDATE DETAIL PANEL (Case Registration + Suitability + Notes + Steps) ============ -->
+        <div class="checklistPanel" id="candidateDetailPanel"></div>
 
       </main>
+    </div>
+  </div>
+
+  <!-- ============ FLOATING ACTIONS (Hold / Release history / Reject / Undo / Export) ============ -->
+  <div class="applyStatusFabGroup hidden" id="applyStatusFabGroup"></div>
+
+  <!-- ============ HOLD MODAL ============ -->
+  <div class="modal fade" id="holdModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Hold Application</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <label class="form-label" for="holdReasonText">Reason (shown to the candidate)</label>
+          <textarea class="form-control" id="holdReasonText" rows="3"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="styled-button styled-button--outline" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="styled-button styled-button--primary" id="btnConfirmHold">Put on Hold</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ REJECT MODAL ============ -->
+  <div class="modal fade" id="rejectModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header border-bottom">
+          <h5 class="modal-title d-flex align-items-center gap-2"><i class="bi bi-exclamation-triangle-fill text-danger"></i> Reject Application</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>Are you sure you want to reject this application? This can be undone later from the candidate panel.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="styled-button styled-button--outline" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="styled-button styled-button--danger" id="btnConfirmReject">Reject Application</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ EDIT IMPACT WARNING MODAL ============ -->
+  <div class="modal fade" id="impactModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="impactModalIcon bi bi-exclamation-triangle-fill"></i> Editing driver info</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>Changes to this candidate's core information are audited and may affect downstream vetting decisions. Continue?</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="styled-button styled-button--outline" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="styled-button styled-button--primary" id="btnConfirmEditImpact">Continue editing</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ AUDIT LOG MODAL ============ -->
+  <div class="modal fade" id="auditModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Audit Log</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div id="auditLogBody" class="timeline"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="styled-button styled-button--outline" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ DHL EXPORT MODAL ============ -->
+  <div class="modal fade dhlExportModal" id="dhlExportModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Export to DHL</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="dhlSectionSuitability" checked />
+            <label class="form-check-label" for="dhlSectionSuitability">Suitability Assessment</label>
+          </div>
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="dhlSectionInterview" checked />
+            <label class="form-check-label" for="dhlSectionInterview">Interview Notes</label>
+          </div>
+          <label class="form-label" for="dhlSignatoryName">Signatory name</label>
+          <input type="text" class="form-control" id="dhlSignatoryName" placeholder="Full name" />
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="styled-button styled-button--outline" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="styled-button styled-button--primary" id="btnConfirmDhlExport">Generate handoff</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -171,7 +201,10 @@
   <script src="../../admin-header.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script src="vetting-shared.js"></script>
-  <script src="list.js"></script>
-  <script src="../../dhl-mock-data.js" defer></script>
+  <!-- Knowledge Assessment: admin-only. assessment-bank.js (answer key) is loaded ONLY here —
+       never by sp-portal/assessment (the candidate-facing page), which loads assessment-types.js only. -->
+  <script src="../assessment-types.js"></script>
+  <script src="assessment-bank.js"></script>
+  <script src="checklist.js"></script>
 </body>
 </html>

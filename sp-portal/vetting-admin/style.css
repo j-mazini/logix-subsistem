@@ -1217,3 +1217,738 @@ body.vetting-admin-page {
     grid-template-columns: 1fr;
   }
 }
+
+/* =====================================================
+   CANDIDATE DETAIL PANEL (Case Registration / Suitability / Notes / Steps)
+   ===================================================== */
+.checklistPanel {
+  margin-top: 1.5rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  padding: 1.5rem;
+}
+
+.panelHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.panelCandidateName {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.panelCandidateMeta {
+  margin: 0.15rem 0 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.panelHeaderRight {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.progressTrack {
+  width: 100%;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: var(--bg-tertiary);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--primary-gradient);
+  transition: width var(--transition);
+}
+
+.progressLabel {
+  margin: 0.35rem 0 1.25rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.sectionTitle {
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* ---- Banners ---- */
+.rejectBanner {
+  background: rgba(220, 38, 38, 0.06);
+  border: 1px solid rgba(220, 38, 38, 0.25);
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.rejectBannerTitle {
+  margin: 0 0 0.5rem;
+  font-weight: 700;
+  color: var(--danger-red);
+}
+
+.holdBanner {
+  background: rgba(217, 119, 6, 0.08);
+  border: 1px solid rgba(217, 119, 6, 0.3);
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.holdBannerTitle {
+  margin: 0 0 0.35rem;
+  font-weight: 700;
+  color: var(--warning-amber);
+}
+
+.holdBannerReason {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.tempPasswordBanner {
+  background: rgba(99, 102, 241, 0.07);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.85rem;
+}
+
+.tempPasswordValue {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-weight: 700;
+  font-size: 1rem;
+  margin-top: 0.35rem;
+  color: var(--primary-blue-hover);
+}
+
+/* ---- Case Registration Panel ---- */
+.caseRegistrationPanel {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+  background: var(--bg-secondary);
+}
+
+.caseRegistrationHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+.caseFieldsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.75rem;
+}
+
+.caseField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.caseFieldFull {
+  grid-column: 1 / -1;
+}
+
+.caseFieldLabel {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-light);
+}
+
+.caseFieldValue {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.caseFieldInput {
+  padding: 0.4rem 0.6rem;
+  font-size: 0.85rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.4rem;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.caseFieldInput:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+}
+
+.caseReadonlySection {
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px dashed var(--border-color);
+}
+
+.caseReadonlyNote {
+  margin: 0.2rem 0 0;
+  font-size: 0.8rem;
+  color: var(--text-light);
+}
+
+/* ---- Suitability ---- */
+.suitabilityBlock {
+  margin-bottom: 1.25rem;
+}
+
+.suitabilityOptions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.suitabilityOption {
+  padding: 0.45rem 0.9rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  border: 1px solid var(--border-color);
+  border-radius: 9999px;
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.suitabilityOption:hover {
+  border-color: var(--primary-blue);
+  color: var(--primary-blue);
+}
+
+.suitabilityOption--active {
+  background: var(--primary-gradient);
+  border-color: transparent;
+  color: #fff;
+}
+
+/* ---- Notes ---- */
+.notesBlock {
+  margin-bottom: 1.25rem;
+}
+
+.notesTextarea {
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.85rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  resize: vertical;
+}
+
+.notesTextarea:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+}
+
+/* ---- Confirmation / templated messages ---- */
+.confirmationMessageBlock {
+  margin: 0.5rem 0;
+}
+
+.confirmationMessageLabel {
+  margin: 0 0 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-light);
+}
+
+.confirmationMessageBox {
+  white-space: pre-wrap;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.8rem;
+  color: var(--text-primary);
+  margin-bottom: 0.4rem;
+}
+
+/* ---- Steps (checklist step cards) ---- */
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.stepCard {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--bg-primary);
+}
+
+.stepCard--approved {
+  border-color: rgba(22, 163, 74, 0.35);
+}
+
+.stepCard--rejected {
+  border-color: rgba(220, 38, 38, 0.35);
+}
+
+.stepHeaderButton {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  border: none;
+  background: var(--bg-secondary);
+  cursor: pointer;
+  text-align: left;
+}
+
+.stepTitle {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.stepSubtitle {
+  margin: 0.15rem 0 0;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.stepHeaderMeta {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-shrink: 0;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.stepStatusBadge {
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.stepStatusBadge--approved {
+  background: rgba(22, 163, 74, 0.12);
+  color: var(--success-green);
+}
+
+.stepStatusBadge--rejected {
+  background: rgba(220, 38, 38, 0.12);
+  color: var(--danger-red);
+}
+
+.stepBody {
+  padding: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.stepApprovalMeta {
+  margin: 0.5rem 0 0;
+  font-size: 0.75rem;
+  color: var(--text-light);
+}
+
+.stepActions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+  padding-top: 0.85rem;
+  border-top: 1px dashed var(--border-color);
+}
+
+/* ---- Checklist row extras (document download / required download) ---- */
+.requiredDownloadRow {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0.4rem 0;
+}
+
+.requiredDownloadNote {
+  font-size: 0.75rem;
+  color: var(--warning-amber);
+}
+
+/* =====================================================
+   FLOATING ACTIONS (Hold / Release history / Reject / Undo / Export)
+   ===================================================== */
+.applyStatusFabGroup {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+  z-index: 1030;
+}
+
+.fab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 1rem;
+  border: none;
+  border-radius: 9999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: var(--shadow-lg);
+}
+
+.holdApplyFab {
+  background: var(--warning-amber);
+}
+
+.holdApplyFab--active {
+  background: #92400e;
+}
+
+.releaseHistoryFab {
+  background: #0891b2;
+}
+
+.releaseHistoryFab--active {
+  background: #0e7490;
+}
+
+.rejectApplyFab {
+  background: var(--danger-red);
+}
+
+.undoFab {
+  background: var(--text-secondary);
+}
+
+.exportToggle {
+  background: var(--primary-gradient);
+}
+
+/* ---- Export actions panel ---- */
+.exportActions {
+  position: relative;
+}
+
+.exportActionsPanel {
+  position: absolute;
+  bottom: calc(100% + 0.5rem);
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  padding: 0.5rem;
+  min-width: 180px;
+}
+
+.exportActionsPanel button {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  text-align: left;
+  border-radius: 0.4rem;
+  cursor: pointer;
+}
+
+.exportActionsPanel button:hover {
+  background: var(--bg-tertiary);
+}
+
+/* ---- Impact warning modal icon ---- */
+.impactModalIcon {
+  color: var(--warning-amber);
+}
+
+@media (max-width: 768px) {
+  .applyStatusFabGroup {
+    right: 0.75rem;
+    bottom: 0.75rem;
+  }
+
+  .fab {
+    font-size: 0.75rem;
+    padding: 0.5rem 0.8rem;
+  }
+
+  .caseFieldsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.btn-action--text {
+  width: auto;
+  height: auto;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* ---- Online test link (opens in a new tab) ---- */
+.onlineTestRow {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0.4rem 0;
+}
+
+.onlineTestScore {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--success-green);
+}
+
+.onlineTestNote {
+  font-size: 0.78rem;
+  color: var(--text-light);
+}
+
+/* =====================================================
+   KNOWLEDGE ASSESSMENT (AssessmentPanel + AssessmentResult)
+   ===================================================== */
+.assessmentSection {
+  margin-bottom: 1.25rem;
+}
+
+.assessmentMissingWarning {
+  color: var(--warning-amber);
+  font-size: 0.85rem;
+  margin-bottom: 0.6rem;
+}
+
+.assessmentStatusRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.6rem;
+}
+
+.assessmentStatus {
+  padding: 0.25rem 0.7rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.assessmentStatus--released {
+  background: rgba(100, 116, 139, 0.12);
+  color: var(--text-secondary);
+}
+
+.assessmentStatus--progress {
+  background: rgba(217, 119, 6, 0.12);
+  color: var(--warning-amber);
+}
+
+.assessmentStatus--completed {
+  background: rgba(22, 163, 74, 0.12);
+  color: var(--success-green);
+}
+
+/* ---- Score card ---- */
+.assessmentResult {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px dashed var(--border-color);
+}
+
+.assessmentScoreCard {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.assessmentScorePercent {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--primary-blue);
+}
+
+.assessmentScoreFraction {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.assessmentCategoryGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.assessmentCategoryChip {
+  padding: 0.3rem 0.65rem;
+  border-radius: 0.4rem;
+  background: var(--bg-tertiary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* ---- Tabbed answer review (numbered pills) ---- */
+.assessmentReviewPills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+}
+
+.assessmentReviewPill {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.assessmentReviewPill:hover {
+  transform: translateY(-1px);
+}
+
+.assessmentReviewPill--correct {
+  background: rgba(22, 163, 74, 0.1);
+  border-color: rgba(22, 163, 74, 0.4);
+  color: var(--success-green);
+}
+
+.assessmentReviewPill--incorrect {
+  background: rgba(220, 38, 38, 0.1);
+  border-color: rgba(220, 38, 38, 0.4);
+  color: var(--danger-red);
+}
+
+.assessmentReviewPill--active {
+  outline: 2px solid var(--primary-blue);
+  outline-offset: 2px;
+}
+
+.assessmentReviewDetail {
+  border-radius: var(--radius);
+  padding: 1rem;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+}
+
+.assessmentReviewDetail--correct {
+  border-color: rgba(22, 163, 74, 0.3);
+  background: rgba(22, 163, 74, 0.05);
+}
+
+.assessmentReviewDetail--incorrect {
+  border-color: rgba(220, 38, 38, 0.3);
+  background: rgba(220, 38, 38, 0.05);
+}
+
+.assessmentReviewBadge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.assessmentReviewDetail--correct .assessmentReviewBadge { color: var(--success-green); }
+.assessmentReviewDetail--incorrect .assessmentReviewBadge { color: var(--danger-red); }
+
+.assessmentReviewQuestion {
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+  color: var(--text-primary);
+}
+
+.assessmentReviewLine {
+  margin: 0 0 0.3rem;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+}
+
+.assessmentReviewExplanation {
+  margin: 0.5rem 0 0;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+@media (max-width: 768px) {
+  .assessmentReviewPills {
+    justify-content: flex-start;
+  }
+}
+
+/* =====================================================
+   CHECKLIST PAGE (checklist.html) — back link + not-found state
+   ===================================================== */
+.checklistBackLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+.checklistBackLink:hover {
+  color: var(--primary-blue);
+}
+
+.checklistNotFound {
+  text-align: center;
+  padding: 3rem 1.5rem;
+}
+
+.checklistNotFoundTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--warning-amber);
+  margin-bottom: 0.5rem;
+}
+
+.checklistNotFoundNote {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin-bottom: 1.25rem;
+}
