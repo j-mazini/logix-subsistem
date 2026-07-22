@@ -1,4 +1,5 @@
 import { HashRouter, Routes, Route } from 'react-router-dom';
+import { AccessSelect } from './pages/AccessSelect/AccessSelect';
 import { Profile } from './pages/Profile/Profile';
 import { Login } from './pages/Login/Login';
 import { Select } from './pages/Select/Select';
@@ -30,7 +31,7 @@ function App() {
   return (
     <HashRouter>
       <Routes>
-        <Route path="/" element={<Select />} />
+        <Route path="/" element={<AccessSelect />} />
         <Route path="/login" element={<Login />} />
         <Route path="/select" element={<Select />} />
         <Route path="/profile" element={<Profile />} />
