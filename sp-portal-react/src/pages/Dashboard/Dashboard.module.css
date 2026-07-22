@@ -79,70 +79,150 @@
   border-bottom: 1px solid var(--color-neutral-border);
 }
 
-.actionGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: var(--spacing-4);
+/* Route Table */
+.routeTable {
+  overflow-x: auto;
+  margin-top: var(--spacing-4);
 }
 
-.actionButton {
-  padding: var(--spacing-3) var(--spacing-4);
-  background: linear-gradient(135deg, var(--color-primary-indigo) 0%, var(--color-primary-purple) 100%);
-  color: var(--color-neutral-white);
-  border: none;
-  border-radius: var(--radius-base);
-  font-weight: 600;
+.routeTable table {
+  width: 100%;
+  border-collapse: collapse;
   font-size: 0.875rem;
-  cursor: pointer;
-  transition: all var(--transition-base);
 }
 
-.actionButton:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+.routeTable thead {
+  background: #f9fafb;
 }
 
-.actionButton:active {
-  transform: translateY(0);
+.routeTable th {
+  padding: var(--spacing-3) var(--spacing-4);
+  text-align: left;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  border-bottom: 2px solid var(--color-neutral-border);
 }
 
-.activityList {
+.routeTable td {
+  padding: var(--spacing-3) var(--spacing-4);
+  color: var(--color-text-secondary);
+  border-bottom: 1px solid var(--color-neutral-border);
+}
+
+.statusBadge {
+  display: inline-block;
+  padding: var(--spacing-1) var(--spacing-3);
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.status-on-track {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-attention {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status-delayed {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.status-complete {
+  background: #dbeafe;
+  color: #0c2d6b;
+}
+
+/* Alerts */
+.alertsList {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-4);
+  margin-top: var(--spacing-4);
 }
 
-.activityItem {
+.alertItem {
   display: flex;
   gap: var(--spacing-3);
-  padding: var(--spacing-3);
+  padding: var(--spacing-4);
   border-radius: var(--radius-base);
+  border-left: 4px solid;
   background: #f9fafb;
-  border-left: 3px solid var(--color-primary-indigo);
 }
 
-.activityDot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: var(--color-primary-indigo);
-  margin-top: 4px;
+.alert-error {
+  border-left-color: #dc3545;
+  background: #fee;
+}
+
+.alert-warning {
+  border-left-color: #ffc107;
+  background: #fffbf0;
+}
+
+.alert-info {
+  border-left-color: #0066cc;
+  background: #f0f7ff;
+}
+
+.alertIcon {
+  font-size: 1.5rem;
   flex-shrink: 0;
 }
 
-.activityContent {
+.alertContent {
   flex: 1;
 }
 
-.activityTitle {
-  font-weight: 500;
+.alertTitle {
+  font-weight: 600;
   color: var(--color-text-primary);
   margin-bottom: var(--spacing-1);
 }
 
-.activityTime {
+.alertDescription {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-2);
+}
+
+.alertTime {
   font-size: 0.75rem;
   color: var(--color-text-light);
+}
+
+.alertPriority {
+  display: flex;
+  align-items: center;
+}
+
+.priorityBadge {
+  display: inline-block;
+  padding: var(--spacing-1) var(--spacing-3);
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.priority-high {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.priority-medium {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.priority-low {
+  background: #d4edda;
+  color: #155724;
 }
 
 @media (max-width: 768px) {
@@ -161,10 +241,47 @@
   .metricValue {
     font-size: 1.875rem;
   }
+
+  .routeTable {
+    font-size: 0.75rem;
+  }
+
+  .routeTable th,
+  .routeTable td {
+    padding: var(--spacing-2);
+  }
+
+  .alertItem {
+    flex-direction: column;
+  }
 }
 
 @media (prefers-color-scheme: dark) {
-  .activityItem {
+  .routeTable thead {
     background: rgba(255, 255, 255, 0.05);
+  }
+
+  .routeTable th {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .routeTable td {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .alertItem {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .alert-error {
+    background: rgba(220, 53, 69, 0.1);
+  }
+
+  .alert-warning {
+    background: rgba(255, 193, 7, 0.1);
+  }
+
+  .alert-info {
+    background: rgba(0, 102, 204, 0.1);
   }
 }
