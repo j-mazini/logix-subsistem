@@ -246,9 +246,9 @@
     {
       title: 'Planning & Operations', icon: 'bi-calendar3',
       items: [
-        { label: 'Week Planner', desc: 'Plan routes and crews for the week', icon: 'bi-calendar-week', href: null },
-        { label: 'Route Balance', desc: 'Balance stops across live routes', icon: 'bi-sliders', href: null },
-        { label: 'Daily Operations Management', desc: 'Run and adjust today’s operation', icon: 'bi-speedometer2', href: null }
+        { label: 'Week Planner', desc: 'Plan routes and crews for the week', icon: 'bi-calendar-week', href: '../week-planner/index.html' },
+        { label: 'Route Balance', desc: 'Balance stops across live routes', icon: 'bi-sliders', href: '../route-balance/index.html' },
+        { label: 'Daily Operations Management', desc: 'Run and adjust today operation', icon: 'bi-speedometer2', href: '../daily-operations-management/index.html' }
       ]
     },
     {
@@ -256,7 +256,7 @@
       items: [
         { label: 'Vendor', desc: 'Vendor records and onboarding', icon: 'bi-person-badge', href: '../../dhl/vendor-admin-view/index.html' },
         { label: 'Vehicles', desc: 'Fleet, VRNs and vehicle status', icon: 'bi-truck', href: '../vehicles/index.html' },
-        { label: 'Assets', desc: 'Scanners, devices and equipment', icon: 'bi-upc-scan', href: null },
+        { label: 'Assets', desc: 'Scanners, devices and equipment', icon: 'bi-upc-scan', href: '../assets/index.html' },
         { label: 'Contract Management', desc: 'Routes, loops and agreements', icon: 'bi-file-earmark-text', href: '../contracts/index.html' }
       ]
     },
@@ -264,43 +264,43 @@
       title: 'Feed & Announcements', icon: 'bi-megaphone',
       items: [
         { label: 'Feed', desc: 'SOPs, tutorials and updates', icon: 'bi-journal-bookmark', href: '../sop-feed/index.html' },
-        { label: 'Announcements', desc: 'Messages from DHL', icon: 'bi-megaphone-fill', href: '#announcements' }
+        { label: 'Announcements', desc: 'Messages from DHL', icon: 'bi-megaphone-fill', href: '../announcements/index.html' }
       ]
     },
     {
       title: 'Compliance', icon: 'bi-shield-check',
       items: [
         { label: 'Service Provider Profile', desc: 'Company details and documents', icon: 'bi-building', href: '../profile/index.html' },
-        { label: 'Compliance', desc: 'Training status and renewals', icon: 'bi-patch-check', href: null },
-        { label: 'Vetting', desc: 'Driver vetting and checks', icon: 'bi-person-check', href: null }
+        { label: 'Compliance', desc: 'Training status and renewals', icon: 'bi-patch-check', href: '../daily-operations-reports/index.html' },
+        { label: 'Vetting', desc: 'Driver vetting and checks', icon: 'bi-person-check', href: '../vetting-admin/index.html' }
       ]
     },
     {
       title: 'Billing', icon: 'bi-receipt',
       items: [
-        { label: 'Invoice Processing Workflow', desc: 'Submit and track invoices', icon: 'bi-arrow-repeat', href: null },
-        { label: 'Deductions', desc: 'Liquidation damages and adjustments', icon: 'bi-dash-circle', href: null },
-        { label: 'Adhoc Invoice Management', desc: 'One-off works invoicing', icon: 'bi-receipt-cutoff', href: null }
+        { label: 'Invoice Processing Workflow', desc: 'Submit and track invoices', icon: 'bi-arrow-repeat', href: '../invoices/index.html' },
+        { label: 'Deductions', desc: 'Liquidation damages and adjustments', icon: 'bi-dash-circle', href: '../invoices/index.html' },
+        { label: 'Adhoc Invoice Management', desc: 'One-off works invoicing', icon: 'bi-receipt-cutoff', href: '../adhoc-invoice-management/index.html' }
       ]
     },
     {
       title: 'Performance', icon: 'bi-graph-up',
       items: [
-        { label: 'Financial Insights', desc: 'Income, targets and trends', icon: 'bi-currency-pound', href: null },
-        { label: 'Operation Insights', desc: 'SPR, AFD and time windows', icon: 'bi-bar-chart-line', href: null },
-        { label: 'Vendor Performance', desc: 'Scorecards by vendor', icon: 'bi-trophy', href: null }
+        { label: 'Financial Insights', desc: 'Income, targets and trends', icon: 'bi-currency-pound', href: '../daily-financial-insights/index.html' },
+        { label: 'Operation Insights', desc: 'SPR, AFD and time windows', icon: 'bi-bar-chart-line', href: '../daily-operations-reports/index.html' },
+        { label: 'Vendor Performance', desc: 'Scorecards by vendor', icon: 'bi-trophy', href: '../vendor-performance/index.html' }
       ]
     },
     {
       title: 'Vendor Requests', icon: 'bi-inbox',
       items: [
-        { label: 'Vendor Requests', desc: 'Open requests and approvals', icon: 'bi-envelope-paper', href: null }
+        { label: 'Vendor Requests', desc: 'Open requests and approvals', icon: 'bi-envelope-paper', href: '../requests-admin/index.html' }
       ]
     },
     {
       title: 'Trace & Queries', icon: 'bi-search',
       items: [
-        { label: 'Trace & Queries', desc: 'Track shipments and raise queries', icon: 'bi-binoculars', href: null }
+        { label: 'Trace & Queries', desc: 'Track shipments and raise queries', icon: 'bi-binoculars', href: '../announcements/index.html' }
       ]
     }
   ];
