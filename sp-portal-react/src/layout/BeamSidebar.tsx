@@ -13,7 +13,7 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { href: '/dashboard', icon: 'bi-house-door-fill', label: 'Home', route: '/dashboard' },
-  { href: '/', icon: 'bi-building', label: 'My Profile', route: '/' },
+  { href: '/profile', icon: 'bi-building', label: 'My Profile', route: '/profile' },
   { href: '/drivers', icon: 'bi-people-fill', label: 'Drivers', route: '/drivers' },
   { href: '/vetting-admin', icon: 'bi-check-circle', label: 'Driver Vetting', route: '/vetting-admin' },
   { href: '/vehicles', icon: 'bi-truck', label: 'Vehicles', route: '/vehicles' },

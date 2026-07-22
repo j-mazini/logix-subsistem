@@ -30,9 +30,10 @@ function App() {
   return (
     <HashRouter>
       <Routes>
-        <Route path="/" element={<Profile />} />
+        <Route path="/" element={<Select />} />
         <Route path="/login" element={<Login />} />
         <Route path="/select" element={<Select />} />
+        <Route path="/profile" element={<Profile />} />
         <Route path="/announcements" element={<Announcements />} />
         <Route path="/assets" element={<Assets />} />
         <Route path="/contracts" element={<Contracts />} />
