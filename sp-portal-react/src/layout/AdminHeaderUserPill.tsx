@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { withSp, initialsFor } from '../hooks/useCurrentSp';
 
 /**
@@ -101,22 +102,30 @@ export function AdminHeaderPill({ sp, controls }: { sp: string; controls: AdminH
 
 export function AdminHeaderMenu({ sp, controls }: { sp: string; controls: AdminHeaderMenuControls }) {
   const { open, menuRef, menuPos } = controls;
+  const navigate = useNavigate();
 
-  function handleLogout() {
+  function handleLogout(e: React.MouseEvent) {
+    e.preventDefault();
     try {
       sessionStorage.removeItem('dhl_sp_portal_current_sp');
     } catch {
       /* ignore */
     }
+    navigate('/select');
+  }
+
+  function handleSelectAccess(e: React.MouseEvent) {
+    e.preventDefault();
+    navigate(withSp('/select', sp));
   }
 
   return (
     <div ref={menuRef} className="admin-header-user-menu" hidden={!open} style={{ top: menuPos.top, left: menuPos.left }}>
-      <a href={withSp('../../dhl/access-select/index.html', sp)} className="admin-header-user-menu-item">
+      <a href="#" onClick={handleSelectAccess} className="admin-header-user-menu-item">
         <i className="bi bi-arrow-left-right" /> Select access
       </a>
       <div className="admin-header-user-menu-divider" />
-      <a href="../login/index.html" className="admin-header-user-menu-item admin-header-user-menu-item--danger" onClick={handleLogout}>
+      <a href="#" onClick={handleLogout} className="admin-header-user-menu-item admin-header-user-menu-item--danger">
         <i className="bi bi-box-arrow-right" /> Log out
       </a>
     </div>

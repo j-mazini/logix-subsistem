@@ -1,16 +1,15 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTsParticles } from '../../hooks/useTsParticles';
 
 const SP_NAME = 'TBX';
-// dashboard/* hasn't been migrated into this SPA yet — points at the legacy
-// static page for now. Swap to an internal route once /dashboard exists here.
-const REDIRECT_URL = `../dashboard/index.html?sp=${encodeURIComponent(SP_NAME)}`;
 
 type SpinnerState = 'idle' | 'visible' | 'exit';
 
 /** Port of login/login.js + select/login.js — identical logic in both originals, only the page background CSS differs (see Login.tsx / Select.tsx). */
 export function LoginScreenBody({ variant }: { variant: 'login' | 'select' }) {
   useTsParticles('tsparticles');
+  const navigate = useNavigate();
 
   const [submitting, setSubmitting] = useState(false);
   const [cardExiting, setCardExiting] = useState(false);
@@ -39,7 +38,7 @@ export function LoginScreenBody({ variant }: { variant: 'login' | 'select' }) {
     }, 2200);
 
     setTimeout(() => {
-      window.location.href = REDIRECT_URL;
+      navigate('/dashboard');
     }, 3500);
   }
 
@@ -86,7 +85,7 @@ export function LoginScreenBody({ variant }: { variant: 'login' | 'select' }) {
             </button>
 
             <p className="login-card__footer">
-              <a href="../../dhl/access-select/index.html" className="login-card__link">Back to access selection</a>
+              <a href="#" onClick={(e) => { e.preventDefault(); navigate('/select'); }} className="login-card__link">Back to access selection</a>
             </p>
           </form>
         </section>
