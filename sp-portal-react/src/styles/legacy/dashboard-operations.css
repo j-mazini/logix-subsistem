@@ -1,0 +1,581 @@
+/* Estilos do bloco Last Day Operations e Financials (#spDashboardFoldersBlock). */
+/* ========== LAST DAY OPERATIONS / FINANCIALS (#spDashboardFoldersBlock) – estilo Disco ========== */
+#spDashboardFoldersBlock {
+  background: #fff;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 1.25rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  overflow: hidden;
+}
+
+#spDashboardFoldersBlock .sp-dashboard-module-card {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0;
+}
+
+#spDashboardFoldersBlock .dashboard-block-header {
+  background: rgba(59, 130, 246, 0.04);
+  border-bottom: 1px solid rgba(59, 130, 246, 0.12);
+  padding: 0.5rem 1rem;
+}
+
+#spDashboardFoldersBlock .dashboard-block-title {
+  color: #1e40af !important;
+  font-weight: 700;
+  font-size: 1.15rem;
+}
+
+#spDashboardFoldersBlock .dashboard-block-title i {
+  color: #3b82f6;
+}
+
+#spDashboardFoldersBlock .dashboard-block-desc {
+  color: #64748b !important;
+  font-size: 0.875rem;
+}
+
+#spDashboardFoldersBlock .disco-header-stops-kpi {
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  min-width: 4.5rem;
+  flex-shrink: 0;
+}
+
+#spDashboardFoldersBlock .disco-header-stops-kpi:hover {
+  background: rgba(59, 130, 246, 0.12);
+}
+
+#spDashboardFoldersBlock .disco-header-stops-value {
+  color: #1e40af !important;
+}
+
+/* Chips Depot, Loop, Route e Date (estilo Disco) */
+#spDashboardFoldersBlock .disco-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: flex-end;
+}
+
+#spDashboardFoldersBlock .disco-filters--top {
+  padding: 0.4rem 1rem;
+  border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+  background: rgba(248, 250, 252, 0.6);
+}
+
+#spDashboardFoldersBlock .disco-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+#spDashboardFoldersBlock .disco-filter-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+#spDashboardFoldersBlock .disco-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+#spDashboardFoldersBlock .disco-chip {
+  padding: 0.3rem 0.6rem;
+  border-radius: 2rem;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  font-size: 0.8rem;
+  color: #475569;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+#spDashboardFoldersBlock .disco-chip:hover {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.3);
+  color: #1e40af;
+}
+
+#spDashboardFoldersBlock .disco-chip.active {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  border-color: transparent;
+  color: #fff;
+}
+
+/* Tabs como chips (estilo Disco) */
+#spDashboardFoldersBlock #folderTabsList.disco-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+#spDashboardFoldersBlock #folderTabsList .disco-chip {
+  font-family: inherit;
+  padding: 0.4rem 0.75rem;
+  margin: 0;
+  border-radius: 2rem;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  font-size: 0.85rem;
+  color: #475569;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+}
+
+#spDashboardFoldersBlock #folderTabsList .disco-chip:hover {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.3);
+  color: #1e40af;
+}
+
+#spDashboardFoldersBlock #folderTabsList .disco-chip.active {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  border-color: transparent;
+  color: #fff;
+}
+
+/* Tabs de seção (nav-tabs) – compactas */
+#spDashboardFoldersBlock .card-header-tabs-wrap {
+  padding: 0.25rem 1rem;
+  background: rgba(248, 250, 252, 0.5);
+  border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+}
+
+#spDashboardFoldersBlock .sp-folder-tabs-bootstrap .nav-link {
+  border-radius: 0.4rem 0.4rem 0 0;
+  font-weight: 500;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.8rem;
+  color: #64748b;
+  border: 1px solid transparent;
+  margin-bottom: -1px;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+#spDashboardFoldersBlock .sp-folder-tabs-bootstrap .nav-link:hover {
+  color: #2563eb;
+  background: rgba(59, 130, 246, 0.06);
+}
+
+#spDashboardFoldersBlock .sp-folder-tabs-bootstrap .nav-link.active {
+  background: #fff !important;
+  color: #1e40af !important;
+  border-color: rgba(59, 130, 246, 0.2) rgba(59, 130, 246, 0.2) #fff;
+}
+
+/* Filtro Organization (Depot + Loop) */
+#spDashboardFoldersBlock .opms-filter-organization {
+  gap: 0.5rem 1rem;
+}
+#spDashboardFoldersBlock .opms-filter-organization-title {
+  font-weight: 600;
+  color: #1e40af;
+  font-size: 0.875rem;
+}
+
+/* Filtro Time window – cores por estado: não selecionado = verde/amarelo/vermelho; selecionado = azul (padrão) */
+#spDashboardFoldersBlock #opmsTimeWindowFilterWrap .disco-chip[data-opms-tw="green"] {
+  border-color: rgba(34, 197, 94, 0.6);
+  background: rgba(34, 197, 94, 0.12);
+  color: #15803d;
+}
+#spDashboardFoldersBlock #opmsTimeWindowFilterWrap .disco-chip[data-opms-tw="green"]:hover {
+  background: rgba(34, 197, 94, 0.2);
+  border-color: rgba(34, 197, 94, 0.8);
+}
+#spDashboardFoldersBlock #opmsTimeWindowFilterWrap .disco-chip[data-opms-tw="yellow"] {
+  border-color: rgba(234, 179, 8, 0.6);
+  background: rgba(234, 179, 8, 0.12);
+  color: #a16207;
+}
+#spDashboardFoldersBlock #opmsTimeWindowFilterWrap .disco-chip[data-opms-tw="yellow"]:hover {
+  background: rgba(234, 179, 8, 0.2);
+  border-color: rgba(234, 179, 8, 0.8);
+}
+#spDashboardFoldersBlock #opmsTimeWindowFilterWrap .disco-chip[data-opms-tw="red"] {
+  border-color: rgba(239, 68, 68, 0.6);
+  background: rgba(239, 68, 68, 0.12);
+  color: #b91c1c;
+}
+#spDashboardFoldersBlock #opmsTimeWindowFilterWrap .disco-chip[data-opms-tw="red"]:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.8);
+}
+/* Selecionado: todos em azul (padrão) */
+#spDashboardFoldersBlock #opmsTimeWindowFilterWrap .disco-chip[data-opms-tw="green"].active,
+#spDashboardFoldersBlock #opmsTimeWindowFilterWrap .disco-chip[data-opms-tw="yellow"].active,
+#spDashboardFoldersBlock #opmsTimeWindowFilterWrap .disco-chip[data-opms-tw="red"].active {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  border-color: transparent;
+  color: #fff;
+}
+
+/* Date block no topo - posicionamento do dropdown */
+#spDashboardFoldersBlock .opms-date-block {
+  position: relative;
+  min-width: 180px;
+}
+
+#spDashboardFoldersBlock .opms-date-btn,
+#spDashboardFoldersBlock .opms-date-center {
+  padding: 0.4rem 0.6rem;
+  font-size: 0.875rem;
+}
+
+/* Section tabs no topo */
+#spDashboardFoldersBlock .opms-section-tabs-top {
+  padding: 0.25rem 0.75rem;
+  border-radius: 0;
+}
+
+/* KPIs compactos, mais perto do conteúdo */
+#spDashboardFoldersBlock .opms-kpi-strip-compact {
+  padding: 0.35rem 0.75rem !important;
+  border-bottom: 1px solid rgba(59, 130, 246, 0.08);
+  background: rgba(248, 250, 252, 0.5) !important;
+}
+
+#spDashboardFoldersBlock .opms-kpi-strip-compact .dashboard-kpi-grid {
+  gap: 0.3rem;
+}
+
+#spDashboardFoldersBlock .opms-kpi-strip-compact .dashboard-kpi-card {
+  min-height: 40px !important;
+  padding: 0.25rem 0.4rem !important;
+}
+
+#spDashboardFoldersBlock .opms-kpi-strip-compact .dashboard-kpi-value {
+  font-size: 0.85rem !important;
+}
+
+#spDashboardFoldersBlock .opms-kpi-strip-compact .dashboard-kpi-label {
+  font-size: 0.55rem !important;
+}
+
+#spDashboardFoldersBlock .opms-kpi-strip-compact .dashboard-kpi-icon-wrap {
+  width: 1.2rem !important;
+  height: 1.2rem !important;
+  font-size: 0.65rem !important;
+}
+
+#spDashboardFoldersBlock .opms-kpi-strip-compact .dashboard-kpi-card-total {
+  border-color: rgba(59, 130, 246, 0.25);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0.04) 100%) !important;
+}
+
+/* Header mais compacto */
+#spDashboardFoldersBlock .dashboard-block-header {
+  padding: 0.4rem 0.75rem;
+}
+
+#spDashboardFoldersBlock .dashboard-block-title {
+  font-size: 0.9rem !important;
+}
+
+#spDashboardFoldersBlock .dashboard-block-desc {
+  font-size: 0.75rem !important;
+}
+
+/* Tabelas com altura reduzida + scroll – linhas compactas */
+#spDashboardFoldersBlock .opms-deliveries-table-wrap {
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+#spDashboardFoldersBlock .opms-deliveries-table-wrap .table {
+  font-size: 0.7rem;
+}
+
+#spDashboardFoldersBlock .opms-deliveries-table-wrap .opms-table-disco-style thead th {
+  padding: 0.25rem 0.5rem !important;
+  font-size: 0.65rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.03em !important;
+  background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%) !important;
+  color: #fff !important;
+  border-color: #1e40af !important;
+}
+
+#spDashboardFoldersBlock .opms-deliveries-table-wrap .opms-table-disco-style tbody td {
+  padding: 0.2rem 0.5rem !important;
+  vertical-align: middle !important;
+}
+
+#spDashboardFoldersBlock .opms-deliveries-table-wrap .opms-table-disco-style tbody tr:nth-child(odd),
+#spDashboardFoldersBlock .opms-deliveries-table-wrap .opms-table-disco-style tbody tr:nth-child(odd) > td,
+#spDashboardFoldersBlock .opms-deliveries-table-wrap .opms-table-disco-style tbody tr:nth-child(odd) > th {
+  background: #dbeafe !important;
+  --bs-table-bg: #dbeafe;
+}
+
+#spDashboardFoldersBlock .opms-deliveries-table-wrap .opms-table-disco-style tbody tr:nth-child(even),
+#spDashboardFoldersBlock .opms-deliveries-table-wrap .opms-table-disco-style tbody tr:nth-child(even) > td,
+#spDashboardFoldersBlock .opms-deliveries-table-wrap .opms-table-disco-style tbody tr:nth-child(even) > th {
+  background: #eff6ff !important;
+  --bs-table-bg: #eff6ff;
+}
+
+#spDashboardFoldersBlock .opms-deliveries-table-wrap .opms-table-disco-style tbody tr {
+  transition: none !important;
+}
+#spDashboardFoldersBlock .opms-deliveries-table-wrap .opms-table-disco-style tbody tr:hover > td,
+#spDashboardFoldersBlock .opms-deliveries-table-wrap .opms-table-disco-style tbody tr:hover > th {
+  background: rgba(59, 130, 246, 0.22) !important;
+  --bs-table-bg: rgba(59, 130, 246, 0.22);
+}
+
+/* Paginação: evitar corte do total (1–23 of 23) */
+#spDashboardFoldersBlock .opms-pagination-nav {
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding-bottom: 0.25rem;
+  min-height: 2rem;
+}
+
+#spDashboardFoldersBlock .opms-pagination-info {
+  white-space: nowrap;
+  flex-shrink: 0;
+  min-width: max-content;
+  overflow: visible;
+}
+
+#spDashboardFoldersBlock .opms-pagination-btns {
+  flex-shrink: 0;
+}
+
+#spDashboardFoldersBlock #ldTableSection {
+  padding-bottom: 0.5rem;
+}
+
+/* Estilo Disco em qualquer tabela (vehicles, modal, etc.) */
+.opms-table-disco-style thead th {
+  padding: 0.25rem 0.5rem !important;
+  font-size: 0.65rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.03em !important;
+  background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%) !important;
+  color: #fff !important;
+  border-color: #1e40af !important;
+}
+
+.opms-table-disco-style tbody td {
+  padding: 0.2rem 0.5rem !important;
+  vertical-align: middle !important;
+}
+
+/* Bootstrap 5 define background em td via --bs-table-bg, por isso é necessário
+   aplicar a cor directamente em td (não só no tr) para sobrescrever */
+.opms-table-disco-style tbody tr:nth-child(odd),
+.opms-table-disco-style tbody tr:nth-child(odd) > td,
+.opms-table-disco-style tbody tr:nth-child(odd) > th {
+  background: #dbeafe !important;
+  --bs-table-bg: #dbeafe;
+}
+
+.opms-table-disco-style tbody tr:nth-child(even),
+.opms-table-disco-style tbody tr:nth-child(even) > td,
+.opms-table-disco-style tbody tr:nth-child(even) > th {
+  background: #eff6ff !important;
+  --bs-table-bg: #eff6ff;
+}
+
+.opms-table-disco-style tbody tr {
+  transition: none !important;
+}
+
+.opms-table-disco-style tbody tr:hover > td,
+.opms-table-disco-style tbody tr:hover > th {
+  background: rgba(59, 130, 246, 0.22) !important;
+  --bs-table-bg: rgba(59, 130, 246, 0.22);
+}
+
+/* Listas estilo Disco: cores alternadas (compliance, etc.) */
+.compliance-vendor-list .list-group-item:nth-child(odd) {
+  background: #dbeafe !important;
+}
+
+.compliance-vendor-list .list-group-item:nth-child(even) {
+  background: #eff6ff !important;
+}
+
+.compliance-vendor-list .list-group-item:hover {
+  background: rgba(59, 130, 246, 0.25) !important;
+}
+
+.compliance-vendor-list .list-group-item.none,
+.compliance-vendor-list .list-group-item.text-muted {
+  background: #f8fafc !important;
+  font-style: italic;
+}
+
+/* Blocos de conteúdo mais compactos */
+#spDashboardFoldersBlock .opms-performance-card,
+#spDashboardFoldersBlock .opms-performance-block {
+  padding: 0;
+}
+
+#spDashboardFoldersBlock .opms-performance-header {
+  padding: 0.5rem 0;
+}
+
+#spDashboardFoldersBlock .opms-performance-body {
+  margin-top: 0.75rem !important;
+  padding-bottom: 0.5rem;
+}
+
+#spDashboardFoldersBlock .opms-performance-body .h6 {
+  margin-bottom: 0.5rem !important;
+}
+
+#spDashboardFoldersBlock .ld-header-kpi {
+  margin-bottom: 0.75rem !important;
+}
+
+#spDashboardFoldersBlock .ld-viewing-month-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.4rem 1rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  border-radius: 2rem;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+}
+
+#spDashboardFoldersBlock .tab-content {
+  padding: 0.5rem 1rem !important;
+}
+
+/* Strip de KPIs (Last Day / Financials) – estilo Disco */
+#spDashboardFoldersBlock .sp-folder-strip-wrap {
+  padding: 0.4rem 0.75rem !important;
+  border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+  background: rgba(248, 250, 252, 0.6) !important;
+}
+
+#spDashboardFoldersBlock .dashboard-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+@media (min-width: 576px) {
+  #spDashboardFoldersBlock .dashboard-kpi-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+/* Todos os itens da grelha com a mesma altura e aspecto */
+#spDashboardFoldersBlock .opms-kpi-strip-compact .dashboard-kpi-grid > *,
+#spDashboardFoldersBlock .opms-kpi-strip-compact .dashboard-kpi-grid > * > .dashboard-kpi-card {
+  min-height: 36px !important;
+}
+
+#spDashboardFoldersBlock .dashboard-kpi-grid > * {
+  min-height: 44px;
+  display: flex;
+}
+
+#spDashboardFoldersBlock .dashboard-kpi-grid > * > .dashboard-kpi-card {
+  flex: 1;
+  width: 100%;
+  min-height: 44px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+#spDashboardFoldersBlock .dashboard-kpi-card {
+  background: #fff !important;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 0.25rem 0.25rem;
+  min-height: 44px;
+}
+
+#spDashboardFoldersBlock .dashboard-kpi-card:hover {
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.12);
+  border-color: rgba(59, 130, 246, 0.2);
+}
+
+#spDashboardFoldersBlock .dashboard-kpi-icon-wrap {
+  border-radius: 0.625rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+#spDashboardFoldersBlock .dashboard-kpi-value {
+  color: #1e40af !important;
+  font-weight: 700;
+}
+
+#spDashboardFoldersBlock .dashboard-kpi-label {
+  color: #64748b !important;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* KPIs padronizados: mesmo tamanho e estilização para todos */
+#spDashboardFoldersBlock .dashboard-kpi-card .dashboard-kpi-label {
+  white-space: normal;
+  line-height: 1.2;
+  text-align: center;
+  font-size: 0.6rem;
+}
+
+#spDashboardFoldersBlock .dashboard-kpi-card .dashboard-kpi-value {
+  font-size: 0.9rem;
+}
+
+#spDashboardFoldersBlock .dashboard-kpi-content {
+  gap: 0.15rem;
+}
+
+#spDashboardFoldersBlock .dashboard-kpi-icon-wrap {
+  width: 1.6rem;
+  height: 1.6rem;
+  font-size: 0.85rem;
+}
+
+/* Conteúdo das tabs (estilo Disco dashboard-block-content) */
+#spDashboardFoldersBlock .dashboard-block-content {
+  padding: 0;
+}
+
+#spDashboardFoldersBlock .tab-content {
+  padding: 0.5rem 1rem !important;
+}
+
+#spDashboardFoldersBlock .opms-lastday-layout {
+  align-items: stretch;
+}
+
+#spDashboardFoldersBlock .opms-lastday-layout--filter-left {
+  display: block;
+  margin-top: 0.75rem;
+}
+
+#spDashboardFoldersBlock .opms-spms-dashboard-only {
+  display: block;
+  margin-top: 0.75rem;
+}
+
+#spDashboardFoldersBlock .opms-spms-full {
+  width: 100%;
+}
+
+#spDashboardFoldersBlock .opms-spms-content-inner {
+  min-width: 0;
+}
+

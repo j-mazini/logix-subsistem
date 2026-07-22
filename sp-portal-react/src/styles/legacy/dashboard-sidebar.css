@@ -1,0 +1,284 @@
+/* Estilos da sidebar de filtros. */
+/* ========== Sidebar de filtros – redesign ========== */
+#spDashboardFoldersBlock .opms-filters-sidebar {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #ffffff 0%, #fafbff 100%);
+  border: 1px solid rgba(59, 130, 246, 0.12);
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.06),
+              0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+}
+
+#spDashboardFoldersBlock .opms-filters-sidebar-header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: clamp(0.85rem, 3vw, 1.25rem) clamp(0.85rem, 3vw, 1.25rem) clamp(0.65rem, 2vw, 1rem);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0.02) 100%);
+  border-bottom: 1px solid rgba(59, 130, 246, 0.08);
+}
+
+#spDashboardFoldersBlock .opms-filters-sidebar-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: #fff;
+  border-radius: 0.75rem;
+  font-size: 1.1rem;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+#spDashboardFoldersBlock .opms-filters-sidebar-title {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+#spDashboardFoldersBlock .opms-filters-sidebar-title-text {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e293b;
+  letter-spacing: -0.02em;
+}
+
+#spDashboardFoldersBlock .opms-filters-sidebar-subtitle {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+#spDashboardFoldersBlock .opms-filters-sidebar-body {
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+  -webkit-overflow-scrolling: touch;
+  padding: 1rem 1rem 1.25rem;
+}
+
+/* Árvore – estilo sidebar */
+#spDashboardFoldersBlock .opms-tree--sidebar {
+  font-size: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+/* Animação suave na abertura dos grupos */
+#spDashboardFoldersBlock .opms-tree--sidebar .opms-tree-children {
+  animation: opms-filter-expand 0.4s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+  transform-origin: top center;
+}
+
+@keyframes opms-filter-expand {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scaleY(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scaleY(1);
+  }
+}
+
+#spDashboardFoldersBlock .opms-tree--sidebar > .opms-tree-item {
+  margin-bottom: 0;
+}
+
+#spDashboardFoldersBlock .opms-tree--sidebar [role="group"] {
+  list-style: none;
+  padding-left: 0;
+  margin: 0.6rem 0 0 1rem;
+  border-left: 2px solid rgba(59, 130, 246, 0.2);
+  margin-left: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+#spDashboardFoldersBlock .opms-tree--sidebar [role="group"] > .opms-tree-item {
+  margin-bottom: 0;
+}
+
+#spDashboardFoldersBlock .opms-tree--sidebar .opms-tree-label {
+  padding: 0.65rem 1rem;
+  border-radius: 0.625rem;
+  font-weight: 500;
+  font-size: 0.9rem;
+  background: #f8fafc;
+  border: 1px solid transparent;
+  transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
+}
+
+#spDashboardFoldersBlock .opms-tree--sidebar .opms-tree-item:hover .opms-tree-label {
+  background: #f1f5f9;
+  border-color: rgba(59, 130, 246, 0.15);
+  color: #2563eb;
+}
+
+#spDashboardFoldersBlock .opms-tree--sidebar .opms-tree-item.selected .opms-tree-label {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(59, 130, 246, 0.06) 100%);
+  color: #2563eb;
+  font-weight: 600;
+  border-color: rgba(59, 130, 246, 0.25);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+}
+
+#spDashboardFoldersBlock .opms-tree--sidebar .opms-tree-icon {
+  color: #94a3b8;
+  font-size: 0.75rem;
+  transition: color 0.25s ease, transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+#spDashboardFoldersBlock .opms-tree--sidebar .opms-tree-item.selected .opms-tree-icon {
+  color: #3b82f6;
+}
+
+#spDashboardFoldersBlock .opms-tree--sidebar .opms-tree-item-all .opms-tree-label {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.06) 0%, rgba(59, 130, 246, 0.02) 100%);
+  font-weight: 600;
+}
+
+#spDashboardFoldersBlock .opms-tree--sidebar .opms-tree-item-all.selected .opms-tree-label {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.14) 0%, rgba(59, 130, 246, 0.08) 100%);
+}
+
+#spDashboardFoldersBlock .opms-delivery-list-inner {
+  min-width: 0;
+}
+
+#spDashboardFoldersBlock .opms-delivery-list-inner .table-responsive {
+  max-height: 380px;
+  overflow-y: auto;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+#spDashboardFoldersBlock .opms-box-section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 0.75rem;
+}
+
+
+#spDashboardFoldersBlock .opms-performance-block {
+  flex: 1;
+  min-width: 0;
+}
+
+#spDashboardFoldersBlock .opms-performance-card {
+  height: 100%;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+}
+
+#spDashboardFoldersBlock .opms-spms-performance-card {
+  padding-bottom: 1.5rem;
+}
+
+#spDashboardFoldersBlock .opms-spms-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  flex: 1;
+  margin-top: 1rem;
+}
+
+#spDashboardFoldersBlock .opms-spms-financials-inner {
+  padding-top: 1.5rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+#spDashboardFoldersBlock .opms-spms-financials-inner .spms-overview-title {
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+/* Financials: blocos da mesma altura na linha */
+#spDashboardFoldersBlock .spms-financials-row {
+  align-items: stretch;
+}
+
+#spDashboardFoldersBlock .spms-financials-row .spms-financials-circle-wrap,
+#spDashboardFoldersBlock .spms-financials-row .spms-financials-stack,
+#spDashboardFoldersBlock .spms-financials-row .spms-avg-block {
+  flex: 1;
+  min-width: 0;
+  min-height: 140px;
+}
+
+#spDashboardFoldersBlock .opms-lastday-header h3.h6 {
+  color: #1e293b !important;
+  font-weight: 700;
+}
+
+#spDashboardFoldersBlock .opms-lastday-header h3.h6 .text-primary {
+  color: #3b82f6 !important;
+}
+
+#spDashboardFoldersBlock .opms-date-edge-btn,
+#spDashboardFoldersBlock .opms-date-center {
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  background: #fff;
+  color: #334155;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+#spDashboardFoldersBlock .opms-date-edge-btn:hover,
+#spDashboardFoldersBlock .opms-date-center:hover {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.05);
+}
+
+#spDashboardFoldersBlock .opms-viewing-date {
+  color: #1e293b !important;
+}
+
+#spDashboardFoldersBlock .opms-subtitle {
+  color: #64748b !important;
+}
+
+/* Árvore e painéis Last Day */
+#spDashboardFoldersBlock .opms-tree,
+#spDashboardFoldersBlock .opms-panel {
+  color: #334155;
+}
+
+#spDashboardFoldersBlock .opms-tree-item.selected {
+  background: rgba(59, 130, 246, 0.08);
+  color: #2563eb;
+  font-weight: 600;
+}
+
+#spDashboardFoldersBlock .opms-tree-item:hover:not(.selected) {
+  background: #f8fafc;
+}
+
+/* Financials tab – mesmo bloco, consistência */
+#spDashboardFoldersBlock #folder-panel-spms .card,
+#spDashboardFoldersBlock #folder-panel-spms .sp-module-inner-card {
+  background: #fff !important;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+}
+
+#spDashboardFoldersBlock #folder-panel-spms .card-header {
+  background: rgba(59, 130, 246, 0.04) !important;
+  border-bottom: 1px solid #e2e8f0;
+  color: #1e293b;
+}
+
+/* Liquidation Damages – KPI Total e Count no header */
