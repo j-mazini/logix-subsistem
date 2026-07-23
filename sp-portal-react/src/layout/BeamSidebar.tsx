@@ -44,7 +44,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { icon: 'bi-building', label: 'Service Provider Profile', route: '/profile' },
       { icon: 'bi-shield-check', label: 'Compliance' },
-      { icon: 'bi-check-circle', label: 'Vetting', route: '/vetting-admin' },
+      { icon: 'bi-check-circle', label: 'Vetting', route: '/vetting-dashboard' },
     ],
   },
   {

@@ -1,4 +1,4 @@
-import { HashRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AccessSelect } from './pages/AccessSelect/AccessSelect';
 import { Profile } from './pages/Profile/Profile';
 import { Login } from './pages/Login/Login';
@@ -18,7 +18,6 @@ import { Drivers } from './pages/Drivers/Drivers';
 import { RouteBalance } from './pages/RouteBalance/RouteBalance';
 import { SOPFeed } from './pages/SOPFeed/SOPFeed';
 import { Vehicles } from './pages/Vehicles/Vehicles';
-import { VettingAdmin } from './pages/VettingAdmin/VettingAdmin';
 import {
   VettingAdminLayout,
   VettingChecklistPage,
@@ -55,7 +54,7 @@ function App() {
         <Route path="/route-balance" element={<RouteBalance />} />
         <Route path="/sop-feed" element={<SOPFeed />} />
         <Route path="/vehicles" element={<Vehicles />} />
-        <Route path="/vetting-admin" element={<VettingAdmin />} />
+        <Route path="/vetting-admin" element={<Navigate to="/vetting-dashboard" replace />} />
         <Route element={<VettingAdminLayout />}>
           <Route path="/vetting-dashboard" element={<VettingDashboardPage />} />
           <Route path="/vetting-checklist" element={<VettingChecklistPage />} />

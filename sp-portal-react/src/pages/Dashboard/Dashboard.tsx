@@ -95,7 +95,7 @@ const NAV_GROUPS: NavGroup[] = [
   { title: 'Compliance', icon: 'bi-shield-check', items: [
     { label: 'Service Provider Profile', desc: 'Company details and documents', icon: 'bi-building', route: '/profile' },
     { label: 'Compliance', desc: 'Training status and renewals', icon: 'bi-patch-check', route: null },
-    { label: 'Vetting', desc: 'Driver vetting and checks', icon: 'bi-person-check', route: '/vetting-admin' },
+    { label: 'Vetting', desc: 'Driver vetting and checks', icon: 'bi-person-check', route: '/vetting-dashboard' },
   ] },
   { title: 'Billing', icon: 'bi-receipt', items: [
     { label: 'Invoice Processing Workflow', desc: 'Submit and track invoices', icon: 'bi-arrow-repeat', route: '/invoices' },
