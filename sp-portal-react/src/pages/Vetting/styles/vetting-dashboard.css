@@ -1,0 +1,337 @@
+/* Vetting Dashboard Styles */
+
+.vetting-dashboard {
+  padding: 20px;
+  background: #f8f9fa;
+  min-height: 100vh;
+}
+
+.dashboard-header {
+  margin-bottom: 30px;
+}
+
+.dashboard-header h1 {
+  font-size: 28px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 10px 0;
+}
+
+.dashboard-header .subtitle {
+  font-size: 16px;
+  color: #666;
+  margin: 0 0 8px 0;
+}
+
+.dashboard-header .timestamp {
+  font-size: 12px;
+  color: #999;
+  margin: 0;
+  font-style: italic;
+}
+
+.no-data {
+  background: white;
+  border-radius: 8px;
+  padding: 40px 20px;
+  text-align: center;
+  color: #999;
+  font-size: 16px;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+/* Dashboard Card Styling */
+.dashboard-card {
+  background: white;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.2s;
+}
+
+.dashboard-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.dashboard-card h2 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 20px 0;
+  color: #1a1a1a;
+}
+
+/* Progress Card */
+.progress-card {
+  grid-column: span 1;
+}
+
+.progress-metric {
+  margin-bottom: 20px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 24px;
+  background: #e8e8e8;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #66bb6a 0%, #4caf50 100%);
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.progress-details {
+  font-size: 13px;
+  color: #666;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #eee;
+}
+
+.progress-details p {
+  margin: 6px 0;
+  display: flex;
+  justify-content: space-between;
+}
+
+.progress-details p:first-child {
+  margin-top: 0;
+}
+
+/* Distribution Card */
+.distribution-card {
+  grid-column: span 1;
+}
+
+.stage-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.stage-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.stage-info {
+  display: flex;
+  justify-content: space-between;
+  min-width: 140px;
+  gap: 8px;
+}
+
+.stage-name {
+  font-weight: 500;
+  color: #1a1a1a;
+  flex: 1;
+}
+
+.stage-count {
+  background: #e8e8e8;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  color: #333;
+  min-width: 30px;
+  text-align: center;
+}
+
+.stage-bar {
+  flex: 1;
+  height: 20px;
+  background: #f0f0f0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.stage-fill {
+  height: 100%;
+  min-width: 2px;
+  transition: width 0.3s ease;
+}
+
+.stage-application {
+  background: linear-gradient(90deg, #64b5f6 0%, #42a5f5 100%);
+}
+
+.stage-pre_screen {
+  background: linear-gradient(90deg, #ffd54f 0%, #ffca28 100%);
+}
+
+.stage-interview {
+  background: linear-gradient(90deg, #81c784 0%, #66bb6a 100%);
+}
+
+.stage-documents {
+  background: linear-gradient(90deg, #f06292 0%, #ec407a 100%);
+}
+
+.stage-active {
+  background: linear-gradient(90deg, #66bb6a 0%, #4caf50 100%);
+}
+
+.stage-rejected {
+  background: linear-gradient(90deg, #ef5350 0%, #e53935 100%);
+}
+
+.stage-percentage {
+  min-width: 40px;
+  text-align: right;
+  font-weight: 600;
+  color: #666;
+}
+
+/* Workload Card */
+.workload-card {
+  grid-column: span 1;
+}
+
+.officer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.officer-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.officer-info {
+  display: flex;
+  justify-content: space-between;
+  min-width: 140px;
+  gap: 8px;
+}
+
+.officer-name {
+  font-weight: 500;
+  color: #1a1a1a;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.officer-badge {
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  min-width: 30px;
+  text-align: center;
+}
+
+.officer-bar {
+  flex: 1;
+  height: 20px;
+  background: #f0f0f0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.officer-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #1976d2 0%, #1565c0 100%);
+  transition: width 0.3s ease;
+  min-width: 2px;
+}
+
+.empty-state {
+  color: #999;
+  font-style: italic;
+  text-align: center;
+  padding: 20px;
+  margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .vetting-dashboard {
+    padding: 16px;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .dashboard-card {
+    padding: 20px;
+  }
+
+  .dashboard-header h1 {
+    font-size: 24px;
+  }
+
+  .dashboard-header .subtitle {
+    font-size: 14px;
+  }
+
+  .stage-info,
+  .officer-info {
+    min-width: 120px;
+  }
+
+  .stage-percentage {
+    min-width: 36px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .vetting-dashboard {
+    padding: 12px;
+  }
+
+  .dashboard-card {
+    padding: 16px;
+  }
+
+  .dashboard-header h1 {
+    font-size: 20px;
+  }
+
+  .dashboard-card h2 {
+    font-size: 16px;
+    margin-bottom: 16px;
+  }
+
+  .stage-name,
+  .officer-name {
+    font-size: 12px;
+  }
+
+  .progress-bar {
+    height: 20px;
+  }
+}
