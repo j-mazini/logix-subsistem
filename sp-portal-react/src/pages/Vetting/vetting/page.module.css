@@ -47,7 +47,7 @@
 .spinner {
   width: 2rem;
   height: 2rem;
-  border: 3px solid rgba(191, 29, 35, 0.12);
+  border: 3px solid rgba(99, 102, 241, 0.12);
   border-top-color: var(--ba-red);
   border-radius: 999px;
   animation: spin 0.8s linear infinite;
@@ -188,7 +188,7 @@
 .filterButtonActive {
   color: var(--ba-red);
   background: #fff;
-  border-color: rgba(191, 29, 35, 0.22);
+  border-color: rgba(99, 102, 241, 0.22);
   transform: translateY(-1px);
 }
 
@@ -207,7 +207,7 @@
 }
 
 .searchInput:focus {
-  border-color: rgba(191, 29, 35, 0.45);
+  border-color: rgba(99, 102, 241, 0.45);
   background: #fff;
 }
 
@@ -280,8 +280,8 @@
   display: grid;
   place-items: center;
   color: var(--ba-red);
-  background: rgba(191, 29, 35, 0.08);
-  border: 1px solid rgba(191, 29, 35, 0.18);
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.18);
   border-radius: 999px;
   font-size: 0.72rem;
   font-weight: 900;
@@ -355,8 +355,8 @@
 
 .stageRejected {
   color: var(--ba-red);
-  background: rgba(191, 29, 35, 0.09);
-  border-color: rgba(191, 29, 35, 0.22);
+  background: rgba(99, 102, 241, 0.09);
+  border-color: rgba(99, 102, 241, 0.22);
 }
 
 .slaOk,
@@ -396,7 +396,7 @@
 
 .slaDotDanger {
   background: var(--ba-red);
-  box-shadow: 0 0 0 3px rgba(191, 29, 35, 0.08);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.08);
 }
 
 .slaDotOk {
@@ -476,7 +476,7 @@
 }
 
 .statCardActive {
-  border-color: rgba(191, 29, 35, 0.3) !important;
+  border-color: rgba(99, 102, 241, 0.3) !important;
 }
 
 .statCardClickable {
@@ -488,8 +488,8 @@
 }
 
 .errorBanner {
-  background: rgba(191, 29, 35, 0.08);
-  border: 1px solid rgba(191, 29, 35, 0.22);
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.22);
   border-radius: 12px;
   padding: 12px 16px;
   font-size: 12px;
@@ -641,12 +641,12 @@
 
 .actionReject {
   color: var(--ba-red);
-  background: rgba(191, 29, 35, 0.09);
-  border: 1px solid rgba(191, 29, 35, 0.22);
+  background: rgba(99, 102, 241, 0.09);
+  border: 1px solid rgba(99, 102, 241, 0.22);
 }
 
 .actionReject:hover {
-  background: rgba(191, 29, 35, 0.16);
+  background: rgba(99, 102, 241, 0.16);
 }
 
 .actionReopen {
@@ -667,7 +667,7 @@
 
 .actionDelete:hover {
   color: var(--ba-red);
-  border-color: rgba(191, 29, 35, 0.3);
+  border-color: rgba(99, 102, 241, 0.3);
 }
 
 .stageCard {
@@ -780,7 +780,7 @@
 
 .categoryOption:hover {
   transform: translateY(-1px);
-  border-color: rgba(191, 29, 35, 0.28);
+  border-color: rgba(99, 102, 241, 0.28);
 }
 
 .categoryOptionActive {
@@ -816,14 +816,14 @@
 
 .formInput:focus,
 .formSelect:focus {
-  border-color: rgba(191, 29, 35, 0.45);
+  border-color: rgba(99, 102, 241, 0.45);
   background: #fff;
 }
 
 .modalError {
   color: var(--ba-red-deep);
-  background: rgba(191, 29, 35, 0.07);
-  border: 1px solid rgba(191, 29, 35, 0.2);
+  background: rgba(99, 102, 241, 0.07);
+  border: 1px solid rgba(99, 102, 241, 0.2);
   border-radius: 8px;
   padding: 9px 12px;
   font-size: 12px;

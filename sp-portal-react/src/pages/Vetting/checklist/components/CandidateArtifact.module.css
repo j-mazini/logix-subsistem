@@ -14,7 +14,7 @@
   gap: 12px;
   margin-bottom: 24px;
   padding-bottom: 18px;
-  border-bottom: 2px solid #bf1d23;
+  border-bottom: 2px solid #6366f1;
 }
 
 .artifactKicker {
@@ -22,7 +22,7 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.07em;
-  color: #bf1d23;
+  color: #6366f1;
   margin: 0 0 6px;
 }
 
@@ -68,7 +68,7 @@
   color: #111827;
   margin: 0 0 10px;
   padding-bottom: 8px;
-  border-bottom: 2px solid rgba(191, 29, 35, 0.2);
+  border-bottom: 2px solid rgba(99, 102, 241, 0.2);
 }
 
 .sectionBody {
