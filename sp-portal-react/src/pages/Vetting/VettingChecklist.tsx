@@ -1,9 +1,9 @@
 'use client';
 
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { PortalLayout } from '../../layout/PortalLayout';
-import '../styles/vetting-checklist.css';
-import { CHECKLIST_STEPS, type ChecklistItem } from './checklist/data/checklist';
+import './styles/vetting-checklist.css';
+import { CHECKLIST_STEPS } from './checklist/data/checklist';
 
 // Types from ba-express-vetting
 interface ChecklistCandidate {
@@ -44,22 +44,6 @@ interface ChecklistCandidate {
   applicationRejectionInternalNotes?: string;
 }
 
-interface CaseRegistrationField {
-  name: string;
-  email: string;
-  phone: string;
-  nin: string;
-  depot: string;
-  role: string;
-  startDate: string;
-  employment: string;
-  nationality: string;
-  dob: string;
-  postcode: string;
-  address: string;
-  owner: string;
-  driveFolderUrl: string;
-}
 
 // Mock candidates for demo
 const MOCK_CANDIDATES: ChecklistCandidate[] = [
@@ -197,7 +181,7 @@ export function VettingChecklist() {
   }, [selected]);
 
   return (
-    <PortalLayout>
+    <PortalLayout mainClassName="vetting-checklist">
       <div className="vetting-checklist-page">
         <header className="vetting-checklist-header">
           <h1>Vetting Checklist</h1>

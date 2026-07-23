@@ -380,8 +380,8 @@ function applySortRows(rows: DomRecord[], sortConfig: SortConfig): DomRecord[] {
   const field = map[sortConfig.key] || sortConfig.key;
   const dir = sortConfig.direction === 'asc' ? 1 : -1;
   return [...rows].sort((a, b) => {
-    const av = String((a as Record<string, unknown>)[field] ?? '').trim();
-    const bv = String((b as Record<string, unknown>)[field] ?? '').trim();
+    const av = String((a as unknown as Record<string, unknown>)[field] ?? '').trim();
+    const bv = String((b as unknown as Record<string, unknown>)[field] ?? '').trim();
     return dir * av.localeCompare(bv, undefined, { sensitivity: 'base' });
   });
 }

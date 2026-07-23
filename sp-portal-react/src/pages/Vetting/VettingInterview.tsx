@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useMemo } from 'react';
 import { PortalLayout } from '../../layout/PortalLayout';
-import '../styles/vetting-interview.css';
+import './styles/vetting-interview.css';
 
 interface InterviewCandidate {
   id: string;
@@ -97,7 +97,7 @@ export function VettingInterview() {
   const currentAssessment = selected ? assessmentData[selected.id] : null;
 
   return (
-    <PortalLayout>
+    <PortalLayout mainClassName="vetting-interview">
       <div className="vetting-interview-page">
         <header className="vetting-interview-header">
           <h1>Candidate Assessment</h1>
