@@ -1,0 +1,89 @@
+/**
+ * Design tokens + base styles from dhl-vetting-v2's globals.css, scoped under
+ * .vetting-v2-scope so they don't leak into the rest of the SP portal.
+ * Values copied verbatim from the source :root / body / heading rules.
+ */
+
+.vetting-v2-scope {
+  /* Brand */
+  --primary: #bf1d23;
+  --primary-deep: #9e0006;
+  --accent: #dc0503;
+
+  /* Brand aliases used across app pages (BA Express namespace) */
+  --ba-red: #bf1d23;
+  --ba-red-deep: #9e0006;
+  --ba-navy: #111827;
+  --ba-navy-deep: #111827;
+
+  /* Text */
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --text-tertiary: rgba(17, 24, 39, 0.45);
+  --text-soft: #4b5563;
+  --muted: #737d8c;
+
+  /* Surfaces & lines */
+  --bg-page: #eef0f3;
+  --bg-soft: #f9fafb;
+  --line: rgba(17, 24, 39, 0.08);
+  --line-strong: rgba(17, 24, 39, 0.14);
+
+  /* Status */
+  --green: #189a55;
+  --green-dim: rgba(24, 154, 85, 0.1);
+  --amber: #c47d10;
+  --amber-dim: rgba(196, 125, 16, 0.1);
+  --amber-deep: #9a620b;
+  --blue: #2563eb;
+  --blue-deep: #1d4ed8;
+  --blue-dim: rgba(37, 99, 235, 0.1);
+  --ba-red-bright: #d42a32;
+
+  /* Radius scale */
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-pill: 9999px;
+
+  /* Panels / elevation */
+  --glass-fill: rgba(255, 255, 255, 0.86);
+  --glass-fill-strong: #ffffff;
+  --glass-border: rgba(17, 24, 39, 0.12);
+  --glass-highlight: rgba(255, 255, 255, 0.95);
+  --glass-shadow: 0 1px 2px rgba(17, 24, 39, 0.04), 0 8px 24px -12px rgba(17, 24, 39, 0.1);
+  --glass-shadow-lg: 0 2px 4px rgba(17, 24, 39, 0.05), 0 16px 40px -16px rgba(17, 24, 39, 0.14);
+  --glass: var(--glass-shadow);
+
+  --font-main: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-display: 'Avenir Next Condensed', 'HelveticaNeue-CondensedBold', 'Arial Narrow',
+    'Montserrat', var(--font-main);
+  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  /* body-equivalent styles, applied to the scope wrapper */
+  min-height: 100vh;
+  font-family: var(--font-main);
+  background-color: var(--bg-page);
+  color: var(--text-primary);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  background-image:
+    repeating-linear-gradient(0deg, rgba(17, 24, 39, 0.025) 0 1px, transparent 1px 56px),
+    repeating-linear-gradient(90deg, rgba(17, 24, 39, 0.025) 0 1px, transparent 1px 56px);
+}
+
+.vetting-v2-scope *,
+.vetting-v2-scope *::before,
+.vetting-v2-scope *::after {
+  box-sizing: border-box;
+}
+
+.vetting-v2-scope h1,
+.vetting-v2-scope h2,
+.vetting-v2-scope h3 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.015em;
+  line-height: 1;
+  color: var(--text-primary);
+}

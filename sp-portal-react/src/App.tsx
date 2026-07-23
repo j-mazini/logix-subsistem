@@ -19,7 +19,12 @@ import { RouteBalance } from './pages/RouteBalance/RouteBalance';
 import { SOPFeed } from './pages/SOPFeed/SOPFeed';
 import { Vehicles } from './pages/Vehicles/Vehicles';
 import { VettingAdmin } from './pages/VettingAdmin/VettingAdmin';
-import { VettingChecklist, VettingInterview } from './pages/Vetting';
+import {
+  VettingAdminLayout,
+  VettingChecklistPage,
+  VettingDashboardPage,
+  VettingInterviewPage,
+} from './pages/Vetting';
 import { WeekPlanner } from './pages/WeekPlanner/WeekPlanner';
 import { useViewportAttribute } from './hooks/useViewportAttribute';
 import { useRefinementsMotion } from './hooks/useRefinementsMotion';
@@ -51,8 +56,11 @@ function App() {
         <Route path="/sop-feed" element={<SOPFeed />} />
         <Route path="/vehicles" element={<Vehicles />} />
         <Route path="/vetting-admin" element={<VettingAdmin />} />
-        <Route path="/vetting-checklist" element={<VettingChecklist />} />
-        <Route path="/vetting-interview" element={<VettingInterview />} />
+        <Route element={<VettingAdminLayout />}>
+          <Route path="/vetting-dashboard" element={<VettingDashboardPage />} />
+          <Route path="/vetting-checklist" element={<VettingChecklistPage />} />
+          <Route path="/vetting-interview" element={<VettingInterviewPage />} />
+        </Route>
         <Route path="/week-planner" element={<WeekPlanner />} />
       </Routes>
     </HashRouter>

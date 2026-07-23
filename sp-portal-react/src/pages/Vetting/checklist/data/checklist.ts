@@ -180,7 +180,7 @@ export const CHECKLIST_STEPS: ChecklistStep[] = [
         docKey: 'practical_tests',
         detail: 'Redirect to the online test module. Once the candidate completes the released test, the score appears in this checklist.',
         links: [
-          { label: 'Open / release online test', url: '/admin/interview' },
+          { label: 'Open / release online test', url: '/vetting-interview' },
         ],
       },
       {

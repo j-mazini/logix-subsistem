@@ -1,0 +1,1008 @@
+/* Design tokens live in globals.css :root (single source of truth). */
+
+.legacyPage {
+  width: 100%;
+  min-height: 100vh;
+  background: #fff;
+}
+
+.legacyFrame {
+  display: block;
+  width: 100%;
+  height: 100vh;
+  border: 0;
+  background: #fff;
+}
+
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  color: var(--ba-navy-deep);
+  background: #f6f7f9;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.page::after,
+.loadingPage::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 200;
+  pointer-events: none;
+  background: var(--ba-red);
+}
+
+.loadingPage {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background: #fff;
+}
+
+.spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 3px solid rgba(191, 29, 35, 0.12);
+  border-top-color: var(--ba-red);
+  border-radius: 999px;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.candidate,
+.eyebrow,
+.filters,
+.filterGroup,
+.overviewHeader,
+.slaBreached,
+.slaNormal {
+  display: flex;
+  align-items: center;
+}
+
+.content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 1120px;
+  margin: 38px auto 0;
+  padding: 0 24px 56px;
+}
+
+.eyebrow {
+  gap: 0.6rem;
+  margin-bottom: 9px;
+}
+
+.eyebrowLine,
+.overviewLine {
+  width: 72px;
+  height: 2px;
+  background: var(--ba-red);
+  border-radius: 99px;
+}
+
+.eyebrowText {
+  color: var(--ba-red);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin-bottom: 18px;
+  color: var(--ba-navy-deep);
+  font-size: clamp(24px, 3vw, 34px);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+}
+
+.titleAccent {
+  color: var(--ba-red);
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 26px;
+}
+
+.statCard,
+.tableShell,
+.stageCard {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(17, 24, 39, 0.04);
+}
+
+.statCard {
+  padding: 18px 20px 16px;
+  overflow: hidden;
+}
+
+.statLabel {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  margin-top: 8px;
+}
+
+.statValue {
+  color: var(--ba-navy-deep);
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.statDanger {
+  color: var(--ba-red);
+}
+
+.statSuccess {
+  color: var(--green);
+}
+
+.filters {
+  gap: 12px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+.filterGroup {
+  gap: 0.5rem;
+  flex: 1;
+  flex-wrap: wrap;
+}
+
+.filterButton {
+  color: var(--text-soft);
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 9px 13px;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s, transform 0.2s, background 0.2s;
+}
+
+.filterButton:hover,
+.filterButtonActive {
+  color: var(--ba-red);
+  background: #fff;
+  border-color: rgba(191, 29, 35, 0.22);
+  transform: translateY(-1px);
+}
+
+.searchInput {
+  min-width: 220px;
+  color: var(--ba-navy-deep);
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 16px;
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+  box-shadow: 0 1px 3px rgba(17, 24, 39, 0.05);
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.searchInput:focus {
+  border-color: rgba(191, 29, 35, 0.45);
+  background: #fff;
+}
+
+.tableShell {
+  overflow: hidden;
+  margin-bottom: 28px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.86rem;
+}
+
+.tableHeadRow {
+  background: rgba(249, 250, 251, 0.72);
+  border-bottom: 1px solid var(--line);
+}
+
+.tableHeading {
+  padding: 14px 18px;
+  color: var(--muted);
+  text-align: left;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.tableBody {
+  color: var(--text-soft);
+}
+
+.tableRow {
+  border-bottom: 1px solid rgba(17, 24, 39, 0.055);
+  transition: background 0.2s;
+}
+
+.tableRow:hover {
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.tableCell {
+  padding: 15px 18px;
+}
+
+.emptyCell,
+.errorCell {
+  padding: 42px 18px;
+  text-align: center;
+  font-size: 0.86rem;
+}
+
+.emptyCell {
+  color: var(--muted);
+}
+
+.errorCell {
+  color: var(--ba-red);
+}
+
+.candidate {
+  gap: 12px;
+}
+
+.initials {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  color: var(--ba-red);
+  background: rgba(191, 29, 35, 0.08);
+  border: 1px solid rgba(191, 29, 35, 0.18);
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.candidateName {
+  color: var(--ba-navy-deep);
+  font-weight: 800;
+}
+
+.candidateEmailMobile,
+.contactPhone,
+.dateCell {
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+.contactEmail {
+  color: var(--text-soft);
+  font-size: 0.84rem;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 7px 11px;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+
+.stagePreRegistered {
+  color: var(--text-soft);
+  background: rgba(46, 65, 86, 0.05);
+  border-color: var(--line-strong);
+}
+
+.stagePreScreen {
+  color: var(--blue);
+  background: rgba(37, 99, 235, 0.08);
+  border-color: rgba(37, 99, 235, 0.18);
+}
+
+.stageInterview {
+  color: #7c3aed;
+  background: rgba(124, 58, 237, 0.08);
+  border-color: rgba(124, 58, 237, 0.18);
+}
+
+.stageDhl {
+  color: var(--amber);
+  background: rgba(196, 125, 16, 0.1);
+  border-color: rgba(196, 125, 16, 0.28);
+}
+
+.stageApproved {
+  color: var(--green);
+  background: rgba(24, 154, 85, 0.1);
+  border-color: rgba(24, 154, 85, 0.25);
+}
+
+.stageOnHold {
+  color: #64748b;
+  background: rgba(100, 116, 139, 0.1);
+  border-color: rgba(100, 116, 139, 0.28);
+}
+
+.stageRejected {
+  color: var(--ba-red);
+  background: rgba(191, 29, 35, 0.09);
+  border-color: rgba(191, 29, 35, 0.22);
+}
+
+.slaOk,
+.slaBreached,
+.slaNormal,
+.viewButton {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.slaOk {
+  color: var(--green);
+}
+
+.slaBreached,
+.viewButton {
+  color: var(--ba-red);
+}
+
+.slaNormal {
+  color: var(--muted);
+}
+
+.slaBreached,
+.slaNormal {
+  gap: 6px;
+}
+
+.slaDotDanger,
+.slaDotOk {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+}
+
+.slaDotDanger {
+  background: var(--ba-red);
+  box-shadow: 0 0 0 3px rgba(191, 29, 35, 0.08);
+}
+
+.slaDotOk {
+  background: var(--green);
+  box-shadow: 0 0 0 3px rgba(24, 154, 85, 0.1);
+}
+
+.viewButton {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.overviewHeader {
+  gap: 12px;
+  margin: 0 0 14px;
+}
+
+.overviewLine {
+  width: 3px;
+  height: 16px;
+}
+
+.overviewTitle {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.stageGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  padding-bottom: 56px;
+}
+
+.stageCard {
+  padding: 16px 18px;
+}
+
+.stageCardLabel {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.stageCardValue {
+  color: var(--ba-navy-deep);
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.stageCardWarning {
+  color: var(--ba-red);
+  font-size: 0.76rem;
+  font-weight: 700;
+  margin-top: 7px;
+}
+
+.statCard {
+  cursor: pointer;
+  text-align: left;
+  appearance: none;
+  font: inherit;
+  transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s;
+}
+
+.statCard:hover {
+  border-color: var(--line-strong);
+  box-shadow: 0 12px 32px rgba(17, 24, 39, 0.08);
+}
+
+.statCardActive {
+  border-color: rgba(191, 29, 35, 0.3) !important;
+}
+
+.statCardClickable {
+  cursor: default;
+}
+
+.statAmber {
+  color: var(--amber);
+}
+
+.errorBanner {
+  background: rgba(191, 29, 35, 0.08);
+  border: 1px solid rgba(191, 29, 35, 0.22);
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 12px;
+  color: var(--ba-red-deep);
+  margin-bottom: 18px;
+}
+
+.newVendorButton {
+  flex-shrink: 0;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  white-space: nowrap;
+  color: #fff;
+  background: var(--ba-red);
+  border: none;
+  box-shadow: none;
+  transition: background 0.2s;
+}
+
+.newVendorButton:hover {
+  background: var(--ba-red-deep);
+}
+
+.accessLinkButton {
+  flex-shrink: 0;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  white-space: nowrap;
+  color: #fff;
+  background: var(--blue);
+  border: none;
+  box-shadow: none;
+  transition: background 0.2s;
+}
+
+.accessLinkButton:hover {
+  background: var(--blue-deep);
+}
+
+.linkInput {
+  width: 100%;
+  padding: 10px 12px;
+  margin: 12px 0 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.92rem;
+  color: var(--text-primary);
+  background: #fff;
+}
+
+.linkInput:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px var(--blue-dim);
+}
+
+.linkResult {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg-soft);
+}
+
+.linkResultLabel {
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.linkResultUrl {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--text-primary);
+  word-break: break-all;
+}
+
+.copyLinkButton {
+  align-self: flex-start;
+  padding: 9px 16px;
+  border: none;
+  border-radius: 8px;
+  background: var(--blue);
+  color: #fff;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.copyLinkButton:hover {
+  background: var(--blue-deep);
+}
+
+.actionsCell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.actionApprove,
+.actionReject,
+.actionReopen,
+.actionDelete {
+  font-family: inherit;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 5px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+  white-space: nowrap;
+}
+
+.actionApprove {
+  color: var(--green);
+  background: rgba(24, 154, 85, 0.09);
+  border: 1px solid rgba(24, 154, 85, 0.22);
+}
+
+.actionApprove:hover {
+  background: rgba(24, 154, 85, 0.17);
+}
+
+.actionReject {
+  color: var(--ba-red);
+  background: rgba(191, 29, 35, 0.09);
+  border: 1px solid rgba(191, 29, 35, 0.22);
+}
+
+.actionReject:hover {
+  background: rgba(191, 29, 35, 0.16);
+}
+
+.actionReopen {
+  color: var(--amber);
+  background: rgba(196, 125, 16, 0.09);
+  border: 1px solid rgba(196, 125, 16, 0.22);
+}
+
+.actionReopen:hover {
+  background: rgba(196, 125, 16, 0.16);
+}
+
+.actionDelete {
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--line);
+}
+
+.actionDelete:hover {
+  color: var(--ba-red);
+  border-color: rgba(191, 29, 35, 0.3);
+}
+
+.stageCard {
+  cursor: pointer;
+  appearance: none;
+  font: inherit;
+  text-align: left;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.stageCard:hover {
+  border-color: var(--line-strong);
+  box-shadow: 0 12px 32px rgba(17, 24, 39, 0.08);
+}
+
+/* Modals */
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(17, 24, 39, 0.52);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.modal {
+  width: min(100%, 620px);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 32px 28px 24px;
+  box-shadow: 0 24px 64px -16px rgba(17, 24, 39, 0.28);
+  max-height: 86vh;
+  overflow-y: auto;
+}
+
+.confirmModal {
+  width: min(100%, 420px);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 28px 24px 22px;
+  box-shadow: 0 24px 64px -16px rgba(17, 24, 39, 0.28);
+}
+
+.modalTitle {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: var(--ba-navy-deep);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.modalSub {
+  color: var(--text-soft);
+  font-size: 12.5px;
+  line-height: 1.6;
+  margin-bottom: 22px;
+}
+
+.confirmText {
+  color: var(--text-soft);
+  font-size: 13px;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.formField {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.formFieldFull {
+  grid-column: 1 / -1;
+}
+
+.categoryOptions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.categoryOption {
+  min-height: 42px;
+  padding: 9px 10px;
+  color: var(--ba-navy-deep);
+  background: rgba(17, 24, 39, 0.04);
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.2s;
+}
+
+.categoryOption:hover {
+  transform: translateY(-1px);
+  border-color: rgba(191, 29, 35, 0.28);
+}
+
+.categoryOptionActive {
+  color: #fff;
+  background: var(--ba-red);
+  border-color: var(--ba-red);
+}
+
+.formLabel {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.formRequired {
+  color: var(--ba-red);
+}
+
+.formInput,
+.formSelect {
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--ba-navy-deep);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.formInput:focus,
+.formSelect:focus {
+  border-color: rgba(191, 29, 35, 0.45);
+  background: #fff;
+}
+
+.modalError {
+  color: var(--ba-red-deep);
+  background: rgba(191, 29, 35, 0.07);
+  border: 1px solid rgba(191, 29, 35, 0.2);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 12px;
+  margin-top: 14px;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.modalCancel {
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  color: var(--muted);
+  background: rgba(17, 24, 39, 0.05);
+  border: 1px solid var(--line);
+  transition: background 0.2s;
+}
+
+.modalCancel:hover {
+  background: rgba(17, 24, 39, 0.09);
+}
+
+.modalCancel:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.modalSubmit {
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  color: #fff;
+  background: var(--ba-red);
+  border: none;
+  box-shadow: none;
+  transition: background 0.2s;
+}
+
+.modalSubmit:hover {
+  background: var(--ba-red-deep);
+}
+
+.modalSubmit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.confirmApprove {
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  color: #fff;
+  background: var(--green);
+  border: none;
+  box-shadow: none;
+  transition: background 0.2s;
+}
+
+.confirmApprove:hover {
+  background: #12814a;
+}
+
+.confirmApprove:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.confirmReopen {
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  color: #fff;
+  background: var(--amber);
+  border: none;
+  box-shadow: none;
+  transition: background 0.2s;
+}
+
+.confirmReopen:hover {
+  background: var(--amber-deep);
+}
+
+.confirmReopen:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.confirmReject {
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  color: #fff;
+  background: var(--ba-red);
+  border: none;
+  box-shadow: none;
+  transition: background 0.2s;
+}
+
+.confirmReject:hover {
+  background: var(--ba-red-deep);
+}
+
+.confirmReject:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+@media (max-width: 900px) {
+  .statsGrid,
+  .stageGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .tableHeadingHidden,
+  .tableCellHidden {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+
+  .content {
+    padding-inline: 16px;
+  }
+
+  .statsGrid,
+  .stageGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .searchInput {
+    width: 100%;
+  }
+
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .categoryOptions {
+    grid-template-columns: 1fr;
+  }
+
+  .formFieldFull {
+    grid-column: auto;
+  }
+}
