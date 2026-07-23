@@ -1,12 +1,10 @@
 'use client';
 
-import Image from '../../shims/image';
 import Link from '../../shims/link';
-import { usePathname, useRouter } from '../../shims/navigation';
+import { usePathname } from '../../shims/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { collection, onSnapshot, type DocumentData } from '../../shims/firestore';
 import { db } from '../../shims/firebase';
-import { useAuth } from '../../shims/AuthContext';
 import { useAdminCandidate } from './AdminCandidateContext';
 import styles from './AdminNavbar.module.css';
 
@@ -31,8 +29,6 @@ function driverName(data: DocumentData): string {
 /** Shared top navigation for all /admin pages. */
 export function AdminNavbar() {
   const pathname = usePathname();
-  const router = useRouter();
-  const { user, isAuthenticated, signOut } = useAuth();
   const { selectedId, setSelectedId } = useAdminCandidate();
   const [options, setOptions] = useState<CandidateOption[]>([]);
 
@@ -48,7 +44,7 @@ export function AdminNavbar() {
   // Lightweight name/id subscription — same id scheme the pages use
   // (`driver-<id>` / `legacy-<id>`), so selection transfers directly.
   useEffect(() => {
-    if (!isAuthenticated || !showCandidateSelect) return;
+    if (!showCandidateSelect) return;
 
     let drivers: CandidateOption[] = [];
     let legacy: CandidateOption[] = [];
@@ -76,7 +72,7 @@ export function AdminNavbar() {
       unsubDrivers();
       unsubLegacy();
     };
-  }, [isAuthenticated, showCandidateSelect]);
+  }, [showCandidateSelect]);
 
   const selectValue = useMemo(
     () => (selectedId && options.some((o) => o.id === selectedId) ? selectedId : ''),
@@ -86,7 +82,8 @@ export function AdminNavbar() {
   const handleCandidateChange = (id: string) => {
     setSelectedId(id || null);
     // Keep the URL shareable/deep-linkable without a full navigation.
-    const url = id ? `${pathname}?candidate=${encodeURIComponent(id)}` : pathname ?? '';
+    // The portal uses HashRouter, so the route (and its query) live in the hash.
+    const url = id ? `#${pathname}?candidate=${encodeURIComponent(id)}` : `#${pathname ?? ''}`;
     window.history.replaceState(null, '', url);
   };
 
@@ -96,25 +93,8 @@ export function AdminNavbar() {
       ? `${base}?candidate=${encodeURIComponent(selectedId)}`
       : base;
 
-  const handleSignOut = async () => {
-    await signOut();
-    router.replace('/');
-  };
-
   return (
     <header className={styles.navbar}>
-      <Link href="/vetting-dashboard" className={styles.brand} aria-label="BA Express — Admin home">
-        <Image
-          src="https://baexpress.co.uk/assets/logo-ba.png"
-          alt=""
-          width={36}
-          height={36}
-          unoptimized
-        />
-        <span className={styles.brandName}>BA Express</span>
-        <span className={styles.brandBadge}>Admin</span>
-      </Link>
-
       <nav className={styles.nav} aria-label="Admin sections">
         {NAV_LINKS.map((link) => {
           const active = pathname?.startsWith(link.href);
@@ -148,17 +128,6 @@ export function AdminNavbar() {
           ))}
         </select>
       )}
-
-      <div className={styles.user}>
-        {user?.photoURL && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={user.photoURL} alt="" className={styles.avatar} />
-        )}
-        <span className={styles.userName}>{user?.displayName}</span>
-        <button type="button" onClick={handleSignOut} className={styles.signOut}>
-          Sign out
-        </button>
-      </div>
     </header>
   );
 }
