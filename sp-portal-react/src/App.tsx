@@ -20,6 +20,7 @@ import { RouteBalancer } from './pages/RouteBalancer/RouteBalancer';
 import { SOPFeed } from './pages/SOPFeed/SOPFeed';
 import { Vehicles } from './pages/Vehicles/Vehicles';
 import { VettingAdmin } from './pages/VettingAdmin/VettingAdmin';
+import { VettingChecklist, VettingInterview } from './pages/Vetting';
 import { WeekPlanner } from './pages/WeekPlanner/WeekPlanner';
 import { useViewportAttribute } from './hooks/useViewportAttribute';
 import { useRefinementsMotion } from './hooks/useRefinementsMotion';
@@ -52,6 +53,8 @@ function App() {
         <Route path="/sop-feed" element={<SOPFeed />} />
         <Route path="/vehicles" element={<Vehicles />} />
         <Route path="/vetting-admin" element={<VettingAdmin />} />
+        <Route path="/vetting-checklist" element={<VettingChecklist />} />
+        <Route path="/vetting-interview" element={<VettingInterview />} />
         <Route path="/week-planner" element={<WeekPlanner />} />
       </Routes>
     </HashRouter>
