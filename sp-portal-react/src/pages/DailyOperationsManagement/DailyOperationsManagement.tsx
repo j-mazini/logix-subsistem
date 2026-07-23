@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { PortalLayout } from '../../layout/PortalLayout';
 import { useViewportAttribute } from '../../hooks/useViewportAttribute';
+import { useModalBehavior } from '../../hooks/useModalBehavior';
 import '../../styles/legacy/daily-operations-management.css';
 
 /**
@@ -485,6 +486,10 @@ export function DailyOperationsManagement() {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const toastIdRef = useRef(0);
 
+  useModalBehavior(() => setModalOpen(false), modalOpen);
+  useModalBehavior(() => setDeleteTarget(null), Boolean(deleteTarget));
+  useModalBehavior(() => setRateModalItem(null), Boolean(rateModalItem));
+
   useEffect(() => {
     document.body.classList.add('dom-page');
     return () => document.body.classList.remove('dom-page');
@@ -966,10 +971,10 @@ export function DailyOperationsManagement() {
 
       {/* ============ MODAL: Add / Edit Record ============ */}
       {modalOpen && formData && createPortal(
-        <div className="dom-modal-backdrop" onClick={(e) => { if (e.target === e.currentTarget) closeRecordModal(); }}>
-          <div className="dom-modal">
+        <div className="dom-modal-backdrop sp-modal-backdrop-anim" onClick={(e) => { if (e.target === e.currentTarget) closeRecordModal(); }}>
+          <div className="dom-modal sp-modal-anim" role="dialog" aria-modal="true" aria-labelledby="recordModalTitle">
             <div className="dom-modal-header">
-              <h2 className="dom-modal-title">{editingId ? 'Edit Record' : modalMode === 'adhoc' ? 'Add Adhoc Service' : modalMode === 'dayoff' ? 'Add Day off' : 'Add New Record'}</h2>
+              <h2 className="dom-modal-title" id="recordModalTitle">{editingId ? 'Edit Record' : modalMode === 'adhoc' ? 'Add Adhoc Service' : modalMode === 'dayoff' ? 'Add Day off' : 'Add New Record'}</h2>
               <button type="button" className="dom-modal-close" aria-label="Close" onClick={closeRecordModal}><i className="bi bi-x-lg" /></button>
             </div>
             <form className="dom-modal-body" onSubmit={handleFormSubmit}>
@@ -991,20 +996,31 @@ export function DailyOperationsManagement() {
 
       {/* ============ MODAL: Delete confirm ============ */}
       {deleteTarget && createPortal(
-        <div className="dom-modal-backdrop" onClick={(e) => { if (e.target === e.currentTarget) closeDeleteModal(); }}>
-          <div className="dom-modal dom-modal-small">
-            <div className="dom-modal-header">
-              <h2 className="dom-modal-title"><i className="bi bi-exclamation-triangle text-danger me-2" />Confirm Delete</h2>
-              <button type="button" className="dom-modal-close" aria-label="Close" onClick={closeDeleteModal}><i className="bi bi-x-lg" /></button>
-            </div>
-            <div className="dom-modal-body">
-              <p>{records.filter((r) => r.userId === deleteTarget.userId).length > 1
-                ? `Remove ${deleteTarget.Name}'s record for ${deleteTarget.Route}? This record will be deleted.`
-                : `${deleteTarget.Name} has no other record today — removing this will mark them as Not Allocated instead of deleting.`}</p>
-              <div className="dom-form-actions">
-                <button type="button" className="styled-button styled-button--outline" onClick={closeDeleteModal}>Cancel</button>
-                <button type="button" className="styled-button styled-button--danger" onClick={confirmDelete}>Delete</button>
+        <div className="dom-modal-backdrop sp-modal-backdrop-anim" onClick={(e) => { if (e.target === e.currentTarget) closeDeleteModal(); }}>
+          <div
+            className="dom-modal dom-modal-small sp-modal-anim"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="deleteRecordModalTitle"
+          >
+            <button type="button" className="dom-modal-close sp-danger-modal-close" aria-label="Close" onClick={closeDeleteModal}><i className="bi bi-x-lg" /></button>
+            <div className="sp-danger-modal-body">
+              <div className="sp-danger-modal-icon">
+                <i className="bi bi-exclamation-triangle-fill" />
               </div>
+              <h5 id="deleteRecordModalTitle" className="sp-danger-modal-title">
+                {records.filter((r) => r.userId === deleteTarget.userId).length > 1 ? 'Delete this record?' : 'Remove this vendor from the day?'}
+              </h5>
+              <p className="sp-danger-modal-text">
+                {records.filter((r) => r.userId === deleteTarget.userId).length > 1
+                  ? <>You&apos;re about to remove <strong>{deleteTarget.Name}</strong>&apos;s record for <strong>{deleteTarget.Route}</strong>.</>
+                  : <><strong>{deleteTarget.Name}</strong> has no other record today — removing this will mark them as Not Allocated instead of deleting.</>}
+              </p>
+              <p className="sp-danger-modal-subtext">This action cannot be undone.</p>
+            </div>
+            <div className="dom-modal-body sp-danger-modal-footer">
+              <button type="button" className="styled-button styled-button--outline" onClick={closeDeleteModal}>Cancel</button>
+              <button type="button" className="styled-button styled-button--danger" onClick={confirmDelete} autoFocus>Delete</button>
             </div>
           </div>
         </div>,
@@ -1013,10 +1029,10 @@ export function DailyOperationsManagement() {
 
       {/* ============ MODAL: Rate bands ============ */}
       {rateModalItem && createPortal(
-        <div className="dom-modal-backdrop" onClick={(e) => { if (e.target === e.currentTarget) closeRateModal(); }}>
-          <div className="dom-modal dom-modal-small">
+        <div className="dom-modal-backdrop sp-modal-backdrop-anim" onClick={(e) => { if (e.target === e.currentTarget) closeRateModal(); }}>
+          <div className="dom-modal dom-modal-small sp-modal-anim" role="dialog" aria-modal="true" aria-labelledby="rateModalTitle">
             <div className="dom-modal-header">
-              <h2 className="dom-modal-title"><i className="bi bi-info-circle me-2" />Cost Model Bands</h2>
+              <h2 className="dom-modal-title" id="rateModalTitle"><i className="bi bi-info-circle me-2" />Cost Model Bands</h2>
               <button type="button" className="dom-modal-close" aria-label="Close" onClick={closeRateModal}><i className="bi bi-x-lg" /></button>
             </div>
             <div className="dom-modal-body">

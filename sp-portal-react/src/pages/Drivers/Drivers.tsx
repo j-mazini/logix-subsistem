@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { PortalLayout } from '../../layout/PortalLayout';
 import { useCurrentSp } from '../../hooks/useCurrentSp';
+import { useModalBehavior } from '../../hooks/useModalBehavior';
 import '../../styles/legacy/shared-pages.css';
 import '../../styles/legacy/drivers.css';
 import {
@@ -112,6 +113,11 @@ export function Drivers() {
   const [deleteVendorId, setDeleteVendorId] = useState<number | null>(null);
   const [infoModal, setInfoModal] = useState<{ vendorId: number; type: 'training' | 'documents' } | null>(null);
   const [driverDetailId, setDriverDetailId] = useState<number | null>(null);
+
+  useModalBehavior(() => setShowVendorModal(false), showVendorModal);
+  useModalBehavior(() => setDeleteVendorId(null), deleteVendorId !== null);
+  useModalBehavior(() => setInfoModal(null), infoModal !== null);
+  useModalBehavior(() => setDriverDetailId(null), driverDetailId !== null);
 
   const allVendors = useMemo<Vendor[]>(() => {
     const mock = getAllMockVendors().filter((v) => v.serviceProvider === sp);
@@ -503,9 +509,9 @@ export function Drivers() {
       {showVendorModal &&
         createPortal(
           <>
-            <div className="modal-backdrop fade show" onClick={() => setShowVendorModal(false)} />
+            <div className="modal-backdrop fade show sp-modal-backdrop-anim" onClick={() => setShowVendorModal(false)} />
             <div
-              className="modal fade show vendor-modal-liquid-glass"
+              className="modal fade show vendor-modal-liquid-glass sp-modal-anim"
               style={{ display: 'block' }}
               tabIndex={-1}
               role="dialog"
@@ -699,30 +705,33 @@ export function Drivers() {
         deleteVendor &&
         createPortal(
           <>
-            <div className="modal-backdrop fade show" onClick={() => setDeleteVendorId(null)} />
-            <div className="modal fade show" style={{ display: 'block' }} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="deleteConfirmModalLabel">
-              <div className="modal-dialog">
-                <div className="modal-content">
-                  <div className="modal-header border-bottom">
-                    <h5 className="modal-title d-flex align-items-center gap-2" id="deleteConfirmModalLabel">
-                      <i className="bi bi-exclamation-triangle-fill text-warning" />
-                      <span>Confirm Deletion</span>
-                    </h5>
-                    <button type="button" className="btn-close" aria-label="Close" onClick={() => setDeleteVendorId(null)} />
-                  </div>
-                  <div className="modal-body">
-                    <p className="mb-3">
-                      Are you sure you want to delete the vendor <strong>{`${deleteVendor.firstName || ''} ${deleteVendor.lastName || ''}`}</strong>?
-                    </p>
-                    <p className="text-muted small mb-0">{deleteVendor.email ? `Email: ${deleteVendor.email}` : ''}</p>
-                    <div className="vendor-delete-warning mt-3 p-3 rounded">
-                      <div className="d-flex align-items-center gap-2 text-warning-emphasis">
-                        <i className="bi bi-info-circle" />
-                        <span className="small">This action cannot be undone.</span>
-                      </div>
+            <div className="modal-backdrop fade show sp-modal-backdrop-anim" onClick={() => setDeleteVendorId(null)} />
+            <div
+              className="modal fade show sp-modal-anim"
+              style={{ display: 'block' }}
+              tabIndex={-1}
+              role="alertdialog"
+              aria-modal="true"
+              aria-labelledby="deleteConfirmModalLabel"
+            >
+              <div className="modal-dialog modal-dialog-centered">
+                <div className="modal-content" style={{ position: 'relative' }}>
+                  <button type="button" className="btn-close sp-danger-modal-close" aria-label="Close" onClick={() => setDeleteVendorId(null)} />
+                  <div className="sp-danger-modal-body">
+                    <div className="sp-danger-modal-icon">
+                      <i className="bi bi-exclamation-triangle-fill" />
                     </div>
+                    <h5 id="deleteConfirmModalLabel" className="sp-danger-modal-title">
+                      Delete this vendor?
+                    </h5>
+                    <p className="sp-danger-modal-text">
+                      You&apos;re about to remove{' '}
+                      <strong>{`${deleteVendor.firstName || ''} ${deleteVendor.lastName || ''}`}</strong>
+                      {deleteVendor.email ? ` (${deleteVendor.email})` : ''}.
+                    </p>
+                    <p className="sp-danger-modal-subtext">This action cannot be undone.</p>
                   </div>
-                  <div className="modal-footer border-top bg-light">
+                  <div className="modal-footer sp-danger-modal-footer border-top bg-light">
                     <button type="button" className="btn btn-outline-secondary" onClick={() => setDeleteVendorId(null)}>Cancel</button>
                     <button type="button" className="btn btn-danger d-inline-flex align-items-center gap-2" onClick={confirmDelete}>
                       <i className="bi bi-trash-fill" />
@@ -741,8 +750,8 @@ export function Drivers() {
         infoVendor &&
         createPortal(
           <>
-            <div className="modal-backdrop fade show" onClick={() => setInfoModal(null)} />
-            <div className="modal fade show" style={{ display: 'block' }} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="infoModalTitle">
+            <div className="modal-backdrop fade show sp-modal-backdrop-anim" onClick={() => setInfoModal(null)} />
+            <div className="modal fade show sp-modal-anim" style={{ display: 'block' }} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="infoModalTitle">
               <div className="modal-dialog modal-dialog-centered">
                 <div className="modal-content">
                   <div className="modal-header border-bottom flex-wrap">
@@ -838,9 +847,9 @@ export function Drivers() {
         driverDetailVendor &&
         createPortal(
           <>
-            <div className="driver-detail-modal-backdrop" onClick={() => setDriverDetailId(null)} />
+            <div className="driver-detail-modal-backdrop sp-modal-backdrop-anim" onClick={() => setDriverDetailId(null)} />
             <div className="driver-detail-modal-wrap" role="dialog" aria-modal="true" aria-labelledby="driverDetailModalTitle">
-              <div className="driver-detail-modal liquid-glass-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="driver-detail-modal liquid-glass-modal sp-modal-anim" onClick={(e) => e.stopPropagation()}>
                 <div className="driver-detail-modal-header">
                   <div className="driver-detail-modal-header-inner">
                     <span className="driver-detail-modal-badge">Driver</span>

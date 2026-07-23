@@ -1,6 +1,6 @@
 import { createPortal } from 'react-dom';
 import { formatDateDisplay, type RawVehicle } from '../../../data/vehiclesData';
-import { useModalBehavior } from './useModalBehavior';
+import { useModalBehavior } from '../../../hooks/useModalBehavior';
 
 interface VehicleDetailModalProps {
   vehicle: RawVehicle;

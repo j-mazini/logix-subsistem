@@ -13,6 +13,7 @@ import '../../styles/legacy/dashboard-sidebar.css';
 import '../../styles/legacy/dashboard-live-service.css';
 import { PortalLayout } from '../../layout/PortalLayout';
 import { useViewportAttribute } from '../../hooks/useViewportAttribute';
+import { useModalBehavior } from '../../hooks/useModalBehavior';
 
 /* ============================ Live Service data (ported from live-service.js) ============================ */
 const LIVE_ROUTES = [
@@ -167,6 +168,8 @@ export function Dashboard() {
   const [modalSlide, setModalSlide] = useState(0);
   const [activeFolder, setActiveFolder] = useState<'lastday' | 'spms' | 'ld'>('lastday');
   const [activeRouteIndex, setActiveRouteIndex] = useState(0);
+
+  useModalBehavior(() => setShowModal(false), showModal);
 
   const route = LIVE_ROUTES[activeRouteIndex];
   const done = route.stops.length > 1 ? 1 : 0;
@@ -515,9 +518,9 @@ export function Dashboard() {
 
       {showModal && createPortal(
         <div className="sp-full-dashboard-modal sp-full-dashboard-modal--open" role="dialog" aria-modal="true" aria-labelledby="fullDashboardModalTitle">
-          <div className="sp-full-dashboard-modal-backdrop" onClick={() => setShowModal(false)} />
+          <div className="sp-full-dashboard-modal-backdrop sp-modal-backdrop-anim" onClick={() => setShowModal(false)} />
           <div className="sp-full-dashboard-modal-dialog">
-            <div className="sp-full-dashboard-modal-content">
+            <div className="sp-full-dashboard-modal-content sp-modal-anim">
               <div className="sp-full-dashboard-modal-header">
                 <h2 id="fullDashboardModalTitle" className="sp-full-dashboard-modal-title">Full dashboard</h2>
                 <div className="sp-full-dashboard-modal-category-dots" aria-label="Category">

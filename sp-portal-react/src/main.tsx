@@ -19,6 +19,8 @@ import './styles/legacy/refinements-v2.css';
 import './styles/legacy/refinements-v3-motion.css';
 import './styles/legacy/admin-header-standard.css';
 
+import './styles/modal-behavior.css';
+
 import './index.css';
 import App from './App.tsx';
 

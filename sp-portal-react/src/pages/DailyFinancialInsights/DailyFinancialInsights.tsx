@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { PortalLayout } from '../../layout/PortalLayout';
+import { useModalBehavior } from '../../hooks/useModalBehavior';
 import '../../styles/legacy/daily-financial-insights.css';
 import {
   ADHOC_SERVICES,
@@ -106,6 +107,9 @@ export function DailyFinancialInsights() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const rowsByDate = useRef(new Map<string, Row[]>());
+
+  useModalBehavior(() => setModalOpen(false), modalOpen);
+  useModalBehavior(() => setDeleteId(null), Boolean(deleteId));
 
   function showToast(message: string, type: ToastType = 'info') {
     const id = ++toastSeq;
@@ -482,13 +486,18 @@ export function DailyFinancialInsights() {
       {modalOpen &&
         createPortal(
           <div
-            className="dom-modal-backdrop"
+            className="dom-modal-backdrop sp-modal-backdrop-anim"
             id="operationModalBackdrop"
             onClick={(e) => {
               if (e.target === e.currentTarget) setModalOpen(false);
             }}
           >
-            <div className="dom-modal dfi-op-modal">
+            <div
+              className="dom-modal dfi-op-modal sp-modal-anim"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="operationModalTitle"
+            >
               <div className="dom-modal-header">
                 <h2 className="dom-modal-title" id="operationModalTitle">{modalTitle}</h2>
                 <button type="button" className="dom-modal-close" id="btnCloseOperationModal" aria-label="Close" onClick={() => setModalOpen(false)}>
@@ -671,27 +680,34 @@ export function DailyFinancialInsights() {
         deleteRow &&
         createPortal(
           <div
-            className="dom-modal-backdrop"
+            className="dom-modal-backdrop sp-modal-backdrop-anim"
             id="deleteModalBackdrop"
             onClick={(e) => {
               if (e.target === e.currentTarget) setDeleteId(null);
             }}
           >
-            <div className="dom-modal dom-modal-small">
-              <div className="dom-modal-header">
-                <h2 className="dom-modal-title"><i className="bi bi-exclamation-triangle text-danger me-2" />Confirm Delete</h2>
-                <button type="button" className="dom-modal-close" id="btnCloseDeleteModal" aria-label="Close" onClick={() => setDeleteId(null)}>
-                  <i className="bi bi-x-lg" />
-                </button>
-              </div>
-              <div className="dom-modal-body">
-                <p id="deleteModalText">
-                  Remove the register for {deleteRow.courier} on {formatDateDisplay(deleteRow.date)} (route {deleteRow.route})? This cannot be undone.
-                </p>
-                <div className="dom-form-actions">
-                  <button type="button" className="styled-button styled-button--outline" id="btnCancelDelete" onClick={() => setDeleteId(null)}>Cancel</button>
-                  <button type="button" className="styled-button styled-button--danger" id="btnConfirmDelete" onClick={confirmDelete}>Delete</button>
+            <div
+              className="dom-modal dom-modal-small sp-modal-anim"
+              role="alertdialog"
+              aria-modal="true"
+              aria-labelledby="deleteModalTitle"
+            >
+              <button type="button" className="dom-modal-close sp-danger-modal-close" id="btnCloseDeleteModal" aria-label="Close" onClick={() => setDeleteId(null)}>
+                <i className="bi bi-x-lg" />
+              </button>
+              <div className="sp-danger-modal-body">
+                <div className="sp-danger-modal-icon">
+                  <i className="bi bi-exclamation-triangle-fill" />
                 </div>
+                <h5 id="deleteModalTitle" className="sp-danger-modal-title">Delete this register?</h5>
+                <p className="sp-danger-modal-text" id="deleteModalText">
+                  You&apos;re about to remove the register for <strong>{deleteRow.courier}</strong> on {formatDateDisplay(deleteRow.date)} (route {deleteRow.route}).
+                </p>
+                <p className="sp-danger-modal-subtext">This action cannot be undone.</p>
+              </div>
+              <div className="dom-modal-body sp-danger-modal-footer">
+                <button type="button" className="styled-button styled-button--outline" id="btnCancelDelete" onClick={() => setDeleteId(null)}>Cancel</button>
+                <button type="button" className="styled-button styled-button--danger" id="btnConfirmDelete" onClick={confirmDelete} autoFocus>Delete</button>
               </div>
             </div>
           </div>,

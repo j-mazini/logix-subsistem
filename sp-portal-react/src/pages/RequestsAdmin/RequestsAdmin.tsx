@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PortalLayout } from '../../layout/PortalLayout';
+import { useModalBehavior } from '../../hooks/useModalBehavior';
 import '../../styles/legacy/requests-admin.css';
 
 /* =====================================================
@@ -242,14 +243,7 @@ export function RequestsAdmin() {
     return () => clearTimeout(t);
   }, []);
 
-  useEffect(() => {
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') closeScheduleTermsModal();
-    }
-    document.addEventListener('keydown', onKeyDown);
-    return () => document.removeEventListener('keydown', onKeyDown);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  useModalBehavior(() => closeScheduleTermsModal(), selectedRequest !== null);
 
   function getVendorName(userId: number): string {
     const v = vendors.find((x) => x.userId === userId);
@@ -581,16 +575,21 @@ export function RequestsAdmin() {
 
       {/* ============ MODAL: Pre-Payment Schedule Terms ============ */}
       <div
-        className="va-modal-backdrop"
+        className={`va-modal-backdrop${selectedRequest ? ' sp-modal-backdrop-anim' : ''}`}
         id="scheduleTermsModalBackdrop"
         hidden={!selectedRequest}
         onClick={(e) => {
           if (e.target === e.currentTarget) closeScheduleTermsModal();
         }}
       >
-        <div className="va-modal va-modal-small">
+        <div
+          className={`va-modal va-modal-small${selectedRequest ? ' sp-modal-anim' : ''}`}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="scheduleTermsModalTitle"
+        >
           <div className="va-modal-header">
-            <h2 className="va-modal-title">Pre-Payment Schedule Terms</h2>
+            <h2 className="va-modal-title" id="scheduleTermsModalTitle">Pre-Payment Schedule Terms</h2>
             <button type="button" className="va-modal-close" id="btnCloseScheduleTermsModal" aria-label="Close" onClick={closeScheduleTermsModal}>
               <i className="bi bi-x-lg" />
             </button>

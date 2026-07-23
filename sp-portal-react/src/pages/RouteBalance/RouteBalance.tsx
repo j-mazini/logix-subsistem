@@ -2,7 +2,10 @@ import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { PortalLayout } from '../../layout/PortalLayout';
 import { useCurrentSp } from '../../hooks/useCurrentSp';
+import { useModalBehavior } from '../../hooks/useModalBehavior';
 import '../../styles/legacy/route-balance.css';
+// Note: modal-behavior.css classes/hook used below are backdrop-agnostic —
+// this page must never import the portal dark CSS (see route-balance.css header).
 
 /**
  * Faithful port of sp-portal/route-balance (index.html + style.css +
@@ -1087,6 +1090,16 @@ export function RouteBalance() {
   const previewList = routes.filter((r) => visibleStops(r).length > 0);
   const previewIndex = previewRoute ? previewList.findIndex((r) => r.id === previewRoute.id) : -1;
 
+  // Escape-to-close + scroll lock for each modal. Called unconditionally
+  // (active flag mirrors each modal's own open condition) to keep hook
+  // call order stable across renders.
+  useModalBehavior(() => setAddPostcodeModalOpen(false), addPostcodeModalOpen);
+  useModalBehavior(() => setAddRouteModalOpen(false), addRouteModalOpen);
+  useModalBehavior(() => setShipmentModalRouteId(null), !!shipmentRoute);
+  useModalBehavior(() => setEditStopId(null), !!editingStop);
+  useModalBehavior(() => setPmListingModalOpen(false), pmListingModalOpen);
+  useModalBehavior(() => setSelectedRouteId(null), !!previewRoute && !rebalanceMode);
+
   const pmAuthorized = !!sp;
   const pmRecords: { route: RouteRow; stop: Stop }[] = [];
   routes.forEach((route) => {
@@ -1366,11 +1379,11 @@ export function RouteBalance() {
       {/* ============ MODAL: Add Postcode ============ */}
       {addPostcodeModalOpen && createPortal(
         <>
-          <div className="modal fade show" style={{ display: 'block' }} tabIndex={-1} role="dialog" aria-modal="true">
+          <div className="modal fade show sp-modal-anim" style={{ display: 'block' }} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="addPostcodeModalTitle">
             <div className="modal-dialog">
               <div className="modal-content">
                 <div className="modal-header">
-                  <h5 className="modal-title"><i className="bi bi-geo-alt me-2" />Add Postcode</h5>
+                  <h5 className="modal-title" id="addPostcodeModalTitle"><i className="bi bi-geo-alt me-2" />Add Postcode</h5>
                   <button type="button" className="btn-close" aria-label="Close" onClick={() => setAddPostcodeModalOpen(false)} />
                 </div>
                 <div className="modal-body">
@@ -1405,7 +1418,7 @@ export function RouteBalance() {
               </div>
             </div>
           </div>
-          <div className="modal-backdrop fade show" onClick={() => setAddPostcodeModalOpen(false)} />
+          <div className="modal-backdrop fade show sp-modal-backdrop-anim" onClick={() => setAddPostcodeModalOpen(false)} />
         </>,
         document.body,
       )}
@@ -1413,11 +1426,11 @@ export function RouteBalance() {
       {/* ============ MODAL: Add New Flex Route ============ */}
       {addRouteModalOpen && createPortal(
         <>
-          <div className="modal fade show" style={{ display: 'block' }} tabIndex={-1} role="dialog" aria-modal="true">
+          <div className="modal fade show sp-modal-anim" style={{ display: 'block' }} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="addRouteModalTitle">
             <div className="modal-dialog">
               <div className="modal-content">
                 <div className="modal-header">
-                  <h5 className="modal-title"><i className="bi bi-plus-circle me-2" />Add New Flex Route</h5>
+                  <h5 className="modal-title" id="addRouteModalTitle"><i className="bi bi-plus-circle me-2" />Add New Flex Route</h5>
                   <button type="button" className="btn-close" aria-label="Close" onClick={() => setAddRouteModalOpen(false)} />
                 </div>
                 <div className="modal-body">
@@ -1443,7 +1456,7 @@ export function RouteBalance() {
               </div>
             </div>
           </div>
-          <div className="modal-backdrop fade show" onClick={() => setAddRouteModalOpen(false)} />
+          <div className="modal-backdrop fade show sp-modal-backdrop-anim" onClick={() => setAddRouteModalOpen(false)} />
         </>,
         document.body,
       )}
@@ -1451,11 +1464,11 @@ export function RouteBalance() {
       {/* ============ MODAL: Shipment Details ============ */}
       {shipmentRoute && createPortal(
         <>
-          <div className="modal fade show" style={{ display: 'block' }} tabIndex={-1} role="dialog" aria-modal="true">
+          <div className="modal fade show sp-modal-anim" style={{ display: 'block' }} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="shipmentModalTitle">
             <div className="modal-dialog">
               <div className="modal-content">
                 <div className="modal-header">
-                  <h5 className="modal-title"><i className="bi bi-box2 me-2" />Shipment Details</h5>
+                  <h5 className="modal-title" id="shipmentModalTitle"><i className="bi bi-box2 me-2" />Shipment Details</h5>
                   <button type="button" className="btn-close" aria-label="Close" onClick={() => setShipmentModalRouteId(null)} />
                 </div>
                 <div className="modal-body">
@@ -1473,7 +1486,7 @@ export function RouteBalance() {
               </div>
             </div>
           </div>
-          <div className="modal-backdrop fade show" onClick={() => setShipmentModalRouteId(null)} />
+          <div className="modal-backdrop fade show sp-modal-backdrop-anim" onClick={() => setShipmentModalRouteId(null)} />
         </>,
         document.body,
       )}
@@ -1481,11 +1494,11 @@ export function RouteBalance() {
       {/* ============ MODAL: Edit Postcode ============ */}
       {editingStop && createPortal(
         <>
-          <div className="modal fade show" style={{ display: 'block' }} tabIndex={-1} role="dialog" aria-modal="true">
+          <div className="modal fade show sp-modal-anim" style={{ display: 'block' }} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="editPostcodeModalTitle">
             <div className="modal-dialog">
               <div className="modal-content">
                 <div className="modal-header">
-                  <h5 className="modal-title"><i className="bi bi-pencil-square me-2" />Edit Postcode</h5>
+                  <h5 className="modal-title" id="editPostcodeModalTitle"><i className="bi bi-pencil-square me-2" />Edit Postcode</h5>
                   <button type="button" className="btn-close" aria-label="Close" onClick={() => setEditStopId(null)} />
                 </div>
                 <div className="modal-body">
@@ -1517,7 +1530,7 @@ export function RouteBalance() {
               </div>
             </div>
           </div>
-          <div className="modal-backdrop fade show" onClick={() => setEditStopId(null)} />
+          <div className="modal-backdrop fade show sp-modal-backdrop-anim" onClick={() => setEditStopId(null)} />
         </>,
         document.body,
       )}
@@ -1525,11 +1538,11 @@ export function RouteBalance() {
       {/* ============ MODAL: PM ASR/DSR Listing ============ */}
       {pmListingModalOpen && createPortal(
         <>
-          <div className="modal fade show" style={{ display: 'block' }} tabIndex={-1} role="dialog" aria-modal="true">
+          <div className="modal fade show sp-modal-anim" style={{ display: 'block' }} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="pmListingModalTitle">
             <div className="modal-dialog modal-xl modal-dialog-scrollable">
               <div className="modal-content">
                 <div className="modal-header">
-                  <h5 className="modal-title"><i className="bi bi-clipboard-data me-2" />PM ASR/DSR Listing</h5>
+                  <h5 className="modal-title" id="pmListingModalTitle"><i className="bi bi-clipboard-data me-2" />PM ASR/DSR Listing</h5>
                   <button type="button" className="btn-close" aria-label="Close" onClick={() => setPmListingModalOpen(false)} />
                 </div>
                 <div className="modal-body" id="pmListingBody">
@@ -1574,7 +1587,7 @@ export function RouteBalance() {
               </div>
             </div>
           </div>
-          <div className="modal-backdrop fade show" onClick={() => setPmListingModalOpen(false)} />
+          <div className="modal-backdrop fade show sp-modal-backdrop-anim" onClick={() => setPmListingModalOpen(false)} />
         </>,
         document.body,
       )}
@@ -1582,11 +1595,11 @@ export function RouteBalance() {
       {/* ============ MODAL: Route Preview (Rebalance Navigation) ============ */}
       {previewRoute && !rebalanceMode && createPortal(
         <>
-          <div className="modal fade show" style={{ display: 'block' }} tabIndex={-1} role="dialog" aria-modal="true">
+          <div className="modal fade show sp-modal-anim" style={{ display: 'block' }} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="routePreviewModalTitle">
             <div className="modal-dialog modal-xl modal-dialog-scrollable">
               <div className="modal-content">
                 <div className="modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <h5 className="modal-title"><i className="bi bi-shuffle" /> Route {previewRoute.name} — Rebalance Preview</h5>
+                  <h5 className="modal-title" id="routePreviewModalTitle"><i className="bi bi-shuffle" /> Route {previewRoute.name} — Rebalance Preview</h5>
                   <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                     <button type="button" className="styled-button styled-button--outline btn-preview-prev" disabled={previewList.length <= 1}
                       onClick={() => setSelectedRouteId(previewList[(previewIndex - 1 + previewList.length) % previewList.length].id)}>
@@ -1648,7 +1661,7 @@ export function RouteBalance() {
               </div>
             </div>
           </div>
-          <div className="modal-backdrop fade show" onClick={() => setSelectedRouteId(null)} />
+          <div className="modal-backdrop fade show sp-modal-backdrop-anim" onClick={() => setSelectedRouteId(null)} />
         </>,
         document.body,
       )}

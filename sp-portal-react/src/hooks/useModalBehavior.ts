@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
 
 /**
- * Escape-to-close + background scroll lock, shared by all Vehicles modals.
- * Pass `active: false` (e.g. while a modal is conditionally unmounted-by-prop
- * rather than unmounted-by-JSX) to skip attaching without breaking the
- * rules-of-hooks call order.
+ * Escape-to-close + background scroll lock, shared by every modal in the
+ * app. Pass `active: false` (e.g. a modal that's conditionally rendered by
+ * a prop rather than unmounted via JSX) to skip attaching without breaking
+ * the rules-of-hooks call order.
  */
 export function useModalBehavior(onClose: () => void, active = true) {
   useEffect(() => {

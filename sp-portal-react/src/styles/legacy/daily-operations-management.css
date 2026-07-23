@@ -554,6 +554,7 @@ body.dom-page {
 }
 
 .dom-modal {
+  position: relative;
   background: var(--card-bg);
   border-radius: 14px;
   width: 100%;

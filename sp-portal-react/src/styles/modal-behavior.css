@@ -1,0 +1,114 @@
+/* ============================================================
+   SHARED MODAL BEHAVIOR — animations, focus states, and a reusable
+   "danger" (destructive-confirmation) skeleton, applied on top of
+   each page's own modal markup/classes (Bootstrap `.modal`/
+   `.modal-backdrop`, or a page-specific `.xx-modal-backdrop`).
+   Pairs with hooks/useModalBehavior.ts (Escape-to-close + scroll
+   lock). Add `.sp-modal-backdrop-anim` to a modal's backdrop
+   element and `.sp-modal-anim` to its content/dialog element to
+   opt in — additive, doesn't replace existing classes.
+   ============================================================ */
+
+@keyframes sp-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes sp-modal-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sp-modal-backdrop-anim,
+  .sp-modal-anim { animation: none !important; }
+}
+
+.sp-modal-backdrop-anim {
+  animation: sp-backdrop-in 0.18s ease-out;
+}
+
+.sp-modal-anim {
+  animation: sp-modal-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Focus-visible ring for interactive elements inside any modal —
+   scoped to modal containers so it doesn't change focus styling
+   app-wide beyond this task's scope. */
+.sp-modal-anim :is(button, a, input, select, textarea):focus-visible,
+[role='dialog'] :is(button, a, input, select, textarea):focus-visible,
+[role='alertdialog'] :is(button, a, input, select, textarea):focus-visible {
+  outline: 2px solid #0d6efd;
+  outline-offset: 2px;
+}
+
+/* ============ REUSABLE DANGER (destructive-confirm) SKELETON ============
+   Markup shape:
+   <div class="sp-danger-modal-body">
+     <div class="sp-danger-modal-icon"><i class="bi bi-exclamation-triangle-fill" /></div>
+     <h5 class="sp-danger-modal-title">...</h5>
+     <p class="sp-danger-modal-text">...</p>
+     <p class="sp-danger-modal-subtext">This action cannot be undone.</p>
+   </div>
+   ...footer with .sp-danger-modal-footer for centered buttons... */
+
+.sp-danger-modal-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 2rem 1.75rem 1.5rem;
+}
+
+.sp-danger-modal-icon {
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 999px;
+  background: #fdecec;
+  color: #dc3545;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  margin-bottom: 1rem;
+  flex-shrink: 0;
+}
+
+.sp-danger-modal-title {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+.sp-danger-modal-text {
+  margin: 0 0 0.35rem;
+  font-size: 0.9rem;
+  color: #6c757d;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.sp-danger-modal-subtext {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #dc3545;
+  font-weight: 500;
+}
+
+.sp-danger-modal-footer {
+  display: flex !important;
+  align-items: center;
+  justify-content: center !important;
+  gap: 0.75rem;
+}
+
+.sp-danger-modal-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 1;
+}

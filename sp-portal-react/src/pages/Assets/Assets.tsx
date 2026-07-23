@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { PortalLayout } from '../../layout/PortalLayout';
+import { useModalBehavior } from '../../hooks/useModalBehavior';
 import '../../styles/legacy/assets.css';
 
 /* =====================================================
@@ -350,6 +351,18 @@ export function Assets() {
 
   const [pendingDelete, setPendingDelete] = useState<{ type: 'managementTeam' | 'adhocCategory'; id: number } | null>(null);
   const confirmDeleteOpen = pendingDelete !== null;
+
+  /* Escape-to-close + scroll lock for every modal on this page. Hooks are
+     called unconditionally (component-level state, not conditional JSX
+     mounts of separate components) with `active` reflecting each modal's
+     open state, keeping hook call order stable across renders. */
+  useModalBehavior(() => setVendorTypeModal({ open: false, editing: null }), vendorTypeModal.open);
+  useModalBehavior(() => setUserTypeModal({ open: false, editing: null }), userTypeModal.open);
+  useModalBehavior(() => setCostModelModal({ open: false, editing: null }), costModelModal.open);
+  useModalBehavior(() => setVehicleTypeModal({ open: false, editing: null }), vehicleTypeModal.open);
+  useModalBehavior(() => setManagementTeamModal({ open: false, editing: null }), managementTeamModal.open);
+  useModalBehavior(() => setAdhocCategoryModal({ open: false, editing: null }), adhocCategoryModal.open);
+  useModalBehavior(() => setPendingDelete(null), confirmDeleteOpen);
 
   function closeAllModals() {
     setVendorTypeModal({ open: false, editing: null });
@@ -874,10 +887,10 @@ export function Assets() {
 
       {/* ============ MODAL: Vendor Type ============ */}
       {vendorTypeModal.open && (
-        <div className="am-modal-backdrop" onClick={(e) => { if (e.target === e.currentTarget) setVendorTypeModal({ open: false, editing: null }); }}>
-          <div className="am-modal am-modal-small">
+        <div className="am-modal-backdrop sp-modal-backdrop-anim" onClick={(e) => { if (e.target === e.currentTarget) setVendorTypeModal({ open: false, editing: null }); }}>
+          <div className="am-modal am-modal-small sp-modal-anim" role="dialog" aria-modal="true" aria-labelledby="vendorTypeModalTitle">
             <div className="am-modal-header">
-              <h2 className="am-modal-title">{vendorTypeModal.editing ? 'Edit Vendor Type' : 'Create Vendor Type'}</h2>
+              <h2 className="am-modal-title" id="vendorTypeModalTitle">{vendorTypeModal.editing ? 'Edit Vendor Type' : 'Create Vendor Type'}</h2>
               <button type="button" className="am-modal-close" aria-label="Close" onClick={() => setVendorTypeModal({ open: false, editing: null })}><i className="bi bi-x-lg" /></button>
             </div>
             <form onSubmit={submitVendorType}>
@@ -900,10 +913,10 @@ export function Assets() {
 
       {/* ============ MODAL: User Type ============ */}
       {userTypeModal.open && (
-        <div className="am-modal-backdrop" onClick={(e) => { if (e.target === e.currentTarget) setUserTypeModal({ open: false, editing: null }); }}>
-          <div className="am-modal am-modal-small">
+        <div className="am-modal-backdrop sp-modal-backdrop-anim" onClick={(e) => { if (e.target === e.currentTarget) setUserTypeModal({ open: false, editing: null }); }}>
+          <div className="am-modal am-modal-small sp-modal-anim" role="dialog" aria-modal="true" aria-labelledby="userTypeModalTitle">
             <div className="am-modal-header">
-              <h2 className="am-modal-title">{userTypeModal.editing ? 'Edit User Type' : 'Create User Type'}</h2>
+              <h2 className="am-modal-title" id="userTypeModalTitle">{userTypeModal.editing ? 'Edit User Type' : 'Create User Type'}</h2>
               <button type="button" className="am-modal-close" aria-label="Close" onClick={() => setUserTypeModal({ open: false, editing: null })}><i className="bi bi-x-lg" /></button>
             </div>
             <form onSubmit={submitUserType}>
@@ -925,10 +938,10 @@ export function Assets() {
 
       {/* ============ MODAL: Cost Model (edit-only) ============ */}
       {costModelModal.open && costModelModal.editing && (
-        <div className="am-modal-backdrop" onClick={(e) => { if (e.target === e.currentTarget) setCostModelModal({ open: false, editing: null }); }}>
-          <div className="am-modal">
+        <div className="am-modal-backdrop sp-modal-backdrop-anim" onClick={(e) => { if (e.target === e.currentTarget) setCostModelModal({ open: false, editing: null }); }}>
+          <div className="am-modal sp-modal-anim" role="dialog" aria-modal="true" aria-labelledby="costModelModalTitle">
             <div className="am-modal-header">
-              <h2 className="am-modal-title">Edit Cost Model</h2>
+              <h2 className="am-modal-title" id="costModelModalTitle">Edit Cost Model</h2>
               <button type="button" className="am-modal-close" aria-label="Close" onClick={() => setCostModelModal({ open: false, editing: null })}><i className="bi bi-x-lg" /></button>
             </div>
             <form onSubmit={submitCostModel}>
@@ -961,10 +974,10 @@ export function Assets() {
 
       {/* ============ MODAL: Vehicle Type ============ */}
       {vehicleTypeModal.open && (
-        <div className="am-modal-backdrop" onClick={(e) => { if (e.target === e.currentTarget) setVehicleTypeModal({ open: false, editing: null }); }}>
-          <div className="am-modal am-modal-small">
+        <div className="am-modal-backdrop sp-modal-backdrop-anim" onClick={(e) => { if (e.target === e.currentTarget) setVehicleTypeModal({ open: false, editing: null }); }}>
+          <div className="am-modal am-modal-small sp-modal-anim" role="dialog" aria-modal="true" aria-labelledby="vehicleTypeModalTitle">
             <div className="am-modal-header">
-              <h2 className="am-modal-title">{vehicleTypeModal.editing ? 'Edit Vehicle Type' : 'Create Vehicle Type'}</h2>
+              <h2 className="am-modal-title" id="vehicleTypeModalTitle">{vehicleTypeModal.editing ? 'Edit Vehicle Type' : 'Create Vehicle Type'}</h2>
               <button type="button" className="am-modal-close" aria-label="Close" onClick={() => setVehicleTypeModal({ open: false, editing: null })}><i className="bi bi-x-lg" /></button>
             </div>
             <form onSubmit={submitVehicleType}>
@@ -987,10 +1000,10 @@ export function Assets() {
 
       {/* ============ MODAL: Management Team Function ============ */}
       {managementTeamModal.open && (
-        <div className="am-modal-backdrop" onClick={(e) => { if (e.target === e.currentTarget) setManagementTeamModal({ open: false, editing: null }); }}>
-          <div className="am-modal am-modal-small">
+        <div className="am-modal-backdrop sp-modal-backdrop-anim" onClick={(e) => { if (e.target === e.currentTarget) setManagementTeamModal({ open: false, editing: null }); }}>
+          <div className="am-modal am-modal-small sp-modal-anim" role="dialog" aria-modal="true" aria-labelledby="managementTeamModalTitle">
             <div className="am-modal-header">
-              <h2 className="am-modal-title">{managementTeamModal.editing ? 'Edit Management Team Function' : 'Create Management Team Function'}</h2>
+              <h2 className="am-modal-title" id="managementTeamModalTitle">{managementTeamModal.editing ? 'Edit Management Team Function' : 'Create Management Team Function'}</h2>
               <button type="button" className="am-modal-close" aria-label="Close" onClick={() => setManagementTeamModal({ open: false, editing: null })}><i className="bi bi-x-lg" /></button>
             </div>
             <form onSubmit={submitManagementTeam}>
@@ -1034,10 +1047,10 @@ export function Assets() {
 
       {/* ============ MODAL: Adhoc Category ============ */}
       {adhocCategoryModal.open && (
-        <div className="am-modal-backdrop" onClick={(e) => { if (e.target === e.currentTarget) setAdhocCategoryModal({ open: false, editing: null }); }}>
-          <div className="am-modal am-modal-small">
+        <div className="am-modal-backdrop sp-modal-backdrop-anim" onClick={(e) => { if (e.target === e.currentTarget) setAdhocCategoryModal({ open: false, editing: null }); }}>
+          <div className="am-modal am-modal-small sp-modal-anim" role="dialog" aria-modal="true" aria-labelledby="adhocCategoryModalTitle">
             <div className="am-modal-header">
-              <h2 className="am-modal-title">{adhocCategoryModal.editing ? 'Edit Adhoc Category' : 'Create Adhoc Category'}</h2>
+              <h2 className="am-modal-title" id="adhocCategoryModalTitle">{adhocCategoryModal.editing ? 'Edit Adhoc Category' : 'Create Adhoc Category'}</h2>
               <button type="button" className="am-modal-close" aria-label="Close" onClick={() => setAdhocCategoryModal({ open: false, editing: null })}><i className="bi bi-x-lg" /></button>
             </div>
             <form onSubmit={submitAdhocCategory}>
@@ -1068,18 +1081,23 @@ export function Assets() {
 
       {/* ============ MODAL: Confirm Delete (shared) ============ */}
       {confirmDeleteOpen && (
-        <div className="am-modal-backdrop" onClick={(e) => { if (e.target === e.currentTarget) setPendingDelete(null); }}>
-          <div className="am-modal am-modal-small">
-            <div className="am-modal-header">
-              <h2 className="am-modal-title">{confirmDeleteTitle}</h2>
-              <button type="button" className="am-modal-close" aria-label="Close" onClick={() => setPendingDelete(null)}><i className="bi bi-x-lg" /></button>
+        <div className="am-modal-backdrop sp-modal-backdrop-anim" onClick={(e) => { if (e.target === e.currentTarget) setPendingDelete(null); }}>
+          <div
+            className="am-modal am-modal-small sp-modal-anim"
+            style={{ position: 'relative' }}
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="confirmDeleteTitle"
+          >
+            <button type="button" className="am-modal-close sp-danger-modal-close" aria-label="Close" onClick={() => setPendingDelete(null)}><i className="bi bi-x-lg" /></button>
+            <div className="sp-danger-modal-body">
+              <div className="sp-danger-modal-icon"><i className="bi bi-exclamation-triangle-fill" /></div>
+              <h5 id="confirmDeleteTitle" className="sp-danger-modal-title">{confirmDeleteTitle}</h5>
+              <p className="sp-danger-modal-text">{confirmDeleteMessage}</p>
             </div>
-            <div className="am-modal-body">
-              <p className="am-modal-desc">{confirmDeleteMessage}</p>
-            </div>
-            <div className="am-form-actions" style={{ padding: '0 1.4rem 1.4rem' }}>
+            <div className="am-form-actions sp-danger-modal-footer" style={{ padding: '0 1.4rem 1.4rem' }}>
               <button type="button" className="styled-button styled-button--outline" onClick={() => setPendingDelete(null)}>Cancel</button>
-              <button type="button" className="styled-button styled-button--danger" onClick={confirmDelete}>Delete</button>
+              <button type="button" className="styled-button styled-button--danger" onClick={confirmDelete} autoFocus>Delete</button>
             </div>
           </div>
         </div>

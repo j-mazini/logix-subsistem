@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PortalLayout } from '../../layout/PortalLayout';
+import { useModalBehavior } from '../../hooks/useModalBehavior';
 import '../../styles/legacy/invoices.css';
 
 /* =====================================================
@@ -249,6 +250,8 @@ export function Invoices() {
   function closeModal() {
     setModal(null);
   }
+
+  useModalBehavior(closeModal, modal !== null);
 
   /* ---------- VIEW 1 — Processing Workflow ---------- */
   const [workflowRecords, setWorkflowRecords] = useState<WorkflowRecord[]>(INITIAL_WORKFLOW_RECORDS);
@@ -1071,7 +1074,14 @@ export function Invoices() {
           so this shows/hides via conditional render instead of the JS plugin. */}
       {modal && (
         <>
-          <div className="modal fade show" style={{ display: 'block' }} tabIndex={-1} role="dialog" aria-modal="true">
+          <div
+            className="modal fade show sp-modal-anim"
+            style={{ display: 'block' }}
+            tabIndex={-1}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="invoiceModalTitle"
+          >
             <div className="modal-dialog modal-dialog-centered">
               <div className="modal-content">
                 <div className="modal-header">
@@ -1098,7 +1108,7 @@ export function Invoices() {
               </div>
             </div>
           </div>
-          <div className="modal-backdrop fade show" onClick={closeModal} />
+          <div className="modal-backdrop fade show sp-modal-backdrop-anim" onClick={closeModal} />
         </>
       )}
 

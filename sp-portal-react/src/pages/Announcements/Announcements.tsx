@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { PortalLayout } from '../../layout/PortalLayout';
 import { useCurrentSp } from '../../hooks/useCurrentSp';
+import { useModalBehavior } from '../../hooks/useModalBehavior';
 import { getAllAvisos, addAviso, updateAviso, deleteAviso } from '../../data/announcementsData';
 import '../../styles/legacy/announcements.css';
 
@@ -101,13 +102,7 @@ export function Announcements() {
     return () => clearTimeout(t);
   }, []);
 
-  useEffect(() => {
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') setModalOpen(false);
-    }
-    document.addEventListener('keydown', onKeyDown);
-    return () => document.removeEventListener('keydown', onKeyDown);
-  }, []);
+  useModalBehavior(() => setModalOpen(false), modalOpen);
 
   function showToast(message: string, type: ToastType = 'info') {
     const id = ++toastIdRef.current;
@@ -460,13 +455,13 @@ export function Announcements() {
 
       {modalOpen && (
         <div
-          className="va-modal-backdrop"
+          className="va-modal-backdrop sp-modal-backdrop-anim"
           id="annModalBackdrop"
           onClick={(e) => {
             if (e.target === e.currentTarget) closeModal();
           }}
         >
-          <div className="va-modal">
+          <div className="va-modal sp-modal-anim" role="dialog" aria-modal="true" aria-labelledby="annModalTitle">
             <div className="va-modal-header">
               <h2 className="va-modal-title" id="annModalTitle">
                 {modalTitle}

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useViewportAttribute } from '../../hooks/useViewportAttribute';
 import { useCurrentSp } from '../../hooks/useCurrentSp';
+import { useModalBehavior } from '../../hooks/useModalBehavior';
 import { AdminHeaderPill, AdminHeaderMenu, useAdminHeaderPill } from '../../layout/AdminHeaderUserPill';
 import { PortalLayout } from '../../layout/PortalLayout';
 import { getServiceProvider } from '../../data/dhlMockData';
@@ -132,6 +133,10 @@ export function SOPFeed() {
   });
 
   const openPost = posts.find((p) => p.id === openPostId) || null;
+
+  // The detail panel is always mounted (toggled via CSS classes/aria-hidden,
+  // not JSX conditional mount), so drive `active` off whether a post is open.
+  useModalBehavior(closePost, !!openPost);
 
   function handlePublish(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -360,8 +365,15 @@ export function SOPFeed() {
       </div>
 
       {createPortal(
-        <div className={`sop-post-detail${openPost ? ' sop-post-detail--open' : ''}`} id="sopPostDetail" aria-hidden={!openPost}>
-          <div className="sop-post-detail-backdrop" id="sopPostDetailBackdrop" onClick={closePost} />
+        <div
+          className={`sop-post-detail${openPost ? ' sop-post-detail--open sp-modal-anim' : ''}`}
+          id="sopPostDetail"
+          aria-hidden={!openPost}
+          role="dialog"
+          aria-modal={!!openPost}
+          aria-labelledby="sopPostDetailAuthor"
+        >
+          <div className={`sop-post-detail-backdrop${openPost ? ' sp-modal-backdrop-anim' : ''}`} id="sopPostDetailBackdrop" onClick={closePost} />
           <div className="sop-post-detail-inner" id="sopPostDetailContent">
             {!openPost ? (
               <p className="sop-post-detail-placeholder" id="sopPostDetailPlaceholder">
@@ -374,7 +386,7 @@ export function SOPFeed() {
                     <img src={assetPath(openPost.authorAvatar)} alt="" width={40} height={40} />
                   </div>
                   <div className="sop-post-meta">
-                    <strong className="sop-post-author">{openPost.author}</strong>
+                    <strong className="sop-post-author" id="sopPostDetailAuthor">{openPost.author}</strong>
                     <span className={`sop-post-badge sop-post-badge--${openPost.type}`}>{typeLabel(openPost.type)}</span>
                     <span className="sop-post-badge sop-post-badge--source">{sourceLabel(openPost)}</span>
                     <span className="sop-post-badge sop-post-badge--audience">{audienceLabel(openPost)}</span>

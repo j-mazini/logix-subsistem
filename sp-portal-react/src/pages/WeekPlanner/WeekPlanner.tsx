@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { PortalLayout } from '../../layout/PortalLayout';
+import { useModalBehavior } from '../../hooks/useModalBehavior';
 import '../../styles/legacy/week-planner.css';
 
 /* =====================================================
@@ -811,7 +812,7 @@ export function WeekPlanner() {
           </aside>
 
           {/* ============ Assignment edit modal ============ */}
-          <div className="wp-modal-backdrop" id="assignmentModalBackdrop" hidden={!editingRecord}>
+          <div className={`wp-modal-backdrop${editingRecord ? ' sp-modal-backdrop-anim' : ''}`} id="assignmentModalBackdrop" hidden={!editingRecord}>
             {editingRecord && (
               <AssignmentModal
                 record={editingRecord}
@@ -881,8 +882,12 @@ function AssignmentModal({
   const [status, setStatus] = useState(record.status || 'Working');
   const [notes, setNotes] = useState(record.notes || '');
 
+  // Mounted/unmounted via JSX conditional (see caller), so `active` is
+  // always true for the lifetime of this component.
+  useModalBehavior(onClose);
+
   return (
-    <div className="wp-modal">
+    <div className="wp-modal sp-modal-anim" role="dialog" aria-modal="true" aria-labelledby="assignmentModalTitle">
       <div className="wp-modal-header">
         <h2 className="wp-modal-title" id="assignmentModalTitle">
           <i className="bi bi-pencil-square me-2" />

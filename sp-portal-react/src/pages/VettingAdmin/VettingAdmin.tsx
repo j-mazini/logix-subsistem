@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { PortalLayout } from '../../layout/PortalLayout';
+import { useModalBehavior } from '../../hooks/useModalBehavior';
 import '../../styles/legacy/vetting-admin.css';
 
 /* ============================ Checklist template (ported from script.js's CHECKLIST_TEMPLATE) ============================ */
@@ -201,6 +202,10 @@ export function VettingAdmin() {
   }, []);
 
   const current = candidates.find((c) => c.id === currentId) || null;
+
+  // Escape-to-close + scroll lock — all four modal kinds share the same
+  // close handler, so one hook call covers them.
+  useModalBehavior(closeModal, modalKind !== null);
 
   const filtered = candidates.filter((c) => {
     if (stageFilter !== 'All' && c.stage !== stageFilter) return false;
@@ -516,12 +521,12 @@ export function VettingAdmin() {
         current &&
         createPortal(
           <>
-            <div className="modal fade show" style={{ display: 'block' }} tabIndex={-1} role="dialog" aria-modal="true">
+            <div className="modal fade show sp-modal-anim" style={{ display: 'block' }} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="checklistModalTitle">
               <div className="modal-dialog modal-lg modal-dialog-scrollable">
                 <div className="modal-content">
                   <div className="modal-header">
                     <div>
-                      <h5 className="modal-title">Vetting Checklist</h5>
+                      <h5 className="modal-title" id="checklistModalTitle">Vetting Checklist</h5>
                       <p className="modal-subtitle">
                         {current.name} — {current.email} · {checklistDraft.reduce((n, step) => n + step.items.filter((it) => it.complete).length, 0)}/{CHECKLIST_TOTAL_ITEMS} complete
                       </p>
@@ -579,7 +584,7 @@ export function VettingAdmin() {
                 </div>
               </div>
             </div>
-            <div className="modal-backdrop fade show" onClick={closeModal} />
+            <div className="modal-backdrop fade show sp-modal-backdrop-anim" onClick={closeModal} />
           </>,
           document.body,
         )}
@@ -589,11 +594,11 @@ export function VettingAdmin() {
         current &&
         createPortal(
           <>
-            <div className="modal fade show" style={{ display: 'block' }} tabIndex={-1} role="dialog" aria-modal="true">
+            <div className="modal fade show sp-modal-anim" style={{ display: 'block' }} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="editCandidateModalTitle">
               <div className="modal-dialog">
                 <div className="modal-content">
                   <div className="modal-header">
-                    <h5 className="modal-title">Edit Candidate</h5>
+                    <h5 className="modal-title" id="editCandidateModalTitle">Edit Candidate</h5>
                     <button type="button" className="btn-close" aria-label="Close" onClick={closeModal} />
                   </div>
                   <div className="modal-body">
@@ -645,7 +650,7 @@ export function VettingAdmin() {
                 </div>
               </div>
             </div>
-            <div className="modal-backdrop fade show" onClick={closeModal} />
+            <div className="modal-backdrop fade show sp-modal-backdrop-anim" onClick={closeModal} />
           </>,
           document.body,
         )}
@@ -655,11 +660,11 @@ export function VettingAdmin() {
         current &&
         createPortal(
           <>
-            <div className="modal fade show" style={{ display: 'block' }} tabIndex={-1} role="dialog" aria-modal="true">
+            <div className="modal fade show sp-modal-anim" style={{ display: 'block' }} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="notesModalTitle">
               <div className="modal-dialog modal-lg">
                 <div className="modal-content">
                   <div className="modal-header">
-                    <h5 className="modal-title">Notes & Comments</h5>
+                    <h5 className="modal-title" id="notesModalTitle">Notes & Comments</h5>
                     <button type="button" className="btn-close" aria-label="Close" onClick={closeModal} />
                   </div>
                   <div className="modal-body">
@@ -697,7 +702,7 @@ export function VettingAdmin() {
                 </div>
               </div>
             </div>
-            <div className="modal-backdrop fade show" onClick={closeModal} />
+            <div className="modal-backdrop fade show sp-modal-backdrop-anim" onClick={closeModal} />
           </>,
           document.body,
         )}
@@ -707,11 +712,11 @@ export function VettingAdmin() {
         current &&
         createPortal(
           <>
-            <div className="modal fade show" style={{ display: 'block' }} tabIndex={-1} role="dialog" aria-modal="true">
+            <div className="modal fade show sp-modal-anim" style={{ display: 'block' }} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="timelineModalTitle">
               <div className="modal-dialog modal-lg">
                 <div className="modal-content">
                   <div className="modal-header">
-                    <h5 className="modal-title">Activity Timeline</h5>
+                    <h5 className="modal-title" id="timelineModalTitle">Activity Timeline</h5>
                     <button type="button" className="btn-close" aria-label="Close" onClick={closeModal} />
                   </div>
                   <div className="modal-body">
@@ -742,7 +747,7 @@ export function VettingAdmin() {
                 </div>
               </div>
             </div>
-            <div className="modal-backdrop fade show" onClick={closeModal} />
+            <div className="modal-backdrop fade show sp-modal-backdrop-anim" onClick={closeModal} />
           </>,
           document.body,
         )}

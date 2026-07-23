@@ -416,6 +416,7 @@ th.dfi-total-col:hover { color: #4338ca; }
 .dom-modal-backdrop[hidden] { display: none; }
 
 .dom-modal {
+  position: relative;
   background: var(--card-bg);
   border-radius: 14px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
