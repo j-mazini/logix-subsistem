@@ -99,7 +99,7 @@ const NAV_GROUPS: NavGroup[] = [
   ] },
   { title: 'Billing', icon: 'bi-receipt', items: [
     { label: 'Invoice Processing Workflow', desc: 'Submit and track invoices', icon: 'bi-arrow-repeat', route: '/invoices' },
-    { label: 'Deductions', desc: 'Liquidation damages and adjustments', icon: 'bi-dash-circle', route: null },
+    { label: 'Deductions', desc: 'Liquidation damages and adjustments', icon: 'bi-dash-circle', route: '/deductions-disbursements-recharges' },
     { label: 'Adhoc Invoice Management', desc: 'One-off works invoicing', icon: 'bi-receipt-cutoff', route: '/adhoc-invoice-management' },
   ] },
   { title: 'Performance', icon: 'bi-graph-up', items: [
