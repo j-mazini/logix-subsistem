@@ -81,7 +81,7 @@ export const DriverLogin: React.FC = () => {
                   className="text-link"
                   onClick={() => navigate('/vetting/register')}
                 >
-                  Start registration
+                  Register here
                 </button>
               </p>
             </div>
@@ -135,7 +135,7 @@ export const DriverLogin: React.FC = () => {
                   className="text-link"
                   onClick={() => navigate('/vetting/register')}
                 >
-                  Start registration
+                  Register here
                 </button>
               </p>
             </form>
