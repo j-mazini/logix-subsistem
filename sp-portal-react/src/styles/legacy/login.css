@@ -58,7 +58,9 @@ html, body {
    and both originally defined this same class with conflicting rules —
    whichever loaded last silently won. Scoped per variant to fix that. */
 .login-page__background--login {
-  background: url('../logix-sphere-frontend-nextjs/public/logix-sphere-background.jpg') center/cover no-repeat fixed;
+  background:
+    linear-gradient(135deg, rgba(13, 36, 56, 0.85) 0%, rgba(26, 58, 82, 0.80) 50%, rgba(13, 36, 56, 0.85) 100%),
+    url('../logix-sphere-frontend-nextjs/public/logix-sphere-background.jpg') center/cover no-repeat fixed;
 }
 
 /* Partículas */
