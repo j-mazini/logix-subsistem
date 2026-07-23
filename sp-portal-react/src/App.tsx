@@ -8,6 +8,7 @@ import { Login } from './pages/Login/Login';
 import { Select } from './pages/Select/Select';
 import { LandingPage } from './pages/Landing/LandingPage';
 import { DriverLogin } from './pages/Login/DriverLogin';
+import { RegistrationFlow } from './pages/Vetting/Driver/Registration/RegistrationFlow';
 import { Announcements } from './pages/Announcements/Announcements';
 import { Assets } from './pages/Assets/Assets';
 import { Contracts } from './pages/Contracts/Contracts';
@@ -39,6 +40,7 @@ function AppRoutes() {
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<DriverLogin />} />
       <Route path="/vetting/login" element={<DriverLogin />} />
+      <Route path="/vetting/register" element={<RegistrationFlow />} />
 
       {/* Legacy Routes (kept for compatibility) */}
       <Route path="/select" element={<Select />} />
