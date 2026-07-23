@@ -10,6 +10,7 @@ import { Invoices } from './pages/Invoices/Invoices';
 import { RequestsAdmin } from './pages/RequestsAdmin/RequestsAdmin';
 import { VendorPerformance } from './pages/VendorPerformance/VendorPerformance';
 import { AdhocInvoiceManagement } from './pages/AdhocInvoiceManagement/AdhocInvoiceManagement';
+import { DeductionsDisbursementsRecharges } from './pages/DeductionsDisbursementsRecharges/DeductionsDisbursementsRecharges';
 import { Dashboard } from './pages/Dashboard/Dashboard';
 import { DailyFinancialInsights } from './pages/DailyFinancialInsights/DailyFinancialInsights';
 import { DailyOperationsManagement } from './pages/DailyOperationsManagement/DailyOperationsManagement';
@@ -46,6 +47,7 @@ function App() {
         <Route path="/requests-admin" element={<RequestsAdmin />} />
         <Route path="/vendor-performance" element={<VendorPerformance />} />
         <Route path="/adhoc-invoice-management" element={<AdhocInvoiceManagement />} />
+        <Route path="/deductions-disbursements-recharges" element={<DeductionsDisbursementsRecharges />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/daily-financial-insights" element={<DailyFinancialInsights />} />
         <Route path="/daily-operations-management" element={<DailyOperationsManagement />} />

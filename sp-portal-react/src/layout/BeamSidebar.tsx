@@ -51,7 +51,7 @@ const NAV_GROUPS: NavGroup[] = [
     label: 'Billing',
     items: [
       { icon: 'bi-receipt', label: 'Invoices', route: '/invoices' },
-      { icon: 'bi-dash-circle', label: 'Deductions' },
+      { icon: 'bi-dash-circle', label: 'Deductions', route: '/deductions-disbursements-recharges' },
       { icon: 'bi-file-plus', label: 'Ad-hoc Invoice System', route: '/adhoc-invoice-management' },
     ],
   },
