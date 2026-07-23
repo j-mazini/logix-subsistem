@@ -106,12 +106,65 @@ export function setStoredTarget(spName: string, depotName: string, routeName: st
   }
 }
 
+const ROUTE_SUBPOSTCODES_STORAGE_KEY = 'dhl_contract_route_subpostcodes';
+
+/** Get custom subpostcodes added for a specific route (in addition to extracted ones). */
+export function getStoredSubpostcodes(spName: string, depotName: string, routeName: string): string[] {
+  try {
+    const raw = localStorage.getItem(ROUTE_SUBPOSTCODES_STORAGE_KEY);
+    if (!raw) return [];
+    const data = JSON.parse(raw);
+    const sp = data[spName];
+    if (!sp) return [];
+    const val = sp[targetKey(depotName, routeName)];
+    return Array.isArray(val) ? val.map(String) : [];
+  } catch {
+    return [];
+  }
+}
+
+/** Store custom subpostcodes for a route. */
+export function setStoredSubpostcodes(spName: string, depotName: string, routeName: string, subpostcodes: string[]): void {
+  try {
+    const raw = localStorage.getItem(ROUTE_SUBPOSTCODES_STORAGE_KEY);
+    const data = raw ? JSON.parse(raw) : {};
+    if (!data[spName]) data[spName] = {};
+    const key = targetKey(depotName, routeName);
+    if (!subpostcodes || subpostcodes.length === 0) delete data[spName][key];
+    else data[spName][key] = subpostcodes.map(String).filter(Boolean);
+    localStorage.setItem(ROUTE_SUBPOSTCODES_STORAGE_KEY, JSON.stringify(data));
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Add a single subpostcode to a route (merges with existing). */
+export function addStoredSubpostcode(spName: string, depotName: string, routeName: string, subpostcode: string): void {
+  const existing = getStoredSubpostcodes(spName, depotName, routeName);
+  const normalized = String(subpostcode).trim().toUpperCase();
+  if (!normalized) return;
+  if (!existing.includes(normalized)) {
+    existing.push(normalized);
+  }
+  setStoredSubpostcodes(spName, depotName, routeName, existing);
+}
+
+/** Remove a subpostcode from a route. */
+export function removeStoredSubpostcode(spName: string, depotName: string, routeName: string, subpostcode: string): void {
+  const existing = getStoredSubpostcodes(spName, depotName, routeName);
+  const normalized = String(subpostcode).trim().toUpperCase();
+  const filtered = existing.filter(s => s !== normalized);
+  setStoredSubpostcodes(spName, depotName, routeName, filtered);
+}
+
 export interface ContractRouteView {
   name: string;
   type: string;
   target: number;
   driver: string;
   postcodes: string[];
+  subpostcodes: string[];
+  customSubpostcodes: string[];
 }
 
 export interface ContractLoopView {
@@ -148,7 +201,18 @@ export function getFilteredContracts(spName: string): ContractProviderView[] {
       const routes: ContractRouteView[] = (loop.routes || []).map((r) => {
         const stored = getStoredTarget(prov.serviceProvider, dep.name, r.name);
         const target = stored != null && !Number.isNaN(stored) ? stored : r.targetDel != null ? r.targetDel : 0;
-        return { name: r.name, type: r.type || 'Child', target, driver: r.driver || '', postcodes: r.postcodes || [] };
+        const extracted = postcodesToSubpostcodes(r.postcodes || []);
+        const custom = getStoredSubpostcodes(prov.serviceProvider, dep.name, r.name);
+        const allSubpostcodes = Array.from(new Set([...extracted, ...custom])).sort();
+        return {
+          name: r.name,
+          type: r.type || 'Child',
+          target,
+          driver: r.driver || '',
+          postcodes: r.postcodes || [],
+          subpostcodes: allSubpostcodes,
+          customSubpostcodes: custom,
+        };
       });
       const rate = typeof loop.deliveryRate === 'number' ? loop.deliveryRate : 0;
       return { name: loop.name, deliveryRate: rate, routes };
