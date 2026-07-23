@@ -67,6 +67,48 @@
       "rationale": "## Synthesis Result\n\n**CONFLICTS:** None identifiable — only Sonnet produced output. Codex (CLI unavailable) and Gemini (API key missing) generated no approach to compare.\n\n**GAPS:** \n1. **Missing inp",
       "date": "2026-07-20",
       "commit": "9d9b0d68a7cfae81dfda7f46801f772cbfde2781"
+    },
+    {
+      "phase": "design_review_ceremony",
+      "decision": "Design review completed for: Vamos migrar o /Users/jopitondo/Desktop/Subsystem/logix-subs",
+      "rationale": "## Design Review Synthesis: React Migration (SP Portal)\n\n**Source availability:** Only 1 of 3 providers responded. Codex and Gemini CLIs were not in PATH, so there is **no cross-provider validation** ",
+      "date": "2026-07-21",
+      "commit": "cea028638c618d41241443100e21b16384343557"
+    },
+    {
+      "phase": "design_review_ceremony",
+      "decision": "Design review completed for: Vamos migrar o /Users/jopitondo/Desktop/Subsystem/logix-subs",
+      "rationale": "## Synthesis — Design Review: Migração React (SP Profile + sp-portal)\n\n**⚠️ Source integrity note:** Only **1 of 3** providers responded — `codex` and `agy/gemini` CLIs were not in PATH. This is a *si",
+      "date": "2026-07-21",
+      "commit": "cea028638c618d41241443100e21b16384343557"
+    },
+    {
+      "phase": "design_review_ceremony",
+      "decision": "Design review completed for: Vamos migrar o /Users/jopitondo/Desktop/Subsystem/logix-subs",
+      "rationale": "## Design Review Synthesis — SP Profile + sp-portal/* → React Migration\n\n**Source status:** 2 of 3 providers unavailable (codex, gemini CLIs not in PATH). Only the Sonnet approach is substantive. This",
+      "date": "2026-07-21",
+      "commit": "cea028638c618d41241443100e21b16384343557"
+    },
+    {
+      "phase": "validate_tangle_results",
+      "decision": "Quality gate FAILED: 100% success rate (threshold: 75%)",
+      "rationale": "Success: 2/2, failures: 0, threshold: 75%",
+      "date": "2026-07-21",
+      "commit": "cea028638c618d41241443100e21b16384343557"
+    },
+    {
+      "phase": "validate_tangle_results",
+      "decision": "Quality gate FAILED: 50% success rate (threshold: 75%)",
+      "rationale": "Success: 2/4, failures: 2, threshold: 75%",
+      "date": "2026-07-21",
+      "commit": "cea028638c618d41241443100e21b16384343557"
+    },
+    {
+      "phase": "validate_tangle_results",
+      "decision": "Quality gate FAILED: 33% success rate (threshold: 75%)",
+      "rationale": "Success: 2/6, failures: 4, threshold: 75%",
+      "date": "2026-07-21",
+      "commit": "cea028638c618d41241443100e21b16384343557"
     }
   ],
   "blockers": [],
@@ -80,10 +122,10 @@
     "phases_completed": 0,
     "total_execution_time_minutes": 0,
     "provider_usage": {
-      "codex": 2,
+      "codex": 3,
       "gemini": 0,
       "perplexity": 0,
-      "claude": 6
+      "claude": 14
     }
   }
 }

@@ -1,0 +1,10 @@
+{
+  "buildCommand": "cd sp-portal-react && npm ci && npm run build",
+  "outputDirectory": "sp-portal-react/dist",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

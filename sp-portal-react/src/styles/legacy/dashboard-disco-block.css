@@ -1,0 +1,1358 @@
+/* Estilos do bloco DISCO (#spDiscoBlock). */
+/* ========== DISCO (#spDiscoBlock) ========== */
+#spDiscoBlock {
+  background: #fff;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 1.25rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  overflow: hidden;
+}
+
+#spDiscoBlock .dashboard-block-header {
+  background: rgba(59, 130, 246, 0.04);
+  border-bottom: 1px solid rgba(59, 130, 246, 0.12);
+  padding: 1.25rem 1.5rem;
+}
+
+/* Stops + switch: juntos, bem próximos */
+#spDiscoBlock .disco-header-stops-and-switch {
+  flex-shrink: 0;
+  gap: 0.5rem;
+}
+
+/* KPI Total Stops no header do bloco Disco */
+#spDiscoBlock .disco-header-stops-kpi {
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  min-width: 4.5rem;
+  flex-shrink: 0;
+}
+
+#spDiscoBlock .disco-header-stops-kpi:hover {
+  background: rgba(59, 130, 246, 0.12);
+}
+
+#spDiscoBlock .disco-header-stops-value {
+  color: #1e40af !important;
+}
+
+/* AM/PM switch vertical: estilo lâmpada (um “interruptor” na vertical, AM em cima / PM em baixo) */
+#spDiscoBlock .disco-am-pm-switch {
+  background: rgba(59, 130, 246, 0.06);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+}
+
+/* Modificador vertical: coluna, aspecto de interruptor de lâmpada */
+#spDiscoBlock .disco-am-pm-switch--vertical {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  padding: 0.2rem;
+  border-radius: 0.5rem;
+  min-width: 2.5rem;
+  background: linear-gradient(180deg, rgba(59, 130, 246, 0.12) 0%, rgba(59, 130, 246, 0.06) 100%);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+#spDiscoBlock .disco-am-pm-switch--vertical .disco-gravura {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 0.4rem 0.5rem;
+  border: none;
+  border-radius: 0.35rem;
+  cursor: pointer;
+  transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+  background: rgba(0, 0, 0, 0.04);
+  color: #64748b;
+  min-height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#spDiscoBlock .disco-am-pm-switch--vertical .disco-gravura-am {
+  color: #15803d;
+  border-radius: 0.35rem 0.35rem 0 0;
+}
+
+#spDiscoBlock .disco-am-pm-switch--vertical .disco-gravura-pm {
+  color: #a16207;
+  border-radius: 0 0 0.35rem 0.35rem;
+}
+
+#spDiscoBlock .disco-am-pm-switch--vertical .disco-gravura:hover {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+#spDiscoBlock .disco-am-pm-switch--vertical .disco-gravura.disco-gravura-on {
+  background: rgba(59, 130, 246, 0.2);
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.5), 0 1px 3px rgba(0, 0, 0, 0.12);
+  color: #0f172a;
+}
+
+#spDiscoBlock .disco-am-pm-switch--vertical .disco-gravura-am.disco-gravura-on {
+  background: linear-gradient(180deg, rgba(34, 197, 94, 0.45) 0%, rgba(34, 197, 94, 0.25) 100%);
+  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.5), 0 1px 3px rgba(0, 0, 0, 0.1);
+  color: #14532d;
+}
+
+#spDiscoBlock .disco-am-pm-switch--vertical .disco-gravura-pm.disco-gravura-on {
+  background: linear-gradient(180deg, rgba(234, 179, 8, 0.35) 0%, rgba(234, 179, 8, 0.2) 100%);
+  box-shadow: 0 0 0 1px rgba(234, 179, 8, 0.5), 0 1px 3px rgba(0, 0, 0, 0.1);
+  color: #713f12;
+}
+
+#spDiscoBlock .dashboard-block-title {
+  color: #1e40af !important;
+  font-weight: 700;
+  font-size: 1.15rem;
+}
+
+#spDiscoBlock .dashboard-block-title i {
+  color: #3b82f6;
+}
+
+#spDiscoBlock .dashboard-block-desc {
+  color: #64748b !important;
+  font-size: 0.875rem;
+}
+
+#spDiscoBlock .dashboard-block-content {
+  padding: 1.25rem 1.5rem;
+  overflow-y: auto;
+  /* altura máxima para activar scroll interno e permitir sticky do summary */
+  max-height: 80vh;
+}
+
+/* KPI SPR dentro do bloco Disco */
+#spDiscoBlock .disco-kpi-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+  background: rgba(248, 250, 252, 0.5);
+}
+
+#spDiscoBlock .disco-kpi-strip .dashboard-kpi-card {
+  margin: 0;
+}
+
+/* Bento grid: KPIs Disco */
+#spDiscoBlock .disco-bento-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 0.5rem;
+  grid-template-areas:
+    "spr pre12 pre12"
+    "asr asr dsr";
+}
+
+#spDiscoBlock .disco-bento-cell {
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 0.6rem;
+  padding: 0.65rem 0.85rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  min-height: 80px;
+  overflow: hidden;
+}
+
+#spDiscoBlock .disco-bento-spr {
+  grid-area: spr;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0.5rem 0.5rem;
+  min-height: 0;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.04) 100%);
+  border-color: rgba(59, 130, 246, 0.2);
+}
+
+#spDiscoBlock .disco-bento-pre12 {
+  grid-area: pre12;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(5, 150, 105, 0.03) 100%);
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+#spDiscoBlock .disco-bento-asr {
+  grid-area: asr;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.06) 0%, rgba(217, 119, 6, 0.02) 100%);
+  border-color: rgba(245, 158, 11, 0.2);
+}
+
+#spDiscoBlock .disco-bento-dsr {
+  grid-area: dsr;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.06) 0%, rgba(124, 58, 237, 0.02) 100%);
+  border-color: rgba(139, 92, 246, 0.2);
+}
+
+
+#spDiscoBlock .disco-kpi-label {
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+  margin-bottom: 0.15rem;
+}
+
+#spDiscoBlock .disco-bento-spr .disco-kpi-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1e40af;
+}
+#spDiscoBlock .disco-bento-spr .disco-kpi-label {
+  font-size: 0.58rem;
+  margin-bottom: 0.1rem;
+}
+#spDiscoBlock .disco-bento-spr .disco-kpi-sublabel {
+  font-size: 0.6rem;
+}
+
+#spDiscoBlock .disco-kpi-sublabel {
+  font-size: 0.7rem;
+  color: #94a3b8;
+}
+
+#spDiscoBlock .disco-kpi-list {
+  max-height: 140px;
+  overflow-y: auto;
+  font-size: 0.8rem;
+  color: #334155;
+}
+
+#spDiscoBlock .disco-list-item {
+  padding: 0.35rem 0;
+  border-bottom: 1px solid #f1f5f9;
+  line-height: 1.3;
+}
+
+#spDiscoBlock .disco-list-item:last-child { border-bottom: none; }
+
+#spDiscoBlock .disco-postcode {
+  font-weight: 600;
+  color: #1e40af;
+  margin-right: 0.35rem;
+}
+
+#spDiscoBlock .disco-list-empty,
+#spDiscoBlock .disco-list-more {
+  color: #94a3b8;
+  font-size: 0.8rem;
+  margin: 0.5rem 0 0;
+}
+
+@media (max-width: 768px) {
+  #spDiscoBlock .disco-bento-grid {
+    grid-template-columns: 1fr;
+    grid-template-areas: "spr" "pre12" "asr" "dsr";
+  }
+}
+
+/* Filtros: chips Depot e Loop (no topo do bloco) */
+#spDiscoBlock .disco-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+#spDiscoBlock .disco-filters--top {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+  background: rgba(248, 250, 252, 0.6);
+}
+
+#spDiscoBlock .disco-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+#spDiscoBlock .disco-filter-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+#spDiscoBlock .disco-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+#spDiscoBlock .disco-chip {
+  padding: 0.4rem 0.75rem;
+  border-radius: 2rem;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  font-size: 0.85rem;
+  color: #475569;
+  cursor: pointer;
+  /* Performance: animações GPU-accelerated */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+}
+
+#spDiscoBlock .disco-chip:hover {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.3);
+  color: #1e40af;
+  transform: translateZ(0) scale(1.05);
+}
+
+#spDiscoBlock .disco-chip:active {
+  transform: translateZ(0) scale(0.98);
+}
+
+#spDiscoBlock .disco-chip.active {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  border-color: transparent;
+  color: #fff;
+  transform: translateZ(0);
+}
+
+/* Resumo geral (nenhum depot selecionado) – card */
+#spDiscoBlock .disco-summary-block {
+  margin-bottom: 1.25rem;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+#spDiscoBlock .disco-summary-block.hidden {
+  display: none;
+}
+
+#spDiscoBlock .disco-summary-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+/* Estado filtrado: destaque visual no card */
+#spDiscoBlock .disco-summary-card--filtered {
+  border-color: rgba(59, 130, 246, 0.45);
+  box-shadow: 0 2px 12px rgba(59, 130, 246, 0.14);
+}
+
+#spDiscoBlock .disco-summary-card-header {
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.04) 100%);
+  border-bottom: 1px solid rgba(59, 130, 246, 0.15);
+  padding: 0.65rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+#spDiscoBlock .disco-summary-card--filtered .disco-summary-card-header {
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.18) 0%, rgba(59, 130, 246, 0.06) 100%);
+}
+
+#spDiscoBlock .disco-summary-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1e40af;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* Contentor dos badges de contexto do filtro */
+#spDiscoBlock .disco-summary-filter-ctx {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+
+/* Badge: Depot activo */
+#spDiscoBlock .disco-summary-filter-badge {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  border-radius: 99px;
+  background: #1d4ed8;
+  color: #fff;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+}
+
+/* Badge: Loop activo */
+#spDiscoBlock .disco-summary-filter-badge--loop {
+  background: #0891b2;
+}
+
+#spDiscoBlock .disco-summary-card-body {
+  padding: 1rem 1.25rem;
+}
+
+/* Linha que agrupa KPIs e card N&D lado a lado com a mesma altura */
+#spDiscoBlock .disco-summary-kpi-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 0.75rem;
+}
+
+#spDiscoBlock .disco-summary-grid {
+  flex: 2 1 260px;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 0.75rem;
+}
+
+/* N&D: ocupa ~1/3 do espaço total, preenche até ao fim do bloco */
+#spDiscoBlock .disco-summary-kpi-row .sp-network-delay-box.disco-summary-network-delays {
+  flex: 1 1 220px;
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+}
+
+@media (max-width: 480px) {
+  #spDiscoBlock .disco-summary-kpi-row .sp-network-delay-box.disco-summary-network-delays {
+    flex-basis: 100%;
+  }
+}
+
+#spDiscoBlock .disco-summary-item {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  /* Performance: animações GPU-accelerated */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+#spDiscoBlock .disco-summary-item:hover {
+  border-color: rgba(59, 130, 246, 0.35);
+  background: #eff6ff;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+}
+
+#spDiscoBlock .disco-summary-item--kpi {
+  border-color: rgba(59, 130, 246, 0.25);
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+}
+
+#spDiscoBlock .disco-summary-item--kpi .disco-summary-value {
+  color: #1d4ed8;
+  font-size: 1.15rem;
+}
+
+#spDiscoBlock .disco-summary-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1e40af;
+}
+
+#spDiscoBlock .disco-summary-label {
+  font-size: 0.7rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* Resumo por loop (depot selecionado, loop não) – usa .disco-route-blocks e .disco-route-block como as rotas */
+#spDiscoBlock .disco-loop-summary-block {
+  margin-bottom: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#spDiscoBlock .disco-loop-summary-block .disco-route-blocks {
+  justify-content: center;
+}
+
+#spDiscoBlock .disco-loop-summary-block.hidden {
+  display: none;
+}
+
+#spDiscoBlock .disco-loop-summary-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e40af;
+  margin-bottom: 0.75rem;
+}
+
+/* Blocos por depot (Depot = Todos): um card por depot com Pre-12, ASR e DSR */
+#spDiscoBlock .disco-depot-blocks-wrap {
+  margin-top: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+#spDiscoBlock .disco-depot-blocks-wrap.hidden {
+  display: none;
+}
+
+/* Centralizar blocos por depot */
+#spDiscoBlock .disco-depot-blocks-wrap {
+  display: flex;
+  justify-content: center;
+}
+
+#spDiscoBlock .disco-depot-blocks-wrap .disco-route-blocks {
+  justify-content: center;
+}
+
+#spDiscoBlock .disco-depot-blocks {
+  /* Usa o mesmo grid que .disco-route-blocks */
+}
+
+/* Grid de blocos das rotas: 3 por linha a partir de 768px; 1 coluna em mobile */
+#spDiscoBlock .disco-route-blocks {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.5rem;
+  align-items: stretch;
+  /* Performance: isolamento de layout */
+  contain: layout style;
+}
+
+@media (min-width: 768px) {
+  #spDiscoBlock .disco-route-blocks {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.55rem;
+  }
+}
+
+/* Bloco da rota: altura fixa para scroll interno funcionar (evita colapso do flex) */
+#spDiscoBlock .disco-route-block {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.65rem;
+  display: flex;
+  flex-direction: column;
+  height: clamp(300px, 68vh, 380px);
+  min-height: 0;
+  overflow: hidden;
+  /* Performance: animações GPU-accelerated */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  contain: layout style;
+}
+
+#spDiscoBlock .disco-route-block:hover {
+  border-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+  background: rgba(248, 250, 252, 0.98);
+}
+
+#spDiscoBlock .disco-route-block-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.3rem;
+  margin-bottom: 0.35rem;
+  flex-shrink: 0;
+}
+
+#spDiscoBlock .disco-route-block-name {
+  font-weight: 700;
+  color: #1e40af;
+  font-size: 0.85rem;
+}
+
+/* Destaque da quantidade de stops nos cards (badge em evidência) */
+#spDiscoBlock .disco-route-block-stops {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #fff;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  padding: 0.35rem 0.65rem;
+  border-radius: 0.5rem;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.35);
+  min-width: 3.5rem;
+  text-align: center;
+}
+
+#spDiscoBlock .disco-route-block-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-bottom: 0.3rem;
+  flex-shrink: 0;
+}
+
+#spDiscoBlock .disco-route-block-badge {
+  font-size: 0.7rem;
+  color: #475569;
+  background: rgba(59, 130, 246, 0.08);
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.35rem;
+}
+
+#spDiscoBlock .disco-route-block-hint {
+  font-size: 0.65rem;
+  color: #94a3b8;
+  display: block;
+}
+
+/* Área Pre-12 / ASR / DSR: ocupa o resto do card e faz scroll */
+#spDiscoBlock .disco-route-block .disco-route-detail-content {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #e2e8f0;
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  contain: layout style;
+}
+
+#spDiscoBlock .disco-route-block .disco-route-detail-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+#spDiscoBlock .disco-route-block .disco-route-detail-content::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+#spDiscoBlock .disco-route-block .disco-route-detail-content::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+#spDiscoBlock .disco-route-block .disco-route-detail-content::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+#spDiscoBlock .disco-route-block .disco-route-detail-lists {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0;
+  min-height: 0;
+  will-change: transform;
+}
+
+#spDiscoBlock .disco-route-block .disco-route-detail-list-block {
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background: #fff;
+  width: 100%;
+  position: relative;
+  min-height: 0;
+  flex-shrink: 0;
+  contain: layout style;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Quando não há entregas na categoria: só o header, sem corpo (evita linhas em branco) */
+#spDiscoBlock .disco-route-block .disco-route-detail-list-block--header-only {
+  padding-bottom: 0;
+  min-height: 0;
+}
+
+#spDiscoBlock .disco-route-block .disco-route-detail-list-block--header-only .disco-route-detail-list-title {
+  margin-bottom: 0;
+  border-bottom: none;
+}
+
+#spDiscoBlock .disco-route-block .disco-route-detail-list-block--header-only::after {
+  display: none;
+}
+
+#spDiscoBlock .disco-route-block .disco-route-detail-list-block:hover {
+  border-color: rgba(59, 130, 246, 0.35);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+}
+
+/* Fade out no final da lista para indicar scroll */
+#spDiscoBlock .disco-route-block .disco-route-detail-list-block::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 20px;
+  background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.9));
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+/* Mostrar fade quando há scroll disponível */
+#spDiscoBlock .disco-route-block .disco-route-detail-list-block:hover::after {
+  opacity: 1;
+}
+
+#spDiscoBlock .disco-route-block .disco-route-detail-list-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #1e40af;
+  padding: 0.4rem 0.6rem;
+  margin: 0;
+  background: linear-gradient(90deg, #93c5fd 0%, #bfdbfe 100%);
+  border-bottom: 1px solid rgba(30, 64, 175, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  /* Performance: uso de GPU para transições */
+  backface-visibility: hidden;
+}
+
+#spDiscoBlock .disco-route-block .disco-route-detail-list-title::before {
+  content: "●";
+  font-size: 0.55rem;
+  opacity: 0.7;
+}
+
+#spDiscoBlock .disco-route-block .disco-route-detail-address-list {
+  max-height: 120px;
+  min-height: 0;
+  overflow-y: auto;
+  font-size: 0.75rem;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+#spDiscoBlock .disco-route-block .disco-route-detail-address-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+#spDiscoBlock .disco-route-block .disco-route-detail-address-list::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+#spDiscoBlock .disco-route-block .disco-route-detail-address-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+  transition: background 0.2s ease;
+}
+
+#spDiscoBlock .disco-route-block .disco-route-detail-address-list::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+#spDiscoBlock .disco-route-block .disco-route-address-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.7rem;
+  table-layout: fixed;
+  /* Performance: isolamento de layout */
+  contain: layout;
+}
+
+#spDiscoBlock .disco-route-block .disco-route-address-table td {
+  padding: 0.35rem 0.5rem;
+  border-bottom: 1px solid rgba(30, 64, 175, 0.1);
+  vertical-align: middle;
+  line-height: 1.3;
+}
+
+#spDiscoBlock .disco-route-block .disco-route-address-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+#spDiscoBlock .disco-route-block .disco-route-address-table tbody tr:nth-child(odd) {
+  background: #dbeafe;
+}
+
+#spDiscoBlock .disco-route-block .disco-route-address-table tbody tr:nth-child(even) {
+  background: #eff6ff;
+}
+
+#spDiscoBlock .disco-route-block .disco-addr-postcode {
+  font-weight: 700;
+  color: #1e40af;
+  white-space: nowrap;
+  width: 95px;
+  font-size: 0.7rem;
+  background: rgba(59, 130, 246, 0.04);
+  border-right: 2px solid rgba(59, 130, 246, 0.15);
+}
+
+#spDiscoBlock .disco-route-block .disco-addr-address {
+  color: #334155;
+  font-size: 0.7rem;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#spDiscoBlock .disco-route-block .disco-list-empty {
+  padding: 0.4rem 0.5rem;
+  margin: 0;
+  font-size: 0.7rem;
+  color: #64748b;
+  text-align: center;
+  font-style: italic;
+}
+
+/* Indicador de scroll disponível */
+#spDiscoBlock .disco-route-block .disco-route-detail-address-list::after {
+  content: '';
+  display: block;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.3), transparent);
+  margin-top: 0.25rem;
+}
+
+/* Modal: lista completa da rota – otimizada para performance */
+.disco-route-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  /* Performance: isolamento e GPU acceleration */
+  contain: layout style paint;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  animation: discoModalFadeIn 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.disco-route-modal.hidden {
+  display: none;
+}
+
+@keyframes discoModalFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.disco-route-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  cursor: pointer;
+  /* Performance: GPU acceleration para blur */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: opacity;
+  transition: background 0.3s ease, opacity 0.3s ease;
+}
+
+.disco-route-modal-backdrop:hover {
+  background: rgba(15, 23, 42, 0.7);
+}
+
+.disco-route-modal-dialog {
+  position: relative;
+  width: 100%;
+  max-width: 920px;
+  max-height: 88vh;
+  overflow: hidden;
+  border-radius: 1rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  background: #fff;
+  /* Performance: animação GPU-accelerated */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  contain: layout style paint;
+  animation: discoModalSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes discoModalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.disco-route-modal-content {
+  max-height: 88vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* Performance: scroll otimizado */
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  contain: layout style;
+  overscroll-behavior: contain;
+}
+
+.disco-route-modal-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.disco-route-modal-content::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.disco-route-modal-content::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.disco-route-modal-content::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.disco-route-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.35rem;
+  background: linear-gradient(135deg, #1e40af 0%, #2563eb 50%, #3b82f6 100%);
+  border-bottom: none;
+  flex-shrink: 0;
+}
+
+.disco-route-modal-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.disco-route-modal-close {
+  flex-shrink: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  cursor: pointer;
+  border-radius: 0.5rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.disco-route-modal-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.disco-route-modal-close:active {
+  transform: scale(0.98);
+}
+
+.disco-route-modal-body {
+  padding: 1.25rem 1.5rem 1.5rem;
+}
+
+.disco-route-modal-body .disco-route-detail-header,
+.disco-route-modal-body .disco-route-detail-table-wrap,
+.disco-route-modal-body .disco-route-detail-lists {
+  margin-top: 0;
+}
+
+/* Detalhe da rota na modal – barra azul, tabela, listas endereços */
+.disco-route-detail-content {
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background: #fafbfc;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.disco-route-modal-body .disco-route-detail-content {
+  margin-top: 0;
+}
+
+/* Barra azul no topo (tipo dropdown) */
+.disco-route-detail-content .disco-route-detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(180deg, #93c5fd 0%, #7dd3fc 100%);
+  border-bottom: 1px dotted rgba(30, 64, 175, 0.25);
+  color: #1e3a8a;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.disco-route-detail-content .disco-route-detail-header-arrow {
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+/* Tabela: cabeçalho azul escuro branco, linhas alternadas, linha TOTAL azul */
+.disco-route-detail-content .disco-route-detail-table-wrap {
+  overflow-x: auto;
+}
+
+.disco-route-detail-content .disco-route-detail-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.disco-route-detail-content .disco-route-detail-table th,
+.disco-route-detail-content .disco-route-detail-table td {
+  padding: 0.55rem 0.75rem;
+  border: 1px dotted rgba(30, 64, 175, 0.2);
+}
+
+.disco-route-detail-content .disco-route-detail-table thead tr {
+  background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+  color: #fff;
+}
+
+.disco-route-detail-content .disco-route-detail-table thead th {
+  font-weight: 700;
+  text-align: left;
+}
+
+.disco-route-detail-content .disco-route-detail-table thead th:nth-child(n+2) {
+  text-align: right;
+}
+
+.disco-route-detail-content .disco-route-detail-table tbody tr:nth-child(odd) {
+  background: #dbeafe;
+}
+
+.disco-route-detail-content .disco-route-detail-table tbody tr:nth-child(even) {
+  background: #eff6ff;
+}
+
+.disco-route-detail-content .disco-route-detail-table td.disco-td-num {
+  text-align: right;
+}
+
+.disco-route-detail-content .disco-route-detail-table tfoot tr {
+  background: linear-gradient(180deg, #1d4ed8 0%, #1e40af 100%);
+  color: #fff;
+  font-weight: 700;
+}
+
+.disco-route-detail-content .disco-route-detail-table tfoot td:nth-child(n+2) {
+  text-align: right;
+}
+
+/* Listas Pre-12 / ASR / DSR: layout horizontal empilhado verticalmente */
+.disco-route-detail-content .disco-route-detail-lists {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1rem 1rem 1.25rem;
+  /* Performance: isolamento de layout */
+  contain: layout style paint;
+  will-change: transform;
+}
+
+.disco-route-detail-content .disco-route-detail-list-block {
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background: #fff;
+  width: 100%;
+  /* Performance: isolamento de conteúdo */
+  contain: layout style;
+  /* Transição suave para interações */
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.disco-route-detail-content .disco-route-detail-list-block:hover {
+  border-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+}
+
+.disco-route-detail-content .disco-route-detail-list-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #1e40af;
+  padding: 0.65rem 0.85rem;
+  margin: 0;
+  background: linear-gradient(90deg, #93c5fd 0%, #bfdbfe 100%);
+  border-bottom: 1px solid rgba(30, 64, 175, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  /* Performance: uso de GPU para transições */
+  backface-visibility: hidden;
+}
+
+.disco-route-detail-content .disco-route-detail-list-title::before {
+  content: "●";
+  font-size: 0.7rem;
+  opacity: 0.7;
+}
+
+.disco-route-detail-content .disco-route-detail-address-list {
+  max-height: 280px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* Performance: scroll otimizado */
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+.disco-route-detail-content .disco-route-detail-address-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.disco-route-detail-content .disco-route-detail-address-list::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.disco-route-detail-content .disco-route-detail-address-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.disco-route-detail-content .disco-route-detail-address-list::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.disco-route-detail-content .disco-route-address-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  table-layout: fixed;
+  /* Performance: isolamento de layout */
+  contain: layout;
+}
+
+.disco-route-detail-content .disco-route-address-table td {
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid rgba(30, 64, 175, 0.1);
+  vertical-align: middle;
+  line-height: 1.5;
+}
+
+.disco-route-detail-content .disco-route-address-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.disco-route-detail-content .disco-route-address-table tbody tr:nth-child(odd) {
+  background: #dbeafe;
+}
+
+.disco-route-detail-content .disco-route-address-table tbody tr:nth-child(even) {
+  background: #eff6ff;
+}
+
+.disco-route-detail-content .disco-route-address-table .disco-addr-postcode {
+  font-weight: 700;
+  color: #1e40af;
+  white-space: nowrap;
+  width: 140px;
+  font-size: 0.85rem;
+  background: rgba(59, 130, 246, 0.05);
+  border-right: 3px solid rgba(59, 130, 246, 0.2);
+}
+
+.disco-route-detail-content .disco-route-address-table .disco-addr-address {
+  color: #334155;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.disco-route-detail-content .disco-route-detail-address-list .disco-list-empty {
+  padding: 0.6rem 0.65rem;
+  margin: 0;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+#spDiscoBlock .disco-loop-card {
+  background: #fff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+#spDiscoBlock .disco-loop-card .card-header {
+  background: rgba(59, 130, 246, 0.06) !important;
+  border-bottom: 1px solid #e2e8f0;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+#spDiscoBlock .disco-loop-card .badge.bg-primary {
+  background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+  font-size: 0.75rem;
+}
+
+#spDiscoBlock .disco-loop-routes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+#spDiscoBlock .disco-loop-route-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.35rem 0.5rem;
+  background: rgba(0,0,0,0.02);
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+}
+
+#spDiscoBlock .disco-loop-route-name {
+  font-weight: 500;
+  color: #334155;
+}
+
+#spDiscoBlock .disco-loop-route-count {
+  font-weight: 700;
+  color: #1e40af;
+  min-width: 2rem;
+  text-align: right;
+}
+
+#spDiscoBlock .disco-no-data.hidden {
+  display: none !important;
+}
+
+/* Disco: blocos por loop alinhados e do mesmo tamanho */
+#spDiscoBlock .disco-loop-blocks {
+  align-items: stretch;
+}
+
+#spDiscoBlock .disco-loop-blocks > [class*="col-"] {
+  display: flex;
+}
+
+#spDiscoBlock .disco-loop-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 200px;
+  width: 100%;
+}
+
+#spDiscoBlock .disco-loop-card .card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ======================================================================
+   ADDRESS LIST — estilo global para qualquer contexto da página
+   (aplica-se onde os escopos específicos não cobrem)
+   ====================================================================== */
+.disco-route-detail-address-list {
+  max-height: 160px;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  font-size: 0.75rem;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(59, 130, 246, 0.12);
+  background: #f8faff;
+}
+
+.disco-route-detail-address-list::-webkit-scrollbar {
+  width: 5px;
+}
+.disco-route-detail-address-list::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+.disco-route-detail-address-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+  transition: background 0.2s ease;
+}
+.disco-route-detail-address-list::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.disco-route-address-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.7rem;
+  table-layout: fixed;
+}
+
+.disco-route-address-table td {
+  padding: 0.32rem 0.5rem;
+  border-bottom: 1px solid rgba(30, 64, 175, 0.08);
+  vertical-align: middle;
+  line-height: 1.3;
+}
+
+.disco-route-address-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.disco-route-address-table tbody tr:nth-child(odd) {
+  background: #dbeafe;
+}
+
+.disco-route-address-table tbody tr:nth-child(even) {
+  background: #eff6ff;
+}
+
+.disco-addr-postcode {
+  font-weight: 700;
+  color: #1e40af;
+  white-space: nowrap;
+  width: 90px;
+  font-size: 0.68rem;
+  background: rgba(59, 130, 246, 0.05);
+  border-right: 2px solid rgba(59, 130, 246, 0.15);
+}
+
+.disco-addr-address {
+  color: #334155;
+  font-size: 0.68rem;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.disco-route-detail-address-list .disco-list-empty {
+  padding: 0.5rem;
+  margin: 0;
+  font-size: 0.7rem;
+  color: #64748b;
+  text-align: center;
+  font-style: italic;
+}

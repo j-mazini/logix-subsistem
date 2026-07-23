@@ -1,0 +1,316 @@
+.accessSelectPage {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  background: linear-gradient(160deg, #f8fafc 0%, #f1f5f9 30%, #e8f4fc 60%, #f1f5f9 100%);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+  position: relative;
+  overflow: hidden;
+}
+
+.accessSelectPage::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 100% 60% at 50% -30%, rgba(99, 102, 241, 0.15), transparent),
+    radial-gradient(ellipse 70% 50% at 100% 40%, rgba(14, 165, 233, 0.1), transparent),
+    radial-gradient(ellipse 70% 50% at 0% 100%, rgba(139, 92, 246, 0.08), transparent);
+}
+
+.header {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  margin-bottom: 3.5rem;
+  max-width: 600px;
+}
+
+.logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  border-radius: 14px;
+  color: white;
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 8px 32px rgba(99, 102, 241, 0.3);
+}
+
+.header h1 {
+  font-size: 2.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+  margin: 0 0 0.75rem 0;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.header p {
+  font-size: 1.1rem;
+  color: #64748b;
+  font-weight: 500;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 2rem;
+  max-width: 900px;
+  width: 100%;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  padding: 2.5rem;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 18px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  height: 100%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.card--dhl::before {
+  background: linear-gradient(135deg, rgba(212, 5, 17, 0.03) 0%, rgba(212, 5, 17, 0.02) 100%);
+}
+
+.card:hover {
+  transform: translateY(-8px);
+  border-color: rgba(255, 255, 255, 1);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.12);
+}
+
+.card:hover::before {
+  opacity: 1;
+}
+
+.card:focus-visible {
+  outline: 3px solid #6366f1;
+  outline-offset: 2px;
+}
+
+.icon {
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  margin-bottom: 1.5rem;
+  border-radius: 16px;
+  position: relative;
+  z-index: 1;
+  transition: all 0.4s ease;
+}
+
+.iconDhl {
+  background: linear-gradient(135deg, #fef08a 0%, #fde047 100%);
+  color: #d40511;
+  box-shadow: 0 8px 24px rgba(250, 204, 21, 0.3);
+}
+
+.iconSp {
+  background: linear-gradient(135deg, #e0e7ff 0%, #dbeafe 100%);
+  color: #6366f1;
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.2);
+}
+
+.card:hover .icon {
+  transform: scale(1.1) rotate(4deg);
+}
+
+.cardHeader {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+
+.card h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.375rem 0.875rem;
+  border-radius: 8px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+.badgeDhl {
+  background: #fff4f4;
+  color: #d40511;
+}
+
+.badgeSp {
+  background: #f8f8ff;
+  color: #6366f1;
+}
+
+.description {
+  position: relative;
+  z-index: 1;
+  font-size: 0.95rem;
+  color: #64748b;
+  margin: 0 0 1.5rem 0;
+  line-height: 1.6;
+}
+
+.features {
+  position: relative;
+  z-index: 1;
+  list-style: none;
+  margin: 0 0 2rem 0;
+  padding: 0;
+  flex-grow: 1;
+}
+
+.features li {
+  display: flex;
+  align-items: center;
+  font-size: 0.9rem;
+  color: #64748b;
+  margin-bottom: 0.6rem;
+  padding-left: 0;
+}
+
+.features li::before {
+  content: "✓";
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-right: 0.7rem;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.card:nth-child(1) .features li::before {
+  background: rgba(212, 5, 17, 0.1);
+  color: #d40511;
+}
+
+.card:nth-child(2) .features li::before {
+  background: rgba(99, 102, 241, 0.1);
+  color: #6366f1;
+}
+
+.cta {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem 1.75rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+  text-transform: capitalize;
+}
+
+.ctaDhl {
+  background: linear-gradient(135deg, #d40511 0%, #b30310 100%);
+  color: white;
+  box-shadow: 0 4px 16px rgba(212, 5, 17, 0.25);
+}
+
+.ctaDhl:hover {
+  box-shadow: 0 8px 24px rgba(212, 5, 17, 0.35);
+  transform: translateX(4px);
+}
+
+.ctaSp {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  color: white;
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.25);
+}
+
+.ctaSp:hover {
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.35);
+  transform: translateX(4px);
+}
+
+@media (max-width: 768px) {
+  .accessSelectPage {
+    padding: 2rem 1rem;
+  }
+
+  .header {
+    margin-bottom: 2.5rem;
+  }
+
+  .header h1 {
+    font-size: 1.875rem;
+  }
+
+  .header p {
+    font-size: 0.95rem;
+  }
+
+  .card {
+    padding: 1.75rem;
+  }
+
+  .grid {
+    gap: 1.5rem;
+  }
+
+  .cardHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .badge {
+    align-self: flex-start;
+  }
+}

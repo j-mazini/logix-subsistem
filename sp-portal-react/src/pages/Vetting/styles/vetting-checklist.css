@@ -1,0 +1,372 @@
+.vetting-checklist-page {
+  min-height: 100vh;
+  background: #f8f9fa;
+  padding: 2rem 0;
+}
+
+.vetting-checklist-header {
+  text-align: center;
+  margin-bottom: 3rem;
+  padding: 0 2rem;
+}
+
+.vetting-checklist-header h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 0.5rem 0;
+}
+
+.vetting-checklist-subtitle {
+  font-size: 1.1rem;
+  color: #666;
+  margin: 0;
+}
+
+.vetting-empty {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #999;
+  font-size: 1.1rem;
+}
+
+.vetting-checklist-main {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 2rem;
+  padding: 0 2rem;
+}
+
+.vetting-checklist-panel {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.vetting-panel-header {
+  padding: 2rem;
+  border-bottom: 1px solid #e0e0e0;
+  background: linear-gradient(135deg, #f5f7fa 0%, #fff 100%);
+}
+
+.vetting-panel-label {
+  font-size: 0.875rem;
+  color: #999;
+  margin: 0 0 0.5rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+.vetting-panel-name {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 0.5rem 0;
+}
+
+.vetting-panel-meta {
+  font-size: 0.95rem;
+  color: #666;
+  margin: 0;
+}
+
+.vetting-checklist-steps {
+  padding: 2rem;
+}
+
+.vetting-step-card {
+  margin-bottom: 1.5rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.vetting-step-card:hover {
+  border-color: #0066cc;
+  box-shadow: 0 2px 8px rgba(0, 102, 204, 0.1);
+}
+
+.vetting-step-header {
+  width: 100%;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #f5f7fa 0%, #fff 100%);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  transition: background 0.2s ease;
+}
+
+.vetting-step-header:hover {
+  background: linear-gradient(135deg, #eff2f7 0%, #f8f9fa 100%);
+}
+
+.vetting-step-info {
+  flex: 1;
+  text-align: left;
+}
+
+.vetting-step-number {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #0066cc;
+  margin-bottom: 0.25rem;
+}
+
+.vetting-step-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0.25rem 0;
+}
+
+.vetting-step-subtitle {
+  font-size: 0.9rem;
+  color: #999;
+  margin: 0;
+}
+
+.vetting-step-progress {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-width: fit-content;
+}
+
+.vetting-step-status {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #666;
+}
+
+.vetting-step-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  background: #e8f0ff;
+  color: #0066cc;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.vetting-step-body {
+  padding: 2rem;
+  background: white;
+  border-top: 1px solid #e0e0e0;
+}
+
+.vetting-items-list {
+  margin-bottom: 2rem;
+}
+
+.vetting-item {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 6px;
+  margin-bottom: 0.75rem;
+  transition: background 0.2s ease;
+}
+
+.vetting-item:hover {
+  background: #f8f9fa;
+}
+
+.vetting-item-checkbox {
+  margin-top: 4px;
+  cursor: pointer;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.vetting-item-label {
+  flex: 1;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.vetting-item-title {
+  font-weight: 600;
+  color: #1a1a1a;
+  display: block;
+}
+
+.vetting-item-detail {
+  font-size: 0.9rem;
+  color: #999;
+  margin: 0;
+}
+
+.vetting-item-required {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #cc0000;
+  margin-top: 0.5rem;
+}
+
+.vetting-step-actions {
+  border-top: 1px solid #e0e0e0;
+  padding-top: 1.5rem;
+}
+
+.vetting-step-approved,
+.vetting-step-rejected {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.vetting-step-approved {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.vetting-step-rejected {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.vetting-approved-check,
+.vetting-rejected-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.vetting-step-buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+.vetting-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.vetting-btn-approve {
+  background: #0066cc;
+  color: white;
+  flex: 1;
+}
+
+.vetting-btn-approve:hover {
+  background: #0052a3;
+}
+
+.vetting-btn-reject {
+  background: #f5f5f5;
+  color: #1a1a1a;
+  border: 1px solid #e0e0e0;
+  flex: 1;
+}
+
+.vetting-btn-reject:hover {
+  background: #efefef;
+}
+
+.vetting-checklist-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  height: fit-content;
+  position: sticky;
+  top: 2rem;
+}
+
+.vetting-candidates-list {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.vetting-candidates-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 1rem 0;
+}
+
+.vetting-candidates-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.vetting-candidates-list li {
+  margin-bottom: 0.5rem;
+}
+
+.vetting-candidate-btn {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  background: white;
+  color: #1a1a1a;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.vetting-candidate-btn:hover {
+  border-color: #0066cc;
+  background: #f8faff;
+}
+
+.vetting-candidate-btn.active {
+  background: #0066cc;
+  color: white;
+  border-color: #0066cc;
+}
+
+@media (max-width: 768px) {
+  .vetting-checklist-main {
+    grid-template-columns: 1fr;
+    padding: 0 1rem;
+  }
+
+  .vetting-checklist-sidebar {
+    display: none;
+  }
+
+  .vetting-step-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .vetting-step-progress {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .vetting-step-buttons {
+    flex-direction: column;
+  }
+}
