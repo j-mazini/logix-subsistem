@@ -13,6 +13,7 @@ interface AuditLogEntry {
   // Debate gate condition: Add browser fingerprint as weak audit trail
   browserFingerprint: string;
   userAgent: string;
+  clientIP: string;
 }
 
 // Get browser fingerprint (non-identifying, for audit only)
@@ -21,7 +22,7 @@ function getBrowserFingerprint(): string {
     navigator.language,
     new Date().getTimezoneOffset(),
     navigator.hardwareConcurrency || 'unknown',
-    navigator.deviceMemory || 'unknown',
+    (navigator as Navigator & { deviceMemory?: number }).deviceMemory || 'unknown',
     screen.width + 'x' + screen.height,
     screen.colorDepth,
   ];
@@ -71,6 +72,7 @@ export class AuditLogger {
       details: details?.extra,
       browserFingerprint: getBrowserFingerprint(),
       userAgent: navigator.userAgent,
+      clientIP: this.clientIP ?? 'UNKNOWN',
     };
 
     this.logs.push(entry);

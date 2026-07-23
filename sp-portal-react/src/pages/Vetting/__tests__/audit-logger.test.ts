@@ -1,7 +1,6 @@
 // Tests for Audit Logger
 // Verifies debate gate condition: logs include browser fingerprint + IP address
 
-import { describe, it, expect, beforeEach } from '@jest/globals';
 
 describe('AuditLogger', () => {
   beforeEach(() => {

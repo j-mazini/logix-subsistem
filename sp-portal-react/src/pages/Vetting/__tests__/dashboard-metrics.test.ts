@@ -1,7 +1,6 @@
 // Tests for Dashboard metrics calculation
 // Verifies MVP dashboard correctly calculates: progress, stage distribution, officer workload
 
-import { describe, it, expect } from '@jest/globals';
 
 interface CandidateRecord {
   id: string;

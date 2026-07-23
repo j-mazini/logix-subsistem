@@ -60,7 +60,7 @@ export function VettingDashboard({ candidates = [] }: VettingDashboardProps) {
 
   // Calculate overall progress
   const overallProgress = useMemo(() => {
-    if (candidates.length === 0) return 0;
+    if (candidates.length === 0) return '0.0';
     const totalChecks = candidates.reduce((sum, c) => {
       const checkCount = (c.checks || []).filter(Boolean).length;
       const maxChecks = (c.checks || []).length || 50;
@@ -86,7 +86,7 @@ export function VettingDashboard({ candidates = [] }: VettingDashboardProps) {
   }, [candidates]);
 
   return (
-    <PortalLayout>
+    <PortalLayout mainClassName="vetting-container container-fluid px-3 px-lg-4 py-4" title="Vetting Dashboard">
       <div className="vetting-dashboard">
         <header className="dashboard-header">
           <h1>Vetting Dashboard</h1>

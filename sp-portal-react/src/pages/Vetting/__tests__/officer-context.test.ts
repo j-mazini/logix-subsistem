@@ -1,7 +1,6 @@
 // Tests for Officer Context (no-auth model)
 // Verifies debate gate condition: officer selection uses sessionStorage
 
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 
 describe('OfficerContext', () => {
   const VETTING_OFFICERS = [
