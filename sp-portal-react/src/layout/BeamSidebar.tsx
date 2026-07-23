@@ -20,7 +20,6 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/contracts', icon: 'bi-file-earmark-text', label: 'Contracts', route: '/contracts' },
   { href: '/sop-feed', icon: 'bi-journal-bookmark-fill', label: 'SOP Feed', route: '/sop-feed' },
   { href: '/route-balance', icon: 'bi-shuffle', label: 'Route Balance', route: '/route-balance' },
-  { href: '/route-balancer', icon: 'bi-diagram-3-fill', label: 'Route Balancer', route: '/route-balancer' },
   { href: '/daily-operations-management', icon: 'bi-clock-history', label: 'Daily Operations Management', route: '/daily-operations-management' },
   { href: '/week-planner', icon: 'bi-calendar-week', label: 'Week Planner', route: '/week-planner' },
   { href: '/assets', icon: 'bi-phone', label: 'Assets', route: '/assets' },

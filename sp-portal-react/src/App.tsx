@@ -16,7 +16,6 @@ import { DailyOperationsManagement } from './pages/DailyOperationsManagement/Dai
 import { DailyOperationsReports } from './pages/DailyOperationsReports/DailyOperationsReports';
 import { Drivers } from './pages/Drivers/Drivers';
 import { RouteBalance } from './pages/RouteBalance/RouteBalance';
-import { RouteBalancer } from './pages/RouteBalancer/RouteBalancer';
 import { SOPFeed } from './pages/SOPFeed/SOPFeed';
 import { Vehicles } from './pages/Vehicles/Vehicles';
 import { VettingAdmin } from './pages/VettingAdmin/VettingAdmin';
@@ -49,7 +48,6 @@ function App() {
         <Route path="/daily-operations-reports" element={<DailyOperationsReports />} />
         <Route path="/drivers" element={<Drivers />} />
         <Route path="/route-balance" element={<RouteBalance />} />
-        <Route path="/route-balancer" element={<RouteBalancer />} />
         <Route path="/sop-feed" element={<SOPFeed />} />
         <Route path="/vehicles" element={<Vehicles />} />
         <Route path="/vetting-admin" element={<VettingAdmin />} />
