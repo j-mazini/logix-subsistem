@@ -241,10 +241,18 @@ const AvailableDrivers: React.FC<AvailableDriversProps> = ({
                             onDragStart={(e) => handleVendorDragStart(e, driver, dateStr)}
                             onDragEnd={handleDragEnd}
                             className="wp-driver-card"
+                            title={`${driver.fullName} • ${driver.vehicle || driver.plate || 'N/A'}`}
                           >
-                            <div className="wp-driver-name">{driver.fullName}</div>
-                            <div className="wp-driver-vehicle">
-                              {driver.vehicle || driver.plate || 'N/A'}
+                            <div className="wp-driver-icon">
+                              <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M18 18.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM9 18.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM20 8H4c-1.1 0-2 .9-2 2v8h2v3c0 .6.4 1 1 1h1c.6 0 1-.4 1-1v-3h12v3c0 .6.4 1 1 1h1c.6 0 1-.4 1-1v-3h2v-8c0-1.1-.9-2-2-2z"/>
+                              </svg>
+                            </div>
+                            <div className="wp-driver-info">
+                              <div className="wp-driver-name">{driver.fullName}</div>
+                              <div className="wp-driver-vehicle">
+                                {driver.vehicle || driver.plate || 'N/A'}
+                              </div>
                             </div>
                           </div>
                         ))}
@@ -260,10 +268,18 @@ const AvailableDrivers: React.FC<AvailableDriversProps> = ({
                                 onDragStart={(e) => handleVendorDragStart(e, driver, dateStr)}
                                 onDragEnd={handleDragEnd}
                                 className="wp-driver-card wp-spare"
+                                title={`${driver.fullName} • ${driver.vehicle || driver.plate || 'N/A'} (Spare)`}
                               >
-                                <div className="wp-driver-name">{driver.fullName}</div>
-                                <div className="wp-driver-vehicle">
-                                  {driver.vehicle || driver.plate || 'N/A'}
+                                <div className="wp-driver-icon">
+                                  <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                  </svg>
+                                </div>
+                                <div className="wp-driver-info">
+                                  <div className="wp-driver-name">{driver.fullName}</div>
+                                  <div className="wp-driver-vehicle">
+                                    {driver.vehicle || driver.plate || 'N/A'}
+                                  </div>
                                 </div>
                               </div>
                             ))}
