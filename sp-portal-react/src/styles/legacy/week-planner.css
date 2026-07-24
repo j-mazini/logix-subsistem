@@ -703,7 +703,7 @@ body.wp-page {
   }
 }
 
-/* Drawer Overlay - Semi-transparent, non-blocking */
+/* Drawer Overlay - Non-blocking, only clickable area is below drawer */
 .wp-drivers-overlay {
   position: fixed;
   top: 0;
@@ -714,11 +714,6 @@ body.wp-page {
   background: rgba(0, 0, 0, 0);
   pointer-events: none;
   transition: background-color var(--transition-base);
-}
-
-.wp-drivers-overlay.wp-open {
-  background: rgba(0, 0, 0, 0.15);
-  pointer-events: auto;
 }
 
 /* Drawer Panel - Fixed at top, slides down */
@@ -737,11 +732,13 @@ body.wp-page {
   overflow: hidden;
   transition: max-height var(--transition-base), border-color var(--transition-base);
   backdrop-filter: blur(12px);
+  pointer-events: none;
 }
 
 .wp-drivers-drawer.wp-open {
-  max-height: 60vh;
+  max-height: 35vh;
   border-bottom-color: var(--border-color);
+  pointer-events: auto;
 }
 
 /* Drawer Header */
@@ -938,7 +935,7 @@ body.wp-page {
 
 @media (max-width: 640px) {
   .wp-drivers-drawer.wp-open {
-    max-height: 55vh;
+    max-height: 30vh;
   }
 
   .wp-drawer-content {
