@@ -332,6 +332,13 @@ export function WeekPlanner() {
     setRenderVersion((n) => n + 1);
   }
 
+  function generateWeek() {
+    const key = formatDateISO(currentWeekStart);
+    weekCache.current.delete(key);
+    showToast('Week regenerated with new assignments.', 'success');
+    rerender();
+  }
+
   /* records are mutated in-place (see file header note); renderVersion is the dependency-free trigger to re-read them */
   void renderVersion;
 
@@ -554,8 +561,15 @@ export function WeekPlanner() {
           </span>
         </div>
 
-        <div className="dfi-actions" style={{ visibility: 'hidden' }}>
-          {/* Placeholder to maintain layout - button is now floating */}
+        <div className="dfi-actions">
+          <button
+            type="button"
+            className="styled-button styled-button--outline"
+            onClick={generateWeek}
+            title="Regenerate week with new random assignments"
+          >
+            <i className="bi bi-arrow-repeat" /> Generate Week
+          </button>
         </div>
       </div>
 
