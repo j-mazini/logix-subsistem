@@ -640,6 +640,68 @@ body.invoices-page {
 .icon-btn--history { background: rgba(100, 116, 139, 0.12); color: var(--text-secondary); }
 .icon-btn--history:hover { background: rgba(100, 116, 139, 0.24); }
 
+.icon-btn--ready { background: rgba(22, 163, 74, 0.12); color: var(--success-green); }
+.icon-btn--ready:hover { background: rgba(22, 163, 74, 0.24); }
+
+/* Approval Modal Styles */
+.approval-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.summary-section {
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border-radius: var(--radius);
+  border-left: 3px solid var(--primary-blue);
+}
+
+.summary-section h6 {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.summary-section .detail-grid {
+  gap: 0.75rem;
+}
+
+.summary-section .detail-item {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+}
+
+.summary-section .detail-label {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin: 0;
+  font-weight: 600;
+}
+
+.summary-section .detail-value {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.summary-section textarea.form-control {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 0.75rem;
+  font-size: 0.88rem;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 80px;
+}
+
+.summary-section textarea.form-control:focus {
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  outline: none;
+}
+
 /* Instalment progress (View 2) */
 .progress-wrap {
   display: flex;

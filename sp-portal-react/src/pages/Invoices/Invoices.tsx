@@ -18,6 +18,14 @@ interface StatusAuditLog {
   notes?: string;
 }
 
+interface ApprovalLog {
+  id: string;
+  recordId: string;
+  approvedBy: string;
+  approvedAt: string;
+  notes?: string;
+}
+
 interface WorkflowRecord {
   id: string;
   sub: string;
@@ -26,6 +34,16 @@ interface WorkflowRecord {
   status: WorkflowStatus;
   lastStatusChange: string;
   auditTrail: StatusAuditLog[];
+  approvalLog?: ApprovalLog;
+  requiresApproval: boolean;
+}
+
+interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  role: 'viewer' | 'processor' | 'approver' | 'admin';
+  canApprove: boolean;
 }
 
 interface DeductionRecord {
@@ -123,7 +141,9 @@ const createWorkflowRecord = (
       triggeredBy: 'system',
       notes: 'Initial record created'
     }
-  ]
+  ],
+  requiresApproval: status === 'Pending Verification',
+  approvalLog: undefined
 });
 
 const INITIAL_WORKFLOW_RECORDS: WorkflowRecord[] = [
@@ -204,6 +224,17 @@ const deductionRecords: DeductionRecord[] = [
 
 const DED_TOTAL_STOPS = 2840; // month stop count for avg-per-stop metric
 const DED_PAGE_SIZE = 25;
+
+/* =====================================================
+   MOCK USER DATA (for role-based access control)
+   ===================================================== */
+const CURRENT_USER: UserProfile = {
+  id: 'user-001',
+  name: 'Finance Manager',
+  email: 'finance@example.com',
+  role: 'approver',
+  canApprove: true
+};
 
 const INITIAL_SCHEDULE_RECORDS: ScheduleRecord[] = [
   { id: 'INV-2025001', sub: 'Charlotte Wilson', period: 'Dec 2024', payDate: '2025-04-17', run: 1, amount: 2219.95, deduction: 0, dedReason: '', status: 'Scheduled', hold: false },
@@ -295,7 +326,8 @@ function transitionRecord(
   record: WorkflowRecord,
   newStatus: WorkflowStatus,
   triggeredBy: 'system' | 'manual' = 'manual',
-  notes?: string
+  notes?: string,
+  approvedBy?: string
 ): TransitionResult {
   if (!canTransitionTo(record.status, newStatus)) {
     return {
@@ -314,11 +346,23 @@ function transitionRecord(
     notes
   };
 
+  const approvalLog = approvedBy && newStatus === 'Ready to Invoice'
+    ? {
+        id: `approval-${record.id}-${Date.now()}`,
+        recordId: record.id,
+        approvedBy,
+        approvedAt: getCurrentTimestamp(),
+        notes: notes || 'Invoice approved'
+      }
+    : record.approvalLog;
+
   const updatedRecord: WorkflowRecord = {
     ...record,
     status: newStatus,
     lastStatusChange: getCurrentTimestamp(),
-    auditTrail: [...record.auditTrail, auditEntry]
+    auditTrail: [...record.auditTrail, auditEntry],
+    approvalLog,
+    requiresApproval: newStatus === 'Pending Verification'
   };
 
   return {
@@ -332,6 +376,8 @@ export function Invoices() {
   const [loadingHidden, setLoadingHidden] = useState(false);
   const [activeView, setActiveView] = useState<ViewName>('workflow');
   const [modal, setModal] = useState<{ title: string; fields: DetailField[] } | null>(null);
+  const [approvalModal, setApprovalModal] = useState<{ record: WorkflowRecord } | null>(null);
+  const [approvalNotes, setApprovalNotes] = useState('');
   const [toastMsg, setToastMsg] = useState('');
   const [toastVisible, setToastVisible] = useState(false);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -363,7 +409,44 @@ export function Invoices() {
     setModal(null);
   }
 
+  function closeApprovalModal() {
+    setApprovalModal(null);
+    setApprovalNotes('');
+  }
+
+  function openApprovalModal(record: WorkflowRecord) {
+    if (!CURRENT_USER.canApprove) {
+      toast('You do not have permission to approve invoices.');
+      return;
+    }
+    setApprovalModal({ record });
+    setApprovalNotes('');
+  }
+
+  function handleApproveInvoice() {
+    if (!approvalModal?.record) return;
+
+    const result = transitionRecord(
+      approvalModal.record,
+      'Ready to Invoice',
+      'manual',
+      `Approved by ${CURRENT_USER.name}${approvalNotes ? ': ' + approvalNotes : ''}`,
+      CURRENT_USER.name
+    );
+
+    if (result.success && result.record) {
+      setWorkflowRecords((prev) =>
+        prev.map((r) => (r.id === approvalModal.record.id ? result.record! : r))
+      );
+      toast(`✓ ${approvalModal.record.id} approved and moved to Ready to Invoice.`);
+      closeApprovalModal();
+    } else {
+      toast(`✗ ${result.error}`);
+    }
+  }
+
   useModalBehavior(closeModal, modal !== null);
+  useModalBehavior(closeApprovalModal, approvalModal !== null);
 
   /* ---------- VIEW 1 — Processing Workflow ---------- */
   const [workflowRecords, setWorkflowRecords] = useState<WorkflowRecord[]>(INITIAL_WORKFLOW_RECORDS);
@@ -536,6 +619,15 @@ export function Invoices() {
           <>
             {view}
             {audit}
+            {CURRENT_USER.canApprove && (
+              <button
+                className="icon-btn icon-btn--ready"
+                title="Open for approval"
+                onClick={() => openApprovalModal(rec)}
+              >
+                <i className="bi bi-check-circle" />
+              </button>
+            )}
             <button className="icon-btn icon-btn--move" title="Mark ready for invoicing" onClick={() => handleWorkflowAction(rec, 'ready')}>
               <i className="bi bi-arrow-right" />
             </button>
@@ -1310,6 +1402,102 @@ export function Invoices() {
           </div>
         </div>
       </section>
+
+      {/* Invoice Approval Modal */}
+      {approvalModal && (
+        <>
+          <div
+            className="modal fade show sp-modal-anim"
+            style={{ display: 'block' }}
+            tabIndex={-1}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="approvalModalTitle"
+          >
+            <div className="modal-dialog modal-dialog-centered">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title" id="approvalModalTitle">
+                    📋 Review & Approve Invoice
+                  </h5>
+                  <button type="button" className="btn-close" aria-label="Close" onClick={closeApprovalModal} />
+                </div>
+                <div className="modal-body">
+                  <div className="approval-summary">
+                    <div className="summary-section">
+                      <h6>Invoice Details</h6>
+                      <div className="detail-grid">
+                        <div className="detail-item">
+                          <p className="detail-label">Invoice ID</p>
+                          <p className="detail-value fw-semibold">{approvalModal.record.id}</p>
+                        </div>
+                        <div className="detail-item">
+                          <p className="detail-label">Subcontractor</p>
+                          <p className="detail-value">{approvalModal.record.sub}</p>
+                        </div>
+                        <div className="detail-item">
+                          <p className="detail-label">Period</p>
+                          <p className="detail-value">{approvalModal.record.period}</p>
+                        </div>
+                        <div className="detail-item">
+                          <p className="detail-label">Amount</p>
+                          <p className="detail-value fw-semibold text-accent">{gbp(approvalModal.record.amount)}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="summary-section">
+                      <h6>Approval Information</h6>
+                      <div className="detail-grid">
+                        <div className="detail-item">
+                          <p className="detail-label">Approver</p>
+                          <p className="detail-value">{CURRENT_USER.name}</p>
+                        </div>
+                        <div className="detail-item">
+                          <p className="detail-label">Approval Time</p>
+                          <p className="detail-value">{fmtDateTime(getCurrentTimestamp())}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="summary-section">
+                      <label htmlFor="approvalNotes" className="form-label">
+                        Approval Notes (Optional)
+                      </label>
+                      <textarea
+                        id="approvalNotes"
+                        className="form-control"
+                        rows={3}
+                        placeholder="Add any notes or comments about this approval..."
+                        value={approvalNotes}
+                        onChange={(e) => setApprovalNotes(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button
+                    type="button"
+                    className="styled-button styled-button--outline"
+                    onClick={closeApprovalModal}
+                  >
+                    Reject
+                  </button>
+                  <button
+                    type="button"
+                    className="styled-button styled-button--success"
+                    onClick={handleApproveInvoice}
+                  >
+                    <i className="bi bi-check-circle" />
+                    Approve Invoice
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="modal-backdrop fade show sp-modal-backdrop-anim" onClick={closeApprovalModal} />
+        </>
+      )}
 
       {/* Invoice detail modal — manual port of Bootstrap's JS-driven .modal;
           only Bootstrap's CSS is loaded in this SPA (no bootstrap.bundle.min.js),
