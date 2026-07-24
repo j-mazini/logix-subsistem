@@ -556,6 +556,21 @@ export function WeekPlanner() {
             {showWeekends ? 'Show weekends' : 'Weekdays only'}
           </span>
         </div>
+
+        <div className="dfi-actions">
+          <button
+            type="button"
+            className="styled-button styled-button--outline"
+            onClick={() => {
+              const element = document.querySelector('.available-drivers-container');
+              if (element) {
+                element.scrollIntoView({ behavior: 'smooth' });
+              }
+            }}
+          >
+            <i className="bi bi-people" /> Available Drivers <span className="wp-badge-count">{availableVendors.length}</span>
+          </button>
+        </div>
       </div>
 
       {/* ============ COLOR LEGEND ============ */}
