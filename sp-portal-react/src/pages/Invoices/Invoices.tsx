@@ -6,7 +6,17 @@ import '../../styles/legacy/invoices.css';
 /* =====================================================
    TYPES
    ===================================================== */
-type WorkflowStatus = 'Current Period' | 'Pending Verification' | 'Ready for Invoicing' | 'Invoiced';
+type WorkflowStatus = 'Current Period' | 'Pending Verification' | 'Ready to Invoice' | 'Invoiced' | 'Scheduled for Payment' | 'Invoice History';
+
+interface StatusAuditLog {
+  id: string;
+  recordId: string;
+  previousStatus: WorkflowStatus | null;
+  newStatus: WorkflowStatus;
+  timestamp: string;
+  triggeredBy: 'system' | 'manual';
+  notes?: string;
+}
 
 interface WorkflowRecord {
   id: string;
@@ -14,6 +24,8 @@ interface WorkflowRecord {
   period: string;
   amount: number;
   status: WorkflowStatus;
+  lastStatusChange: string;
+  auditTrail: StatusAuditLog[];
 }
 
 interface DeductionRecord {
@@ -60,43 +72,91 @@ const fmtDate = (iso: string) => {
   return `${d}/${m}/${y}`;
 };
 
+const fmtDateTime = (iso: string) => {
+  const date = new Date(iso);
+  return date.toLocaleString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
+
+const getCurrentTimestamp = () => new Date().toISOString();
+
+const VALID_TRANSITIONS: Record<WorkflowStatus, WorkflowStatus[]> = {
+  'Current Period': ['Pending Verification'],
+  'Pending Verification': ['Ready to Invoice', 'Current Period'],
+  'Ready to Invoice': ['Invoiced', 'Pending Verification'],
+  'Invoiced': ['Scheduled for Payment'],
+  'Scheduled for Payment': ['Invoice History'],
+  'Invoice History': [],
+};
+
 /* =====================================================
    MOCK DATA (verbatim port of sp-portal/invoices/script.js —
    fully self-contained, does not read window.DHL_MOCK_DATA)
    ===================================================== */
-const WORKFLOW_STATUSES: WorkflowStatus[] = ['Current Period', 'Pending Verification', 'Ready for Invoicing', 'Invoiced'];
+const WORKFLOW_STATUSES: WorkflowStatus[] = ['Current Period', 'Pending Verification', 'Ready to Invoice', 'Invoiced', 'Scheduled for Payment', 'Invoice History'];
+
+const createWorkflowRecord = (
+  id: string,
+  sub: string,
+  period: string,
+  amount: number,
+  status: WorkflowStatus
+): WorkflowRecord => ({
+  id,
+  sub,
+  period,
+  amount,
+  status,
+  lastStatusChange: getCurrentTimestamp(),
+  auditTrail: [
+    {
+      id: `audit-${id}-001`,
+      recordId: id,
+      previousStatus: null,
+      newStatus: status,
+      timestamp: getCurrentTimestamp(),
+      triggeredBy: 'system',
+      notes: 'Initial record created'
+    }
+  ]
+});
 
 const INITIAL_WORKFLOW_RECORDS: WorkflowRecord[] = [
-  { id: 'REC-2025001', sub: 'Benjamin Harris', period: 'Mar 2025', amount: 2489.2, status: 'Pending Verification' },
-  { id: 'REC-2025002', sub: 'James Anderson', period: 'Jan 2025', amount: 929.1, status: 'Pending Verification' },
-  { id: 'REC-2025003', sub: 'Charlotte Walker', period: 'Mar 2025', amount: 643.41, status: 'Ready for Invoicing' },
-  { id: 'REC-2025004', sub: 'Alexander Lee', period: 'Jan 2025', amount: 2546.77, status: 'Ready for Invoicing' },
-  { id: 'REC-2025005', sub: 'Emma Wilson', period: 'Dec 2024', amount: 1670.29, status: 'Invoiced' },
-  { id: 'REC-2025006', sub: 'Maria Garcia', period: 'Mar 2025', amount: 1798.1, status: 'Current Period' },
-  { id: 'REC-2025007', sub: 'Maria Garcia', period: 'Dec 2024', amount: 1324.02, status: 'Pending Verification' },
-  { id: 'REC-2025008', sub: 'Olivia Taylor', period: 'Mar 2025', amount: 2102.02, status: 'Invoiced' },
-  { id: 'REC-2025009', sub: 'Amelia Lewis', period: 'Jan 2025', amount: 2697.66, status: 'Current Period' },
-  { id: 'REC-2025010', sub: 'Sarah Brown', period: 'Mar 2025', amount: 3011.18, status: 'Pending Verification' },
-  { id: 'REC-2025011', sub: 'Daniel Clark', period: 'Feb 2025', amount: 1877.45, status: 'Pending Verification' },
-  { id: 'REC-2025012', sub: 'Michael Davis', period: 'Mar 2025', amount: 2214.9, status: 'Current Period' },
-  { id: 'REC-2025013', sub: 'Isabella Jackson', period: 'Feb 2025', amount: 1490.33, status: 'Pending Verification' },
-  { id: 'REC-2025014', sub: 'Matthew Moore', period: 'Jan 2025', amount: 2955.08, status: 'Ready for Invoicing' },
-  { id: 'REC-2025015', sub: 'John Smith', period: 'Mar 2025', amount: 1102.76, status: 'Pending Verification' },
-  { id: 'REC-2025016', sub: 'Sophia Martinez', period: 'Feb 2025', amount: 2381.55, status: 'Pending Verification' },
-  { id: 'REC-2025017', sub: 'William Taylor', period: 'Mar 2025', amount: 1755.6, status: 'Ready for Invoicing' },
-  { id: 'REC-2025018', sub: 'Emma Wilson', period: 'Jan 2025', amount: 1288.14, status: 'Pending Verification' },
-  { id: 'REC-2025019', sub: 'Alexander Wilson', period: 'Feb 2025', amount: 2620.31, status: 'Ready for Invoicing' },
-  { id: 'REC-2025020', sub: 'Olivia Martinez', period: 'Mar 2025', amount: 1932.87, status: 'Pending Verification' },
-  { id: 'REC-2025021', sub: 'Sarah Walker', period: 'Feb 2025', amount: 3106.44, status: 'Pending Verification' },
-  { id: 'REC-2025022', sub: 'David Harris', period: 'Mar 2025', amount: 1667.92, status: 'Current Period' },
-  { id: 'REC-2025023', sub: 'Isabella Lee', period: 'Jan 2025', amount: 2450.18, status: 'Pending Verification' },
-  { id: 'REC-2025024', sub: 'Benjamin Garcia', period: 'Feb 2025', amount: 1518.73, status: 'Current Period' },
-  { id: 'REC-2025025', sub: 'Charlotte Wilson', period: 'Mar 2025', amount: 2033.5, status: 'Ready for Invoicing' },
-  { id: 'REC-2025026', sub: 'Daniel Wilson', period: 'Dec 2024', amount: 985.62, status: 'Invoiced' },
-  { id: 'REC-2025027', sub: 'Mia Rodriguez', period: 'Jan 2025', amount: 1529.47, status: 'Current Period' },
-  { id: 'REC-2025028', sub: 'Amelia Lewis', period: 'Feb 2025', amount: 1442.86, status: 'Current Period' },
-  { id: 'REC-2025029', sub: 'Robert Johnson', period: 'Mar 2025', amount: 2240.2, status: 'Pending Verification' },
-  { id: 'REC-2025030', sub: 'Amelia Lewis', period: 'Jan 2025', amount: 573.77, status: 'Invoiced' },
+  createWorkflowRecord('REC-2025001', 'Benjamin Harris', 'Mar 2025', 2489.2, 'Pending Verification'),
+  createWorkflowRecord('REC-2025002', 'James Anderson', 'Jan 2025', 929.1, 'Pending Verification'),
+  createWorkflowRecord('REC-2025003', 'Charlotte Walker', 'Mar 2025', 643.41, 'Ready to Invoice'),
+  createWorkflowRecord('REC-2025004', 'Alexander Lee', 'Jan 2025', 2546.77, 'Ready to Invoice'),
+  createWorkflowRecord('REC-2025005', 'Emma Wilson', 'Dec 2024', 1670.29, 'Invoiced'),
+  createWorkflowRecord('REC-2025006', 'Maria Garcia', 'Mar 2025', 1798.1, 'Current Period'),
+  createWorkflowRecord('REC-2025007', 'Maria Garcia', 'Dec 2024', 1324.02, 'Pending Verification'),
+  createWorkflowRecord('REC-2025008', 'Olivia Taylor', 'Mar 2025', 2102.02, 'Invoiced'),
+  createWorkflowRecord('REC-2025009', 'Amelia Lewis', 'Jan 2025', 2697.66, 'Current Period'),
+  createWorkflowRecord('REC-2025010', 'Sarah Brown', 'Mar 2025', 3011.18, 'Pending Verification'),
+  createWorkflowRecord('REC-2025011', 'Daniel Clark', 'Feb 2025', 1877.45, 'Pending Verification'),
+  createWorkflowRecord('REC-2025012', 'Michael Davis', 'Mar 2025', 2214.9, 'Current Period'),
+  createWorkflowRecord('REC-2025013', 'Isabella Jackson', 'Feb 2025', 1490.33, 'Pending Verification'),
+  createWorkflowRecord('REC-2025014', 'Matthew Moore', 'Jan 2025', 2955.08, 'Ready to Invoice'),
+  createWorkflowRecord('REC-2025015', 'John Smith', 'Mar 2025', 1102.76, 'Pending Verification'),
+  createWorkflowRecord('REC-2025016', 'Sophia Martinez', 'Feb 2025', 2381.55, 'Pending Verification'),
+  createWorkflowRecord('REC-2025017', 'William Taylor', 'Mar 2025', 1755.6, 'Ready to Invoice'),
+  createWorkflowRecord('REC-2025018', 'Emma Wilson', 'Jan 2025', 1288.14, 'Pending Verification'),
+  createWorkflowRecord('REC-2025019', 'Alexander Wilson', 'Feb 2025', 2620.31, 'Ready to Invoice'),
+  createWorkflowRecord('REC-2025020', 'Olivia Martinez', 'Mar 2025', 1932.87, 'Pending Verification'),
+  createWorkflowRecord('REC-2025021', 'Sarah Walker', 'Feb 2025', 3106.44, 'Pending Verification'),
+  createWorkflowRecord('REC-2025022', 'David Harris', 'Mar 2025', 1667.92, 'Current Period'),
+  createWorkflowRecord('REC-2025023', 'Isabella Lee', 'Jan 2025', 2450.18, 'Pending Verification'),
+  createWorkflowRecord('REC-2025024', 'Benjamin Garcia', 'Feb 2025', 1518.73, 'Current Period'),
+  createWorkflowRecord('REC-2025025', 'Charlotte Wilson', 'Mar 2025', 2033.5, 'Ready to Invoice'),
+  createWorkflowRecord('REC-2025026', 'Daniel Wilson', 'Dec 2024', 985.62, 'Invoiced'),
+  createWorkflowRecord('REC-2025027', 'Mia Rodriguez', 'Jan 2025', 1529.47, 'Current Period'),
+  createWorkflowRecord('REC-2025028', 'Amelia Lewis', 'Feb 2025', 1442.86, 'Current Period'),
+  createWorkflowRecord('REC-2025029', 'Robert Johnson', 'Mar 2025', 2240.2, 'Pending Verification'),
+  createWorkflowRecord('REC-2025030', 'Amelia Lewis', 'Jan 2025', 573.77, 'Invoiced'),
 ];
 
 const DED_CATEGORIES = ['Repairs & Damages', 'Pre-Payments', 'Liquidation Damages', 'Traffic Penalties', 'Other'];
@@ -203,17 +263,69 @@ const HISTORY_SUBS = [...new Set(historyRecords.map((r) => r.sub))].sort();
 const STATUS_CLASS: Record<WorkflowStatus, string> = {
   'Current Period': 'current',
   'Pending Verification': 'pending',
-  'Ready for Invoicing': 'ready',
-  Invoiced: 'invoiced',
+  'Ready to Invoice': 'ready',
+  'Invoiced': 'invoiced',
+  'Scheduled for Payment': 'scheduled',
+  'Invoice History': 'history',
 };
 
 const BATCH_ACTION_MAP: Record<string, WorkflowStatus> = {
   verify: 'Pending Verification',
-  ready: 'Ready for Invoicing',
+  ready: 'Ready to Invoice',
   invoice: 'Invoiced',
+  schedule: 'Scheduled for Payment',
 };
 
 type DetailField = [string, string];
+
+/* =====================================================
+   STATUS MANAGEMENT HELPERS
+   ===================================================== */
+interface TransitionResult {
+  success: boolean;
+  error?: string;
+  record?: WorkflowRecord;
+}
+
+function canTransitionTo(currentStatus: WorkflowStatus, newStatus: WorkflowStatus): boolean {
+  return VALID_TRANSITIONS[currentStatus].includes(newStatus);
+}
+
+function transitionRecord(
+  record: WorkflowRecord,
+  newStatus: WorkflowStatus,
+  triggeredBy: 'system' | 'manual' = 'manual',
+  notes?: string
+): TransitionResult {
+  if (!canTransitionTo(record.status, newStatus)) {
+    return {
+      success: false,
+      error: `Cannot transition from "${record.status}" to "${newStatus}"`
+    };
+  }
+
+  const auditEntry: StatusAuditLog = {
+    id: `audit-${record.id}-${Date.now()}`,
+    recordId: record.id,
+    previousStatus: record.status,
+    newStatus: newStatus,
+    timestamp: getCurrentTimestamp(),
+    triggeredBy,
+    notes
+  };
+
+  const updatedRecord: WorkflowRecord = {
+    ...record,
+    status: newStatus,
+    lastStatusChange: getCurrentTimestamp(),
+    auditTrail: [...record.auditTrail, auditEntry]
+  };
+
+  return {
+    success: true,
+    record: updatedRecord
+  };
+}
 
 export function Invoices() {
   /* ---------- shell (loading overlay + tabs + modal + toast) ---------- */
@@ -292,26 +404,62 @@ export function Invoices() {
           ['Period', rec.period],
           ['Amount', gbp(rec.amount)],
           ['Status', rec.status],
+          ['Last Updated', fmtDateTime(rec.lastStatusChange)],
         ]);
         break;
-      case 'ready':
-        setWorkflowRecords((prev) => prev.map((r) => (r.id === rec.id ? { ...r, status: 'Ready for Invoicing' } : r)));
-        toast(`${rec.id} moved to Ready for Invoicing.`);
+      case 'ready': {
+        const result = transitionRecord(rec, 'Ready to Invoice', 'manual', 'Manual approval by user');
+        if (result.success && result.record) {
+          setWorkflowRecords((prev) => prev.map((r) => (r.id === rec.id ? result.record! : r)));
+          toast(`✓ ${rec.id} moved to Ready to Invoice.`);
+        } else {
+          toast(`✗ ${result.error}`);
+        }
         break;
-      case 'back':
-        setWorkflowRecords((prev) => prev.map((r) => (r.id === rec.id ? { ...r, status: 'Pending Verification' } : r)));
-        toast(`${rec.id} sent back to Pending Verification.`);
+      }
+      case 'back': {
+        const result = transitionRecord(rec, 'Pending Verification', 'manual', 'Sent back for review');
+        if (result.success && result.record) {
+          setWorkflowRecords((prev) => prev.map((r) => (r.id === rec.id ? result.record! : r)));
+          toast(`✓ ${rec.id} sent back to Pending Verification.`);
+        } else {
+          toast(`✗ ${result.error}`);
+        }
         break;
-      case 'invoice':
-        setWorkflowRecords((prev) => prev.map((r) => (r.id === rec.id ? { ...r, status: 'Invoiced' } : r)));
-        toast(`Invoice generated for ${rec.id}.`);
+      }
+      case 'invoice': {
+        const result = transitionRecord(rec, 'Invoiced', 'manual', 'Invoice generated');
+        if (result.success && result.record) {
+          setWorkflowRecords((prev) => prev.map((r) => (r.id === rec.id ? result.record! : r)));
+          toast(`✓ Invoice generated for ${rec.id}.`);
+        } else {
+          toast(`✗ ${result.error}`);
+        }
         break;
+      }
       case 'download':
-        toast(`Downloading invoice for ${rec.id}…`);
+        toast(`⬇ Downloading invoice for ${rec.id}…`);
         break;
-      case 'schedule':
-        toast(`${rec.id} scheduled for the next payment run.`);
+      case 'schedule': {
+        const result = transitionRecord(rec, 'Scheduled for Payment', 'manual', 'Scheduled for payment run');
+        if (result.success && result.record) {
+          setWorkflowRecords((prev) => prev.map((r) => (r.id === rec.id ? result.record! : r)));
+          toast(`✓ ${rec.id} scheduled for the next payment run.`);
+        } else {
+          toast(`✗ ${result.error}`);
+        }
         break;
+      }
+      case 'history': {
+        const result = transitionRecord(rec, 'Invoice History', 'manual', 'Moved to invoice history');
+        if (result.success && result.record) {
+          setWorkflowRecords((prev) => prev.map((r) => (r.id === rec.id ? result.record! : r)));
+          toast(`✓ ${rec.id} archived to Invoice History.`);
+        } else {
+          toast(`✗ ${result.error}`);
+        }
+        break;
+      }
     }
   }
 
@@ -325,8 +473,28 @@ export function Invoices() {
       return;
     }
     const newStatus = BATCH_ACTION_MAP[batchAction];
-    setWorkflowRecords((prev) => prev.map((r) => (workflowSelected.has(r.id) ? { ...r, status: newStatus } : r)));
-    toast(`${workflowSelected.size} record(s) updated to ${newStatus}.`);
+    let successCount = 0;
+    let failureCount = 0;
+
+    setWorkflowRecords((prev) =>
+      prev.map((r) => {
+        if (!workflowSelected.has(r.id)) return r;
+        const result = transitionRecord(r, newStatus, 'manual', `Batch action: ${batchAction}`);
+        if (result.success && result.record) {
+          successCount++;
+          return result.record;
+        } else {
+          failureCount++;
+          return r;
+        }
+      })
+    );
+
+    if (failureCount > 0) {
+      toast(`⚠ ${successCount} succeeded, ${failureCount} failed (invalid transitions).`);
+    } else {
+      toast(`✓ ${successCount} record(s) updated to ${newStatus}.`);
+    }
     setWorkflowSelected(new Set());
   }
 
@@ -336,25 +504,53 @@ export function Invoices() {
         <i className="bi bi-eye" />
       </button>
     );
+    const audit = (
+      <button
+        className="icon-btn icon-btn--history"
+        title="View audit trail"
+        onClick={() => {
+          const auditFields = rec.auditTrail.map(
+            (entry) =>
+              [
+                `${fmtDateTime(entry.timestamp)} (${entry.triggeredBy})`,
+                `${entry.previousStatus || 'New'} → ${entry.newStatus}${entry.notes ? ` - ${entry.notes}` : ''}`
+              ] as DetailField
+          );
+          openDetailModal(`${rec.id} - Audit Trail`, auditFields);
+        }}
+      >
+        <i className="bi bi-clock-history" />
+      </button>
+    );
+
     switch (rec.status) {
+      case 'Current Period':
+        return (
+          <>
+            {view}
+            {audit}
+          </>
+        );
       case 'Pending Verification':
         return (
           <>
             {view}
+            {audit}
             <button className="icon-btn icon-btn--move" title="Mark ready for invoicing" onClick={() => handleWorkflowAction(rec, 'ready')}>
-              <i className="bi bi-arrow-left-right" />
+              <i className="bi bi-arrow-right" />
             </button>
           </>
         );
-      case 'Ready for Invoicing':
+      case 'Ready to Invoice':
         return (
           <>
             {view}
+            {audit}
             <button className="icon-btn icon-btn--invoice" title="Generate invoice" onClick={() => handleWorkflowAction(rec, 'invoice')}>
               <i className="bi bi-file-earmark-spreadsheet" />
             </button>
             <button className="icon-btn icon-btn--move" title="Send back to verification" onClick={() => handleWorkflowAction(rec, 'back')}>
-              <i className="bi bi-arrow-left-right" />
+              <i className="bi bi-arrow-left" />
             </button>
           </>
         );
@@ -362,6 +558,7 @@ export function Invoices() {
         return (
           <>
             {view}
+            {audit}
             <button className="icon-btn icon-btn--download" title="Download invoice" onClick={() => handleWorkflowAction(rec, 'download')}>
               <i className="bi bi-download" />
             </button>
@@ -370,8 +567,30 @@ export function Invoices() {
             </button>
           </>
         );
+      case 'Scheduled for Payment':
+        return (
+          <>
+            {view}
+            {audit}
+            <button className="icon-btn icon-btn--paid" title="Mark as paid / archive" onClick={() => handleWorkflowAction(rec, 'history')}>
+              <i className="bi bi-check-circle" />
+            </button>
+          </>
+        );
+      case 'Invoice History':
+        return (
+          <>
+            {view}
+            {audit}
+          </>
+        );
       default:
-        return view;
+        return (
+          <>
+            {view}
+            {audit}
+          </>
+        );
     }
   }
 
@@ -449,7 +668,16 @@ export function Invoices() {
   function handleScheduleAction(rec: ScheduleRecord) {
     if (rec.status === 'Scheduled') {
       setScheduleRecords((prev) => prev.map((r) => (r.id === rec.id ? { ...r, status: 'Paid' } : r)));
-      toast(`${rec.id} marked as paid.`);
+      setWorkflowRecords((prev) =>
+        prev.map((r) => {
+          if (r.id === rec.id) {
+            const result = transitionRecord(r, 'Invoice History', 'system', 'Payment completed');
+            return result.record || r;
+          }
+          return r;
+        })
+      );
+      toast(`✓ ${rec.id} marked as paid and archived.`);
     } else {
       openDetailModal(rec.id, [
         ['Invoice ID', rec.id],
@@ -479,8 +707,17 @@ export function Invoices() {
         return r;
       }),
     );
+    setWorkflowRecords((prev) =>
+      prev.map((r) => {
+        if (scheduleSelected.has(r.id) && r.status === 'Scheduled for Payment') {
+          const result = transitionRecord(r, 'Invoice History', 'system', 'Batch payment completed');
+          return result.record || r;
+        }
+        return r;
+      })
+    );
     setScheduleSelected(new Set());
-    toast(`${n} invoice(s) marked as paid.`);
+    toast(`✓ ${n} invoice(s) marked as paid and archived.`);
   }
 
   /* ---------- VIEW 4 — Invoices History ---------- */
@@ -553,9 +790,13 @@ export function Invoices() {
                 ? 'stage-current'
                 : stage === 'Pending Verification'
                   ? 'stage-pending'
-                  : stage === 'Ready for Invoicing'
+                  : stage === 'Ready to Invoice'
                     ? 'stage-ready'
-                    : 'stage-invoiced';
+                    : stage === 'Invoiced'
+                      ? 'stage-invoiced'
+                      : stage === 'Scheduled for Payment'
+                        ? 'stage-scheduled'
+                        : 'stage-history';
             return (
               <button
                 key={stage}
@@ -578,8 +819,9 @@ export function Invoices() {
             <select className="form-select batch-select" id="batchAction" value={batchAction} onChange={(e) => setBatchAction(e.target.value)}>
               <option value="">Select Action</option>
               <option value="verify">Move to Pending Verification</option>
-              <option value="ready">Mark Ready for Invoicing</option>
+              <option value="ready">Mark Ready to Invoice</option>
               <option value="invoice">Generate Invoice</option>
+              <option value="schedule">Schedule for Payment</option>
             </select>
             <button className="styled-button styled-button--primary" id="btnApplyBatch" onClick={handleApplyBatch}>
               <i className="bi bi-check2" />

@@ -231,6 +231,14 @@ body.invoices-page {
 .workflow-stage.stage-invoiced .stage-name,
 .workflow-stage.stage-invoiced .stage-amount { color: var(--stage-invoiced); }
 
+.workflow-stage.stage-scheduled { border-color: #0284c7; }
+.workflow-stage.stage-scheduled .stage-name,
+.workflow-stage.stage-scheduled .stage-amount { color: #0284c7; }
+
+.workflow-stage.stage-history { border-color: var(--text-light); }
+.workflow-stage.stage-history .stage-name,
+.workflow-stage.stage-history .stage-amount { color: var(--text-light); }
+
 .workflow-stage.active {
   background: var(--primary-gradient);
   border-color: transparent;
@@ -566,6 +574,7 @@ body.invoices-page {
 .status-badge.invoiced { background: rgba(22, 163, 74, 0.14); color: var(--success-green); }
 .status-badge.scheduled { background: rgba(14, 165, 233, 0.14); color: #0284c7; }
 .status-badge.paid { background: rgba(22, 163, 74, 0.14); color: var(--success-green); }
+.status-badge.history { background: rgba(100, 116, 139, 0.12); color: var(--text-secondary); }
 
 .deduction-tag {
   display: inline-block;
@@ -627,6 +636,9 @@ body.invoices-page {
 
 .icon-btn--print { background: rgba(22, 163, 74, 0.12); color: var(--success-green); }
 .icon-btn--print:hover { background: rgba(22, 163, 74, 0.24); }
+
+.icon-btn--history { background: rgba(100, 116, 139, 0.12); color: var(--text-secondary); }
+.icon-btn--history:hover { background: rgba(100, 116, 139, 0.24); }
 
 /* Instalment progress (View 2) */
 .progress-wrap {
