@@ -193,9 +193,11 @@ const AvailableDrivers: React.FC<AvailableDriversProps> = ({
 
         {/* Drawer Content Grid */}
         <div className="wp-drawer-content">
+          {/* Spacer column for alignment with week planner */}
+          <div className="wp-drawer-spacer" aria-hidden />
 
-            {/* Day columns */}
-            {weekDates.map((dayDate) => {
+          {/* Day columns */}
+          {weekDates.map((dayDate) => {
               const dateStr = formatDate(dayDate, 'yyyy-mm-dd');
               const dayName = dayDate.toLocaleDateString('en-GB', { weekday: 'short' }).toUpperCase();
               const dateNum = formatDate(dayDate, 'dd/mm');

@@ -887,7 +887,7 @@ body.wp-page {
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
-/* Drawer Content */
+/* Drawer Content - Aligned with week planner grid */
 .wp-drawer-content {
   flex: 1;
   overflow-y: auto;
@@ -895,7 +895,8 @@ body.wp-page {
   padding: 0.75rem;
   display: grid;
   gap: 0.625rem;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: 120px repeat(5, minmax(0, 1fr));
+  max-width: 100%;
 }
 
 .wp-drawer-content::-webkit-scrollbar {
@@ -915,15 +916,24 @@ body.wp-page {
   background: rgba(99, 102, 241, 0.35);
 }
 
+/* Grid spacer (aligns with week planner label column) */
+.wp-drawer-spacer {
+  display: none;
+}
+
 @media (max-width: 1279px) {
   .wp-drawer-content {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: 100px repeat(4, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 1023px) {
   .wp-drawer-content {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .wp-drawer-spacer {
+    display: none;
   }
 }
 
