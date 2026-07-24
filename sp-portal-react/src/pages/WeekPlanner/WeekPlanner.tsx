@@ -113,12 +113,9 @@ interface Depot {
   code: string;
 }
 const DEPOTS: Depot[] = [
-  { id: 1, name: 'Heathrow Hub', code: 'HEA' },
-  { id: 2, name: 'Dartford Depot', code: 'DFD' },
-  { id: 3, name: 'Enfield Distribution', code: 'ENF' },
-  { id: 4, name: 'Slough Gateway', code: 'SLG' },
+  { id: 1, name: 'Central Hub', code: 'HUB' },
 ];
-const ROUTE_COUNT_BY_DEPOT: Record<number, number> = { 1: 7, 2: 5, 3: 6, 4: 8 };
+const ROUTE_COUNT_BY_DEPOT: Record<number, number> = { 1: 6 };
 
 interface Route {
   id: number;
