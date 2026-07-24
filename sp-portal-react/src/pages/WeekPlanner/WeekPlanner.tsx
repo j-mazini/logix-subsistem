@@ -556,8 +556,6 @@ export function WeekPlanner() {
             {showWeekends ? 'Show weekends' : 'Weekdays only'}
           </span>
         </div>
-
-        <div className="dfi-actions" />
       </div>
 
       {/* ============ COLOR LEGEND ============ */}
