@@ -302,7 +302,7 @@ interface SupervisorPopoverState {
 export function WeekPlanner() {
   const [loading, setLoading] = useState(true);
   const [currentWeekStart, setCurrentWeekStart] = useState(() => getWeekStart(new Date()));
-  const [showWeekends, setShowWeekends] = useState(true);
+  const [showWeekends, setShowWeekends] = useState(false);
   const [collapsedDepots, setCollapsedDepots] = useState<Set<number>>(new Set());
   const [editingRecord, setEditingRecord] = useState<WPRecord | null>(null);
   const [supervisorPopover, setSupervisorPopover] = useState<SupervisorPopoverState | null>(null);
