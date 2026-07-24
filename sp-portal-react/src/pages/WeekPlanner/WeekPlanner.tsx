@@ -780,6 +780,7 @@ export function WeekPlanner() {
                     onVendorDragStart={(userId: number) => {
                       dragPayload.current = { type: 'vendor', vendorId: userId };
                     }}
+                    alignWithWeekPlanner={true}
                   />
                 </div>
               </div>,
