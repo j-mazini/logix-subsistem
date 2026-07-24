@@ -1465,23 +1465,117 @@ export function RouteBalance() {
       {shipmentRoute && createPortal(
         <>
           <div className="modal fade show sp-modal-anim" style={{ display: 'block' }} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="shipmentModalTitle">
-            <div className="modal-dialog">
+            <div className="modal-dialog modal-xl modal-dialog-scrollable">
               <div className="modal-content">
                 <div className="modal-header">
-                  <h5 className="modal-title" id="shipmentModalTitle"><i className="bi bi-box2 me-2" />Shipment Details</h5>
+                  <h5 className="modal-title" id="shipmentModalTitle"><i className="bi bi-box2 me-2" />Shipment Details - Route {shipmentRoute.name}</h5>
                   <button type="button" className="btn-close" aria-label="Close" onClick={() => setShipmentModalRouteId(null)} />
                 </div>
                 <div className="modal-body">
-                  <div className="shipment-details">
-                    <div className="detail-row"><span className="label">Shipment ID</span><span className="value mono">ROUTE-{shipmentRoute.name}</span></div>
-                    <div className="detail-row"><span className="label">Weight</span><span className="value">Total Stops: {visibleStops(shipmentRoute).length}</span></div>
-                    <div className="detail-row"><span className="label">Height</span><span className="value">Deliveries: {visibleStops(shipmentRoute).filter((s) => s.type === 'DEL').length}</span></div>
-                    <div className="detail-row"><span className="label">Width</span><span className="value">Pickups: {visibleStops(shipmentRoute).filter((s) => s.type === 'PU').length}</span></div>
-                    <div className="detail-row"><span className="label">Length</span><span className="value">Pre-12: {shipmentRoute.pre12}</span></div>
-                    <div className="detail-row"><span className="label">Volume</span><span className="value">ASR: {shipmentRoute.asr}</span></div>
-                    <div className="detail-row"><span className="label">Pieces</span><span className="value">DSR: {shipmentRoute.dsr}</span></div>
-                    <div className="detail-row"><span className="label">Driver</span><span className="value">{shipmentRoute.driver}</span></div>
+                  {/* SUMMARY SECTION */}
+                  <div className="shipment-summary-card">
+                    <div className="summary-row">
+                      <div className="summary-cell">
+                        <span className="label">Route ID</span>
+                        <span className="value mono fw-bold">ROUTE-{shipmentRoute.name}</span>
+                      </div>
+                      <div className="summary-cell">
+                        <span className="label">Driver</span>
+                        <span className="value">{shipmentRoute.driver}</span>
+                      </div>
+                      <div className="summary-cell">
+                        <span className="label">Vehicle</span>
+                        <span className="value">{shipmentRoute.vehicle}</span>
+                      </div>
+                    </div>
+                    <div className="summary-row">
+                      <div className="summary-cell">
+                        <span className="label">Total Stops</span>
+                        <span className="value fw-bold">{visibleStops(shipmentRoute).length}</span>
+                      </div>
+                      <div className="summary-cell">
+                        <span className="label">Deliveries / Pickups</span>
+                        <span className="value">{visibleStops(shipmentRoute).filter((s) => s.type === 'DEL').length} / {visibleStops(shipmentRoute).filter((s) => s.type === 'PU').length}</span>
+                      </div>
+                      <div className="summary-cell">
+                        <span className="label">Completion</span>
+                        <span className="value fw-bold text-success">{shipmentRoute.completion}%</span>
+                      </div>
+                    </div>
+                    <div className="summary-row">
+                      <div className="summary-cell">
+                        <span className="label">Special Indicators</span>
+                        <span className="value">
+                          Pre-12: {shipmentRoute.pre12} | ASR: {shipmentRoute.asr} | DSR: {shipmentRoute.dsr}
+                        </span>
+                      </div>
+                    </div>
                   </div>
+
+                  {/* STOPS GROUPED BY POSTCODE AREA */}
+                  <div className="shipment-stops-list">
+                    <h6 className="stops-header">Deliveries by Postcode Area</h6>
+                    {groupBySubpostcode(visibleStops(shipmentRoute), false).map((subgroup) => (
+                      <div key={subgroup.code} className="postcode-group">
+                        <button
+                          className="postcode-group-header"
+                          onClick={() => {
+                            const elem = document.getElementById(`stops-${subgroup.code}`);
+                            if (elem) elem.classList.toggle('collapsed');
+                          }}
+                          type="button"
+                        >
+                          <i className="bi bi-chevron-down" />
+                          <span className="postcode-badge">{subgroup.code}</span>
+                          <span className="stop-count">{subgroup.total} stops</span>
+                          {subgroup.pre12 && <span className="status-badge status-badge-pre12">Pre 12</span>}
+                          <span className="completion-badge">{subgroup.completion}%</span>
+                        </button>
+                        <div id={`stops-${subgroup.code}`} className="stops-container">
+                          {subgroup.postcodes.map((pcGroup) => (
+                            <div key={pcGroup.postcode} className="postcode-section">
+                              <div className="postcode-detail">
+                                <span className="postcode-label">{pcGroup.postcode}</span>
+                                <span className="postcode-counts">{pcGroup.del} DEL, {pcGroup.pu} PU</span>
+                              </div>
+                              <div className="stops-table">
+                                {pcGroup.stops.map((stop, idx) => (
+                                  <div key={stop.id} className="stop-row">
+                                    <div className="stop-number">{idx + 1}.</div>
+                                    <div className="stop-type">
+                                      <span className={`type-badge type-${stop.type.toLowerCase()}`}>
+                                        {stop.type === 'DEL' ? '📦' : '📍'} {stop.type}
+                                      </span>
+                                    </div>
+                                    <div className="stop-info">
+                                      <div className="stop-address">{stop.address}</div>
+                                      <div className="stop-customer">{stop.customer}</div>
+                                    </div>
+                                    <div className="stop-status">
+                                      <span className={`status-indicator ${stop.status}`}>
+                                        {stop.status === 'completed' ? '✓' : '○'}
+                                      </span>
+                                    </div>
+                                    <div className="stop-indicators">
+                                      {stop.pre12 && <span className="status-badge status-badge-pre12">Pre 12</span>}
+                                      {stop.asr && <span className="status-badge status-badge-asr">ASR</span>}
+                                      {stop.dsr && <span className="status-badge status-badge-dsr">DSR</span>}
+                                      {stop.pm && <span className="status-badge status-badge-pm">PM</span>}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="styled-button styled-button--outline" onClick={() => setShipmentModalRouteId(null)}>
+                    Close
+                  </button>
                 </div>
               </div>
             </div>
