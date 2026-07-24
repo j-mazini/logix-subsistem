@@ -557,14 +557,8 @@ export function WeekPlanner() {
           </span>
         </div>
 
-        <div className="dfi-actions">
-          <button
-            type="button"
-            className="styled-button styled-button--outline"
-            onClick={() => setIsAvailableDriversOpen(!isAvailableDriversOpen)}
-          >
-            <i className="bi bi-people" /> Available Drivers <span className="wp-badge-count">{availableVendors.length}</span>
-          </button>
+        <div className="dfi-actions" style={{ visibility: 'hidden' }}>
+          {/* Placeholder to maintain layout - button is now floating */}
         </div>
       </div>
 
@@ -580,6 +574,26 @@ export function WeekPlanner() {
           <span className="wp-plate wp-legend-plate">AB12 CDE</span> Vehicle registration
         </span>
       </div>
+
+      {/* ============ AVAILABLE DRIVERS DRAWER ============ */}
+      <AvailableDrivers
+        drivers={availableVendors.map((v) => ({
+          id: v.id,
+          userId: v.id,
+          name: v.name,
+          fullName: v.name,
+          vehicle: v.vehicle,
+          plate: v.plate || '',
+          vendorTypeId: v.vendorTypeId || 0,
+        }))}
+        weekDates={weekDates}
+        dayOffEntries={[]}
+        onVendorDragStart={(userId: number) => {
+          dragPayload.current = { type: 'vendor', vendorId: userId };
+        }}
+        isOpen={isAvailableDriversOpen}
+        onToggle={setIsAvailableDriversOpen}
+      />
 
       {/* ============ DEPOT SECTIONS ============ */}
       <div id="depotSections" className="wp-depot-list">
@@ -752,40 +766,6 @@ export function WeekPlanner() {
             <div className="spinner" />
             <p>Loading week planner…</p>
           </div>
-
-          {/* ============ Available Drivers Modal ============ */}
-          {isAvailableDriversOpen &&
-            createPortal(
-              <div
-                className="fixed inset-0 bg-black/20 z-50"
-                onClick={() => setIsAvailableDriversOpen(false)}
-                style={{ top: '0' }}
-              >
-                <div
-                  className="absolute top-20 left-1/2 -translate-x-1/2 w-11/12 max-w-4xl bg-white rounded-2xl shadow-2xl border border-slate-200 max-h-[70vh] overflow-hidden"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <AvailableDrivers
-                    drivers={availableVendors.map((v) => ({
-                      id: v.id,
-                      userId: v.id,
-                      name: v.name,
-                      fullName: v.name,
-                      vehicle: v.vehicle,
-                      plate: v.plate || '',
-                      vendorTypeId: v.vendorTypeId || 0,
-                    }))}
-                    weekDates={weekDates}
-                    dayOffEntries={[]}
-                    onVendorDragStart={(userId: number) => {
-                      dragPayload.current = { type: 'vendor', vendorId: userId };
-                    }}
-                    alignWithWeekPlanner={true}
-                  />
-                </div>
-              </div>,
-              document.body
-            )}
 
           {/* ============ Assignment edit modal ============ */}
           <div className={`wp-modal-backdrop${editingRecord ? ' sp-modal-backdrop-anim' : ''}`} id="assignmentModalBackdrop" hidden={!editingRecord}>

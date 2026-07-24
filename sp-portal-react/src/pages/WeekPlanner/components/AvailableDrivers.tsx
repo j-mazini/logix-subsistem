@@ -1,4 +1,4 @@
-import React, { useState, useMemo, memo } from 'react';
+import React, { useState, useMemo, memo, useCallback, useEffect } from 'react';
 
 interface Driver {
   id: number;
@@ -15,7 +15,8 @@ interface AvailableDriversProps {
   weekDates?: Date[];
   dayOffEntries?: Array<{ userId: number; date: string }>;
   onVendorDragStart?: (userId: number) => void;
-  alignWithWeekPlanner?: boolean;
+  isOpen?: boolean;
+  onToggle?: (isOpen: boolean) => void;
 }
 
 const formatDate = (date: Date, format: string): string => {
@@ -38,10 +39,27 @@ const AvailableDrivers: React.FC<AvailableDriversProps> = ({
   weekDates = [],
   dayOffEntries = [],
   onVendorDragStart,
-  alignWithWeekPlanner = true,
+  isOpen = false,
+  onToggle,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  const handleToggle = useCallback(() => {
+    onToggle?.(!isOpen);
+  }, [isOpen, onToggle]);
+
+  // Close drawer on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        handleToggle();
+      }
+    };
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+      return () => document.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [isOpen, handleToggle]);
 
   // Filter vendors by search term, remove duplicates, sort alphabetically
   const filteredVendors = useMemo(() => {
@@ -101,24 +119,56 @@ const AvailableDrivers: React.FC<AvailableDriversProps> = ({
   }
 
   return (
-    <div className="wp-available-drivers">
-      {/* Header and Controls */}
-      <div className="wp-available-drivers-header">
-        <div className="wp-available-drivers-title-section">
-          <div className="wp-available-drivers-icon">
+    <>
+      {/* Toggle Button - Fixed top right */}
+      <button
+        onClick={handleToggle}
+        className={`wp-drivers-toggle-btn${isOpen ? ' wp-open' : ''}`}
+        aria-label={isOpen ? 'Close drivers panel' : 'Open drivers panel'}
+        title="Available Drivers"
+      >
+        <svg className="wp-icon" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM9 10a9 9 0 1118 0 9 9 0 01-18 0z" />
+        </svg>
+        <span className="wp-btn-label">{isOpen ? 'Hide' : 'Show'} Drivers</span>
+        <span className="wp-btn-badge">{drivers.length}</span>
+      </button>
+
+      {/* Drawer Overlay - Non-blocking */}
+      <div
+        className={`wp-drivers-overlay${isOpen ? ' wp-open' : ''}`}
+        onClick={handleToggle}
+        aria-hidden="true"
+      />
+
+      {/* Drawer Panel - Fixed at top */}
+      <div className={`wp-drivers-drawer${isOpen ? ' wp-open' : ''}`}>
+        {/* Drawer Header */}
+        <div className="wp-drawer-header">
+          <div className="wp-drawer-title-section">
             <svg className="wp-icon" viewBox="0 0 20 20" fill="currentColor">
               <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM9 10a9 9 0 1118 0 9 9 0 01-18 0z" />
             </svg>
+            <div>
+              <h3 className="wp-drawer-title">Available Drivers</h3>
+              <p className="wp-drawer-subtitle">
+                {filteredVendors.length} {filteredVendors.length === 1 ? 'driver' : 'drivers'} available
+              </p>
+            </div>
           </div>
-          <div>
-            <h3 className="wp-available-drivers-title">Available Drivers</h3>
-            <p className="wp-available-drivers-subtitle">
-              {filteredVendors.length} {filteredVendors.length === 1 ? 'driver' : 'drivers'} available
-            </p>
-          </div>
+          <button
+            onClick={handleToggle}
+            className="wp-drawer-close-btn"
+            aria-label="Close"
+          >
+            <svg className="wp-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
 
-        <div className="wp-available-drivers-controls">
+        {/* Search Bar */}
+        <div className="wp-drawer-search">
           <div className="wp-search-wrapper">
             <div className="wp-search-icon">
               <svg className="wp-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -136,33 +186,13 @@ const AvailableDrivers: React.FC<AvailableDriversProps> = ({
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="wp-search-input"
+              autoFocus
             />
           </div>
-
-          <button
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            className="wp-collapse-btn"
-            aria-label={isCollapsed ? 'Expand' : 'Collapse'}
-          >
-            {isCollapsed ? (
-              <svg className="wp-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
-              </svg>
-            ) : (
-              <svg className="wp-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 15l7-7 7 7" />
-              </svg>
-            )}
-          </button>
         </div>
-      </div>
 
-      {/* Content Grid */}
-      {!isCollapsed && (
-        <div className={`wp-available-drivers-content${alignWithWeekPlanner ? ' wp-align-week-planner' : ''}`}>
-          <div className={`wp-drivers-grid${alignWithWeekPlanner ? ' wp-grid-align' : ''}`}>
-            {/* Spacer column for alignment with week planner */}
-            {alignWithWeekPlanner && <div className="wp-grid-spacer" aria-hidden />}
+        {/* Drawer Content Grid */}
+        <div className="wp-drawer-content">
 
             {/* Day columns */}
             {weekDates.map((dayDate) => {
@@ -245,10 +275,9 @@ const AvailableDrivers: React.FC<AvailableDriversProps> = ({
                 </div>
               );
             })}
-          </div>
         </div>
-      )}
-    </div>
+      </div>
+    </>
   );
 };
 
@@ -256,7 +285,8 @@ const areEqual = (prev: AvailableDriversProps, next: AvailableDriversProps) => {
   return (
     prev.drivers === next.drivers &&
     prev.dayOffEntries === next.dayOffEntries &&
-    prev.weekDates === next.weekDates
+    prev.weekDates === next.weekDates &&
+    prev.isOpen === next.isOpen
   );
 };
 
