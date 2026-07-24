@@ -4,16 +4,28 @@ import { AdminHeaderPill, AdminHeaderMenu, useAdminHeaderPill } from '../../layo
 import { useCurrentSp } from '../../hooks/useCurrentSp';
 import {
   getFilteredContracts,
-  getDigressiveBandsFor,
+  getEffectiveBandsFor,
+  setStoredLoopBands,
+  setStoredLoopRate,
   setStoredTarget,
   addStoredSubpostcode,
   removeStoredSubpostcode,
   type ContractDepotView,
   type ContractLoopView,
-  type ContractProviderView,
   type ContractRouteView,
+  type DigressiveBand,
 } from '../../data/contractsData';
 import styles from './Contracts.module.css';
+
+function Chevron({ open }: { open: boolean }) {
+  return (
+    <span className={`${styles.expandIcon} ${!open ? styles.collapsed : ''}`} aria-hidden="true">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+        <path d="M2.5 4.5 6 8l3.5-3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </span>
+  );
+}
 
 function RouteCard({ sp, depotName, route }: { sp: string; depotName: string; route: ContractRouteView }) {
   const [open, setOpen] = useState(false);
@@ -59,7 +71,7 @@ function RouteCard({ sp, depotName, route }: { sp: string; depotName: string; ro
         className={styles.routeHeader}
         onClick={() => setOpen(o => !o)}
       >
-        <span className={styles.routeIcon}>📍</span>
+        <Chevron open={open} />
         <h4 className={styles.routeName}>{route.name}</h4>
         <span className={styles.routeBadge}>{route.type}</span>
       </div>
@@ -96,7 +108,7 @@ function RouteCard({ sp, depotName, route }: { sp: string; depotName: string; ro
               placeholder="Enter target"
               aria-label="Route target"
             />
-            {errors.target && <span style={{ color: 'var(--color-error)', fontSize: '0.75rem' }}>{errors.target}</span>}
+            {errors.target && <span className={styles.fieldError}>{errors.target}</span>}
           </div>
 
           <div className={styles.subpostcodesSection}>
@@ -138,18 +150,14 @@ function RouteCard({ sp, depotName, route }: { sp: string; depotName: string; ro
                   setNewSubpostcode(e.target.value);
                   setErrors(prev => ({ ...prev, subpostcode: '' }));
                 }}
-                placeholder="Add subpostcode (e.g., SW1A)"
+                placeholder="e.g. SW1A"
                 aria-label="Add subpostcode"
               />
               <button type="submit" className={styles.addButton}>
                 + Add
               </button>
             </form>
-            {errors.subpostcode && (
-              <span style={{ color: 'var(--color-error)', fontSize: '0.75rem', display: 'block', marginTop: '0.5rem' }}>
-                {errors.subpostcode}
-              </span>
-            )}
+            {errors.subpostcode && <span className={styles.fieldError}>{errors.subpostcode}</span>}
           </div>
         </div>
       )}
@@ -157,12 +165,25 @@ function RouteCard({ sp, depotName, route }: { sp: string; depotName: string; ro
   );
 }
 
+interface BandDraft {
+  min: string;
+  max: string;
+  price: string;
+}
+
 function LoopPanel({ sp, depotName, loop }: { sp: string; depotName: string; loop: ContractLoopView }) {
   const [open, setOpen] = useState(false);
-  const rateVal = typeof loop.deliveryRate === 'number' && !Number.isNaN(loop.deliveryRate) ? loop.deliveryRate : 0;
-  const rateStr = rateVal > 0 ? `£${rateVal.toFixed(2)}` : '—';
+  const [editing, setEditing] = useState(false);
+  const [rate, setRate] = useState<number>(() =>
+    typeof loop.deliveryRate === 'number' && !Number.isNaN(loop.deliveryRate) ? loop.deliveryRate : 0,
+  );
+  const [bands, setBands] = useState<DigressiveBand[] | undefined>(() => getEffectiveBandsFor(sp, depotName, loop.name));
+  const [draftRate, setDraftRate] = useState('');
+  const [draftBands, setDraftBands] = useState<BandDraft[]>([]);
+  const [editError, setEditError] = useState('');
+
+  const rateStr = rate > 0 ? `£${rate.toFixed(2)}` : '—';
   const totalTarget = loop.routes.reduce((sum, r) => sum + (r.target != null ? r.target : 0), 0);
-  const bands = getDigressiveBandsFor(loop.name);
   const bandsText =
     bands && bands.length
       ? bands
@@ -170,16 +191,85 @@ function LoopPanel({ sp, depotName, loop }: { sp: string; depotName: string; loo
           .join(' · ')
       : `Band 1–4 (rate: ${rateStr})`;
 
+  const startEdit = () => {
+    setDraftRate(rate > 0 ? String(rate) : '');
+    setDraftBands(
+      bands && bands.length
+        ? bands.map(b => ({ min: String(b.min), max: b.max != null ? String(b.max) : '', price: String(b.price) }))
+        : [{ min: '1', max: '', price: rate > 0 ? String(rate) : '' }],
+    );
+    setEditError('');
+    setEditing(true);
+  };
+
+  const updateDraftBand = (index: number, field: keyof BandDraft, value: string) => {
+    setDraftBands(prev => prev.map((b, i) => (i === index ? { ...b, [field]: value } : b)));
+    setEditError('');
+  };
+
+  const addDraftBand = () => {
+    setDraftBands(prev => {
+      const last = prev[prev.length - 1];
+      const nextMin = last && last.max.trim() !== '' ? String(parseInt(last.max, 10) + 1 || '') : '';
+      return [...prev, { min: nextMin, max: '', price: '' }];
+    });
+  };
+
+  const removeDraftBand = (index: number) => {
+    setDraftBands(prev => prev.filter((_, i) => i !== index));
+    setEditError('');
+  };
+
+  const handleSave = () => {
+    const rateTrimmed = draftRate.trim();
+    const newRate = rateTrimmed === '' ? 0 : Number(rateTrimmed);
+    if (Number.isNaN(newRate) || newRate < 0) {
+      setEditError('Rate must be a number of 0 or more');
+      return;
+    }
+
+    const newBands: DigressiveBand[] = [];
+    for (let i = 0; i < draftBands.length; i++) {
+      const d = draftBands[i];
+      const min = parseInt(d.min.trim(), 10);
+      const max = d.max.trim() === '' ? null : parseInt(d.max.trim(), 10);
+      const price = Number(d.price.trim());
+      if (Number.isNaN(min) || min < 0) {
+        setEditError(`Band ${i + 1}: "from" must be a number of 0 or more`);
+        return;
+      }
+      if (max !== null && (Number.isNaN(max) || max < min)) {
+        setEditError(`Band ${i + 1}: "to" must be empty or a number of ${min} or more`);
+        return;
+      }
+      if (d.price.trim() === '' || Number.isNaN(price) || price < 0) {
+        setEditError(`Band ${i + 1}: price must be a number of 0 or more`);
+        return;
+      }
+      newBands.push({ min, max, price });
+    }
+
+    setStoredLoopRate(sp, depotName, loop.name, newRate > 0 ? newRate : null);
+    setStoredLoopBands(sp, depotName, loop.name, newBands.length ? newBands : null);
+    setRate(newRate);
+    setBands(newBands.length ? newBands : getEffectiveBandsFor(sp, depotName, loop.name));
+    setEditing(false);
+  };
+
+  const handleCancel = () => {
+    setEditing(false);
+    setEditError('');
+  };
+
   return (
     <div className={styles.loopPanel}>
       <div className={styles.loopHeader} onClick={() => setOpen(o => !o)}>
-        <h4 className={styles.loopTitle}>
-          <span className={styles.loopIcon}>🔄</span>
-          {loop.name}
-        </h4>
+        <Chevron open={open} />
+        <h4 className={styles.loopTitle}>{loop.name}</h4>
+        <span className={styles.levelTag}>Loop</span>
       </div>
 
-      {open && (
+      {open && !editing && (
         <div className={styles.loopMeta}>
           <div className={styles.loopMetaItem}>
             <span className={styles.loopMetaLabel}>Bands (per loop)</span>
@@ -194,6 +284,105 @@ function LoopPanel({ sp, depotName, loop }: { sp: string; depotName: string; loo
           <div className={styles.loopMetaItem}>
             <span className={styles.loopMetaLabel}>Total Target</span>
             <span className={styles.loopMetaValue}>{totalTarget}</span>
+          </div>
+          <button type="button" className={styles.loopEditButton} onClick={startEdit}>
+            Edit
+          </button>
+        </div>
+      )}
+
+      {open && editing && (
+        <div className={styles.loopEditForm}>
+          <div className={styles.editField}>
+            <label className={styles.targetLabel} htmlFor={`rate-${depotName}-${loop.name}`}>
+              Rate (Band 1)
+            </label>
+            <span className={styles.targetHint}>Delivery rate in £ per drop</span>
+            <input
+              id={`rate-${depotName}-${loop.name}`}
+              type="number"
+              min={0}
+              step={0.01}
+              className={styles.bandInput}
+              value={draftRate}
+              onChange={e => {
+                setDraftRate(e.target.value);
+                setEditError('');
+              }}
+              placeholder="0.00"
+            />
+          </div>
+
+          <div className={styles.editField}>
+            <span className={styles.targetLabel}>Bands (per loop)</span>
+            <span className={styles.targetHint}>Volume range and price per band — leave "to" empty for no cap</span>
+
+            <div className={styles.bandsEditor}>
+              <div className={`${styles.bandRow} ${styles.bandHeaderRow}`}>
+                <span className={styles.bandIndex} />
+                <span className={styles.bandColLabel}>From</span>
+                <span className={styles.bandColLabel}>To</span>
+                <span className={styles.bandColLabel}>Price (£)</span>
+                <span className={styles.bandRemoveSpacer} />
+              </div>
+              {draftBands.map((band, i) => (
+                <div key={i} className={styles.bandRow}>
+                  <span className={styles.bandIndex}>Band {i + 1}</span>
+                  <input
+                    type="number"
+                    min={0}
+                    step={1}
+                    className={styles.bandInput}
+                    value={band.min}
+                    onChange={e => updateDraftBand(i, 'min', e.target.value)}
+                    aria-label={`Band ${i + 1} from`}
+                  />
+                  <input
+                    type="number"
+                    min={0}
+                    step={1}
+                    className={styles.bandInput}
+                    value={band.max}
+                    onChange={e => updateDraftBand(i, 'max', e.target.value)}
+                    placeholder="∞"
+                    aria-label={`Band ${i + 1} to`}
+                  />
+                  <input
+                    type="number"
+                    min={0}
+                    step={0.01}
+                    className={styles.bandInput}
+                    value={band.price}
+                    onChange={e => updateDraftBand(i, 'price', e.target.value)}
+                    placeholder="0.00"
+                    aria-label={`Band ${i + 1} price`}
+                  />
+                  <button
+                    type="button"
+                    className={styles.bandRemove}
+                    onClick={() => removeDraftBand(i)}
+                    aria-label={`Remove band ${i + 1}`}
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <button type="button" className={styles.addBandButton} onClick={addDraftBand}>
+              + Add band
+            </button>
+          </div>
+
+          {editError && <span className={styles.fieldError}>{editError}</span>}
+
+          <div className={styles.editActions}>
+            <button type="button" className={styles.cancelButton} onClick={handleCancel}>
+              Cancel
+            </button>
+            <button type="button" className={styles.addButton} onClick={handleSave}>
+              Save changes
+            </button>
           </div>
         </div>
       )}
@@ -213,36 +402,14 @@ function DepotCard({ sp, depot }: { sp: string; depot: ContractDepotView }) {
   return (
     <div className={styles.depotCard}>
       <div className={styles.depotHeader} onClick={() => setOpen(o => !o)}>
-        <span className={styles.depotIcon}>📦</span>
+        <Chevron open={open} />
         <h3 className={styles.depotName}>{depot.name}</h3>
+        <span className={styles.levelTag}>Depot</span>
       </div>
 
       <div className={`${styles.depotContent} ${!open ? styles.collapsed : ''}`}>
         {depot.loops.map(loop => (
           <LoopPanel key={loop.name} sp={sp} depotName={depot.name} loop={loop} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function ProviderBlock({ sp, provider }: { sp: string; provider: ContractProviderView }) {
-  const [open, setOpen] = useState(true);
-
-  return (
-    <div className={styles.providerBlock}>
-      <div
-        className={`${styles.providerHeader} ${!open ? styles.collapsed : ''}`}
-        onClick={() => setOpen(o => !o)}
-      >
-        <span className={styles.providerIcon}>🏢</span>
-        <h2 className={styles.providerName}>{provider.serviceProvider}</h2>
-        <span className={`${styles.expandIcon} ${!open ? styles.collapsed : ''}`}>▼</span>
-      </div>
-
-      <div className={`${styles.providerContent} ${!open ? styles.collapsed : ''}`}>
-        {provider.depots.map(depot => (
-          <DepotCard key={depot.name} sp={sp} depot={depot} />
         ))}
       </div>
     </div>
@@ -258,7 +425,7 @@ export function Contracts() {
   if (!sp) {
     return (
       <PortalLayout mainClassName={styles.contracts} title="Contracts">
-        <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--color-error)', backgroundColor: '#fef2f2', border: '1px solid #fca5a5', borderRadius: 'var(--radius-lg)' }}>
+        <div className={styles.errorNotice}>
           Service Provider not set. Open with <code>?sp=YourCompany</code>.
         </div>
       </PortalLayout>
@@ -272,23 +439,21 @@ export function Contracts() {
     0,
   );
   const isEmpty = filtered.length === 0;
+  const padCount = (n: number) => String(n).padStart(2, '0');
 
   const header = (
     <>
-      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-        <h1 style={{ margin: 0, fontSize: '1.875rem', fontWeight: 700, color: 'var(--color-text-primary)', flex: 1 }}>
-          Contracts
-        </h1>
-        <div style={{ flex: '0 1 300px', minWidth: '200px' }}>
+      <div className={styles.pageHeader}>
+        <h1 className={styles.pageTitle}>Contracts</h1>
+        <div className={styles.searchBox}>
           <input
             type="search"
-            className={styles.targetInput}
+            className={styles.searchInput}
             placeholder="Search depots, loops, routes..."
             autoComplete="off"
             aria-label="Search contracts"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            style={{ maxWidth: 'none' }}
           />
         </div>
         <AdminHeaderPill sp={sp} controls={menuControls} />
@@ -303,33 +468,33 @@ export function Contracts() {
         <div className={styles.metricsRow}>
           <div className={styles.metricCard}>
             <span className={styles.metricLabel}>Depots</span>
-            <span className={styles.metricValue}>{totalDepots}</span>
+            <span className={styles.metricValue}>{padCount(totalDepots)}</span>
           </div>
           <div className={styles.metricCard}>
             <span className={styles.metricLabel}>Loops</span>
-            <span className={styles.metricValue}>{totalLoops}</span>
+            <span className={styles.metricValue}>{padCount(totalLoops)}</span>
           </div>
           <div className={styles.metricCard}>
             <span className={styles.metricLabel}>Routes</span>
-            <span className={styles.metricValue}>{totalRoutes}</span>
+            <span className={styles.metricValue}>{padCount(totalRoutes)}</span>
           </div>
         </div>
 
         <div className={styles.sectionHeader}>
-          <span className={styles.sectionIcon}>📊</span>
           <h2 className={styles.sectionTitle}>Active Contracts</h2>
         </div>
 
         {!isEmpty ? (
-          <div style={{ display: 'grid', gap: '1rem' }}>
-            {filtered.map(prov => (
-              <ProviderBlock key={prov.serviceProvider} sp={sp} provider={prov} />
-            ))}
+          <div className={styles.depotList}>
+            {filtered.flatMap(prov =>
+              prov.depots.map(depot => (
+                <DepotCard key={`${prov.serviceProvider}-${depot.name}`} sp={sp} depot={depot} />
+              )),
+            )}
           </div>
         ) : (
           <div className={styles.emptyState}>
-            <div className={styles.emptyIcon}>📋</div>
-            <h3 className={styles.emptyTitle}>No Contracts Found</h3>
+            <h3 className={styles.emptyTitle}>No Contracts on File</h3>
             <p className={styles.emptyDescription}>There are currently no contracts available for your service provider.</p>
           </div>
         )}

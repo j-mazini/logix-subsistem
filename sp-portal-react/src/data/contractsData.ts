@@ -157,6 +157,75 @@ export function removeStoredSubpostcode(spName: string, depotName: string, route
   setStoredSubpostcodes(spName, depotName, routeName, filtered);
 }
 
+const LOOP_RATES_STORAGE_KEY = 'dhl_contract_loop_rates';
+
+/** Get the stored delivery-rate override for a loop, or null when not overridden. */
+export function getStoredLoopRate(spName: string, depotName: string, loopName: string): number | null {
+  try {
+    const raw = localStorage.getItem(LOOP_RATES_STORAGE_KEY);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    const sp = data[spName];
+    if (!sp) return null;
+    const val = sp[targetKey(depotName, loopName)];
+    return val != null ? Number(val) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Store a delivery-rate override for a loop. Pass null/undefined/NaN to clear it. */
+export function setStoredLoopRate(spName: string, depotName: string, loopName: string, value: number | null | undefined): void {
+  try {
+    const raw = localStorage.getItem(LOOP_RATES_STORAGE_KEY);
+    const data = raw ? JSON.parse(raw) : {};
+    if (!data[spName]) data[spName] = {};
+    const key = targetKey(depotName, loopName);
+    if (value === null || value === undefined || Number.isNaN(value)) delete data[spName][key];
+    else data[spName][key] = Number(value);
+    localStorage.setItem(LOOP_RATES_STORAGE_KEY, JSON.stringify(data));
+  } catch {
+    /* ignore */
+  }
+}
+
+const LOOP_BANDS_STORAGE_KEY = 'dhl_contract_loop_bands';
+
+/** Get the stored digressive-bands override for a loop, or null when not overridden. */
+export function getStoredLoopBands(spName: string, depotName: string, loopName: string): DigressiveBand[] | null {
+  try {
+    const raw = localStorage.getItem(LOOP_BANDS_STORAGE_KEY);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    const sp = data[spName];
+    if (!sp) return null;
+    const val = sp[targetKey(depotName, loopName)];
+    return Array.isArray(val) ? val : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Store a digressive-bands override for a loop. Pass null or an empty array to clear it. */
+export function setStoredLoopBands(spName: string, depotName: string, loopName: string, bands: DigressiveBand[] | null): void {
+  try {
+    const raw = localStorage.getItem(LOOP_BANDS_STORAGE_KEY);
+    const data = raw ? JSON.parse(raw) : {};
+    if (!data[spName]) data[spName] = {};
+    const key = targetKey(depotName, loopName);
+    if (!bands || bands.length === 0) delete data[spName][key];
+    else data[spName][key] = bands;
+    localStorage.setItem(LOOP_BANDS_STORAGE_KEY, JSON.stringify(data));
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Bands for a loop with any stored override applied, falling back to the contract's digressive bands. */
+export function getEffectiveBandsFor(spName: string, depotName: string, loopName: string): DigressiveBand[] | undefined {
+  return getStoredLoopBands(spName, depotName, loopName) ?? getDigressiveBandsFor(loopName);
+}
+
 export interface ContractRouteView {
   name: string;
   type: string;
@@ -214,7 +283,13 @@ export function getFilteredContracts(spName: string): ContractProviderView[] {
           customSubpostcodes: custom,
         };
       });
-      const rate = typeof loop.deliveryRate === 'number' ? loop.deliveryRate : 0;
+      const storedRate = getStoredLoopRate(prov.serviceProvider, dep.name, loop.name);
+      const rate =
+        storedRate != null && !Number.isNaN(storedRate)
+          ? storedRate
+          : typeof loop.deliveryRate === 'number'
+            ? loop.deliveryRate
+            : 0;
       return { name: loop.name, deliveryRate: rate, routes };
     });
     return { name: dep.name, loops };
