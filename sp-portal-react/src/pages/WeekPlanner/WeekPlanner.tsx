@@ -311,6 +311,7 @@ export function WeekPlanner() {
   const [supervisorPopover, setSupervisorPopover] = useState<SupervisorPopoverState | null>(null);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const [renderVersion, setRenderVersion] = useState(0);
+  const [isAvailableDriversOpen, setIsAvailableDriversOpen] = useState(false);
 
   const weekCache = useRef(new Map<string, WPRecord[]>());
   const dragPayload = useRef<DragPayload | null>(null);
@@ -560,12 +561,7 @@ export function WeekPlanner() {
           <button
             type="button"
             className="styled-button styled-button--outline"
-            onClick={() => {
-              const element = document.querySelector('.available-drivers-container');
-              if (element) {
-                element.scrollIntoView({ behavior: 'smooth' });
-              }
-            }}
+            onClick={() => setIsAvailableDriversOpen(!isAvailableDriversOpen)}
           >
             <i className="bi bi-people" /> Available Drivers <span className="wp-badge-count">{availableVendors.length}</span>
           </button>
@@ -757,25 +753,38 @@ export function WeekPlanner() {
             <p>Loading week planner…</p>
           </div>
 
-          {/* ============ Available Drivers - Grid View (LogixSphere-style) ============ */}
-          <div style={{ marginBottom: '2rem' }}>
-            <AvailableDrivers
-              drivers={availableVendors.map((v) => ({
-                id: v.id,
-                userId: v.id,
-                name: v.name,
-                fullName: v.name,
-                vehicle: v.vehicle,
-                plate: v.plate || '',
-                vendorTypeId: v.vendorTypeId || 0,
-              }))}
-              weekDates={weekDates}
-              dayOffEntries={[]}
-              onVendorDragStart={(userId: number) => {
-                dragPayload.current = { type: 'vendor', vendorId: userId };
-              }}
-            />
-          </div>
+          {/* ============ Available Drivers Modal ============ */}
+          {isAvailableDriversOpen &&
+            createPortal(
+              <div
+                className="fixed inset-0 bg-black/20 z-50"
+                onClick={() => setIsAvailableDriversOpen(false)}
+                style={{ top: '0' }}
+              >
+                <div
+                  className="absolute top-20 left-1/2 -translate-x-1/2 w-11/12 max-w-4xl bg-white rounded-2xl shadow-2xl border border-slate-200 max-h-[70vh] overflow-hidden"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <AvailableDrivers
+                    drivers={availableVendors.map((v) => ({
+                      id: v.id,
+                      userId: v.id,
+                      name: v.name,
+                      fullName: v.name,
+                      vehicle: v.vehicle,
+                      plate: v.plate || '',
+                      vendorTypeId: v.vendorTypeId || 0,
+                    }))}
+                    weekDates={weekDates}
+                    dayOffEntries={[]}
+                    onVendorDragStart={(userId: number) => {
+                      dragPayload.current = { type: 'vendor', vendorId: userId };
+                    }}
+                  />
+                </div>
+              </div>,
+              document.body
+            )}
 
           {/* ============ Assignment edit modal ============ */}
           <div className={`wp-modal-backdrop${editingRecord ? ' sp-modal-backdrop-anim' : ''}`} id="assignmentModalBackdrop" hidden={!editingRecord}>
