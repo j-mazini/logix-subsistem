@@ -4,7 +4,6 @@ import { PortalLayout } from '../../layout/PortalLayout';
 import { useModalBehavior } from '../../hooks/useModalBehavior';
 import AvailableDrivers from './components/AvailableDrivers';
 import '../../styles/legacy/week-planner.css';
-import '../../styles/legacy/available-drivers.css';
 
 /* =====================================================
  * Week Planner — ported from sp-portal/week-planner/script.js
@@ -758,7 +757,7 @@ export function WeekPlanner() {
             <p>Loading week planner…</p>
           </div>
 
-          {/* ============ Available Drivers - Enhanced Grid View (LogixSphere-style) ============ */}
+          {/* ============ Available Drivers - Grid View (LogixSphere-style) ============ */}
           <div style={{ marginBottom: '2rem' }}>
             <AvailableDrivers
               drivers={availableVendors.map((v) => ({
@@ -772,8 +771,8 @@ export function WeekPlanner() {
               }))}
               weekDates={weekDates}
               dayOffEntries={[]}
-              onDragStart={(driver) => {
-                dragPayload.current = { type: 'vendor', vendorId: driver.userId };
+              onVendorDragStart={(userId: number) => {
+                dragPayload.current = { type: 'vendor', vendorId: userId };
               }}
             />
           </div>
