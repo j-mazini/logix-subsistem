@@ -19,7 +19,6 @@ import { Drivers } from './pages/Drivers/Drivers';
 import { RouteBalance } from './pages/RouteBalance/RouteBalance';
 import { SOPFeed } from './pages/SOPFeed/SOPFeed';
 import { Vehicles } from './pages/Vehicles/Vehicles';
-import Vendors from './pages/Vendors/Vendors';
 import {
   VettingAdminLayout,
   VettingChecklistPage,
@@ -57,7 +56,7 @@ function App() {
         <Route path="/route-balance" element={<RouteBalance />} />
         <Route path="/sop-feed" element={<SOPFeed />} />
         <Route path="/vehicles" element={<Vehicles />} />
-        <Route path="/vendors" element={<Vendors />} />
+        <Route path="/drivers" element={<Drivers />} />
         <Route path="/vetting-admin" element={<Navigate to="/vetting-dashboard" replace />} />
         <Route element={<VettingAdminLayout />}>
           <Route path="/vetting-dashboard" element={<VettingDashboardPage />} />
