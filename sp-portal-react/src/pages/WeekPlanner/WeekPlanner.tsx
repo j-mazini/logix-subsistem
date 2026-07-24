@@ -2,7 +2,9 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { PortalLayout } from '../../layout/PortalLayout';
 import { useModalBehavior } from '../../hooks/useModalBehavior';
+import AvailableDrivers from './components/AvailableDrivers';
 import '../../styles/legacy/week-planner.css';
+import '../../styles/legacy/available-drivers.css';
 
 /* =====================================================
  * Week Planner — ported from sp-portal/week-planner/script.js
@@ -150,6 +152,7 @@ interface PoolVendor {
   name: string;
   vehicle: string;
   plate: string;
+  vendorTypeId?: number;
 }
 function buildVendorPool(): PoolVendor[] {
   const pool: PoolVendor[] = [];
@@ -305,8 +308,6 @@ export function WeekPlanner() {
   const [currentWeekStart, setCurrentWeekStart] = useState(() => getWeekStart(new Date()));
   const [showWeekends, setShowWeekends] = useState(true);
   const [collapsedDepots, setCollapsedDepots] = useState<Set<number>>(new Set());
-  const [vendorsDrawerOpen, setVendorsDrawerOpen] = useState(false);
-  const [vendorsDrawerSearch, setVendorsDrawerSearch] = useState('');
   const [editingRecord, setEditingRecord] = useState<WPRecord | null>(null);
   const [supervisorPopover, setSupervisorPopover] = useState<SupervisorPopoverState | null>(null);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
@@ -492,16 +493,12 @@ export function WeekPlanner() {
       if (e.key !== 'Escape') return;
       setEditingRecord(null);
       setSupervisorPopover(null);
-      setVendorsDrawerOpen(false);
     }
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
   }, []);
 
   const weekDates = getWeekDatesFiltered(currentWeekStart, showWeekends);
-  const filteredDrawerVendors = availableVendors.filter(
-    (v) => !vendorsDrawerSearch.trim() || v.name.toLowerCase().includes(vendorsDrawerSearch.trim().toLowerCase()),
-  );
 
   return (
     <PortalLayout mainClassName="wp-container container-fluid px-3 px-lg-4 py-4" title="Week Planner">
@@ -560,11 +557,7 @@ export function WeekPlanner() {
           </span>
         </div>
 
-        <div className="dfi-actions">
-          <button type="button" className="styled-button styled-button--outline" id="btnToggleVendorsPanel" onClick={() => setVendorsDrawerOpen(true)}>
-            <i className="bi bi-people" /> Available Vendors <span className="wp-badge-count" id="btnVendorsCount">{availableVendors.length}</span>
-          </button>
-        </div>
+        <div className="dfi-actions" />
       </div>
 
       {/* ============ COLOR LEGEND ============ */}
@@ -752,64 +745,25 @@ export function WeekPlanner() {
             <p>Loading week planner…</p>
           </div>
 
-          {/* ============ Available Vendors drawer ============ */}
-          <div className="wp-drawer-overlay" id="vendorsDrawerOverlay" hidden={!vendorsDrawerOpen} onClick={() => setVendorsDrawerOpen(false)} />
-          <aside className={`wp-vendors-drawer${vendorsDrawerOpen ? ' open' : ''}`} id="vendorsDrawer" aria-hidden={!vendorsDrawerOpen}>
-            <div className="wp-drawer-header">
-              <h2>
-                <i className="bi bi-people" /> Available Vendors
-              </h2>
-              <button type="button" className="dom-modal-close" id="btnCloseVendorsDrawer" aria-label="Close" onClick={() => setVendorsDrawerOpen(false)}>
-                <i className="bi bi-x-lg" />
-              </button>
-            </div>
-            <div className="wp-drawer-search">
-              <div className="search-input-wrap">
-                <i className="bi bi-search" />
-                <input
-                  type="text"
-                  id="vendorsDrawerSearch"
-                  className="form-control"
-                  placeholder="Search vendor…"
-                  autoComplete="off"
-                  value={vendorsDrawerSearch}
-                  onChange={(e) => setVendorsDrawerSearch(e.target.value)}
-                />
-              </div>
-            </div>
-            <p className="wp-drawer-hint">Drag a vendor onto an empty day cell to assign them for that route and day.</p>
-            <div className="wp-drawer-list" id="vendorsDrawerList">
-              {filteredDrawerVendors.length === 0 ? (
-                <p className="wp-drawer-empty">
-                  <i className="bi bi-check2-circle" />
-                  <br />
-                  No unassigned vendors match.
-                </p>
-              ) : (
-                filteredDrawerVendors.map((v) => (
-                  <div
-                    key={v.id}
-                    className="wp-vendor-chip"
-                    draggable
-                    data-vendor-id={v.id}
-                    title="Drag onto a day cell to assign"
-                    onDragStart={(e) => {
-                      dragPayload.current = { type: 'vendor', vendorId: v.id };
-                      e.dataTransfer.effectAllowed = 'copy';
-                      (e.currentTarget as HTMLElement).classList.add('dragging');
-                    }}
-                    onDragEnd={(e) => (e.currentTarget as HTMLElement).classList.remove('dragging')}
-                  >
-                    <div>
-                      <span className="wp-vendor-chip-name">{v.name}</span>
-                      <span className="wp-vendor-chip-vehicle">{v.vehicle}</span>
-                    </div>
-                    <i className="bi bi-grip-vertical wp-vendor-chip-drag" />
-                  </div>
-                ))
-              )}
-            </div>
-          </aside>
+          {/* ============ Available Drivers - Enhanced Grid View (LogixSphere-style) ============ */}
+          <div style={{ marginBottom: '2rem' }}>
+            <AvailableDrivers
+              drivers={availableVendors.map((v) => ({
+                id: v.id,
+                userId: v.id,
+                name: v.name,
+                fullName: v.name,
+                vehicle: v.vehicle,
+                plate: v.plate || '',
+                vendorTypeId: v.vendorTypeId || 0,
+              }))}
+              weekDates={weekDates}
+              dayOffEntries={[]}
+              onDragStart={(driver) => {
+                dragPayload.current = { type: 'vendor', vendorId: driver.userId };
+              }}
+            />
+          </div>
 
           {/* ============ Assignment edit modal ============ */}
           <div className={`wp-modal-backdrop${editingRecord ? ' sp-modal-backdrop-anim' : ''}`} id="assignmentModalBackdrop" hidden={!editingRecord}>
