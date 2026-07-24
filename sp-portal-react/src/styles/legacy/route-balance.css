@@ -2529,6 +2529,100 @@ body.rebalance-mode-active .operation-summary { display: none; }
   color: var(--ink-soft);
 }
 
+/* ============ SHIPMENT BREAKDOWN ============ */
+
+.shipment-breakdown-section {
+  background: var(--surface-2);
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin-top: 1.5rem;
+  border: 1px solid var(--hairline);
+}
+
+.breakdown-header {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0 0 1rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.breakdown-table-wrapper {
+  overflow-x: auto;
+}
+
+.breakdown-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.breakdown-table thead {
+  background: var(--surface);
+  border-bottom: 2px solid var(--hairline-strong);
+}
+
+.breakdown-table th {
+  padding: 0.6rem 0.75rem;
+  text-align: left;
+  font-weight: 700;
+  color: var(--ink);
+  font-family: var(--font-ui);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.75rem;
+}
+
+.breakdown-table td {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--hairline);
+  color: var(--ink);
+}
+
+.breakdown-table tbody tr:hover {
+  background: rgba(13, 110, 253, 0.04);
+}
+
+.breakdown-table .type-cell {
+  font-weight: 600;
+}
+
+.type-badge-small {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.75rem;
+  padding: 0.3rem 0.6rem;
+  background: rgba(13, 110, 253, 0.1);
+  color: var(--accent-ink);
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.breakdown-table .text-end {
+  text-align: right;
+}
+
+.breakdown-table .mono {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.breakdown-total {
+  background: var(--surface);
+  border-top: 2px solid var(--hairline-strong);
+  font-weight: 700;
+}
+
+.breakdown-total td {
+  border-bottom: none;
+  padding: 0.75rem;
+  color: var(--ink);
+}
+
 /* ============ TRANSFER MODAL ============ */
 
 /* Overrides liquid-glass.css's global `.modal-content` skin (frosted gradient +

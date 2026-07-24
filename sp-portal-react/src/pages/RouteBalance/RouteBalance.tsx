@@ -25,6 +25,7 @@ type DashboardFilterKey = 'del' | 'pu' | 'pre12' | 'asr' | 'dsr' | 'special';
 type SpecialCat = 'all' | 'pre12' | 'asr' | 'dsr';
 type SortKey = 'name' | 'driver' | 'target' | 'totalStops';
 type ShiftKey = 'am' | 'pm';
+type ShipmentType = 'COY' | 'COY-S1' | 'COY-S2' | 'FLY' | 'NCY' | 'PAL1';
 
 interface Stop {
   id: number;
@@ -39,6 +40,16 @@ interface Stop {
   asr: boolean;
   dsr: boolean;
   status: StopStatus;
+  shipmentType: ShipmentType;
+  pieces: number;
+  physicalWeight: number;
+}
+
+interface ShipmentMetrics {
+  type: ShipmentType;
+  pieces: number;
+  shipments: number;
+  physicalWeight: number;
 }
 
 interface HistoryEntry {
@@ -71,6 +82,9 @@ interface RouteRow {
   sendStatus: { am: SendStatus; pm: SendStatus };
   history: HistoryEntry[];
   stops: Stop[];
+  totalPieces: number;
+  totalPhysicalWeight: number;
+  shipmentBreakdown: ShipmentMetrics[];
 }
 
 interface ToastItem {
@@ -111,6 +125,7 @@ const VEHICLES = ['Van-001', 'Van-002', 'Van-003', 'Truck-001', 'Truck-002', 'Tr
 const SUBPOSTCODES = Array.from({ length: 8 }, (_, i) => `ME${i + 1}`);
 const POSTCODES = SUBPOSTCODES.flatMap((sub) => Array.from({ length: 5 }, (_, i) => `${sub} ${i + 1}AB`));
 const STREETS = ['High Street', 'Station Road', 'Church Lane', 'Victoria Avenue', 'Mill Road', 'Park View', 'Queensway', 'Riverside Drive'];
+const SHIPMENT_TYPES: ShipmentType[] = ['COY', 'COY-S1', 'COY-S2', 'FLY', 'NCY', 'PAL1'];
 
 function rand(n: number): number {
   return Math.floor(Math.random() * n);
@@ -147,8 +162,25 @@ function generateFakeData(): RouteRow[] {
         asr: Math.random() > 0.15,
         dsr: Math.random() > 0.12,
         status: j < completedStops ? 'completed' : 'pending',
+        shipmentType: pick(SHIPMENT_TYPES),
+        pieces: 1 + rand(15),
+        physicalWeight: Math.round((50 + Math.random() * 750) * 100) / 100,
       });
     }
+
+    // Calculate shipment metrics
+    const totalPieces = stops.reduce((sum, s) => sum + s.pieces, 0);
+    const totalPhysicalWeight = Math.round(stops.reduce((sum, s) => sum + s.physicalWeight, 0) * 100) / 100;
+
+    const shipmentBreakdown: ShipmentMetrics[] = SHIPMENT_TYPES.map((type) => {
+      const typeStops = stops.filter((s) => s.shipmentType === type);
+      return {
+        type,
+        pieces: typeStops.reduce((sum, s) => sum + s.pieces, 0),
+        shipments: typeStops.length,
+        physicalWeight: Math.round(typeStops.reduce((sum, s) => sum + s.physicalWeight, 0) * 100) / 100,
+      };
+    }).filter((m) => m.shipments > 0);
 
     routes.push({
       id: i,
@@ -170,6 +202,9 @@ function generateFakeData(): RouteRow[] {
       sendStatus: { am: 'pending', pm: 'pending' },
       history: [],
       stops,
+      totalPieces,
+      totalPhysicalWeight,
+      shipmentBreakdown,
     });
   }
 
@@ -1015,6 +1050,7 @@ export function RouteBalance() {
       id: Date.now(), name, driver: newRouteDriver, vehicle: pick(VEHICLES), target: isNaN(target) ? 85 : target,
       totalStops: 0, completedStops: 0, completion: 0, deliveries: 0, pickups: 0, pre12: 0, asr: 0, dsr: 0, spr: 0,
       sortAttendance: 'yes', notes: '', sendStatus: { am: 'pending', pm: 'pending' }, history: [], stops: [],
+      totalPieces: 0, totalPhysicalWeight: 0, shipmentBreakdown: [],
     }]);
     setAddRouteModalOpen(false);
     setNewRouteName(''); setNewRouteTarget('85'); setNewRouteDriver(DRIVERS[0]);
@@ -1504,11 +1540,67 @@ export function RouteBalance() {
                     </div>
                     <div className="summary-row">
                       <div className="summary-cell">
+                        <span className="label">Total Pieces</span>
+                        <span className="value fw-bold">{shipmentRoute.totalPieces}</span>
+                      </div>
+                      <div className="summary-cell">
+                        <span className="label">Soma Phys (kg)</span>
+                        <span className="value fw-bold">{shipmentRoute.totalPhysicalWeight}</span>
+                      </div>
+                      <div className="summary-cell">
+                        <span className="label">Total Shipments</span>
+                        <span className="value fw-bold">{shipmentRoute.stops.length}</span>
+                      </div>
+                    </div>
+                    <div className="summary-row">
+                      <div className="summary-cell" style={{ gridColumn: '1 / -1' }}>
                         <span className="label">Special Indicators</span>
                         <span className="value">
                           Pre-12: {shipmentRoute.pre12} | ASR: {shipmentRoute.asr} | DSR: {shipmentRoute.dsr}
                         </span>
                       </div>
+                    </div>
+                  </div>
+
+                  {/* SHIPMENT BREAKDOWN BY TYPE */}
+                  <div className="shipment-breakdown-section">
+                    <h6 className="breakdown-header">Shipment Breakdown by Type</h6>
+                    <div className="breakdown-table-wrapper">
+                      <table className="breakdown-table">
+                        <thead>
+                          <tr>
+                            <th>Type</th>
+                            <th className="text-end">Pieces</th>
+                            <th className="text-end">Shipments</th>
+                            <th className="text-end">Soma Phys (kg)</th>
+                            <th className="text-end">% Total</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {shipmentRoute.shipmentBreakdown.map((metric) => (
+                            <tr key={metric.type}>
+                              <td className="type-cell">
+                                <span className="type-badge-small">{metric.type}</span>
+                              </td>
+                              <td className="text-end mono">{metric.pieces}</td>
+                              <td className="text-end mono">{metric.shipments}</td>
+                              <td className="text-end mono">{metric.physicalWeight}</td>
+                              <td className="text-end mono">
+                                {shipmentRoute.totalPhysicalWeight > 0
+                                  ? Math.round((metric.physicalWeight / shipmentRoute.totalPhysicalWeight) * 100)
+                                  : 0}%
+                              </td>
+                            </tr>
+                          ))}
+                          <tr className="breakdown-total">
+                            <td className="fw-bold">Total</td>
+                            <td className="text-end mono fw-bold">{shipmentRoute.totalPieces}</td>
+                            <td className="text-end mono fw-bold">{shipmentRoute.stops.length}</td>
+                            <td className="text-end mono fw-bold">{shipmentRoute.totalPhysicalWeight}</td>
+                            <td className="text-end mono fw-bold">100%</td>
+                          </tr>
+                        </tbody>
+                      </table>
                     </div>
                   </div>
 
