@@ -28,11 +28,21 @@
   --color-text-light: #8491a1;
   --color-text-muted: #6b7280;
 
-  /* Colors - Semantic */
-  --color-success: #28a745;
-  --color-warning: #ffc107;
-  --color-error: #dc3545;
+  /* Colors - Semantic.
+     These were Bootstrap's defaults, which no stylesheet in the app actually
+     followed: a count across every page stylesheet found #16a34a/#d97706/
+     #dc2626 used 31/22/27 times against 0/3/7 for the Bootstrap values. The
+     tokens now name the palette the app really uses. The soft variants are
+     the tinted backgrounds those same stylesheets pair with each colour. */
+  --color-success: #16a34a;
+  --color-warning: #d97706;
+  --color-error: #dc2626;
   --color-info: #0c5460;
+
+  --color-success-soft: rgba(22, 163, 74, 0.12);
+  --color-warning-soft: rgba(217, 119, 6, 0.12);
+  --color-error-soft: rgba(220, 38, 38, 0.12);
+  --color-primary-indigo-soft: rgba(99, 102, 241, 0.12);
 
   /* Spacing */
   --spacing-1: 0.25rem;

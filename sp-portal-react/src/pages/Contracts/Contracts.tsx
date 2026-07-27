@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import { PortalLayout } from '../../layout/PortalLayout';
-import { AdminHeaderPill, AdminHeaderMenu, useAdminHeaderPill } from '../../layout/AdminHeaderUserPill';
 import { useCurrentSp } from '../../hooks/useCurrentSp';
 import {
   getFilteredContracts,
@@ -418,7 +417,6 @@ function DepotCard({ sp, depot }: { sp: string; depot: ContractDepotView }) {
 
 export function Contracts() {
   const sp = useCurrentSp();
-  const menuControls = useAdminHeaderPill();
   const [search, setSearch] = useState('');
   const filtered = useMemo(() => getFilteredContracts(sp), [sp]);
 
@@ -441,29 +439,22 @@ export function Contracts() {
   const isEmpty = filtered.length === 0;
   const padCount = (n: number) => String(n).padStart(2, '0');
 
-  const header = (
-    <>
-      <div className={styles.pageHeader}>
-        <h1 className={styles.pageTitle}>Contracts</h1>
-        <div className={styles.searchBox}>
-          <input
-            type="search"
-            className={styles.searchInput}
-            placeholder="Search depots, loops, routes..."
-            autoComplete="off"
-            aria-label="Search contracts"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
-        </div>
-        <AdminHeaderPill sp={sp} controls={menuControls} />
-      </div>
-      <AdminHeaderMenu sp={sp} controls={menuControls} />
-    </>
+  const headerActions = (
+    <div className={styles.searchBox}>
+      <input
+        type="search"
+        className={styles.searchInput}
+        placeholder="Search depots, loops, routes..."
+        autoComplete="off"
+        aria-label="Search contracts"
+        value={search}
+        onChange={e => setSearch(e.target.value)}
+      />
+    </div>
   );
 
   return (
-    <PortalLayout mainClassName={styles.contracts} header={header}>
+    <PortalLayout mainClassName={styles.contracts} title="Contracts" actions={headerActions}>
       <div className={styles.contractsContent}>
         <div className={styles.metricsRow}>
           <div className={styles.metricCard}>

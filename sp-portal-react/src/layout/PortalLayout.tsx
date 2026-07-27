@@ -10,19 +10,40 @@ interface PortalLayoutProps {
   /** Full class list for <main>, taken verbatim from the original page's <main> element — not every page uses "vendor-admin-main", so callers must include it themselves when the source markup does. */
   mainClassName: string;
   title?: string;
+  /** Bootstrap icon class shown before the title, e.g. "bi-megaphone-fill". */
+  titleIcon?: string;
+  /** One-line description under the title. */
+  subtitle?: string;
+  /**
+   * Page-specific header controls — search inputs, action buttons — rendered
+   * in the right-hand column, before the user pill. This is how a page keeps
+   * its own header affordances without replacing the standard header.
+   */
+  actions?: ReactNode;
   /** Extra class on the .admin-header row, e.g. "sp-profile-page-header". Ignored when `header` is passed. */
   headerClassName?: string;
   /**
-   * Full replacement for the default title+pill `.admin-header` row, for pages
-   * that use a different header pattern (e.g. drivers' `.sp-vendor-header`).
-   * The caller is then responsible for rendering AdminHeaderPill/Menu itself
-   * via useAdminHeaderPill if it still needs the user-menu dropdown.
+   * Escape hatch that replaces the whole standard header row. Prefer
+   * title/titleIcon/subtitle/actions: pages using this opt out of the shared
+   * layout, so the announcements card falls below their markup instead of
+   * sitting centred in the header, and they must render AdminHeaderPill/Menu
+   * themselves via useAdminHeaderPill.
    */
   header?: ReactNode;
   children: ReactNode;
 }
 
-export function PortalLayout({ pageClassName, mainClassName, title, headerClassName, header, children }: PortalLayoutProps) {
+export function PortalLayout({
+  pageClassName,
+  mainClassName,
+  title,
+  titleIcon,
+  subtitle,
+  actions,
+  headerClassName,
+  header,
+  children,
+}: PortalLayoutProps) {
   const sp = useCurrentSp();
   const menuControls = useAdminHeaderPill();
 
@@ -45,10 +66,24 @@ export function PortalLayout({ pageClassName, mainClassName, title, headerClassN
                 </>
               ) : (
                 <>
-                  <div className={`admin-header d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3${headerClassName ? ` ${headerClassName}` : ''}`}>
-                    <h1 className="admin-header-title">{title}</h1>
+                  {/* Three columns: the side ones are equal width, which is
+                      what puts the announcements card on the header's centre
+                      line regardless of how long the title or actions are. */}
+                  <div className={`admin-header admin-header--with-announcement d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3${headerClassName ? ` ${headerClassName}` : ''}`}>
+                    <div className="admin-header-side admin-header-side--start">
+                      <h1 className="admin-header-title">
+                        {titleIcon && <i className={`bi ${titleIcon}`} aria-hidden="true" />}
+                        {title}
+                      </h1>
+                      {subtitle && <p className="admin-header-subtitle">{subtitle}</p>}
+                    </div>
+
                     <AnnouncementBox />
-                    <AdminHeaderPill sp={sp} controls={menuControls} />
+
+                    <div className="admin-header-side admin-header-side--end">
+                      {actions}
+                      <AdminHeaderPill sp={sp} controls={menuControls} />
+                    </div>
                   </div>
                   <AdminHeaderMenu sp={sp} controls={menuControls} />
                 </>

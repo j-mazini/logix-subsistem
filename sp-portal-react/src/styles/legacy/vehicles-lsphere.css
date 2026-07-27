@@ -10,24 +10,28 @@
    same design system.
    ============================================================ */
 
+/* The --v-* names are kept because the whole file references them, but each
+   one that matched a token in design/globals.css now points at it instead of
+   repeating the literal, so the two can no longer drift apart. Only the
+   values with no global equivalent are still declared here. */
 body.vehicles-page {
-  --v-primary: #0d6efd;
-  --v-primary-dark: #0b5ed7;
-  --v-text: #2c3e50;
-  --v-text-muted: #6c757d;
-  --v-text-light: #8491a1;
-  --v-border: #e9ecef;
-  --v-surface: #ffffff;
-  --v-surface-alt: #f8f9fa;
-  --v-bg: #f1f5f9;
-  --v-success: #16a34a;
-  --v-danger: #dc3545;
+  --v-primary: var(--color-primary-blue);
+  --v-primary-dark: #0b5ed7; /* darker shade of --v-primary, no global token */
+  --v-text: var(--color-text-dark);
+  --v-text-muted: var(--color-text-muted);
+  --v-text-light: var(--color-text-light);
+  --v-border: var(--color-neutral-border);
+  --v-surface: var(--color-neutral-white);
+  --v-surface-alt: var(--color-neutral-background);
+  --v-bg: #f1f5f9; /* light page backdrop, specific to this standalone page */
+  --v-success: var(--color-success);
+  --v-danger: var(--color-error);
   --v-danger-dark: #b02a37;
   --v-danger-soft: #fdecec;
-  --v-radius: 0.75rem;
-  --v-radius-lg: 0.75rem;
+  --v-radius: var(--radius-md);
+  --v-radius-lg: var(--radius-md);
   --v-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 12px rgba(15, 23, 42, 0.06);
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: var(--font-sans);
   color: var(--v-text);
   background: var(--v-bg);
   min-height: 100vh;
@@ -44,64 +48,6 @@ body.vehicles-page {
   display: flex;
   justify-content: flex-end;
   margin-bottom: 0.75rem;
-}
-
-/* ============ PAGE HEADER ============ */
-
-.vp-header {
-  border-radius: var(--v-radius-lg);
-  padding: 1.5rem 1.75rem;
-  margin-bottom: 1.25rem;
-  background: linear-gradient(135deg, #0f172a 0%, #4f46e5 100%);
-  color: #fff;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.vp-header-titles h1 {
-  margin: 0;
-  font-size: 1.375rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-}
-
-.vp-header-titles p {
-  margin: 0.2rem 0 0;
-  font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.72);
-}
-
-.vp-header-metrics {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-.vp-header-metric {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 0.6rem;
-  padding: 0.4rem 0.85rem;
-  text-align: center;
-  min-width: 4.5rem;
-}
-
-.vp-header-metric-value {
-  display: block;
-  font-size: 1.05rem;
-  font-weight: 700;
-  line-height: 1.2;
-}
-
-.vp-header-metric-label {
-  display: block;
-  font-size: 0.65rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: rgba(255, 255, 255, 0.68);
 }
 
 /* ============ FILTER BAR (desktop) ============ */
@@ -142,7 +88,7 @@ body.vehicles-page {
   border: 1px solid var(--v-border);
   border-radius: 0.5rem;
   font-size: 0.9rem;
-  background: #fff;
+  background: var(--color-neutral-white);
   width: 100%;
   max-width: 320px;
   transition: border-color 0.2s, box-shadow 0.2s;
@@ -153,7 +99,7 @@ body.vehicles-page {
   border: 1px solid var(--v-border);
   border-radius: 0.5rem;
   font-size: 0.9rem;
-  background: #fff;
+  background: var(--color-neutral-white);
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
@@ -191,7 +137,7 @@ body.vehicles-page {
 
 .vp-btn-primary {
   background: var(--v-primary);
-  color: #fff;
+  color: var(--color-neutral-white);
 }
 
 .vp-btn-primary:hover {
@@ -199,7 +145,7 @@ body.vehicles-page {
 }
 
 .vp-btn-outline {
-  background: #fff;
+  background: var(--color-neutral-white);
   color: var(--v-text-muted);
   border-color: var(--v-border);
 }
@@ -217,7 +163,7 @@ body.vehicles-page {
   right: 0;
   top: calc(100% + 0.35rem);
   z-index: 20;
-  background: #fff;
+  background: var(--color-neutral-white);
   border: 1px solid var(--v-border);
   border-radius: 0.5rem;
   box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
@@ -350,7 +296,7 @@ body.vehicles-page {
 
 .vp-vrn.vp-vrn-electric {
   background: #d8f5e3;
-  border-color: #16a34a;
+  border-color: var(--v-success);
   color: #12603f;
 }
 
@@ -373,8 +319,8 @@ body.vehicles-page {
 }
 
 .vp-status-active {
-  background: #e1f5ec;
-  color: #12805c;
+  background: var(--color-success-soft);
+  color: var(--color-success);
 }
 
 .vp-status-inactive {
@@ -383,8 +329,8 @@ body.vehicles-page {
 }
 
 .vp-status-maintenance {
-  background: #fdf2e0;
-  color: #b45309;
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
 }
 
 .vp-status-default {
@@ -453,7 +399,7 @@ body.vehicles-page {
   border-radius: 0.6rem;
   padding: 0.45rem 0.7rem;
   font-size: 0.8rem;
-  background: #fff;
+  background: var(--color-neutral-white);
 }
 
 .vp-mobile-grid {
@@ -468,13 +414,13 @@ body.vehicles-page {
   border-radius: 0.6rem;
   padding: 0.4rem 0.5rem;
   font-size: 0.78rem;
-  background: #fff;
+  background: var(--color-neutral-white);
 }
 
 .vp-mobile-new-btn {
   width: 100%;
   background: var(--v-primary);
-  color: #fff;
+  color: var(--color-neutral-white);
   border: none;
   border-radius: 0.6rem;
   padding: 0.45rem 0.7rem;
@@ -553,7 +499,7 @@ body.vehicles-page {
 }
 
 .vp-card-actions .vp-card-edit:hover {
-  background: #f0f7ff;
+  background: rgba(13, 110, 253, 0.06); /* tint of --v-primary */
 }
 
 .vp-card-actions .vp-card-delete {
@@ -561,7 +507,7 @@ body.vehicles-page {
 }
 
 .vp-card-actions .vp-card-delete:hover {
-  background: #fff5f5;
+  background: var(--color-error-soft);
 }
 
 .vp-card-info {
@@ -649,7 +595,7 @@ body.vehicles-page {
   padding: 0.3rem 0.6rem;
   border: 1px solid var(--v-border);
   border-radius: 0.4rem;
-  background: #fff;
+  background: var(--color-neutral-white);
   color: var(--v-primary);
   font-size: 0.82rem;
   cursor: pointer;
@@ -667,7 +613,7 @@ body.vehicles-page {
 
 .vp-pagination-btn.vp-active {
   background: var(--v-primary);
-  color: #fff;
+  color: var(--color-neutral-white);
   border-color: var(--v-primary);
 }
 
@@ -707,7 +653,7 @@ body.vehicles-page {
   width: 100%;
   max-width: 52rem;
   max-height: 90vh;
-  background: #fff;
+  background: var(--color-neutral-white);
   border-radius: 0.85rem;
   box-shadow: 0 28px 64px rgba(16, 24, 40, 0.28);
   overflow: hidden;
@@ -805,7 +751,7 @@ body.vehicles-page {
 }
 
 .vp-modal-btn-cancel {
-  background: #fff;
+  background: var(--color-neutral-white);
   border: 1px solid var(--v-border);
   color: var(--v-text-muted);
 }
@@ -818,7 +764,7 @@ body.vehicles-page {
 .vp-modal-btn-save {
   background: var(--v-primary);
   border: 1px solid var(--v-primary);
-  color: #fff;
+  color: var(--color-neutral-white);
 }
 
 .vp-modal-btn-save:hover {
@@ -828,7 +774,7 @@ body.vehicles-page {
 .vp-modal-btn-delete {
   background: var(--v-danger);
   border: 1px solid var(--v-danger);
-  color: #fff;
+  color: var(--color-neutral-white);
 }
 
 .vp-modal-btn-delete:hover {
@@ -849,7 +795,7 @@ body.vehicles-page {
   width: 3.25rem;
   height: 3.25rem;
   border-radius: 999px;
-  background: var(--v-danger-soft, #fdecec);
+  background: var(--v-danger-soft, var(--v-danger-soft));
   color: var(--v-danger);
   display: flex;
   align-items: center;
@@ -944,7 +890,7 @@ body.vehicles-page {
   border: 1px solid var(--v-border);
   border-radius: 0.55rem;
   font-size: 0.9rem;
-  background: #fff;
+  background: var(--color-neutral-white);
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
@@ -1036,7 +982,4 @@ body.vehicles-page {
 
 @media (max-width: 767px) {
   .vp-desktop-main { display: none; }
-  .vp-mobile-main { display: block; }
-  .vp-header { padding: 1.1rem 1.25rem; }
-  .vp-header-titles h1 { font-size: 1.1rem; }
 }

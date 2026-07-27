@@ -1,0 +1,187 @@
+/* =============================================================
+ * Active announcements modal.
+ *
+ * Adapted from the legacy .sp-avisos-modal* shell, but under its
+ * own `annc-` prefix: legacy/dashboard-modals.css still declares
+ * .sp-avisos-modal* for the Dashboard's own (tabbed) avisos modal,
+ * and Vite bundles every stylesheet into one file — reusing those
+ * names would leave the two competing on load order.
+ *
+ * The legacy pagination rules were dropped: this modal lists every
+ * active announcement instead of paging through them one at a time.
+ *
+ * Colours, radii, shadows and transitions come from the :root
+ * tokens in design/globals.css.
+ * ============================================================= */
+
+.annc-modal {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.annc-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(4px);
+}
+
+.annc-modal-dialog {
+  position: relative;
+  width: 100%;
+  max-width: 32rem;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  overflow: hidden;
+}
+
+.annc-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--color-neutral-border);
+}
+
+.annc-modal-title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.annc-modal-title i {
+  color: var(--color-primary-indigo);
+}
+
+.annc-modal-close {
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  border-radius: var(--radius-base);
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.annc-modal-close:hover {
+  background: var(--color-neutral-surface);
+  color: var(--color-text-primary);
+}
+
+.annc-modal-body {
+  padding: 1rem 1.25rem;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.annc-modal-item {
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--color-neutral-border);
+  border-radius: var(--radius-md);
+  background: var(--color-neutral-background);
+}
+
+.annc-modal-page-title {
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.annc-modal-page-msg {
+  margin: 0 0 0.5rem;
+  font-size: 0.9375rem;
+  color: var(--color-text-primary);
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.annc-modal-page-expire {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--color-text-light);
+}
+
+.annc-modal-empty {
+  margin: 0;
+  padding: 1.5rem 0;
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: 0.9375rem;
+}
+
+.annc-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.85rem 1.25rem;
+  border-top: 1px solid var(--color-neutral-border);
+}
+
+.annc-modal-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 1.1rem;
+  border-radius: var(--radius-base);
+  background: var(--gradient-beam);
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: box-shadow var(--transition-fast), transform var(--transition-fast);
+}
+
+.annc-modal-cta:hover {
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.35);
+  transform: translateY(-1px);
+}
+
+/* Urgency dot, same palette the Announcements page uses for its rows. */
+.annc-modal-urgency-dot {
+  display: inline-block;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+.annc-modal-urgency-Critical {
+  background: var(--color-error);
+}
+
+.annc-modal-urgency-High {
+  background: var(--color-warning);
+}
+
+.annc-modal-urgency-Normal {
+  background: var(--color-success);
+}
+
+.annc-modal-urgency-Low {
+  background: var(--color-primary-indigo);
+}

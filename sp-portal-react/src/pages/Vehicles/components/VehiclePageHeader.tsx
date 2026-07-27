@@ -4,25 +4,36 @@ interface Metric {
 }
 
 interface VehiclePageHeaderProps {
-  title: string;
   subtitle: string;
   metrics: Metric[];
 }
 
-export function VehiclePageHeader({ title, subtitle, metrics }: VehiclePageHeaderProps) {
+/**
+ * Fleet counts card.
+ *
+ * Uses the `vendor-page-*` classes from legacy/shared-pages.css — the same
+ * ones the Vendors page renders — rather than the dark gradient banner this
+ * page used to have, so both dashboards read identically. The class prefix
+ * says "vendor" only because Vendors was the first page to use the pattern;
+ * the rules live in the shared stylesheet, not in a vendors-specific one.
+ */
+export function VehiclePageHeader({ subtitle, metrics }: VehiclePageHeaderProps) {
   return (
-    <div className="vp-header">
-      <div className="vp-header-titles">
-        <h1>{title}</h1>
-        <p>{subtitle}</p>
-      </div>
-      <div className="vp-header-metrics" aria-label="Vehicle counts">
-        {metrics.map((m) => (
-          <div className="vp-header-metric" key={m.label}>
-            <span className="vp-header-metric-value">{m.value}</span>
-            <span className="vp-header-metric-label">{m.label}</span>
+    <div className="vendor-page-header mb-4">
+      <div className="vendor-page-header-inner">
+        <div className="vendor-page-header-row">
+          <div className="vendor-page-header-title-block">
+            <p className="vendor-page-subtitle">{subtitle}</p>
+            <div className="vendor-page-metrics" aria-label="Vehicle counts">
+              {metrics.map((m) => (
+                <div className="vendor-page-metric" key={m.label}>
+                  <span className="vendor-page-metric-label">{m.label}</span>
+                  <span className="vendor-page-metric-value">{m.value}</span>
+                </div>
+              ))}
+            </div>
           </div>
-        ))}
+        </div>
       </div>
     </div>
   );

@@ -1,27 +1,67 @@
 /* =============================================================
- * Announcements card — moved out of legacy/dashboard-header.css
- * when PortalLayout started rendering it on every portal page.
- * Kept as plain (unscoped) .sp-announcement-* selectors because
- * that is what the legacy markup uses; no other stylesheet in
- * the app declares them.
+ * Announcements card, rendered by PortalLayout on every page.
+ *
+ * Colours, radii, shadows and transitions come from the :root
+ * tokens in design/globals.css. The card was originally styled
+ * in the Dashboard's own legacy blue (#3b82f6 / #1e40af); it now
+ * uses the portal's indigo accent so it matches the sidebar,
+ * user pill and buttons it sits next to.
+ *
+ * Selectors stay unscoped .sp-announcement-* because that is what
+ * the legacy markup uses, and no other stylesheet declares them.
  * ============================================================= */
 
-/* Default: a flex child of the .admin-header row, taking the space between
-   the page title and the user pill. */
+/* Default: a flex child of the .admin-header row, between the page title
+   and the user pill. */
 .sp-announcement-header-box {
-  flex: 1 1 16rem;
-  min-width: 0;
+  flex: 1 1 20rem;
   max-width: 32rem;
-  /* Absorbs the space left over once max-width caps the flex grow, so the
-     card sits centred between the page title and the user pill. */
-  margin-inline: auto;
 }
 
+/* Equal grow from equal bases keeps the two side columns the same width,
+   which is what centres the card. No `min-width: 0`: the columns must refuse
+   to shrink below their content so a narrow page (e.g. SOP Feed's 44rem
+   column) wraps the header onto more lines instead of squeezing text to one
+   word per line. Kept here because the columns exist only to frame this card. */
+.admin-header--with-announcement > .admin-header-side {
+  flex: 1 1 12rem;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+}
+
+.admin-header--with-announcement > .admin-header-side--start {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+}
+
+.admin-header--with-announcement > .admin-header-side--end {
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.admin-header--with-announcement .admin-header-title {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  min-width: 0;
+}
+
+.admin-header-subtitle {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  color: var(--color-text-secondary);
+}
+
+/* Pages that supply their own header get the card below it — centred on the
+   main column so it lines up with the in-header variant on every other page. */
 .sp-announcement-header-box--standalone {
   flex: 0 0 auto;
   width: min(100%, 32rem);
-  margin-inline: 0;
-  margin-bottom: 1rem;
+  margin-inline: auto;
+  margin-bottom: var(--spacing-4);
 }
 
 @media (max-width: 640px) {
@@ -33,86 +73,91 @@
   }
 }
 
+/* The two rgba() values below are alpha tints of the --gradient-beam pair
+   (--color-primary-indigo #6366f1 and --color-primary-purple #8b5cf6); CSS
+   custom properties can't carry an alpha channel on their own. */
 .sp-announcement-header-card {
-  border: 1px solid rgba(59, 130, 246, 0.25);
-  border-radius: 0.5rem;
-  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border: 1px solid var(--color-primary-indigo-soft);
+  border-radius: var(--radius-base);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.06) 0%, rgba(139, 92, 246, 0.08) 100%);
   overflow: hidden;
 }
 
 .sp-announcement-header-head {
-  padding: 0.4rem 0.75rem;
-  background: rgba(59, 130, 246, 0.08);
-  border-bottom: 1px solid rgba(59, 130, 246, 0.15);
+  padding: var(--spacing-2) var(--spacing-3);
+  background: rgba(99, 102, 241, 0.08);
+  border-bottom: 1px solid var(--color-primary-indigo-soft);
 }
 
 .sp-announcement-header-title {
   margin: 0;
   font-size: 0.875rem;
   font-weight: 600;
-  color: #1e40af;
+  color: var(--color-text-primary);
   display: flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: var(--spacing-1);
   line-height: 1.3;
   white-space: normal;
   overflow-wrap: anywhere;
 }
 
 .sp-announcement-header-title i {
-  color: #3b82f6;
+  color: var(--color-primary-indigo);
 }
 
 .sp-announcement-header-desc {
   font-size: 0.6875rem;
   margin-top: 0.15rem;
   line-height: 1.4;
+  color: var(--color-text-secondary);
   white-space: normal;
   overflow-wrap: anywhere;
 }
 
 .sp-announcement-header-body {
-  padding: 0.4rem 0.75rem;
+  padding: var(--spacing-2) var(--spacing-3);
 }
 
 .sp-announcement-box-trigger {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: var(--spacing-1);
   width: 100%;
-  padding: 0.35rem 0;
+  padding: var(--spacing-1) 0;
   border: none;
-  border-radius: 0.35rem;
+  border-radius: var(--radius-sm);
   background: transparent;
-  color: #1e40af;
+  color: var(--color-primary-indigo);
   font-size: 0.8125rem;
+  font-family: inherit;
   text-align: left;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background var(--transition-fast);
   line-height: 1.35;
   white-space: normal;
   text-decoration: none;
 }
 
 .sp-announcement-box-trigger:hover {
-  background: rgba(59, 130, 246, 0.12);
+  background: var(--color-primary-indigo-soft);
 }
 
-/* Compliance roll-up row: same shape, amber instead of the blue broadcast tone. */
+/* Compliance roll-up row: same shape, warning tone instead of the accent. */
 .sp-announcement-box-trigger--warning {
-  color: #b45309;
-  border-top: 1px solid rgba(59, 130, 246, 0.15);
+  color: var(--color-warning);
+  border-top: 1px solid var(--color-primary-indigo-soft);
   margin-top: 0.15rem;
   padding-top: 0.45rem;
 }
 
 .sp-announcement-box-trigger--warning:hover {
-  background: rgba(217, 119, 6, 0.12);
+  background: var(--color-warning-soft);
 }
 
 .sp-announcement-box-trigger--warning i {
   flex-shrink: 0;
-  color: #d97706;
+  color: var(--color-warning);
 }
 
 .sp-announcement-box-text {
@@ -127,8 +172,8 @@
 .sp-announcement-box-count {
   flex-shrink: 0;
   padding: 0.1rem 0.45rem;
-  border-radius: 9999px;
-  background: rgba(59, 130, 246, 0.15);
+  border-radius: var(--radius-full);
+  background: var(--color-primary-indigo-soft);
   font-size: 0.7rem;
   font-weight: 600;
 }

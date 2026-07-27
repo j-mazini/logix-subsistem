@@ -3,7 +3,6 @@ import { createPortal } from 'react-dom';
 import { useViewportAttribute } from '../../hooks/useViewportAttribute';
 import { useCurrentSp } from '../../hooks/useCurrentSp';
 import { useModalBehavior } from '../../hooks/useModalBehavior';
-import { AdminHeaderPill, AdminHeaderMenu, useAdminHeaderPill } from '../../layout/AdminHeaderUserPill';
 import { PortalLayout } from '../../layout/PortalLayout';
 import { getServiceProvider } from '../../data/dhlMockData';
 import {
@@ -107,7 +106,6 @@ function PostMedia({ post }: { post: SopPost }) {
 export function SOPFeed() {
   useViewportAttribute();
   const sp = useCurrentSp();
-  const menuControls = useAdminHeaderPill();
 
   const [posts, setPosts] = useState<SopPost[]>(() => [...loadCompanyPosts(), ...getDhlPosts()]);
   const [search, setSearch] = useState('');
@@ -208,34 +206,28 @@ export function SOPFeed() {
     setCommentDraft('');
   }
 
-  const header = (
-    <>
-      <div className="admin-header sop-header">
-        <div className="sop-header-top">
-          <h1 className="admin-header-title">
-            <i className="bi bi-megaphone-fill" /> Announcements &amp; Feed
-          </h1>
-          <AdminHeaderPill sp={sp} controls={menuControls} />
-        </div>
-        <p className="text-muted small mb-2">Publish updates to your drivers and share DHL guidance directly in the company feed.</p>
-        <div className="admin-header-search sop-header-search">
-          <input
-            type="search"
-            id="sopSearch"
-            className="form-control"
-            placeholder="Search company updates, DHL posts, keywords…"
-            autoComplete="off"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-      </div>
-      <AdminHeaderMenu sp={sp} controls={menuControls} />
-    </>
+  const headerActions = (
+    <div className="admin-header-search sop-header-search">
+      <input
+        type="search"
+        id="sopSearch"
+        className="form-control"
+        placeholder="Search company updates, DHL posts, keywords…"
+        autoComplete="off"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
+    </div>
   );
 
   return (
-    <PortalLayout mainClassName="sop-main" header={header}>
+    <PortalLayout
+      mainClassName="sop-main"
+      title="Announcements & Feed"
+      titleIcon="bi-megaphone-fill"
+      subtitle="Publish updates to your drivers and share DHL guidance directly in the company feed."
+      actions={headerActions}
+    >
       {/* Create post */}
       <form className="sop-create-post" id="companyPostForm" onSubmit={handlePublish}>
         <div className="sop-create-post-inner">

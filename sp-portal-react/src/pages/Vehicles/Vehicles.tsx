@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { PortalLayout } from '../../layout/PortalLayout';
-import { AdminHeaderPill, AdminHeaderMenu, useAdminHeaderPill } from '../../layout/AdminHeaderUserPill';
 import { useCurrentSp } from '../../hooks/useCurrentSp';
 import { getRawVehicles, getDepotsForSp, formatDateDisplay, getCurrentDateYMD, type RawVehicle } from '../../data/vehiclesData';
+import '../../styles/legacy/shared-pages.css';
 import '../../styles/legacy/vehicles-lsphere.css';
 import { VehiclePageHeader } from './components/VehiclePageHeader';
 import { VehicleFilters } from './components/VehicleFilters';
@@ -57,7 +57,6 @@ function vehicleToForm(v: RawVehicle): VehicleFormState {
 
 export function Vehicles() {
   const sp = useCurrentSp();
-  const menuControls = useAdminHeaderPill();
 
   // Page-scoped body class: vehicles-lsphere.css's `body.vehicles-page`
   // rule flips the shell to the light LogixSphere theme (same technique
@@ -275,15 +274,6 @@ export function Vehicles() {
     );
   }
 
-  const header = (
-    <>
-      <div className="vp-sp-pill-row">
-        <AdminHeaderPill sp={sp} controls={menuControls} />
-      </div>
-      <AdminHeaderMenu sp={sp} controls={menuControls} />
-    </>
-  );
-
   const metrics = [
     { label: 'Total', value: metricTotal },
     { label: 'Active', value: metricActive },
@@ -292,9 +282,9 @@ export function Vehicles() {
   ];
 
   return (
-    <PortalLayout mainClassName="vehicles-page-main" header={header}>
+    <PortalLayout mainClassName="vehicles-page-main" title="Vehicles">
       <div className="vehicles-page-container">
-        <VehiclePageHeader title="Vehicles" subtitle="Vehicle fleet management" metrics={metrics} />
+        <VehiclePageHeader subtitle="Vehicle fleet management" metrics={metrics} />
 
         {/* Desktop */}
         <div className="vp-desktop-main">

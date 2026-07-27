@@ -73,6 +73,17 @@
   scrollbar-width: none;
 }
 
+/* Without this the block is shrink-to-fit, so the metrics row ends up as wide
+   as the subtitle above it — a short subtitle (Vehicles) wrapped the fourth
+   metric onto its own line while a long one (Vendors) did not. Giving it a
+   fixed upper bound makes the row the same width on every page that uses
+   this pattern. */
+.vendor-page-header-title-block {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 40rem;
+}
+
 .shared-page-metrics::-webkit-scrollbar,
 .vendor-page-metrics::-webkit-scrollbar {
   display: none;
