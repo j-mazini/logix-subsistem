@@ -1,5 +1,5 @@
 // Local (non-shared) typed accessors + business logic over window.DHL_MOCK_DATA's
-// `vendors` bucket, used only by the Drivers ("Vendors") page. Ported 1:1 from
+// `vendors` bucket, used only by the Vendors page. Ported 1:1 from
 // sp-portal/drivers/drivers.js's pure helper functions (courier-id derivation,
 // training/document expiry rules, filter/sort). Kept separate from
 // dhlMockData.ts (which other pages/agents are editing concurrently) — see

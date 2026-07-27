@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PortalLayout } from '../../layout/PortalLayout';
 import { useModalBehavior } from '../../hooks/useModalBehavior';
+import '../../styles/legacy/shared-pages.css';
 import '../../styles/legacy/requests-admin.css';
 
 /* =====================================================
@@ -225,11 +226,11 @@ function renderCellValue(value: string | null | undefined) {
 
 export function RequestsAdmin() {
   const master = useMemo(() => buildMasterData(), []);
-  const { vendorTypes, servicePartners, vendors } = master;
+  const { vendorTypes, vendors } = master;
 
   const [allRequests, setAllRequests] = useState<VendorRequest[]>(() => generateMockRequests(vendors));
   const [activeTab, setActiveTab] = useState<'requests' | 'history'>('requests');
-  const [selectedServicePartnerId, setSelectedServicePartnerId] = useState('');
+  const [filterRequestType, setFilterRequestType] = useState<'all' | RequestType>('all');
   const [filterRecordType, setFilterRecordType] = useState('all');
   const [filterVendorType, setFilterVendorType] = useState('all');
   const [selectedRequest, setSelectedRequest] = useState<VendorRequest | null>(null);
@@ -257,15 +258,22 @@ export function RequestsAdmin() {
   }
 
   const pendingRequests = useMemo(() => {
-    let rows = allRequests.filter((r) => r.status.toLowerCase() === 'pending');
-    if (selectedServicePartnerId !== '') {
-      rows = rows.filter((r) => {
-        const v = vendors.find((x) => x.userId === r.userId);
-        return v && String(v.servicePartnerId) === selectedServicePartnerId;
-      });
+    const now = new Date();
+    const thisMonth = now.getMonth();
+    const thisYear = now.getFullYear();
+
+    let rows = allRequests.filter((r) => {
+      if (r.status.toLowerCase() !== 'pending') return false;
+      // Default listing is scoped to the current month, by submission date.
+      const created = new Date(r.createdAt);
+      return created.getMonth() === thisMonth && created.getFullYear() === thisYear;
+    });
+
+    if (filterRequestType !== 'all') {
+      rows = rows.filter((r) => r.requestType === filterRequestType);
     }
     return rows;
-  }, [allRequests, selectedServicePartnerId, vendors]);
+  }, [allRequests, filterRequestType]);
 
   const historyRequests = useMemo(() => {
     let rows = allRequests.filter((r) => r.status.toLowerCase() !== 'pending');
@@ -279,7 +287,7 @@ export function RequestsAdmin() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allRequests, filterRecordType, filterVendorType, vendors, vendorTypes]);
 
-  const pendingCount = useMemo(() => allRequests.filter((r) => r.status.toLowerCase() === 'pending').length, [allRequests]);
+  const pendingCount = pendingRequests.length;
 
   function showToast(message: string, type: ToastItem['type'] = 'info') {
     const id = ++toastIdRef.current;
@@ -383,31 +391,35 @@ export function RequestsAdmin() {
 
       {/* ============ REQUESTS TAB ============ */}
       <section className="va-tab-panel" id="panelRequests" hidden={activeTab !== 'requests'}>
+        {/* Panel head carries the title, the scope note and the controls —
+            same arrangement as LogixSphere's requests-admin. */}
         <div className="va-card">
           <div className="va-card-head">
             <div>
               <div className="va-card-title">Pending Requests</div>
-              <div className="va-card-subtitle">Review and approve or reject pending requests.</div>
+              <div className="va-card-subtitle">Pending requests submitted this month.</div>
             </div>
             <div className="va-card-head-actions">
-              <select
-                className="form-select filter-select"
-                id="filterServicePartner"
-                value={selectedServicePartnerId}
-                onChange={(e) => setSelectedServicePartnerId(e.target.value)}
-              >
-                <option value="">All Service Partners</option>
-                {servicePartners.map((sp) => (
-                  <option key={sp.servicePartnerId} value={String(sp.servicePartnerId)}>
-                    {sp.partnerName}
-                  </option>
-                ))}
-              </select>
+              <label className="ra-filter" htmlFor="filterRequestType">
+                <span className="ra-filter-label">Request Type</span>
+                <select
+                  className="form-select filter-select"
+                  id="filterRequestType"
+                  value={filterRequestType}
+                  onChange={(e) => setFilterRequestType(e.target.value as 'all' | RequestType)}
+                >
+                  <option value="all">All types</option>
+                  <option value="DayOff">Day Off</option>
+                  <option value="HolyDay">Holiday</option>
+                  <option value="PrePayment">Pre-Payment</option>
+                </select>
+              </label>
               <button type="button" className="styled-button styled-button--outline" id="btnRefreshRequests" onClick={refresh}>
                 <i className="bi bi-arrow-clockwise" /> Refresh
               </button>
             </div>
           </div>
+
 
           {pendingRequests.length === 0 ? (
             <div id="requestsEmptyState" className="va-empty-state">

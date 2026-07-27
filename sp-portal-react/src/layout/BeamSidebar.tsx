@@ -26,7 +26,7 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: 'Setup',
     items: [
-      { icon: 'bi-person-fill', label: 'Drivers', route: '/drivers' },
+      { icon: 'bi-person-fill', label: 'Vendors', route: '/vendors' },
       { icon: 'bi-truck', label: 'Vehicles', route: '/vehicles' },
       { icon: 'bi-phone', label: 'Assets', route: '/assets' },
       { icon: 'bi-file-earmark-text', label: 'Contract Management', route: '/contracts' },

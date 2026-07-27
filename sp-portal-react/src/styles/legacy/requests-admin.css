@@ -42,7 +42,8 @@
 
 * { box-sizing: border-box; }
 
-html, body {
+html,
+body {
   min-height: 100%;
   margin: 0;
   padding: 0;
@@ -57,7 +58,7 @@ body.va-page {
   overflow-x: hidden;
 }
 
-.va-container {
+.requests-admin-page .va-container {
   max-width: 1720px;
   margin: 0 auto;
 }
@@ -65,14 +66,14 @@ body.va-page {
 /* =====================================================
    HEADER
    ===================================================== */
-.page-header-section {
+.requests-admin-page .page-header-section {
   display: flex;
   flex-direction: column;
   gap: 1rem;
   margin-bottom: 1.5rem;
 }
 
-.page-header-title {
+.requests-admin-page .page-header-title {
   font-family: 'Inter', sans-serif;
   font-size: 1.85rem;
   font-weight: 700;
@@ -82,7 +83,7 @@ body.va-page {
 }
 
 @media (min-width: 768px) {
-  .page-header-title {
+  .requests-admin-page .page-header-title {
     background: linear-gradient(to bottom right, #1e293b 0%, #6366f1 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -90,7 +91,7 @@ body.va-page {
   }
 }
 
-.page-header-date {
+.requests-admin-page .page-header-date {
   font-family: 'Inter', sans-serif;
   font-size: 0.875rem;
   color: var(--text-light);
@@ -98,12 +99,12 @@ body.va-page {
   display: flex;
   align-items: center;
 }
-.page-header-date i { margin-right: 0.5rem; }
+.requests-admin-page .page-header-date i { margin-right: 0.5rem; }
 
 /* =====================================================
    BUTTONS
    ===================================================== */
-.styled-button {
+.requests-admin-page .styled-button {
   border-radius: 8px;
   font-weight: 500;
   padding: 0.5rem 1rem;
@@ -121,39 +122,41 @@ body.va-page {
   font-family: inherit;
   white-space: nowrap;
 }
-.styled-button:disabled { opacity: 0.6; cursor: not-allowed; }
+.requests-admin-page .styled-button:disabled { opacity: 0.6; cursor: not-allowed; }
 
-.styled-button--success { background-color: var(--success-green); color: #fff; }
-.styled-button--success:hover:not(:disabled) { background-color: var(--success-green-hover); transform: translateY(-1px); }
+.requests-admin-page .styled-button--success { background-color: var(--success-green); color: #fff; }
+.requests-admin-page .styled-button--success:hover:not(:disabled) { background-color: var(--success-green-hover); transform: translateY(-1px); }
 
-.styled-button--danger { background-color: var(--danger-red); color: #fff; }
-.styled-button--danger:hover:not(:disabled) { background-color: var(--danger-red-hover); transform: translateY(-1px); }
+.requests-admin-page .styled-button--danger { background-color: var(--danger-red); color: #fff; }
+.requests-admin-page .styled-button--danger:hover:not(:disabled) { background-color: var(--danger-red-hover); transform: translateY(-1px); }
 
-.styled-button--outline {
+.requests-admin-page .styled-button--outline {
   background-color: transparent;
   border: 1px solid var(--border-color);
   color: var(--text-dark);
 }
-.styled-button--outline:hover:not(:disabled) { background-color: var(--main-bg); border-color: var(--text-light); }
+.requests-admin-page .styled-button--outline:hover:not(:disabled) { background-color: var(--main-bg); border-color: var(--text-light); }
 
-.styled-button--sm { padding: 0.32rem 0.7rem; font-size: 0.8rem; }
+.requests-admin-page .styled-button--sm { padding: 0.32rem 0.7rem; font-size: 0.8rem; }
 
 /* =====================================================
    TABS
    ===================================================== */
-.va-tabs {
+/* shadcn TabsList as the page uses it: `grid w-full grid-cols-2`, so the two
+   triggers split the full width rather than sitting in a narrow pill. */
+.requests-admin-page .va-tabs {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 0.35rem;
-  background: var(--main-bg);
-  border: 1px solid var(--border-color);
-  border-radius: 10px;
-  padding: 0.3rem;
-  margin-bottom: 1.25rem;
-  max-width: 480px;
+  align-items: center;
+  height: 2.5rem;
+  background: #f1f5f9;
+  border-radius: 0.375rem;
+  padding: 0.25rem;
+  margin-bottom: 1rem;
+  width: 100%;
 }
 
-.va-tab {
+.requests-admin-page .va-tab {
   border: none;
   background: transparent;
   color: var(--text-secondary);
@@ -164,27 +167,52 @@ body.va-page {
   cursor: pointer;
   transition: all var(--transition-fast);
 }
-.va-tab:hover { color: var(--text-primary); }
-.va-tab.active {
+.requests-admin-page .va-tab:hover { color: var(--text-primary); }
+.requests-admin-page .va-tab.active {
   background: var(--card-bg);
   color: var(--primary-blue);
   box-shadow: var(--card-shadow);
 }
 
-.va-tab-panel { display: block; }
+.requests-admin-page .va-tab-panel { display: block; }
 
 /* =====================================================
    CARD
    ===================================================== */
-.va-card {
-  background: var(--card-bg);
+/* Faithful to LogixSphere's requests-admin panel, which is
+   `rounded-xl border bg-white/70 p-4 backdrop-blur` — translucent over the
+   page background, hairline border, no shadow. */
+.requests-admin-page .va-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius);
-  box-shadow: var(--card-shadow);
-  padding: 1.1rem 1.25rem 1.25rem;
+  border-radius: 0.75rem;
+  padding: 1rem;
 }
 
-.va-card-head {
+.requests-admin-page .ra-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.requests-admin-page .ra-filter .filter-select {
+  min-width: 12rem;
+  max-width: 16rem;
+}
+
+
+.requests-admin-page .ra-filter-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-light);
+}
+
+
+.requests-admin-page .va-card-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -193,17 +221,17 @@ body.va-page {
   margin-bottom: 1.1rem;
 }
 
-.va-card-title { font-size: 0.95rem; font-weight: 700; color: var(--text-primary); }
-.va-card-subtitle { font-size: 0.78rem; color: var(--text-secondary); margin-top: 0.15rem; }
+.requests-admin-page .va-card-title { font-size: 0.875rem; font-weight: 600; color: var(--text-primary); }
+.requests-admin-page .va-card-subtitle { font-size: 0.75rem; color: #475569; margin-top: 0.15rem; }
 
-.va-card-head-actions {
+.requests-admin-page .va-card-head-actions {
   display: flex;
   align-items: center;
   gap: 0.6rem;
   flex-wrap: wrap;
 }
 
-.form-select.filter-select {
+.requests-admin-page .form-select.filter-select {
   background: var(--card-bg);
   border: 1px solid var(--border-color);
   color: var(--text-primary);
@@ -212,7 +240,7 @@ body.va-page {
   font-family: inherit;
   min-width: 180px;
 }
-.form-select.filter-select:focus {
+.requests-admin-page .form-select.filter-select:focus {
   border-color: var(--primary-blue);
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
 }
@@ -220,52 +248,62 @@ body.va-page {
 /* =====================================================
    EMPTY STATE
    ===================================================== */
-.va-empty-state {
+.requests-admin-page .va-empty-state {
   text-align: center;
   padding: 2.5rem 1.5rem;
   color: var(--text-light);
   font-size: 0.9rem;
 }
-.va-empty-text { margin: 0; }
+.requests-admin-page .va-empty-text { margin: 0; }
 
 /* =====================================================
    TABLE
    ===================================================== */
-.va-table-scroll { overflow-x: auto; border: 1px solid var(--border-color); border-radius: 8px; }
+/* The panel around it provides the frame, so this only scrolls. */
+.requests-admin-page .va-table-scroll { overflow-x: auto; }
 
-.va-table {
+.requests-admin-page .va-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.84rem;
   min-width: 900px;
 }
 
-.va-table thead { background: var(--main-bg); }
+.requests-admin-page .va-table thead { background: transparent; }
 
-.va-table th {
-  color: var(--text-secondary);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  font-size: 0.68rem;
-  padding: 0.65rem 0.8rem;
+/* shadcn TableHead: sentence case at text-sm/medium, no uppercase and no
+   tinted header band — LogixSphere separates rows with a hairline only. */
+.requests-admin-page .va-table th {
+  color: var(--text-primary);
+  font-weight: 500;
+  font-size: 0.875rem;
+  height: 2.5rem;
+  padding: 0 0.5rem;
+  text-align: left;
+  vertical-align: middle;
   border-bottom: 1px solid var(--border-color);
   white-space: nowrap;
+  /* announcements.css declares `.va-table th { text-transform: uppercase }`
+     on the same class vocabulary; specificity is resolved per property, so
+     these have to be reset explicitly rather than merely out-specified. */
+  text-transform: none;
+  letter-spacing: normal;
 }
 
-.va-table td {
-  padding: 0.6rem 0.8rem;
+/* shadcn TableCell: p-2, align-middle. */
+.requests-admin-page .va-table td {
+  padding: 0.5rem;
   border-bottom: 1px solid var(--border-color);
-  color: var(--text-dark);
+  color: var(--text-primary);
   vertical-align: middle;
 }
 
-.va-table tbody tr:last-child td { border-bottom: none; }
-.va-table tbody tr:hover { background: rgba(99, 102, 241, 0.04); }
+.requests-admin-page .va-table tbody tr:last-child td { border-bottom: none; }
+.requests-admin-page .va-table tbody tr:hover { background: rgba(15, 23, 42, 0.03); }
 
-.va-cell-empty { color: var(--text-light); }
+.requests-admin-page .va-cell-empty { color: var(--text-light); }
 
-.va-cell-truncate {
+.requests-admin-page .va-cell-truncate {
   max-width: 200px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -274,10 +312,10 @@ body.va-page {
   vertical-align: middle;
 }
 
-.va-actions-cell { display: flex; align-items: center; justify-content: center; gap: 0.45rem; white-space: nowrap; }
+.requests-admin-page .va-actions-cell { display: flex; align-items: center; justify-content: center; gap: 0.45rem; white-space: nowrap; }
 
 /* Status badge */
-.va-status-badge {
+.requests-admin-page .va-status-badge {
   display: inline-flex;
   align-items: center;
   padding: 0.25rem 0.7rem;
@@ -287,16 +325,16 @@ body.va-page {
   border: 1px solid transparent;
   text-transform: capitalize;
 }
-.va-status-badge.approved { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
-.va-status-badge.rejected,
-.va-status-badge.reproved { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
-.va-status-badge.pending,
-.va-status-badge.other { background: #fef9c3; color: #854d0e; border-color: #fde68a; }
+.requests-admin-page .va-status-badge.approved { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+.requests-admin-page .va-status-badge.rejected,
+.requests-admin-page .va-status-badge.reproved { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
+.requests-admin-page .va-status-badge.pending,
+.requests-admin-page .va-status-badge.other { background: #fef9c3; color: #854d0e; border-color: #fde68a; }
 
 /* =====================================================
    MODAL (renamed from dom-modal pattern)
    ===================================================== */
-.va-modal-backdrop {
+.requests-admin-page .va-modal-backdrop {
   position: fixed;
   inset: 0;
   background: rgba(15, 23, 42, 0.55);
@@ -308,7 +346,7 @@ body.va-page {
   z-index: 2000;
 }
 
-.va-modal {
+.requests-admin-page .va-modal {
   background: var(--card-bg);
   border-radius: 14px;
   width: 100%;
@@ -316,11 +354,11 @@ body.va-page {
   box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.35);
   animation: vaModalFadeIn 0.25s ease-out;
 }
-.va-modal-small { max-width: 480px; }
+.requests-admin-page .va-modal-small { max-width: 480px; }
 
 @keyframes vaModalFadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
 
-.va-modal-header {
+.requests-admin-page .va-modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -329,9 +367,9 @@ body.va-page {
   background: var(--main-bg);
   border-radius: 14px 14px 0 0;
 }
-.va-modal-title { font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin: 0; }
+.requests-admin-page .va-modal-title { font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin: 0; }
 
-.va-modal-close {
+.requests-admin-page .va-modal-close {
   border: none;
   background: transparent;
   color: var(--text-secondary);
@@ -343,20 +381,20 @@ body.va-page {
   align-items: center;
   justify-content: center;
 }
-.va-modal-close:hover { background: rgba(0,0,0,0.06); color: var(--text-primary); }
+.requests-admin-page .va-modal-close:hover { background: rgba(0,0,0,0.06); color: var(--text-primary); }
 
-.va-modal-body { padding: 1.4rem; }
-.va-modal-desc { font-size: 0.85rem; color: var(--text-secondary); margin: 0 0 1rem; }
+.requests-admin-page .va-modal-body { padding: 1.4rem; }
+.requests-admin-page .va-modal-desc { font-size: 0.85rem; color: var(--text-secondary); margin: 0 0 1rem; }
 
-.va-form-field { display: flex; flex-direction: column; gap: 0.35rem; }
-.va-form-label {
+.requests-admin-page .va-form-field { display: flex; flex-direction: column; gap: 0.35rem; }
+.requests-admin-page .va-form-label {
   font-size: 0.78rem;
   font-weight: 700;
   color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
-.va-form-field textarea {
+.requests-admin-page .va-form-field textarea {
   border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 0.6rem 0.7rem;
@@ -366,14 +404,14 @@ body.va-page {
   background: var(--card-bg);
   resize: vertical;
 }
-.va-form-field textarea:focus {
+.requests-admin-page .va-form-field textarea:focus {
   outline: none;
   border-color: var(--primary-blue);
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
 }
-.va-form-hint { font-size: 0.72rem; color: var(--text-light); margin: 0.2rem 0 0; }
+.requests-admin-page .va-form-hint { font-size: 0.72rem; color: var(--text-light); margin: 0.2rem 0 0; }
 
-.va-form-actions {
+.requests-admin-page .va-form-actions {
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
@@ -385,7 +423,7 @@ body.va-page {
 /* =====================================================
    LOADING SCREEN + TOASTS (shared pattern)
    ===================================================== */
-.loading-overlay {
+.requests-admin-page .loading-overlay {
   position: fixed;
   inset: 0;
   background: var(--bg-body);
@@ -398,9 +436,9 @@ body.va-page {
   pointer-events: none;
   transition: opacity 0.4s ease;
 }
-.loading-overlay.active { opacity: 1; pointer-events: auto; }
+.requests-admin-page .loading-overlay.active { opacity: 1; pointer-events: auto; }
 
-.spinner {
+.requests-admin-page .spinner {
   width: 46px;
   height: 46px;
   border: 4px solid var(--border-color);
@@ -410,9 +448,9 @@ body.va-page {
   margin-bottom: 1rem;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
-.loading-overlay p { color: var(--text-secondary); font-weight: 500; font-size: 0.9rem; }
+.requests-admin-page .loading-overlay p { color: var(--text-secondary); font-weight: 500; font-size: 0.9rem; }
 
-.toast-container {
+.requests-admin-page .toast-container {
   position: fixed;
   bottom: 1.5rem;
   right: 1.5rem;
@@ -425,7 +463,7 @@ body.va-page {
 @keyframes toastIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 @keyframes toastOut { to { transform: translateX(120%); opacity: 0; } }
 
-.app-toast {
+.requests-admin-page .app-toast {
   display: flex;
   align-items: center;
   gap: 0.6rem;
@@ -441,27 +479,29 @@ body.va-page {
   font-size: 0.88rem;
   font-weight: 500;
 }
-.app-toast.success { border-left-color: var(--success-green); }
-.app-toast.success i { color: var(--success-green); }
-.app-toast.error { border-left-color: var(--danger-red); }
-.app-toast.error i { color: var(--danger-red); }
-.app-toast.info { border-left-color: var(--primary-blue); }
-.app-toast.info i { color: var(--primary-blue); }
-.app-toast.hiding { animation: toastOut 0.3s ease forwards; }
+.requests-admin-page .app-toast.success { border-left-color: var(--success-green); }
+.requests-admin-page .app-toast.success i { color: var(--success-green); }
+.requests-admin-page .app-toast.error { border-left-color: var(--danger-red); }
+.requests-admin-page .app-toast.error i { color: var(--danger-red); }
+.requests-admin-page .app-toast.info { border-left-color: var(--primary-blue); }
+.requests-admin-page .app-toast.info i { color: var(--primary-blue); }
+.requests-admin-page .app-toast.hiding { animation: toastOut 0.3s ease forwards; }
 
 /* =====================================================
    RESPONSIVE
    ===================================================== */
 @media (max-width: 768px) {
-  .page-header-title { font-size: 1.5rem; }
-  .va-card-head { flex-direction: column; align-items: stretch; }
-  .va-card-head-actions { width: 100%; }
-  .form-select.filter-select { min-width: 0; flex: 1; }
-  .va-tabs { max-width: none; }
-  .toast-container { left: 1rem; right: 1rem; }
-  .app-toast { max-width: none; }
+  .requests-admin-page .page-header-title { font-size: 1.5rem; }
+  .requests-admin-page .va-card-head { flex-direction: column; align-items: stretch; }
+  .requests-admin-page .va-card-head-actions { width: 100%; }
+  .requests-admin-page .form-select.filter-select { min-width: 0; flex: 1; }
+  .requests-admin-page .va-tabs { max-width: none; }
+  .requests-admin-page .toast-container { left: 1rem; right: 1rem; }
+  .requests-admin-page .app-toast { max-width: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .styled-button, .va-modal, .app-toast { animation: none !important; transition: none !important; }
+  .requests-admin-page .styled-button,
+.requests-admin-page .va-modal,
+.requests-admin-page .app-toast { animation: none !important; transition: none !important; }
 }

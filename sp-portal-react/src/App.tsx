@@ -16,7 +16,7 @@ import { Dashboard } from './pages/Dashboard/Dashboard';
 import { DailyFinancialInsights } from './pages/DailyFinancialInsights/DailyFinancialInsights';
 import { DailyOperationsManagement } from './pages/DailyOperationsManagement/DailyOperationsManagement';
 import { DailyOperationsReports } from './pages/DailyOperationsReports/DailyOperationsReports';
-import { Drivers } from './pages/Drivers/Drivers';
+import { Vendors } from './pages/Vendors/Vendors';
 import { RouteBalance } from './pages/RouteBalance/RouteBalance';
 import { SOPFeed } from './pages/SOPFeed/SOPFeed';
 import { Vehicles } from './pages/Vehicles/Vehicles';
@@ -57,7 +57,9 @@ function App() {
           <Route path="/daily-financial-insights" element={<DailyFinancialInsights />} />
           <Route path="/daily-operations-management" element={<DailyOperationsManagement />} />
           <Route path="/daily-operations-reports" element={<DailyOperationsReports />} />
-          <Route path="/drivers" element={<Drivers />} />
+          <Route path="/vendors" element={<Vendors />} />
+          {/* The page was called Drivers until it was renamed; keep old links working. */}
+          <Route path="/drivers" element={<Navigate to="/vendors" replace />} />
           <Route path="/route-balance" element={<RouteBalance />} />
           <Route path="/sop-feed" element={<SOPFeed />} />
           <Route path="/vehicles" element={<Vehicles />} />

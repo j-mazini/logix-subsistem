@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useMemo, useState, ReactNode } 
 import { ExpiredDocumentAlert } from '../pages/Compliance/types/compliance';
 import { getExpiredDocumentAlerts } from '../pages/Compliance/utils/expirationUtils';
 import { vendorToProfile } from '../pages/Compliance/hooks/useComplianceState';
-import { getAllMockVendors } from '../data/driversData';
+import { getAllMockVendors } from '../data/vendorsData';
 import { getActiveAvisos, type AvisoRecord } from '../data/announcementsData';
 import { useCurrentSp } from '../hooks/useCurrentSp';
 

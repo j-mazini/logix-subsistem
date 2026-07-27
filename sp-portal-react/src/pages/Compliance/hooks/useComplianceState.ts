@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ComplianceState, UserProfile, VettingRecord, ProfileFilters } from '../types/compliance';
-import { getAllMockVendors, type Vendor } from '../../../data/driversData';
+import { getAllMockVendors, type Vendor } from '../../../data/vendorsData';
 
 const TAB_STORAGE_KEY = 'compliance-active-tab';
 
@@ -213,7 +213,7 @@ export function useComplianceState() {
     },
   });
 
-  // Loads profiles from the same mock data used by the Vendors/Drivers page
+  // Loads profiles from the same mock data used by the Vendors page
   useEffect(() => {
     const loadData = async () => {
       try {

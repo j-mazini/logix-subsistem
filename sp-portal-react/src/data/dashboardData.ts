@@ -106,7 +106,7 @@ export const routeMetrics: RouteMetrics[] = [
 ];
 
 // Drivers
-export const driversData: DriverInfo[] = [
+export const vendorsData: DriverInfo[] = [
   {
     id: 1,
     name: 'John Smith',
@@ -345,7 +345,7 @@ export const operationalAlerts: OperationalAlert[] = [
 export default {
   dashboardMetrics,
   routeMetrics,
-  driversData,
+  vendorsData,
   vehiclesData,
   financialData,
   operationalAlerts,

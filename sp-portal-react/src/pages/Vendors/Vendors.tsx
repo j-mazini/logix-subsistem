@@ -4,7 +4,7 @@ import { PortalLayout } from '../../layout/PortalLayout';
 import { useCurrentSp } from '../../hooks/useCurrentSp';
 import { useModalBehavior } from '../../hooks/useModalBehavior';
 import '../../styles/legacy/shared-pages.css';
-import '../../styles/legacy/drivers.css';
+import '../../styles/legacy/vendors-page.css';
 import {
   getAllMockVendors,
   getDepotsForSp,
@@ -23,7 +23,7 @@ import {
   type Vendor,
   type StatusFilter,
   type SortKey,
-} from '../../data/driversData';
+} from '../../data/vendorsData';
 
 /**
  * Manual port of Bootstrap's bootstrap.bundle.min.js modal show/hide.
@@ -96,7 +96,7 @@ function stepPaneId(step: Step): string {
   return 'vendorStep' + step.charAt(0).toUpperCase() + step.slice(1);
 }
 
-export function Drivers() {
+export function Vendors() {
   const sp = useCurrentSp();
 
   const [search, setSearch] = useState('');
