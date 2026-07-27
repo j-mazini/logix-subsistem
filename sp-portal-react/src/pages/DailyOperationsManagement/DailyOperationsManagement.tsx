@@ -124,12 +124,9 @@ function timeStringToDecimalHours(s: string): number | undefined {
 function buildMasterData(): MasterData {
   const rng = rngForSeed('dom-master-data-v1');
 
+  // 1 Depot: London
   const deposits: Deposit[] = [
-    { depositId: 1, depositName: 'Maidstone' },
-    { depositId: 2, depositName: 'Chatham' },
-    { depositId: 3, depositName: 'Dartford' },
-    { depositId: 4, depositName: 'Ashford' },
-    { depositId: 7, depositName: 'BAOP' },
+    { depositId: 1, depositName: 'London' },
   ];
 
   const vendorTypes: VendorType[] = [
@@ -164,19 +161,19 @@ function buildMasterData(): MasterData {
     { servicePartnerId: 2, partnerName: 'Kent Express' },
   ];
 
-  const routes: RouteDef[] = [];
-  let rid = 1;
-  for (const dep of deposits.filter((d) => d.depositId !== 7)) {
-    const prefix = dep.depositName.slice(0, 3).toUpperCase();
-    for (let i = 1; i <= 4; i++) {
-      routes.push({ routeId: rid++, routeName: `${prefix}-${String(i).padStart(2, '0')}`, depositId: dep.depositId });
-    }
-  }
-  routes.push({ routeId: rid++, routeName: 'NALC', depositId: 7 });
-  routes.push({ routeId: rid++, routeName: 'DHOC', depositId: 7 });
+  // 6 Routes + 1 Loop (DHOC)
+  const routes: RouteDef[] = [
+    { routeId: 1, routeName: 'LON-01', depositId: 1 },
+    { routeId: 2, routeName: 'LON-02', depositId: 1 },
+    { routeId: 3, routeName: 'LON-03', depositId: 1 },
+    { routeId: 4, routeName: 'LON-04', depositId: 1 },
+    { routeId: 5, routeName: 'LON-05', depositId: 1 },
+    { routeId: 6, routeName: 'LON-06', depositId: 1 },
+    { routeId: 7, routeName: 'DHOC', depositId: 1 },
+  ];
 
   const fuelTypes = ['Diesel', 'Diesel', 'Diesel', 'Petrol', 'EV'];
-  const vehicles: VehicleDef[] = Array.from({ length: 26 }, (_, i) => {
+  const vehicles: VehicleDef[] = Array.from({ length: 10 }, (_, i) => {
     const letter = String.fromCharCode(65 + (i % 26));
     const plate = `V${letter}${String(10 + i).padStart(2, '0')} ${['ABC', 'DEF', 'GHJ', 'KLM', 'NPQ'][i % 5]}`;
     return {
@@ -187,23 +184,21 @@ function buildMasterData(): MasterData {
     };
   });
 
-  const firstNames = ['James', 'Oliver', 'George', 'Harry', 'Jack', 'Amelia', 'Olivia', 'Isla', 'Ava', 'Sophia', 'Mateus', 'Ricardo', 'Bianca', 'Fernanda', 'Diego', 'Marta', 'Tomasz', 'Anna', 'Piotr', 'Elena', 'Marcus', 'Chloe', 'Ethan', 'Grace'];
-  const lastNames = ['Smith', 'Jones', 'Taylor', 'Brown', 'Wilson', 'Evans', 'Silva', 'Costa', 'Santos', 'Ferreira', 'Kowalski', 'Nowak', 'Popescu', 'Ionescu', 'Murphy', 'Walsh'];
-  const vendors: VendorDef[] = Array.from({ length: 26 }, (_, i) => {
-    const fullName = `${firstNames[i % firstNames.length]} ${lastNames[(i * 3) % lastNames.length]}`;
+  // 6 Vendors (one per route)
+  const firstNames = ['James', 'Oliver', 'George', 'Harry', 'Jack', 'Amelia'];
+  const lastNames = ['Smith', 'Jones', 'Taylor', 'Brown', 'Wilson', 'Evans'];
+  const vendors: VendorDef[] = Array.from({ length: 6 }, (_, i) => {
+    const fullName = `${firstNames[i]} ${lastNames[i]}`;
     const vendorTypeId = vendorTypes[i % vendorTypes.length].vendorTypeId;
-    const isBAOP = i >= 24;
-    const dep = isBAOP ? deposits.find((d) => d.depositId === 7)! : deposits[i % 4];
-    const routesForDep = routes.filter((r) => r.depositId === dep.depositId && !['NALC', 'DHOC'].includes(r.routeName));
-    const route = routesForDep.length ? routesForDep[i % routesForDep.length] : routes[0];
+    const route = routes[i]; // Assign each vendor to a specific route
     const vehicle = vehicles[i % vehicles.length];
-    const cmPool = [2, 2, 3, 5, 6, 7, 1, 4, 12];
-    const costModelId = cmPool[i % cmPool.length];
+    const cmPool = [2, 2, 3, 5, 6, 7];
+    const costModelId = cmPool[i];
     return {
       userId: 1000 + i,
       fullName,
       vendorTypeId,
-      depositId: dep.depositId,
+      depositId: 1,
       routeId: route.routeId,
       vehicleId: vehicle.vehicleId,
       costModelId,
@@ -212,7 +207,7 @@ function buildMasterData(): MasterData {
       routeSortValue: rng() > 0.5 ? 20 : 1,
       fixedRate: 95 + Math.round(rng() * 60),
       servicePartnerId: rng() > 0.8 ? servicePartners[i % servicePartners.length].servicePartnerId : null,
-      isBAOP,
+      isBAOP: false,
     };
   });
 
