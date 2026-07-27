@@ -4,7 +4,8 @@ interface ProfileCardProps {
   profile: UserProfile;
   isVettingPending: boolean;
   vettingProgress?: any;
-  onClick: () => void;
+  onViewProfile?: () => void;
+  onRedirectToVetting?: () => void;
 }
 
 /**
@@ -21,7 +22,8 @@ export function ProfileCard({
   profile,
   isVettingPending,
   vettingProgress,
-  onClick,
+  onViewProfile,
+  onRedirectToVetting,
 }: ProfileCardProps) {
   const getStatusBadge = () => {
     switch (profile.vettingStatus) {
@@ -36,7 +38,15 @@ export function ProfileCard({
     }
   };
 
+  const getVettingStatusMessage = () => {
+    if (profile.vettingStatus === 'completed') {
+      return { label: 'Vetting Completed', icon: 'check-circle-fill', color: 'success' };
+    }
+    return { label: 'Vetting Pending', icon: 'exclamation-circle-fill', color: 'warning' };
+  };
+
   const statusBadge = getStatusBadge();
+  const vettingStatus = getVettingStatusMessage();
   const initials = profile.name
     .split(' ')
     .slice(0, 2)
@@ -45,7 +55,7 @@ export function ProfileCard({
     .toUpperCase();
 
   return (
-    <div className="profile-card" onClick={onClick} role="button" tabIndex={0}>
+    <div className="profile-card" role="button" tabIndex={0}>
       {/* Header com avatar e name */}
       <div className="profile-card-header">
         <div className="profile-avatar">{initials}</div>
@@ -108,11 +118,37 @@ export function ProfileCard({
         </div>
       )}
 
+      {/* Vetting status indicator */}
+      <div className={`profile-card-vetting-status vetting-status-${vettingStatus.color}`}>
+        <i className={`bi bi-${vettingStatus.icon}`} />
+        <span>{vettingStatus.label}</span>
+      </div>
+
       {/* Footer with actions */}
       <div className="profile-card-footer">
-        <button className="btn-action btn-primary" onClick={(e) => e.stopPropagation()}>
-          <i className="bi bi-eye" /> View
+        <button
+          className="btn-action btn-primary"
+          onClick={(e) => {
+            e.stopPropagation();
+            onViewProfile?.();
+          }}
+          title="View and edit profile details"
+        >
+          <i className="bi bi-eye" /> View Profile
         </button>
+
+        {isVettingPending && (
+          <button
+            className="btn-action btn-warning"
+            onClick={(e) => {
+              e.stopPropagation();
+              onRedirectToVetting?.();
+            }}
+            title="Complete vetting process"
+          >
+            <i className="bi bi-arrow-right-circle" /> Complete Vetting
+          </button>
+        )}
       </div>
     </div>
   );

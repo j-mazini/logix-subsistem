@@ -116,3 +116,36 @@ export function deleteAviso(id: string): boolean {
   if (found) saveRaw(next);
   return found;
 }
+
+/** Same date coercion the Announcements page applies when building its view model. */
+export function avisoPublishDate(a: AvisoRecord): Date {
+  return a.publishDate ? new Date(`${a.publishDate}T00:00:00`) : new Date(a.createdAt || Date.now());
+}
+
+export function avisoExpirationDate(a: AvisoRecord): Date {
+  return a.expireDate ? new Date(`${a.expireDate}T23:59:59`) : new Date(Date.now() + 7 * 86400000);
+}
+
+const URGENCY_ORDER: Record<string, number> = { Critical: 0, High: 1, Normal: 2, Low: 3 };
+
+/**
+ * Avisos currently live for the given SP — published, not yet expired, not
+ * deleted — sorted most urgent first, then newest first. This is what the
+ * global announcements feed (header bell, dashboard box) shows; the
+ * Announcements page keeps using getAllAvisos() since it also lists
+ * scheduled and expired ones.
+ */
+export function getActiveAvisos(sp: string): AvisoRecord[] {
+  const now = Date.now();
+  return getAllAvisos(sp)
+    .filter((a) => {
+      if (a.deleted) return false;
+      return avisoPublishDate(a).getTime() <= now && avisoExpirationDate(a).getTime() > now;
+    })
+    .sort((a, b) => {
+      const urgency =
+        (URGENCY_ORDER[a.urgency || 'Normal'] ?? 2) - (URGENCY_ORDER[b.urgency || 'Normal'] ?? 2);
+      if (urgency !== 0) return urgency;
+      return avisoPublishDate(b).getTime() - avisoPublishDate(a).getTime();
+    });
+}

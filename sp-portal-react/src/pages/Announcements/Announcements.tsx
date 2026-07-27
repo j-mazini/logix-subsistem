@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { PortalLayout } from '../../layout/PortalLayout';
 import { useCurrentSp } from '../../hooks/useCurrentSp';
 import { useModalBehavior } from '../../hooks/useModalBehavior';
 import { getAllAvisos, addAviso, updateAviso, deleteAviso } from '../../data/announcementsData';
+import { useAnnouncements } from '../../context/AnnouncementsContext';
 import '../../styles/legacy/announcements.css';
 
 type AnnouncementType = 'Announcement' | 'Delay' | 'Warning';
@@ -73,8 +74,17 @@ function loadAnnouncements(sp: string): AnnouncementView[] {
 export function Announcements() {
   const sp = useCurrentSp();
 
+  const { refreshAnnouncements } = useAnnouncements();
+
   const [loading, setLoading] = useState(true);
   const [version, setVersion] = useState(0);
+
+  // Re-renders this page and the global feed (header bell, dashboard box),
+  // both of which read the aviso store directly rather than caching it.
+  const bumpVersion = useCallback(() => {
+    setVersion((v) => v + 1);
+    refreshAnnouncements();
+  }, [refreshAnnouncements]);
 
   const [search, setSearch] = useState('');
   const [filterOrigin, setFilterOrigin] = useState<'all' | 'dhl' | 'mine'>('all');
@@ -192,7 +202,7 @@ export function Announcements() {
     if (!ann || !ann.isMine) return;
     if (window.confirm('Delete this announcement? This cannot be undone.')) {
       deleteAviso(id);
-      setVersion((v) => v + 1);
+      bumpVersion();
       showToast('Announcement deleted.', 'success');
     }
   }
@@ -233,7 +243,7 @@ export function Announcements() {
       showToast('Announcement created.', 'success');
     }
 
-    setVersion((v) => v + 1);
+    bumpVersion();
     closeModal();
   }
 

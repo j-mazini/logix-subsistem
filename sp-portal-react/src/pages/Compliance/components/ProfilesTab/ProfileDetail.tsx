@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { UserProfile } from '../../types/compliance';
+import { getExpirationStatus, getExpirationBadge } from '../../utils/expirationUtils';
 
 interface ProfileDetailProps {
   profile: UserProfile;
@@ -12,12 +14,35 @@ interface ProfileDetailProps {
  * trainings and timeline.
  */
 export function ProfileDetail({ profile, onClose, onUpdate }: ProfileDetailProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState<Partial<UserProfile>>({
+    email: profile.email,
+    phone: profile.phone,
+    address: profile.address || '',
+    driverType: profile.driverType || '',
+    rota: profile.rota || '',
+    bankAccountNumber: profile.bankAccountNumber || '',
+    bankSortCode: profile.bankSortCode || '',
+  });
+
   const formatDate = (iso: string) => {
     return new Date(iso).toLocaleDateString('en-GB', {
       day: '2-digit',
       month: 'short',
       year: 'numeric',
     });
+  };
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSave = () => {
+    onUpdate(profile.id, {
+      ...formData,
+      lastUpdated: new Date().toISOString(),
+    });
+    setIsEditing(false);
   };
 
   return createPortal(
@@ -40,13 +65,75 @@ export function ProfileDetail({ profile, onClose, onUpdate }: ProfileDetailProps
               <div className="profile-detail-section">
                 <h6>Personal information</h6>
                 <div className="detail-grid">
+                  {profile.profilePhoto && (
+                    <div className="profile-photo-container">
+                      <img src={profile.profilePhoto} alt="Profile" className="profile-photo" />
+                    </div>
+                  )}
                   <div>
                     <label>Email</label>
-                    <p>{profile.email}</p>
+                    {isEditing ? (
+                      <input
+                        type="email"
+                        value={formData.email || ''}
+                        onChange={(e) => handleInputChange('email', e.target.value)}
+                        className="form-input"
+                      />
+                    ) : (
+                      <p>{profile.email}</p>
+                    )}
                   </div>
                   <div>
                     <label>Phone</label>
-                    <p>{profile.phone}</p>
+                    {isEditing ? (
+                      <input
+                        type="tel"
+                        value={formData.phone || ''}
+                        onChange={(e) => handleInputChange('phone', e.target.value)}
+                        className="form-input"
+                      />
+                    ) : (
+                      <p>{profile.phone}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label>Address</label>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={formData.address || ''}
+                        onChange={(e) => handleInputChange('address', e.target.value)}
+                        className="form-input"
+                      />
+                    ) : (
+                      <p>{profile.address || '—'}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label>Driver Type</label>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={formData.driverType || ''}
+                        onChange={(e) => handleInputChange('driverType', e.target.value)}
+                        className="form-input"
+                      />
+                    ) : (
+                      <p>{profile.driverType || '—'}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label>Rota</label>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={formData.rota || ''}
+                        onChange={(e) => handleInputChange('rota', e.target.value)}
+                        className="form-input"
+                      />
+                    ) : (
+                      <p>{profile.rota || '—'}</p>
+                    )}
                   </div>
                   <div>
                     <label>Vendor</label>
@@ -74,15 +161,45 @@ export function ProfileDetail({ profile, onClose, onUpdate }: ProfileDetailProps
                   <p className="text-muted">No documents uploaded</p>
                 ) : (
                   <div className="documents-list">
-                    {profile.documents.map((doc) => (
-                      <div key={doc.id} className="document-item">
-                        <div className="document-info">
-                          <p className="document-name">{doc.name}</p>
-                          <p className="document-type">{doc.type}</p>
+                    {profile.documents.map((doc) => {
+                      const expirationStatus = getExpirationStatus(doc.expiresAt);
+                      const expirationBadge = getExpirationBadge(expirationStatus);
+                      return (
+                        <div key={doc.id} className="document-item">
+                          <div className="document-info">
+                            <p className="document-name">{doc.name}</p>
+                            <p className="document-type">{doc.type}</p>
+
+                            {doc.type === 'dbs' && (
+                              <>
+                                {doc.dbsCheckDate && <p className="document-detail">Check date: {formatDate(doc.dbsCheckDate)}</p>}
+                                {doc.dbsNumber && <p className="document-detail">Number: {doc.dbsNumber}</p>}
+                              </>
+                            )}
+
+                            {doc.type === 'dvla' && (
+                              <>
+                                {doc.dvlaExpiry && <p className="document-detail">Expires: {formatDate(doc.dvlaExpiry)}</p>}
+                              </>
+                            )}
+
+                            {doc.type === 'passport' && (
+                              <>
+                                {doc.passportNumber && <p className="document-detail">Number: {doc.passportNumber}</p>}
+                                {doc.passportExpiry && <p className="document-detail">Expires: {formatDate(doc.passportExpiry)}</p>}
+                              </>
+                            )}
+
+                            {doc.expiresAt && (
+                              <p className="document-expiration">
+                                Status: <span className={`expiration-${expirationStatus}`}>{expirationBadge.label}</span>
+                              </p>
+                            )}
+                          </div>
+                          <span className={`badge badge-${doc.status}`}>{doc.status}</span>
                         </div>
-                        <span className={`badge badge-${doc.status}`}>{doc.status}</span>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -99,12 +216,58 @@ export function ProfileDetail({ profile, onClose, onUpdate }: ProfileDetailProps
                         <div className="training-info">
                           <p className="training-name">{training.name}</p>
                           <p className="training-type">{training.type}</p>
+
+                          {training.cargoHandlingDate && (
+                            <p className="training-detail">Cargo Handling: {formatDate(training.cargoHandlingDate)}</p>
+                          )}
+                          {training.dangerousGoodDate && (
+                            <p className="training-detail">Dangerous Good: {formatDate(training.dangerousGoodDate)}</p>
+                          )}
+                          {training.manualHandlingDate && (
+                            <p className="training-detail">Manual Handling: {formatDate(training.manualHandlingDate)}</p>
+                          )}
+                          {training.completedAt && (
+                            <p className="training-detail">Completed: {formatDate(training.completedAt)}</p>
+                          )}
                         </div>
                         <span className={`badge badge-${training.status}`}>{training.status}</span>
                       </div>
                     ))}
                   </div>
                 )}
+              </div>
+
+              {/* Bank Account section */}
+              <div className="profile-detail-section">
+                <h6>Bank Account</h6>
+                <div className="detail-grid">
+                  <div>
+                    <label>Account Number</label>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={formData.bankAccountNumber || ''}
+                        onChange={(e) => handleInputChange('bankAccountNumber', e.target.value)}
+                        className="form-input"
+                      />
+                    ) : (
+                      <p>{profile.bankAccountNumber || '—'}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label>Sort Code</label>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={formData.bankSortCode || ''}
+                        onChange={(e) => handleInputChange('bankSortCode', e.target.value)}
+                        className="form-input"
+                      />
+                    ) : (
+                      <p>{profile.bankSortCode || '—'}</p>
+                    )}
+                  </div>
+                </div>
               </div>
 
               {/* Timeline section */}
@@ -130,21 +293,42 @@ export function ProfileDetail({ profile, onClose, onUpdate }: ProfileDetailProps
             </div>
 
             <div className="modal-footer">
-              <button type="button" className="btn btn-outline" onClick={onClose}>
-                Close
-              </button>
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={() => {
-                  onUpdate(profile.id, {
-                    lastUpdated: new Date().toISOString(),
+              <button type="button" className="btn btn-outline" onClick={() => {
+                if (isEditing) {
+                  setIsEditing(false);
+                  setFormData({
+                    email: profile.email,
+                    phone: profile.phone,
+                    address: profile.address || '',
+                    driverType: profile.driverType || '',
+                    rota: profile.rota || '',
+                    bankAccountNumber: profile.bankAccountNumber || '',
+                    bankSortCode: profile.bankSortCode || '',
                   });
+                } else {
                   onClose();
-                }}
-              >
-                Save changes
+                }
+              }}>
+                {isEditing ? 'Cancel' : 'Close'}
               </button>
+              {!isEditing && (
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => setIsEditing(true)}
+                >
+                  <i className="bi bi-pencil" /> Edit
+                </button>
+              )}
+              {isEditing && (
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={handleSave}
+                >
+                  <i className="bi bi-check" /> Save changes
+                </button>
+              )}
             </div>
           </div>
         </div>

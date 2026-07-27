@@ -203,21 +203,6 @@ export function Dashboard() {
               <span className="sp-dash-title-sub">Service Provider Portal</span>
             </div>
           </div>
-          <div className="dashboard-header-center">
-            <div className="sp-announcement-header-box">
-              <div className="sp-announcement-header-card">
-                <div className="sp-announcement-header-head">
-                  <h3 className="sp-announcement-header-title"><i className="bi bi-megaphone-fill" aria-hidden="true" /> Announcements</h3>
-                  <p className="sp-announcement-header-desc small text-muted mb-0">Announcements from DHL appear here.</p>
-                </div>
-                <div className="sp-announcement-header-body">
-                  <Link to="/announcements" className="sp-announcement-box-trigger" aria-label="View announcements">
-                    <span className="sp-announcement-box-text">No announcements yet.</span>
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 

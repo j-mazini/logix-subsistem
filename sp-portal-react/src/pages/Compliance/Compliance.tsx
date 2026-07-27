@@ -1,10 +1,12 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { PortalLayout } from '../../layout/PortalLayout';
 import { useComplianceState } from './hooks/useComplianceState';
 import { useConditionalRedirect } from './hooks/useConditionalRedirect';
 import { useVendorSync } from './hooks/useVendorSync';
 import { ComplianceTabs } from './components/ComplianceTabs';
 import { ComplianceStats } from './components/ComplianceStats';
+import { getExpiredDocumentAlerts } from './utils/expirationUtils';
+import { useAnnouncements } from '../../context/AnnouncementsContext';
 import './Compliance.css';
 
 /**
@@ -20,6 +22,7 @@ import './Compliance.css';
 export function Compliance() {
   const complianceState = useComplianceState();
   const { state, selectProfile, setActiveTab, ...actions } = complianceState;
+  const { setComplianceAlerts } = useAnnouncements();
 
   // Setup do hook de redirect condicional
   const conditionalRedirect = useConditionalRedirect({
@@ -31,6 +34,17 @@ export function Compliance() {
 
   // Syncs the Vendor page from real Vetting data
   useVendorSync();
+
+  // Calcular alertas de documentos vencidos
+  const expiredDocumentAlerts = useMemo(
+    () => getExpiredDocumentAlerts(state.profiles),
+    [state.profiles],
+  );
+
+  // Atualizar alertas no contexto
+  useEffect(() => {
+    setComplianceAlerts(expiredDocumentAlerts);
+  }, [expiredDocumentAlerts, setComplianceAlerts]);
 
   // Emit event once loading has finished
   useEffect(() => {

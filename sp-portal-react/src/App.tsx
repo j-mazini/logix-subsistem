@@ -1,4 +1,5 @@
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AnnouncementsProvider } from './context/AnnouncementsContext';
 import { AccessSelect } from './pages/AccessSelect/AccessSelect';
 import { Profile } from './pages/Profile/Profile';
 import { Login } from './pages/Login/Login';
@@ -36,37 +37,39 @@ function App() {
 
   return (
     <HashRouter>
-      <Routes>
-        <Route path="/" element={<AccessSelect />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/select" element={<Select />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/announcements" element={<Announcements />} />
-        <Route path="/assets" element={<Assets />} />
-        <Route path="/contracts" element={<Contracts />} />
-        <Route path="/invoices" element={<Invoices />} />
-        <Route path="/requests-admin" element={<RequestsAdmin />} />
-        <Route path="/vendor-performance" element={<VendorPerformance />} />
-        <Route path="/adhoc-invoice-management" element={<AdhocInvoiceManagement />} />
-        <Route path="/deductions-disbursements-recharges" element={<DeductionsDisbursementsRecharges />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/daily-financial-insights" element={<DailyFinancialInsights />} />
-        <Route path="/daily-operations-management" element={<DailyOperationsManagement />} />
-        <Route path="/daily-operations-reports" element={<DailyOperationsReports />} />
-        <Route path="/drivers" element={<Drivers />} />
-        <Route path="/route-balance" element={<RouteBalance />} />
-        <Route path="/sop-feed" element={<SOPFeed />} />
-        <Route path="/vehicles" element={<Vehicles />} />
-        <Route path="/drivers" element={<Drivers />} />
-        <Route path="/vetting-admin" element={<Navigate to="/vetting-dashboard" replace />} />
-        <Route element={<VettingAdminLayout />}>
-          <Route path="/vetting-dashboard" element={<VettingDashboardPage />} />
-          <Route path="/vetting-checklist" element={<VettingChecklistPage />} />
-          <Route path="/vetting-interview" element={<VettingInterviewPage />} />
-        </Route>
-        <Route path="/week-planner" element={<WeekPlanner />} />
-        <Route path="/compliance" element={<Compliance />} />
-      </Routes>
+      {/* Inside the router on purpose: the provider reads ?sp= from the URL. */}
+      <AnnouncementsProvider>
+        <Routes>
+          <Route path="/" element={<AccessSelect />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/select" element={<Select />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/announcements" element={<Announcements />} />
+          <Route path="/assets" element={<Assets />} />
+          <Route path="/contracts" element={<Contracts />} />
+          <Route path="/invoices" element={<Invoices />} />
+          <Route path="/requests-admin" element={<RequestsAdmin />} />
+          <Route path="/vendor-performance" element={<VendorPerformance />} />
+          <Route path="/adhoc-invoice-management" element={<AdhocInvoiceManagement />} />
+          <Route path="/deductions-disbursements-recharges" element={<DeductionsDisbursementsRecharges />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/daily-financial-insights" element={<DailyFinancialInsights />} />
+          <Route path="/daily-operations-management" element={<DailyOperationsManagement />} />
+          <Route path="/daily-operations-reports" element={<DailyOperationsReports />} />
+          <Route path="/drivers" element={<Drivers />} />
+          <Route path="/route-balance" element={<RouteBalance />} />
+          <Route path="/sop-feed" element={<SOPFeed />} />
+          <Route path="/vehicles" element={<Vehicles />} />
+          <Route path="/vetting-admin" element={<Navigate to="/vetting-dashboard" replace />} />
+          <Route element={<VettingAdminLayout />}>
+            <Route path="/vetting-dashboard" element={<VettingDashboardPage />} />
+            <Route path="/vetting-checklist" element={<VettingChecklistPage />} />
+            <Route path="/vetting-interview" element={<VettingInterviewPage />} />
+          </Route>
+          <Route path="/week-planner" element={<WeekPlanner />} />
+          <Route path="/compliance" element={<Compliance />} />
+        </Routes>
+      </AnnouncementsProvider>
     </HashRouter>
   );
 }

@@ -622,9 +622,31 @@
 /* =====================================================
    CARD FOOTERS / BUTTONS
    ===================================================== */
+.compliance-page .profile-card-vetting-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.85rem;
+  border-radius: 0.5rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
+}
+
+.compliance-page .vetting-status-success {
+  background: rgba(22, 163, 74, 0.12);
+  color: var(--success-green);
+}
+
+.compliance-page .vetting-status-warning {
+  background: rgba(217, 119, 6, 0.12);
+  color: var(--warning-amber);
+}
+
 .compliance-page .profile-card-footer,
 .compliance-page .vetting-card-footer {
   display: flex;
+  flex-direction: column;
   gap: 0.5rem;
   padding-top: 0.6rem;
   border-top: 1px solid var(--border-color);
@@ -632,19 +654,20 @@
 }
 
 .compliance-page .btn-action {
-  flex: 1;
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
-  padding: 0.5rem 1rem;
+  padding: 0.55rem 1rem;
   border: none;
   border-radius: 0.5rem;
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
   transition: all var(--transition);
+  white-space: nowrap;
+  flex: 1;
 }
 
 .compliance-page .btn-primary {
@@ -681,7 +704,8 @@
 }
 
 .compliance-page .btn-danger,
-.compliance-page .btn-success {
+.compliance-page .btn-success,
+.compliance-page .btn-warning {
   padding: 0.55rem 1.25rem;
   border: none;
   border-radius: 0.5rem;
@@ -712,6 +736,20 @@
 }
 
 .compliance-page .btn-success:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.compliance-page .btn-warning {
+  background: var(--warning-amber);
+}
+
+.compliance-page .btn-warning:hover:not(:disabled) {
+  background: #b45309;
+  box-shadow: var(--shadow-md);
+}
+
+.compliance-page .btn-warning:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
@@ -897,6 +935,25 @@
   color: var(--text-primary);
 }
 
+.compliance-page .form-input {
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  font-family: inherit;
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  transition: border-color var(--transition), box-shadow var(--transition);
+  margin: 0;
+}
+
+.compliance-page .form-input:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
 .compliance-page .text-muted {
   color: var(--text-light);
   font-size: 0.88rem;
@@ -935,6 +992,56 @@
   color: var(--text-light);
   margin: 0.15rem 0 0;
   text-transform: capitalize;
+}
+
+.compliance-page .document-detail,
+.compliance-page .training-detail {
+  font-size: 0.78rem;
+  color: var(--text-light);
+  margin: 0.1rem 0 0;
+}
+
+.compliance-page .document-expiration {
+  font-size: 0.78rem;
+  color: var(--text-light);
+  margin: 0.3rem 0 0;
+  font-weight: 500;
+}
+
+.compliance-page .expiration-ok {
+  color: var(--success-green);
+  font-weight: 600;
+}
+
+.compliance-page .expiration-expiring-soon {
+  color: var(--warning-amber);
+  font-weight: 600;
+}
+
+.compliance-page .expiration-expired {
+  color: var(--danger-red);
+  font-weight: 600;
+}
+
+.compliance-page .document-info,
+.compliance-page .training-info {
+  flex: 1;
+}
+
+.compliance-page .profile-photo-container {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+
+.compliance-page .profile-photo {
+  width: 120px;
+  height: 120px;
+  border-radius: 0.625rem;
+  object-fit: cover;
+  border: 2px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
 }
 
 .compliance-page .timeline {

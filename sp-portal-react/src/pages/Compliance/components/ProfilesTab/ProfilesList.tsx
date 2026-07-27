@@ -8,6 +8,7 @@ interface ProfilesListProps {
   filters: ProfileFilters;
   onSelectProfile: (profile: UserProfile) => void;
   onOpenProfile: (profile: UserProfile) => void;
+  onOpenModal: () => void;
   isVettingPending: (profileId: string) => boolean;
   getVettingProgress: (profileId: string) => any;
 }
@@ -21,6 +22,7 @@ export function ProfilesList({
   filters,
   onSelectProfile,
   onOpenProfile,
+  onOpenModal,
   isVettingPending,
   getVettingProgress,
 }: ProfilesListProps) {
@@ -79,9 +81,13 @@ export function ProfilesList({
     return result;
   }, [profiles, filters]);
 
-  const handleProfileClick = (profile: UserProfile) => {
+  const handleViewProfile = (profile: UserProfile) => {
     onSelectProfile(profile);
-    // Trigger conditional redirect
+    onOpenModal();
+  };
+
+  const handleRedirectToVetting = (profile: UserProfile) => {
+    onSelectProfile(profile);
     onOpenProfile(profile);
   };
 
@@ -104,7 +110,8 @@ export function ProfilesList({
             profile={profile}
             isVettingPending={isVettingPending(profile.id)}
             vettingProgress={getVettingProgress(profile.id)}
-            onClick={() => handleProfileClick(profile)}
+            onViewProfile={() => handleViewProfile(profile)}
+            onRedirectToVetting={() => handleRedirectToVetting(profile)}
           />
         ))}
       </div>

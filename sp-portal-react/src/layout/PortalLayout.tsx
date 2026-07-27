@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { BeamSidebar } from './BeamSidebar';
 import { AdminHeaderPill, AdminHeaderMenu, useAdminHeaderPill } from './AdminHeaderUserPill';
+import { AnnouncementBox } from './AnnouncementBox';
 import { useCurrentSp } from '../hooks/useCurrentSp';
 
 interface PortalLayoutProps {
@@ -36,11 +37,17 @@ export function PortalLayout({ pageClassName, mainClassName, title, headerClassN
           <div className="page-inner">
             <main className={mainClassName}>
               {header !== undefined ? (
-                header
+                // Pages with their own header markup can't take the box inline,
+                // so it sits directly beneath it instead.
+                <>
+                  {header}
+                  <AnnouncementBox standalone />
+                </>
               ) : (
                 <>
                   <div className={`admin-header d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3${headerClassName ? ` ${headerClassName}` : ''}`}>
                     <h1 className="admin-header-title">{title}</h1>
+                    <AnnouncementBox />
                     <AdminHeaderPill sp={sp} controls={menuControls} />
                   </div>
                   <AdminHeaderMenu sp={sp} controls={menuControls} />

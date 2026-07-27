@@ -133,7 +133,7 @@ function buildChecklist(status: VettingRecord['status']) {
   }));
 }
 
-function vendorToProfile(vendor: Vendor): UserProfile {
+export function vendorToProfile(vendor: Vendor): UserProfile {
   const status = VETTING_STATUS_BY_VENDOR_ID[vendor.id] ?? 'pending';
   const now = new Date().toISOString();
 

@@ -50,6 +50,7 @@ export function ProfilesTab({
         filters={filters}
         onSelectProfile={actions.onSelectProfile}
         onOpenProfile={actions.onOpenProfile}
+        onOpenModal={actions.onOpenModal}
         isVettingPending={actions.isVettingPending}
         getVettingProgress={actions.getVettingProgress}
       />

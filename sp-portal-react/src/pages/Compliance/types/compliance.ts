@@ -1,13 +1,26 @@
 // User Profile Types
 export type UserRole = 'driver' | 'admin' | 'vendor';
 export type ComplianceStatus = 'pending' | 'in-progress' | 'completed' | 'rejected';
-export type DocumentType = 'id' | 'license' | 'proof-of-address' | 'contract' | 'insurance';
+export type DocumentType = 'id' | 'license' | 'proof-of-address' | 'contract' | 'insurance' | 'dbs' | 'dvla' | 'passport';
 export type DocumentStatus = 'pending' | 'approved' | 'rejected' | 'expired';
 export type TrainingStatus = 'not-started' | 'in-progress' | 'completed';
 export type TrainingType = 'mandatory' | 'optional';
 export type VettingStatus = 'pending' | 'in-progress' | 'completed' | 'rejected';
 export type VendorAccessLevel = 'full' | 'restricted' | 'none';
 export type BackgroundCheckStatus = 'pending' | 'approved' | 'flagged';
+export type ExpirationStatus = 'ok' | 'expiring-soon' | 'expired';
+
+export interface ExpiredDocumentAlert {
+  profileId: string;
+  profileName: string;
+  email: string;
+  documents: {
+    name: string;
+    type: DocumentType;
+    expiresAt?: string;
+    status: ExpirationStatus;
+  }[];
+}
 
 export interface UserProfile {
   id: string;
@@ -16,6 +29,16 @@ export interface UserProfile {
   phone: string;
   vendor: string;
   role: UserRole;
+
+  // Personal information
+  address?: string;
+  driverType?: string;
+  rota?: string;
+  profilePhoto?: string;
+
+  // Bank information
+  bankAccountNumber?: string;
+  bankSortCode?: string;
 
   // Compliance data
   documents: ComplianceDocument[];
@@ -45,6 +68,15 @@ export interface ComplianceDocument {
   notes?: string;
   fileSize?: number;
   mimeType?: string;
+
+  // Document-specific fields
+  documentNumber?: string; // DBS, DVLA, Passport number
+  checkDate?: string; // DBS check date
+  passportNumber?: string;
+  passportExpiry?: string;
+  dbsNumber?: string;
+  dbsCheckDate?: string;
+  dvlaExpiry?: string;
 }
 
 export interface Training {
@@ -56,6 +88,12 @@ export interface Training {
   expiresAt?: string;
   certificateUrl?: string;
   progress?: number; // 0-100
+
+  // Training data
+  trainingDate?: string;
+  cargoHandlingDate?: string;
+  dangerousGoodDate?: string;
+  manualHandlingDate?: string;
 }
 
 export interface VettingRecord {
