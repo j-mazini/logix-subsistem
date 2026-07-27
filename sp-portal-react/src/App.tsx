@@ -28,6 +28,7 @@ import {
 } from './pages/Vetting';
 import { WeekPlanner } from './pages/WeekPlanner/WeekPlanner';
 import { Compliance } from './pages/Compliance/Compliance';
+import { LiveService } from './pages/LiveService/LiveService';
 import { useViewportAttribute } from './hooks/useViewportAttribute';
 import { useRefinementsMotion } from './hooks/useRefinementsMotion';
 
@@ -68,6 +69,7 @@ function App() {
           </Route>
           <Route path="/week-planner" element={<WeekPlanner />} />
           <Route path="/compliance" element={<Compliance />} />
+          <Route path="/live-service" element={<LiveService />} />
         </Routes>
       </AnnouncementsProvider>
     </HashRouter>

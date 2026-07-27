@@ -1,0 +1,245 @@
+/** Triage de exceções — Liquid Glass */
+
+@keyframes cardSlideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.triageContainer {
+  display: flex;
+  flex-direction: column;
+  max-height: 440px;
+  border-radius: 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+  overflow: hidden;
+  animation: cardSlideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.triageHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.9rem 1.1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.triageHeader h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.badge {
+  padding: 0.25rem 0.6rem;
+  border-radius: 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: #dc2626;
+  background: rgba(220, 38, 38, 0.12);
+  border: 1px solid rgba(220, 38, 38, 0.25);
+  white-space: nowrap;
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 2.5rem 1rem;
+  text-align: center;
+  flex: 1;
+}
+
+.emptyIcon {
+  width: 32px;
+  height: 32px;
+  color: #10b981;
+  margin-bottom: 0.35rem;
+}
+
+.emptyState p {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.emptySubtext {
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+.exceptionsList {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  scrollbar-width: thin;
+}
+
+.exceptionsList::-webkit-scrollbar { width: 5px; }
+.exceptionsList::-webkit-scrollbar-track { background: transparent; }
+.exceptionsList::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.4);
+  border-radius: 9999px;
+}
+.exceptionsList::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.6); }
+
+.exceptionItem {
+  padding: 0.75rem;
+  border-radius: 0.6rem;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.exceptionItem:hover {
+  background: rgba(255, 255, 255, 0.5);
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+.exceptionItem.expanded {
+  background: #fff;
+  border-color: #c7d2fe;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.1);
+}
+
+.exceptionSummary {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.exceptionIcon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.exceptionInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.exceptionTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.exceptionMeta {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.15rem;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.separator {
+  color: rgba(148, 163, 184, 0.3);
+}
+
+.exceptionTime {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #94a3b8;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  margin-left: auto;
+}
+
+.exceptionDetails {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(79, 70, 229, 0.1);
+}
+
+.detailsRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.4rem;
+  font-size: 0.8rem;
+}
+
+.detailsLabel {
+  font-weight: 600;
+  color: #475569;
+  white-space: nowrap;
+}
+
+.detailsValue {
+  color: #0f172a;
+  text-align: right;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(79, 70, 229, 0.1);
+}
+
+.actionButton {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #475569;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.actionButton:hover {
+  background: rgba(255, 255, 255, 0.7);
+  border-color: rgba(148, 163, 184, 0.5);
+}
+
+.actionButton.primary {
+  color: #fff;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.actionButton.primary:hover {
+  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+  transform: translateY(-1px);
+}
+
+.actionIcon {
+  width: 15px;
+  height: 15px;
+}
+
+@media (max-width: 640px) {
+  .triageContainer {
+    max-height: none;
+  }
+
+  .triageHeader {
+    padding: 0.75rem 0.9rem;
+  }
+}

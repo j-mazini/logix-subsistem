@@ -1,62 +1,91 @@
----
-name: repo-reorganization-intent
-description: Reorganizar logix-subsistem para faxina estrutural com segurança
-metadata:
-  type: project
-  created: 2026-07-22
-  status: planning
----
+# Session Intent Contract
 
-# Session Intent Contract — Reorganização logix-subsistem
+**Created:** 2026-07-27 14:35 GMT-3  
+**Project:** logix-subsistem (sp-portal-react)  
+**Feature:** Live Service Page - Real-time Operations Dashboard
 
 ## Job Statement
 
-Faxinar e reorganizar o repositório `logix-subsistem` movendo ~35 arquivos soltos na raiz para uma arquitetura clara e lógica, mantendo:
-- Histórico git intacto (sem `git reset --hard`)
-- URLs existentes funcionando (alias/redirects onde necessário)
-- Preparação estrutural para migração React planejada
+Implementar uma página **Live Service** que seja o "Pulso da Operação" — um painel em tempo real para administradores gerenciarem entregas ao vivo, rastrearem entregadores, detectarem exceções e reatribuirem tarefas dinamicamente.
+
+## User Context
+
+- **Nível de conhecimento:** Iniciante em implementação técnica
+- **Urgência:** Alta — precisa de execução rápida
+- **Clareza de escopo:** Ideia descrita em português, precisa tradução técnica
+- **Preferência:** Solução funcionando + integrada + pronta para produção
 
 ## Success Criteria
 
-✅ **Plano claro com comandos bash** — Mapeamento linha-a-linha de cada arquivo para seu novo destino, com comandos `mkdir`, `mv`, `rm` prontos para copiar/colar
+1. ✅ **Compreensão Clara**
+   - Arquitetura técnica bem documentada
+   - Decisões de design justificadas
+   - Padrões do projeto replicados
 
-✅ **Reorganização executada** — Arquivos movidos de forma segura, projeto funcionando após mudanças
+2. ✅ **Soluções Funcionando**
+   - 5 seções principais implementadas e testadas
+   - Mock data realista e determinística
+   - Componentes reutilizáveis
 
-✅ **Documentação atualizada** — ARCHITECTURE.md e README.md refletindo a nova estrutura (sem guesswork)
+3. ✅ **Integração Perfeita**
+   - Roteamento configurado em App.tsx
+   - Usa padrões existentes (PortalLayout, hooks, tipos)
+   - Dados fluem corretamente
 
-## User Profile
+4. ✅ **Pronto para Produção**
+   - Componentes com TypeScript strict
+   - Sem console errors
+   - Pronto para substituir mock data por API real
 
-- **Conhecimento:** Avançado — Conhece a arquitetura, precisa de execução limpa
-- **Role:** Senior Software Engineer — Especialista em arquitetura e organização
-- **Context:** Repositório estático (HTML/CSS/JS) com estrutura parcialmente criada, muita documentação em português sobre o projeto
+## Feature Breakdown (Tradução Técnica)
 
-## Boundaries (Restrições Preservadas)
+### 1. KPI Cards — "Visão Geral em Tempo Real"
+- Total de Entregas Hoje
+- Progresso Atual (barra)
+- Taxa de Sucesso vs. Insucesso
+- Tempo Médio por Parada
 
-| Restrição | Significado | Implicação |
-|-----------|------------|-----------|
-| **Preservar histórico git** | Sem `git reset --hard`, sem operações destrutivas | Usar `mv` e `rm` seguros; commits subsequentes preservam história |
-| **Sem quebra de URLs** | Caminhos existentes devem seguir funcionando | Manter alias/redirects onde necessário (ex: `login.html` → `sp-portal/login/index.html`) |
-| **Fazer agora** | Urgência de tempo — não é planejamento futuro | Plano executável imediatamente, não conceitual |
+### 2. Mapa Operacional — "O Olho de Águia"
+- Ícones de entregadores (verde/amarelo/vermelho)
+- Heatmap de zonas com acúmulo
+- Rastreamento ao vivo
 
-## Context & Constraints
+### 3. Triage de Exceções — "Foco na Ação"
+- Fila de exceções em tempo real
+- Click para detalhes e ação
+- Integração com cliente
 
-- **Stack:** Projeto estático (HTML, CSS, JS via CDN) + estrutura de dados mock em `localStorage`
-- **Fase atual:** Transição — código estático bem estruturado em `sp-portal/`, mas raiz está desorganizada
-- **Próximo passo:** Migração planejada para React (Vite + React + TS) — esta limpeza prepara o terreno
+### 4. Live Feed do Scanner — "O Ticker"
+- Feed rolando com eventos
+- Timestamp + ação
+- Auditoria em tempo real
 
-## What We're NOT Doing
+### 5. Raio-X da Equipe — "Status da Operação"
+- Nome, status, carga, bateria
+- Drag-and-drop para reatribuir entregas
 
-- ❌ Modificar `logix-sphere-frontend-nextjs` (repositório externo)
-- ❌ Executar migração React agora (apenas preparar estrutura)
-- ❌ Deletar arquivos sem verificação manual
-- ❌ Quebrar URLs ou redirecionamentos existentes
+## Boundaries
 
-## Próximos Passos
+**Must Have:**
+- 5 componentes principais
+- Mock data realista
+- Integração com routing
+- TypeScript strict
 
-1. **Define:** Analisar cada arquivo solto, classificar (redirect/style/data/utility), propor novo local
-2. **Develop:** Criar script bash com comandos de movimentação seguros
-3. **Deliver:** Executar mudanças, validar, atualizar documentação
+**Nice to Have:**
+- Drag-and-drop funcional
+- WebSocket prep
+- Mapa Leaflet
 
----
+**Out of Scope:**
+- Backend API real
+- Autenticação customizada
+- Internacionalização
 
-**Ready to proceed with structured planning.**
+## Next Phase
+
+1. Discover → Arquitetura existente, modelo de dados
+2. Define → Tipos, componentes, estrutura
+3. Develop → Implementação, hooks, integração
+4. Deliver → Testes, documentação
+
