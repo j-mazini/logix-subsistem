@@ -1,0 +1,353 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                   COMPLIANCE PAGE - VISUAL GUIDE                          ║
+║                         React + TypeScript Architecture                   ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│                          PAGE HIERARCHY                                  │
+└──────────────────────────────────────────────────────────────────────────┘
+
+                            Compliance.tsx
+                                 │
+                    ┌────────────┬┼────────────┬─────────────┐
+                    │            │            │             │
+             ComplianceStats  ComplianceTabs  useComplianceState
+             (KPI Cards)      (Tab Manager)   (Global State)
+                    │            │            │
+                    │     ┌──────┴──────┐     │
+                    │     │             │     │
+              ProfilesTab  VettingTab    │     useConditionalRedirect
+              ├─ List      ├─ List       │     (Redirect Logic)
+              ├─ Filter    ├─ Filter     │
+              ├─ Card      ├─ Card       └─► localStorage (active tab)
+              └─ Modal     └─ Modal          URL params sync
+
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│                      CONDITIONAL REDIRECT FLOW                           │
+└──────────────────────────────────────────────────────────────────────────┘
+
+                          USER CLICKS PROFILE
+                                  │
+                                  ▼
+                     ┌─────────────────────────┐
+                     │  handleOpenProfile()    │
+                     │  in useConditionalRdr  │
+                     └─────────────────────────┘
+                                  │
+                                  ▼
+                    ┌──────────────────────────────┐
+                    │ Find Vetting Record for     │
+                    │ this Profile                │
+                    └──────────────────────────────┘
+                                  │
+                    ┌─────────────┴──────────────┐
+                    │                            │
+               NOT FOUND              FOUND: Check Status
+                    │                            │
+                    ▼                    ┌───────┴──────────┐
+            ┌───────────────┐            │                  │
+            │ REDIRECT TO   │      COMPLETE           IN-PROGRESS/PENDING
+            │ VETTING TAB   │            │                  │
+            │ - Change tab  │            ▼                  ▼
+            │ - Open modal  │      ┌──────────────┐  ┌─────────────────┐
+            │ - Emit event  │      │ OPEN PROFILE │  │ REDIRECT &      │
+            │               │      │ DETAIL MODAL │  │ OPEN VETTING    │
+            └───────────────┘      │ - Show docs  │  │ - Change tab    │
+                    │              │ - Training   │  │ - Open modal    │
+                    ▼              │ - Histórico  │  │ - Emit event    │
+         ┌──────────────────────┐  └──────────────┘  └─────────────────┘
+         │ VETTING DETAIL MODAL │         │                  │
+         │ - Checklist          │         ▼                  ▼
+         │ - Background check   │    USER VIEWS         USER COMPLETES
+         │ - Actions buttons    │    DOCUMENTS          VETTING
+         │                      │
+         └──────────────────────┘        │
+                    │                    │
+                    └────────────────────┴──────────────┐
+                                                        │
+                                                        ▼
+                            ┌──────────────────────────────────┐
+                            │ emit 'compliance-updated' event │
+                            │ Notify Vendor Page               │
+                            │ Update vendorAccess: 'full'      │
+                            └──────────────────────────────────┘
+
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│                          STATE STRUCTURE                                 │
+└──────────────────────────────────────────────────────────────────────────┘
+
+    useComplianceState() 
+            │
+            ├─► profiles: UserProfile[]
+            │   ├─ id, name, email, phone
+            │   ├─ vendor, role
+            │   ├─ documents: ComplianceDocument[]
+            │   ├─ trainings: Training[]
+            │   ├─ vettingStatus: 'pending'|'in-progress'|'completed'|'rejected'
+            │   └─ complianceScore: 0-100
+            │
+            ├─► vettings: VettingRecord[]
+            │   ├─ id, profileId, status
+            │   ├─ backgroundCheck: { criminalRecord, status, notes }
+            │   ├─ checklist: ChecklistItem[]
+            │   ├─ assignedOfficer, priority
+            │   ├─ daysInStage, slaBreached
+            │   └─ vendorAccess: 'full'|'restricted'|'none'
+            │
+            ├─► activeTab: 'profiles' | 'vetting'  ◄─── persisted to localStorage
+            │
+            ├─► selectedProfile: UserProfile | null
+            ├─► selectedVetting: VettingRecord | null
+            │
+            ├─► modals: {
+            │   ├─ profileDetail: boolean
+            │   ├─ vettingDetail: boolean
+            │   └─ documentUpload: boolean
+            │   }
+            │
+            ├─► filters: {
+            │   ├─ profiles: { status, vendor, role, searchQuery, sortBy, sortOrder }
+            │   └─ vetting: { status, officer, priority, slaBreached, ... }
+            │   }
+            │
+            ├─► loading: boolean
+            └─► error: string | null
+
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│                        COMPONENT HIERARCHY                               │
+└──────────────────────────────────────────────────────────────────────────┘
+
+Compliance
+│
+├── ComplianceStats (KPI Cards)
+│   ├── Stats Grid
+│   │   ├── Total Card
+│   │   ├── Completed Card
+│   │   ├── In Progress Card
+│   │   └── ... more cards
+│   │
+│   └── Different stats based on activeTab
+│
+├── ComplianceTabs (Tab Navigation)
+│   ├── Tab Button 1: "Profiles"
+│   ├── Tab Button 2: "Vetting"
+│   └── Tab Content Container
+│
+└── Content Area (Based on activeTab)
+    │
+    ├─ ProfilesTab (if activeTab === 'profiles')
+    │  ├── ProfileFilters
+    │  │   ├── Status Select
+    │  │   ├── Role Select
+    │  │   ├── Search Input
+    │  │   └── Sort Controls
+    │  │
+    │  ├── ProfilesList
+    │  │   └── ProfileCard[] (repeated)
+    │  │       ├── Avatar
+    │  │       ├── Name/Email
+    │  │       ├── Badges (vendor, role, status)
+    │  │       ├── Compliance Score Bar
+    │  │       └── Action Buttons
+    │  │
+    │  └── ProfileDetail (Portal Modal)
+    │      ├── Header with name/email
+    │      ├── Personal Info Section
+    │      ├── Documents Section
+    │      ├── Trainings Section
+    │      ├── Timeline Section
+    │      └── Footer with buttons
+    │
+    └─ VettingTab (if activeTab === 'vetting')
+       ├── VettingFilters
+       │   ├── Status Select
+       │   ├── Priority Select
+       │   ├── SLA Breach Checkbox
+       │   └── Sort Controls
+       │
+       ├── VettingList
+       │   └── VettingCard[] (repeated)
+       │       ├── Name/Email
+       │       ├── Badges (status, priority)
+       │       ├── Officer assigned
+       │       ├── Progress Bar
+       │       ├── Days in progress
+       │       └── Action Buttons
+       │
+       └── VettingDetail (Portal Modal)
+           ├── Header with name/email
+           ├── Status Section
+           ├── Background Check Section
+           ├── Checklist Section
+           │   ├── Progress Bar
+           │   └── Interactive Checklist Items
+           └── Footer with buttons (Approve, Reject)
+
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│                         CUSTOM EVENTS FLOW                               │
+└──────────────────────────────────────────────────────────────────────────┘
+
+                        Compliance.tsx
+                              │
+                ┌─────────────┼─────────────┐
+                │             │             │
+                ▼             ▼             ▼
+       compliance-      compliance-   compliance-
+       conditional-     updated       loaded
+       redirect
+         │               │             │
+         │               │             └─► Any listener can track load
+         │               │                  analytics, enable features
+         │               │
+         │               └─► Vendor Page listens
+         │                   Updates vendorAccess
+         │                   Changes data visibility
+         │
+         └─► Analytics service
+             Tracks redirect reasons
+             Identifies bottlenecks
+
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│                       RESPONSIVE BREAKPOINTS                             │
+└──────────────────────────────────────────────────────────────────────────┘
+
+MOBILE (< 768px)              TABLET (768-1024px)       DESKTOP (> 1024px)
+┌───────────────────┐        ┌──────────────────────┐   ┌──────────────────────────┐
+│ STATS (1 col)     │        │ STATS (3 cols)       │   │ STATS (5 cols grid)      │
+├───────────────────┤        ├──────────────────────┤   ├──────────────────────────┤
+│ TABS (stacked)    │        │ TABS                 │   │ TABS                     │
+├───────────────────┤        ├──────────────────────┤   ├──────────────────────────┤
+│ FILTERS           │        │ FILTERS (2 rows)     │   │ FILTERS (1 row, flex)    │
+│ (all stacked)     │        │                      │   │                          │
+├───────────────────┤        ├──────────────────────┤   ├──────────────────────────┤
+│ CARDS (1 col)     │        │ CARDS (2 cols)       │   │ CARDS (3-4 cols grid)    │
+│ ┌─────────────────┐        │ ┌──────────┐ ┌─────┐│   │ ┌──────────┐ ┌─────────┐ │
+│ │  Card 1         │        │ │ Card 1   │ │ C2  ││   │ │  Card 1  │ │ Card 2  │ │
+│ ├─────────────────┤        │ ├──────────┤ └─────┘│   │ ├──────────┤ ├─────────┤ │
+│ │  Card 2         │        │ │ Card 3   │ ┌─────┐│   │ │  Card 3  │ │ Card 4  │ │
+│ ├─────────────────┤        │ └──────────┘ │ C4  ││   │ └──────────┘ └─────────┘ │
+│ │  Card 3         │        │              └─────┘│   └──────────────────────────┘
+│ └─────────────────┘        │                      │
+└───────────────────┘        └──────────────────────┘
+
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│                            FILES MAPPING                                 │
+└──────────────────────────────────────────────────────────────────────────┘
+
+Compliance/
+├── 📄 Compliance.tsx ......................... Main container + orchestration
+├── 📄 Compliance.module.css ................. All styles (~800 lines)
+│
+├── types/
+│   └── 📄 compliance.ts ..................... 30+ TypeScript interfaces
+│
+├── hooks/
+│   ├── 📄 useComplianceState.ts ............ Global state management
+│   ├── 📄 useConditionalRedirect.ts ....... Redirect conditional logic
+│   └── 📄 useVettingStatus.ts ............. Vetting status utilities
+│
+├── components/
+│   ├── 📄 ComplianceTabs.tsx .............. Tab controller
+│   ├── 📄 ComplianceStats.tsx ............ KPI cards
+│   │
+│   ├── ProfilesTab/
+│   │   ├── 📄 ProfilesTab.tsx ............ Container
+│   │   ├── 📄 ProfilesList.tsx .......... Filtered grid
+│   │   ├── 📄 ProfileCard.tsx .......... Individual card
+│   │   ├── 📄 ProfileFilters.tsx ...... Filter controls
+│   │   └── 📄 ProfileDetail.tsx ...... Detail modal (portal)
+│   │
+│   └── VettingTab/
+│       ├── 📄 VettingTab.tsx ........... Container
+│       ├── 📄 VettingList.tsx ........ Filtered grid
+│       ├── 📄 VettingCard.tsx ...... Individual card
+│       ├── 📄 VettingFilters.tsx  .. Filter controls
+│       └── 📄 VettingDetail.tsx . Detail modal (portal)
+│
+└── Documentation/
+    ├── 📄 INDEX.md ......................... Navigation guide (START HERE)
+    ├── 📄 DELIVERY_SUMMARY.md ............ Overview & next steps
+    ├── 📄 COMPLIANCE_SPEC.md ........... Business rules & specifications
+    ├── 📄 ARCHITECTURE.md ............. Component hierarchy & flow
+    ├── 📄 INTEGRATION_GUIDE.md ....... Step-by-step integration
+    ├── 📄 README.md .................. Hook usage & examples
+    └── 📄 VISUAL_GUIDE.txt .......... This file
+
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│                          QUICK REFERENCE                                 │
+└──────────────────────────────────────────────────────────────────────────┘
+
+MAIN HOOK SIGNATURES:
+
+  useComplianceState()
+    → state: ComplianceState
+    → selectProfile(profile): void
+    → selectVetting(vetting): void
+    → setActiveTab(tab): void
+    → updateProfile(id, updates): void
+    → updateVetting(id, updates): void
+    → updateChecklistItem(vettingId, itemId, completed): void
+    → [+ modal open/close functions]
+
+  useConditionalRedirect({ vettings, onTabChange, ... })
+    → handleOpenProfile(profile): void  ◄─ Main entry point
+    → handleOpenVetting(vetting): void
+    → isVettingPending(profileId): boolean
+    → getVettingProgress(profileId): object
+
+  useVettingStatus(vetting)
+    → isComplete: boolean
+    → isPending: boolean
+    → progress: { completed, total, percentage }
+    → pendingItems: ChecklistItem[]
+    → nextStep: ChecklistItem
+    → slaStatus: 'ok' | 'warning' | 'breached'
+
+
+STATUS VALUES:
+
+  ComplianceStatus (for profiles)
+    'pending' | 'in-progress' | 'completed' | 'rejected'
+
+  VettingStatus (for vettings)
+    'pending' | 'in-progress' | 'completed' | 'rejected'
+
+  DocumentStatus
+    'pending' | 'approved' | 'rejected' | 'expired'
+
+  TrainingStatus
+    'not-started' | 'in-progress' | 'completed'
+
+
+CUSTOM EVENTS:
+
+  window.addEventListener('compliance-conditional-redirect', (e) => {
+    e.detail: { profileId, vettingId, action, reason }
+  })
+
+  window.addEventListener('compliance-updated', (e) => {
+    e.detail: { profileId, vettingId, status, vendorAccess, timestamp }
+  })
+
+  window.addEventListener('compliance-loaded', (e) => {
+    e.detail: { totalProfiles, totalVettings, timestamp }
+  })
+
+
+═══════════════════════════════════════════════════════════════════════════
+
+                        READY TO IMPLEMENT? 🚀
+
+  1. Start with INDEX.md for navigation
+  2. Read DELIVERY_SUMMARY.md for overview
+  3. Follow INTEGRATION_GUIDE.md for steps
+  4. Consult README.md for hook usage
+
+═══════════════════════════════════════════════════════════════════════════

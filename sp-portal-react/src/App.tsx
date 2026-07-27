@@ -26,6 +26,7 @@ import {
   VettingInterviewPage,
 } from './pages/Vetting';
 import { WeekPlanner } from './pages/WeekPlanner/WeekPlanner';
+import { Compliance } from './pages/Compliance/Compliance';
 import { useViewportAttribute } from './hooks/useViewportAttribute';
 import { useRefinementsMotion } from './hooks/useRefinementsMotion';
 
@@ -64,6 +65,7 @@ function App() {
           <Route path="/vetting-interview" element={<VettingInterviewPage />} />
         </Route>
         <Route path="/week-planner" element={<WeekPlanner />} />
+        <Route path="/compliance" element={<Compliance />} />
       </Routes>
     </HashRouter>
   );

@@ -1,0 +1,1206 @@
+/* =====================================================
+   Compliance Page — Logixsphere Design System
+
+   NOTE: every top-level selector is prefixed with `.compliance-page`
+   (the PortalLayout pageClassName, an ancestor of everything this
+   page renders). This SPA loads every page's CSS simultaneously with
+   no per-route isolation, so bare class names like `.stat-card`,
+   `.badge`, `.modal-content` collide with other pages (e.g.
+   route-balance.css's own unscoped `.stat-card`). Scoping under
+   `.compliance-page` keeps the cascade contained to this page only,
+   mirroring the pattern used by vetting-admin.css.
+   ===================================================== */
+
+.compliance-page {
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
+  --text-light: #8491a1;
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-tertiary: #f1f5f9;
+  --border-color: #e9ecef;
+  --primary-blue: #6366f1;
+  --primary-blue-hover: #4f46e5;
+  --accent-purple: #8b5cf6;
+  --primary-gradient: linear-gradient(135deg, var(--primary-blue) 0%, var(--accent-purple) 100%);
+  --success-green: #16a34a;
+  --danger-red: #dc2626;
+  --warning-amber: #d97706;
+  --radius: 0.625rem;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --transition: 150ms ease-in-out;
+  --v3-ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  color: var(--text-primary);
+}
+
+.compliance-page * {
+  box-sizing: border-box;
+}
+
+.compliance-page .compliance-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* =====================================================
+   HEADER
+   ===================================================== */
+.compliance-page .compliance-header {
+  margin-bottom: 1.5rem;
+}
+
+.compliance-page .page-header-welcome-text {
+  display: flex;
+  align-items: center;
+}
+
+.compliance-page .page-header-date {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.compliance-page .page-header-date i {
+  color: var(--primary-blue);
+  font-size: 1.05rem;
+}
+
+/* =====================================================
+   LOADING / ERROR
+   ===================================================== */
+.compliance-page .compliance-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 4rem 1.5rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  color: var(--text-secondary);
+}
+
+.compliance-page .spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--border-color);
+  border-top-color: var(--primary-blue);
+  border-radius: 50%;
+  animation: complianceSpin 0.8s linear infinite;
+}
+
+@keyframes complianceSpin {
+  to { transform: rotate(360deg); }
+}
+
+.compliance-page .compliance-error {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.25rem 1.5rem;
+  background: rgba(220, 38, 38, 0.06);
+  border: 1px solid rgba(220, 38, 38, 0.25);
+  border-radius: var(--radius);
+  color: var(--danger-red);
+}
+
+/* =====================================================
+   STATS GRID (KPI cards)
+   ===================================================== */
+.compliance-page .compliance-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.compliance-page .stat-card {
+  position: relative;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.5rem;
+  cursor: pointer;
+  text-align: left;
+  overflow: hidden;
+  transition: box-shadow 0.25s var(--v3-ease), border-color 0.25s var(--v3-ease), transform 0.25s var(--v3-ease);
+}
+
+.compliance-page .stat-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--primary-gradient);
+  opacity: 0;
+  transition: opacity 0.25s var(--v3-ease);
+}
+
+.compliance-page .stat-card:hover {
+  border-color: var(--primary-blue);
+  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.12);
+  transform: translateY(-2px);
+}
+
+.compliance-page .stat-card:hover::before {
+  opacity: 1;
+}
+
+.compliance-page .stat-card-large {
+  grid-column: span 2;
+  cursor: default;
+}
+
+.compliance-page .stat-value {
+  font-size: 1.75rem;
+  font-weight: 800;
+  margin: 0 0 0.35rem;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.compliance-page .stat-value.stat-success { color: var(--success-green); }
+.compliance-page .stat-value.stat-warning { color: var(--warning-amber); }
+.compliance-page .stat-value.stat-danger { color: var(--danger-red); }
+.compliance-page .stat-value.stat-info { color: var(--primary-blue); }
+
+.compliance-page .stat-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-light);
+  margin: 0;
+}
+
+.compliance-page .stat-progress-bar {
+  width: 100%;
+  height: 6px;
+  background: var(--bg-tertiary);
+  border-radius: 9999px;
+  overflow: hidden;
+  margin-top: 0.85rem;
+}
+
+.compliance-page .stat-progress-fill {
+  height: 100%;
+  background: var(--primary-gradient);
+  transition: width var(--transition);
+}
+
+/* =====================================================
+   TABS
+   ===================================================== */
+.compliance-page .compliance-tabs-section {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+/* The Vetting tab embeds the real, standalone Vetting page (its own
+   navbar, background and card system) — drop the wrapper card so it
+   isn't nested inside another card. */
+.compliance-page .compliance-tabs-section--full {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+.compliance-page .compliance-tabs-section--full .compliance-tabs-nav {
+  border-radius: var(--radius) var(--radius) 0 0;
+  border: 1px solid var(--border-color);
+  border-bottom: none;
+}
+
+.compliance-page .compliance-tabs-nav {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+}
+
+.compliance-page .tab-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.25rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.compliance-page .tab-button:hover {
+  background: rgba(99, 102, 241, 0.08);
+  color: var(--primary-blue);
+}
+
+.compliance-page .tab-button-active {
+  background: var(--primary-gradient);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.compliance-page .compliance-tabs-content {
+  padding: 1.5rem;
+}
+
+.compliance-page .compliance-tabs-content--full {
+  padding: 0;
+  border: 1px solid var(--border-color);
+  border-top: none;
+  border-radius: 0 0 var(--radius) var(--radius);
+  overflow: hidden;
+}
+
+/* =====================================================
+   FILTERS
+   ===================================================== */
+.compliance-page .profiles-filters,
+.compliance-page .vetting-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1.25rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+}
+
+.compliance-page .filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.compliance-page .filter-group.flex-grow {
+  grid-column: span 2;
+}
+
+.compliance-page .filter-group label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.compliance-page .filter-group select,
+.compliance-page .search-input input {
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  font-size: 0.88rem;
+  font-family: inherit;
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.compliance-page .filter-group select:focus,
+.compliance-page .search-input input:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.compliance-page .search-input {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.compliance-page .search-input i {
+  position: absolute;
+  left: 0.75rem;
+  color: var(--text-light);
+  font-size: 0.85rem;
+  pointer-events: none;
+}
+
+.compliance-page .search-input input {
+  width: 100%;
+  padding-left: 2.25rem;
+}
+
+/* =====================================================
+   CARD GRIDS (Profiles / Vetting)
+   ===================================================== */
+.compliance-page .profiles-list-empty,
+.compliance-page .vetting-list-empty {
+  padding: 3rem 1.5rem;
+  text-align: center;
+  color: var(--text-light);
+}
+
+.compliance-page .profiles-list-grid,
+.compliance-page .vetting-list-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+.compliance-page .profile-card,
+.compliance-page .vetting-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1.25rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: box-shadow 0.25s var(--v3-ease), border-color 0.25s var(--v3-ease), transform 0.25s var(--v3-ease);
+}
+
+.compliance-page .profile-card:hover,
+.compliance-page .vetting-card:hover {
+  border-color: var(--primary-blue);
+  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.12);
+  transform: translateY(-2px);
+}
+
+.compliance-page .profile-card-header,
+.compliance-page .vetting-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  position: relative;
+}
+
+.compliance-page .profile-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #e0e7ff 0%, #f0f4ff 100%);
+  color: var(--primary-blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.compliance-page .profile-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.compliance-page .profile-name,
+.compliance-page .vetting-name {
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.compliance-page .profile-email,
+.compliance-page .vetting-email {
+  font-size: 0.8rem;
+  color: var(--text-light);
+  margin: 0.15rem 0 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.compliance-page .vetting-pending-indicator {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(217, 119, 6, 0.12);
+  color: var(--warning-amber);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.compliance-page .vetting-badges {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.compliance-page .profile-card-header .profile-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-left: 0.75rem;
+}
+
+.compliance-page .profile-card-vendor {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.compliance-page .vetting-card-meta {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.compliance-page .vetting-card-officer {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.compliance-page .vetting-card-officer i {
+  color: var(--primary-blue);
+}
+
+/* =====================================================
+   BADGES
+   ===================================================== */
+.compliance-page .badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.7rem;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.compliance-page .badge-outline {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+}
+
+.compliance-page .badge-success {
+  background: rgba(22, 163, 74, 0.12);
+  color: var(--success-green);
+}
+
+.compliance-page .badge-warning {
+  background: rgba(217, 119, 6, 0.12);
+  color: var(--warning-amber);
+}
+
+.compliance-page .badge-danger {
+  background: rgba(220, 38, 38, 0.12);
+  color: var(--danger-red);
+}
+
+.compliance-page .badge-info {
+  background: rgba(99, 102, 241, 0.12);
+  color: var(--primary-blue);
+}
+
+.compliance-page .badge-required {
+  background: rgba(220, 38, 38, 0.1);
+  color: var(--danger-red);
+}
+
+.compliance-page .badge-conditional {
+  background: rgba(99, 102, 241, 0.1);
+  color: var(--primary-blue);
+}
+
+/* document/training status badges reuse the same soft-pill treatment */
+.compliance-page .badge-pending { background: rgba(217, 119, 6, 0.12); color: var(--warning-amber); }
+.compliance-page .badge-approved,
+.compliance-page .badge-completed { background: rgba(22, 163, 74, 0.12); color: var(--success-green); }
+.compliance-page .badge-rejected { background: rgba(220, 38, 38, 0.12); color: var(--danger-red); }
+.compliance-page .badge-expired { background: rgba(100, 116, 139, 0.12); color: var(--text-secondary); }
+.compliance-page .badge-in-progress,
+.compliance-page .badge-not-started { background: rgba(99, 102, 241, 0.12); color: var(--primary-blue); }
+
+/* =====================================================
+   PROGRESS BARS
+   ===================================================== */
+.compliance-page .compliance-bar,
+.compliance-page .progress-bar {
+  width: 100%;
+  height: 6px;
+  background: var(--bg-tertiary);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.compliance-page .compliance-fill,
+.compliance-page .progress-fill {
+  height: 100%;
+  background: var(--primary-gradient);
+  transition: width var(--transition);
+}
+
+.compliance-page .profile-card-compliance {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.compliance-page .compliance-score {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.82rem;
+}
+
+.compliance-page .score-label {
+  color: var(--text-secondary);
+}
+
+.compliance-page .score-value {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.compliance-page .profile-card-vetting-progress,
+.compliance-page .vetting-card-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.compliance-page .progress-label,
+.compliance-page .progress-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.compliance-page .progress-value {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.compliance-page .vetting-card-sla {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  background: var(--bg-secondary);
+  border-radius: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.compliance-page .vetting-card-sla p {
+  margin: 0;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.compliance-page .sla-breached {
+  color: var(--danger-red) !important;
+  font-weight: 600;
+}
+
+/* =====================================================
+   CARD FOOTERS / BUTTONS
+   ===================================================== */
+.compliance-page .profile-card-footer,
+.compliance-page .vetting-card-footer {
+  display: flex;
+  gap: 0.5rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--border-color);
+  margin-top: auto;
+}
+
+.compliance-page .btn-action {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.compliance-page .btn-primary {
+  background: var(--primary-gradient);
+  color: #fff;
+}
+
+.compliance-page .btn-primary:hover:not(:disabled) {
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+  transform: translateY(-1px);
+}
+
+.compliance-page .btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.compliance-page .btn-outline {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  padding: 0.55rem 1.25rem;
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.compliance-page .btn-outline:hover {
+  background: var(--bg-secondary);
+  border-color: var(--text-light);
+}
+
+.compliance-page .btn-danger,
+.compliance-page .btn-success {
+  padding: 0.55rem 1.25rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: inherit;
+  color: #fff;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.compliance-page .btn-danger {
+  background: var(--danger-red);
+}
+
+.compliance-page .btn-danger:hover {
+  background: #b91c1c;
+  box-shadow: var(--shadow-md);
+}
+
+.compliance-page .btn-success {
+  background: var(--success-green);
+}
+
+.compliance-page .btn-success:hover:not(:disabled) {
+  background: #15803d;
+  box-shadow: var(--shadow-md);
+}
+
+.compliance-page .btn-success:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* =====================================================
+   MODALS (Profile Detail / Vetting Detail)
+   ===================================================== */
+.compliance-page .profile-detail-modal,
+.compliance-page .vetting-detail-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  pointer-events: none;
+}
+
+.compliance-page .modal-dialog {
+  width: 100%;
+  pointer-events: auto;
+  max-height: calc(100vh - 3rem);
+  display: flex;
+}
+
+.compliance-page .modal-lg {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.compliance-page .modal-content {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-height: calc(100vh - 3rem);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.compliance-page .modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.compliance-page .modal-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.compliance-page .modal-subtitle {
+  margin: 0.25rem 0 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.compliance-page .modal-body {
+  flex: 1;
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+.compliance-page .modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1.25rem 1.5rem;
+  border-top: 1px solid var(--border-color);
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.compliance-page .btn-close {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-light);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition);
+}
+
+.compliance-page .btn-close:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.compliance-page .modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1290;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(2px);
+}
+
+/* =====================================================
+   DETAIL SECTIONS (inside modals)
+   ===================================================== */
+.compliance-page .profile-detail-section,
+.compliance-page .vetting-detail-section {
+  padding-bottom: 1.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.compliance-page .profile-detail-section:last-child,
+.compliance-page .vetting-detail-section:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.compliance-page .profile-detail-section h6,
+.compliance-page .vetting-detail-section h6 {
+  margin: 0 0 1rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.compliance-page .section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.compliance-page .section-header h6 {
+  margin: 0;
+}
+
+.compliance-page .progress-badge {
+  padding: 0.25rem 0.7rem;
+  border-radius: 9999px;
+  background: rgba(99, 102, 241, 0.1);
+  color: var(--primary-blue);
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.compliance-page .detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
+}
+
+.compliance-page .detail-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.compliance-page .detail-grid label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-light);
+}
+
+.compliance-page .detail-grid p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.compliance-page .text-muted {
+  color: var(--text-light);
+  font-size: 0.88rem;
+}
+
+.compliance-page .documents-list,
+.compliance-page .trainings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.compliance-page .document-item,
+.compliance-page .training-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+}
+
+.compliance-page .document-name,
+.compliance-page .training-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  font-size: 0.88rem;
+}
+
+.compliance-page .document-type,
+.compliance-page .training-type {
+  font-size: 0.78rem;
+  color: var(--text-light);
+  margin: 0.15rem 0 0;
+  text-transform: capitalize;
+}
+
+.compliance-page .timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.compliance-page .timeline-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg-secondary);
+  border-radius: 0.5rem;
+}
+
+.compliance-page .timeline-label {
+  margin: 0;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.compliance-page .timeline-value {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+}
+
+/* =====================================================
+   STATUS / BACKGROUND CHECK BLOCKS
+   ===================================================== */
+.compliance-page .status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.compliance-page .status-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.compliance-page .status-grid label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-light);
+}
+
+.compliance-page .status-grid p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.compliance-page .alert {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.85rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-top: 0.75rem;
+}
+
+.compliance-page .alert-warning {
+  background: rgba(217, 119, 6, 0.1);
+  color: var(--warning-amber);
+  border: 1px solid rgba(217, 119, 6, 0.25);
+}
+
+.compliance-page .alert-danger {
+  background: rgba(220, 38, 38, 0.08);
+  color: var(--danger-red);
+  border: 1px solid rgba(220, 38, 38, 0.25);
+}
+
+.compliance-page .bg-check-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.compliance-page .bg-check-fields > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.compliance-page .bg-check-fields label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-light);
+}
+
+.compliance-page .bg-check-fields p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.compliance-page .bg-check-notes {
+  padding: 0.85rem 1rem;
+  background: var(--bg-secondary);
+  border-radius: 0.5rem;
+}
+
+.compliance-page .bg-check-notes label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-light);
+  margin-bottom: 0.3rem;
+}
+
+.compliance-page .bg-check-notes p {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--text-primary);
+}
+
+/* =====================================================
+   CHECKLIST (inside Vetting Detail modal)
+   ===================================================== */
+.compliance-page .checklist-progress {
+  margin-bottom: 1.25rem;
+}
+
+.compliance-page .checklist-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.compliance-page .checklist-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: var(--bg-secondary);
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+.compliance-page .checklist-item:hover {
+  background: var(--bg-tertiary);
+}
+
+.compliance-page .checklist-item input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin-top: 0.15rem;
+  cursor: pointer;
+  accent-color: var(--primary-blue);
+  flex-shrink: 0;
+}
+
+.compliance-page .checklist-label {
+  flex: 1;
+  min-width: 0;
+}
+
+.compliance-page .checklist-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0 0 0.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.88rem;
+}
+
+.compliance-page .checklist-desc {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+/* =====================================================
+   RESPONSIVE
+   ===================================================== */
+@media (max-width: 768px) {
+  .compliance-page .compliance-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .compliance-page .stat-card-large {
+    grid-column: 1 / -1;
+  }
+
+  .compliance-page .compliance-tabs-nav {
+    flex-wrap: wrap;
+  }
+
+  .compliance-page .tab-button {
+    flex: 1 1 45%;
+  }
+
+  .compliance-page .profiles-filters,
+  .compliance-page .vetting-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .compliance-page .filter-group.flex-grow {
+    grid-column: 1;
+  }
+
+  .compliance-page .profiles-list-grid,
+  .compliance-page .vetting-list-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .compliance-page .modal-dialog,
+  .compliance-page .modal-lg {
+    max-width: 100%;
+  }
+
+  .compliance-page .detail-grid,
+  .compliance-page .status-grid,
+  .compliance-page .bg-check-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .compliance-page .modal-footer {
+    flex-direction: column-reverse;
+  }
+
+  .compliance-page .modal-footer button {
+    width: 100%;
+  }
+}
+
+/* =====================================================
+   MOTION — one-shot entrance cascade, mirrors vetting-admin-page
+   ===================================================== */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes complianceFadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .compliance-page .compliance-stats-grid,
+  .compliance-page .compliance-tabs-section {
+    animation: complianceFadeUp 0.4s var(--v3-ease) both;
+  }
+
+  .compliance-page .compliance-tabs-section {
+    animation-delay: 80ms;
+  }
+
+  .compliance-page .profile-card,
+  .compliance-page .vetting-card {
+    animation: complianceFadeUp 0.3s var(--v3-ease) both;
+  }
+}

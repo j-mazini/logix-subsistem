@@ -43,7 +43,7 @@ const NAV_GROUPS: NavGroup[] = [
     label: 'Compliance',
     items: [
       { icon: 'bi-building', label: 'Service Provider Profile', route: '/profile' },
-      { icon: 'bi-shield-check', label: 'Compliance' },
+      { icon: 'bi-shield-check', label: 'Compliance', route: '/compliance' },
       { icon: 'bi-check-circle', label: 'Vetting', route: '/vetting-dashboard' },
     ],
   },
