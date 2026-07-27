@@ -710,26 +710,19 @@ function RouteBlockCard(props: RouteBlockCardProps) {
             {chip('dsr', 'DSR')}
           </div>
           {specialStops.length ? (
-            <div className="pre12-flip-list">
-              {specialGroups.map((g) => (
-                <div className="pre12-flip-group" key={g.code}>
-                  <div className="pre12-flip-group-name">{g.code}</div>
-                  <div className="pre12-flip-items">
-                    {g.postcodes.map((p) => (
-                      <div className="pre12-flip-item" key={p.postcode}>
-                        <span className="pre12-flip-pc">{p.postcode}</span>
-                        <span className="pre12-flip-customer">{p.stops[0]?.customer || 'N/A'}</span>
-                        <span className="special-tags">
-                          {p.stops.some((s) => s.pre12) && <span className="status-badge status-badge-pre12">Pre 12</span>}
-                          {p.stops.some((s) => s.asr) && <span className="status-badge special-tag-asr">ASR</span>}
-                          {p.stops.some((s) => s.dsr) && <span className="status-badge special-tag-dsr">DSR</span>}
-                        </span>
-                        <span className="pre12-flip-count">DEL {p.del} / PU {p.pu}</span>
-                      </div>
-                    ))}
+            <div className="pre12-flip-list" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {specialGroups.map((g) =>
+                g.postcodes.map((p) => (
+                  <div className="pre12-flip-item" key={p.postcode} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem', borderBottom: '1px solid #e2e8f0' }}>
+                    <span className="pre12-flip-pc" style={{ fontWeight: 600, minWidth: '60px' }}>{p.postcode}</span>
+                    <span className="special-tags" style={{ display: 'flex', gap: '0.4rem' }}>
+                      {p.stops.some((s) => s.pre12) && <span className="status-badge status-badge-pre12">Pre 12</span>}
+                      {p.stops.some((s) => s.asr) && <span className="status-badge special-tag-asr">ASR</span>}
+                      {p.stops.some((s) => s.dsr) && <span className="status-badge special-tag-dsr">DSR</span>}
+                    </span>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           ) : (
             <div className="pre12-empty-state">
@@ -1259,33 +1252,8 @@ export function RouteBalance() {
             )}
           </div>
 
-          <div className="summary-grid">
-            <div className="summary-table-wrapper">
-              <div className="table-responsive">
-                <table className="table table-hover" id="summaryTable">
-                  <thead>
-                    <tr>
-                      <th onClick={() => handleSort('name')} style={{ cursor: 'pointer' }}>Route <i className="bi bi-arrow-down-up" /></th>
-                      <th onClick={() => handleSort('driver')} style={{ cursor: 'pointer' }}>Driver <i className="bi bi-arrow-down-up" /></th>
-                      <th>Target (%)</th>
-                      <th>Total Stops</th>
-                    </tr>
-                  </thead>
-                  <tbody id="summaryTableBody">
-                    {dashboardFilteredRoutes.map((route) => (
-                      <tr key={route.id}>
-                        <td><strong>{route.name}</strong></td>
-                        <td>{route.driver}</td>
-                        <td>{route.target}%</td>
-                        <td>{displayStops(route).length}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div className="summary-cards" id="summaryCards">
+          <div className="summary-grid" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div className="summary-cards" id="summaryCards" style={{ width: '100%', maxWidth: '1000px', margin: '0 auto' }}>
               <div className={`stat-card stat-card--filterable${dashboardFilter === null ? '' : ''}`} data-tooltip="Total stops across all routes · click to clear any filter" role="button" tabIndex={0}
                 onClick={() => toggleDashboardFilter('all')}>
                 <div className="stat-icon"><i className="bi bi-stack" /></div>
