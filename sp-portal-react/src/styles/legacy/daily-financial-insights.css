@@ -367,18 +367,202 @@ th.dfi-total-col:hover { color: #4338ca; }
 .dfi-pm-7 { background: #cffafe; color: #0e7490; }
 .dfi-pm-OFF { background: #f1f5f9; color: #64748b; }
 
-.dfi-notes-icon {
+/* Notes cell trigger. Rows with a note keep the original yellow sticky badge;
+   rows without one get a quiet outline "+" that only gains colour on hover, so
+   an empty column still reads as empty at a glance. */
+.dfi-notes-btn {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  border: 1px solid #fde047;
-  background: #fef9c3;
-  color: #a16207;
+  border: 1px dashed var(--border-color);
+  background: transparent;
+  color: var(--text-light);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  cursor: default;
+  cursor: pointer;
   font-size: 0.72rem;
+  padding: 0;
+  transition: all var(--transition-fast);
+}
+.dfi-notes-btn:hover {
+  border-style: solid;
+  border-color: var(--primary-indigo);
+  color: var(--primary-indigo);
+  background: rgba(99, 102, 241, 0.08);
+}
+.dfi-notes-btn:focus-visible {
+  outline: none;
+  border-color: var(--primary-indigo);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+.dfi-notes-btn.has-note {
+  border: 1px solid #fde047;
+  background: #fef9c3;
+  color: #a16207;
+}
+.dfi-notes-btn.has-note:hover {
+  background: #fef08a;
+  border-color: #facc15;
+  color: #854d0e;
+}
+.dfi-notes-btn.has-note:focus-visible {
+  border-color: #a16207;
+  box-shadow: 0 0 0 3px rgba(161, 98, 7, 0.22);
+}
+
+/* =====================================================
+   NOTES MODAL
+   ===================================================== */
+/* Two classes on purpose. `.dom-modal` is shared verbatim with
+   daily-operations-management.css and requests-admin.css, which both set
+   `max-width: 760px` and land after this file in the global cascade — a
+   single-class `.dfi-note-modal` here would silently lose to them. */
+.dom-modal.dfi-note-modal { max-width: 560px; }
+.dfi-note-modal-title-icon { color: #a16207; margin-right: 0.5rem; }
+.dfi-note-modal-body { display: flex; flex-direction: column; gap: 1.1rem; }
+
+/* Read-only context for the register the note belongs to — without it the
+   note is a floating sentence with no idea which route or day it describes. */
+.dfi-note-context {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.75rem 1rem;
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: var(--main-bg);
+}
+.dfi-note-context-item { min-width: 0; }
+.dfi-note-context dt {
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+.dfi-note-context dd {
+  margin: 0.1rem 0 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+
+.dfi-note-readonly {
+  margin: 0;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--border-color);
+  border-left: 3px solid #facc15;
+  border-radius: 10px;
+  background: #fffbeb;
+  color: var(--text-dark);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.dfi-note-editor { display: flex; flex-direction: column; gap: 0.4rem; }
+
+.dfi-note-textarea {
+  width: 100%;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.6rem 0.7rem;
+  font-family: inherit;
+  font-size: 0.87rem;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background: var(--card-bg);
+  resize: vertical;
+  min-height: 110px;
+}
+.dfi-note-textarea:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+}
+
+.dfi-note-editor-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+.dfi-note-hint kbd {
+  font-family: inherit;
+  font-size: 0.68rem;
+  border: 1px solid var(--border-color);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  padding: 0.05rem 0.3rem;
+  background: var(--main-bg);
+  color: var(--text-dark);
+}
+.dfi-note-counter { font-variant-numeric: tabular-nums; }
+.dfi-note-counter.is-full { color: var(--danger-red); font-weight: 700; }
+
+.dfi-note-presets { margin-top: 0.5rem; }
+.dfi-note-presets-label {
+  display: block;
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  margin-bottom: 0.4rem;
+}
+.dfi-note-presets-list { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+
+.dfi-note-preset {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  background: var(--card-bg);
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.74rem;
+  padding: 0.22rem 0.65rem 0.22rem 0.45rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.dfi-note-preset:hover {
+  border-color: var(--primary-indigo);
+  color: var(--primary-indigo);
+  background: rgba(99, 102, 241, 0.06);
+}
+.dfi-note-preset:focus-visible {
+  outline: none;
+  border-color: var(--primary-indigo);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
+}
+
+/* Sticky so Save stays reachable on a short viewport: .dom-modal caps itself
+   at 90vh and scrolls, which on a phone otherwise pushes the footer below the
+   fold behind the quick-add chips. */
+.dfi-note-modal-actions {
+  position: sticky;
+  bottom: 0;
+  margin: 0;
+  padding: 1.1rem 1.4rem 1.4rem;
+  border-top: 1px solid var(--border-color);
+  background: var(--card-bg);
+}
+/* Destructive action sits apart from Cancel/Save so it can't be hit by reflex. */
+.dfi-note-remove { margin-right: auto; }
+
+@media (max-width: 640px) {
+  .dfi-note-modal-actions { flex-wrap: wrap; }
+  .dfi-note-remove { margin-right: 0; width: 100%; order: 1; }
+  .dfi-note-modal-actions .styled-button:not(.dfi-note-remove) { flex: 1 1 auto; }
 }
 
 .dfi-actions-cell { display: flex; align-items: center; justify-content: center; gap: 0.35rem; }

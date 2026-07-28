@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { PortalLayout } from '../../layout/PortalLayout';
 import { useModalBehavior } from '../../hooks/useModalBehavior';
+import { NotesModal } from './NotesModal';
 import '../../styles/legacy/daily-financial-insights.css';
 import {
   ADHOC_SERVICES,
@@ -95,7 +96,15 @@ export function DailyFinancialInsights() {
   const [sortField, setSortField] = useState<SortField>('date');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [toasts, setToasts] = useState<Toast[]>([]);
-  const [, forceRender] = useState(0);
+  /**
+   * The generated rows live in a ref (see `rowsByDate` below), which React
+   * can't observe — so every mutation bumps this counter and the derived
+   * `filteredRows` memo lists it as a dependency. Without it, adding,
+   * editing, deleting a register or saving a note updated the underlying mock
+   * store but never the table, the metric cards or the totals row.
+   */
+  const [dataVersion, setDataVersion] = useState(0);
+  const bumpDataVersion = useCallback(() => setDataVersion((v) => v + 1), []);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [modalTitle, setModalTitle] = useState('Add New Register');
@@ -105,6 +114,7 @@ export function DailyFinancialInsights() {
   const [formError, setFormError] = useState('');
 
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [notesId, setNotesId] = useState<string | null>(null);
 
   const rowsByDate = useRef(new Map<string, Row[]>());
 
@@ -158,8 +168,10 @@ export function DailyFinancialInsights() {
     }
     if (payment !== 'All') rows = rows.filter((r) => r.paymentMode === payment);
     return applySort(rows, sortField, sortDirection);
+    // getRowsInRange reads the rowsByDate ref, which React can't track —
+    // dataVersion stands in for it and is bumped by every mutation.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dateFrom, dateTo, search, payment, sortField, sortDirection]);
+  }, [dateFrom, dateTo, search, payment, sortField, sortDirection, dataVersion]);
 
   const totals = calculatePageTotals(filteredRows);
   const uniqueRoutes = new Set(filteredRows.map((r) => r.route).filter(Boolean)).size;
@@ -266,7 +278,7 @@ export function DailyFinancialInsights() {
     }
 
     setModalOpen(false);
-    forceRender((n) => n + 1);
+    bumpDataVersion();
   }
 
   function confirmDelete() {
@@ -284,13 +296,43 @@ export function DailyFinancialInsights() {
     setDeleteId(null);
     if (removed) {
       showToast('Register deleted successfully.', 'success');
-      forceRender((n) => n + 1);
+      bumpDataVersion();
     } else {
       showToast('Could not delete register. Please try again.', 'error');
     }
   }
 
+  /**
+   * Notes modal write-back. Mutates the row in place in the same mock store
+   * the Add/Edit form writes to, then bumps the version so the table, the
+   * metric cards and the totals row all re-derive.
+   */
+  const saveNotes = useCallback((operationId: string, notes: string) => {
+    let target: Row | null = null;
+    for (const rows of rowsByDate.current.values()) {
+      const found = rows.find((r) => r.operationId === operationId);
+      if (found) {
+        target = found;
+        break;
+      }
+    }
+    if (!target) {
+      showToast('Could not save the note. Please try again.', 'error');
+      return;
+    }
+    const had = Boolean(target.notes);
+    target.notes = notes;
+    bumpDataVersion();
+    showToast(notes ? (had ? 'Note updated.' : 'Note added.') : 'Note removed.', 'success');
+    // showToast is stable enough for this handler's lifetime (it only closes
+    // over setToasts, itself stable).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bumpDataVersion]);
+
+  const closeNotes = useCallback(() => setNotesId(null), []);
+
   const deleteRow = deleteId ? findRowById(deleteId) : null;
+  const notesRow = notesId ? findRowById(notesId) : null;
   const headerSubtitle =
     dateFrom && dateTo && dateFrom !== dateTo
       ? `Period: ${formatDateLong(dateFrom)} - ${formatDateLong(dateTo)}`
@@ -434,8 +476,22 @@ export function DailyFinancialInsights() {
                       <td data-label="Route Sort">{isOff || !row.sort ? '-' : formatCurrency(row.sort)}</td>
                       <td data-label="AD-HOC SERVICE">{isOff || !row.adhoc ? '-' : formatCurrency(row.adhoc)}</td>
                       <td data-label="Extras">{extrasDisplay}</td>
+                      {/*
+                        Notes stay available on OFF rows: the generator assigns
+                        them independently of payment mode, so the previous
+                        `isOff ? '-'` rule silently hid notes that existed on
+                        the record and left no way to add one.
+                      */}
                       <td data-label="Notes">
-                        {isOff || !row.notes ? '-' : <span className="dfi-notes-icon" title={row.notes}><i className="bi bi-sticky-fill" /></span>}
+                        <button
+                          type="button"
+                          className={`dfi-notes-btn${row.notes ? ' has-note' : ''}`}
+                          title={row.notes || 'Add a note'}
+                          aria-label={row.notes ? `View note for route ${row.route}` : `Add a note for route ${row.route}`}
+                          onClick={() => setNotesId(row.operationId)}
+                        >
+                          <i className={`bi ${row.notes ? 'bi-sticky-fill' : 'bi-plus'}`} aria-hidden="true" />
+                        </button>
                       </td>
                       <td data-label="Total" className="dfi-total-col">{isOff ? '-' : formatCurrency(total)}</td>
                       <td data-label="Avg/Stop">{isOff ? '-' : formatCurrency(avgPerStop)}</td>
@@ -674,6 +730,9 @@ export function DailyFinancialInsights() {
           </div>,
           document.body,
         )}
+
+      {/* ============ MODAL: Notes ============ */}
+      {notesRow && <NotesModal row={notesRow} onClose={closeNotes} onSave={saveNotes} />}
 
       {/* ============ MODAL: Delete confirm ============ */}
       {deleteId &&
