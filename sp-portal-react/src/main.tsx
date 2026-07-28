@@ -21,6 +21,10 @@ import './styles/legacy/admin-header-standard.css';
 
 import './styles/modal-behavior.css';
 
+// Camada de acabamento: carrega depois de todo o legacy, por isso vence por
+// ordem de cascata sem precisar de subir especificidade.
+import './design/refinements.css';
+
 import './index.css';
 import App from './App.tsx';
 

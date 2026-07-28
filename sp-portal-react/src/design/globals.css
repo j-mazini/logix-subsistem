@@ -4,9 +4,28 @@
  */
 
 :root {
-  /* Typography */
+  /* Typography.
+     The mono stack lists faces the OS actually ships: "Geist Mono" was never
+     loaded by this app, so every `var(--font-mono)` fell through to the bare
+     `monospace` keyword and rendered in whatever the browser defaults to. */
   --font-sans: "Inter", "Geist Sans", system-ui, sans-serif;
-  --font-mono: "Geist Mono", monospace;
+  --font-mono: ui-monospace, "SF Mono", "Geist Mono", "JetBrains Mono",
+    "IBM Plex Mono", Menlo, Consolas, monospace;
+
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Optical tracking: large type wants to be tighter, small caps wants air. */
+  --tracking-display: -0.03em;
+  --tracking-tight: -0.02em;
+  --tracking-normal: -0.011em;
+  --tracking-caps: 0.08em;
+
+  --leading-tight: 1.15;
+  --leading-snug: 1.35;
+  --leading-normal: 1.55;
 
   /* Colors - Primary */
   --color-primary-blue: #0d6efd;
@@ -18,8 +37,14 @@
   --color-neutral-black: #000000;
   --color-neutral-background: #f8fafc;
   --color-neutral-surface: #f7f8fa;
-  --color-neutral-border: #e9ecef;
-  --color-neutral-input: #e9ecef;
+  --color-neutral-border: #e6eaf1;
+  --color-neutral-input: #e6eaf1;
+
+  /* A hairline that sits on any surface. Alpha-based, so it stays a hairline
+     over white cards, tinted washes and the glass panels alike, instead of
+     the flat grey #e9ecef that turned muddy over the gradient background. */
+  --color-neutral-hairline: rgba(15, 23, 42, 0.07);
+  --color-neutral-hairline-strong: rgba(15, 23, 42, 0.12);
 
   /* Colors - Text */
   --color-text-primary: #0f172a;
@@ -65,19 +90,35 @@
   --radius-xl: 1.5rem;
   --radius-full: 9999px;
 
-  /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-base: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-md: 0 10px 15px -3px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+  /* Elevation.
+     Each level is a tight contact shadow plus a wide ambient one, tinted with
+     the slate of the page rather than pure black. Two layers is what makes a
+     surface read as lifted off the page instead of outlined in grey; the
+     single-layer black shadows this replaces read as a smudge at every size. */
+  --shadow-xs: 0 1px 1px rgba(15, 23, 42, 0.04);
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05), 0 1px 3px -1px rgba(15, 23, 42, 0.05);
+  --shadow-base: 0 1px 2px rgba(15, 23, 42, 0.04), 0 4px 10px -3px rgba(15, 23, 42, 0.08);
+  --shadow-md: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 18px -6px rgba(15, 23, 42, 0.1);
+  --shadow-lg: 0 2px 4px rgba(15, 23, 42, 0.04), 0 16px 32px -12px rgba(15, 23, 42, 0.14);
+  --shadow-xl: 0 4px 8px rgba(15, 23, 42, 0.05), 0 32px 64px -20px rgba(15, 23, 42, 0.2);
   --shadow-glass: 0 8px 32px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
   --shadow-glass-hover: 0 12px 40px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.6) inset;
 
-  /* Transitions */
-  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-base: 300ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
+  /* A focus ring that survives any backdrop: a solid halo punches a gap out of
+     whatever is behind, then the indigo ring sits on that gap. */
+  --ring-focus: 0 0 0 2px var(--color-neutral-white),
+    0 0 0 4px rgba(99, 102, 241, 0.55);
+
+  /* Motion.
+     `--ease-out` is a quint-out: it leaves fast and settles slowly, which is
+     what makes hover and open transitions feel resolved rather than linear. */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.5, 1);
+
+  --transition-fast: 140ms var(--ease-out);
+  --transition-base: 240ms var(--ease-out);
+  --transition-slow: 420ms var(--ease-out);
 
   /* Z-Index */
   --z-hide: -1;
@@ -110,6 +151,10 @@ html {
 body {
   font-family: var(--font-sans);
   font-feature-settings: "rlig" 1, "calt" 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: var(--tracking-normal);
+  line-height: var(--leading-normal);
   color: var(--color-text-primary);
   background: var(--color-neutral-background);
   margin: 0;
@@ -171,12 +216,22 @@ body {
 
 /* Typography */
 h1, h2, h3, h4, h5, h6 {
-  font-weight: var(--font-weight-semibold, 600);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tight);
+  text-wrap: balance;
   margin: 0;
   color: var(--color-text-primary);
 }
 
+/* The display sizes need more negative tracking than the small ones — a single
+   heading tracking value always looks loose at 2rem and cramped at 1rem. */
+h1 {
+  letter-spacing: var(--tracking-display);
+}
+
 p {
+  text-wrap: pretty;
   margin: 0;
   color: var(--color-text-secondary);
 }
@@ -221,8 +276,8 @@ a:focus-visible,
 input:focus-visible,
 textarea:focus-visible,
 select:focus-visible {
-  outline: 2px solid var(--color-primary-indigo);
-  outline-offset: 2px;
+  outline: none;
+  box-shadow: var(--ring-focus);
 }
 
 /* Center Page Content */

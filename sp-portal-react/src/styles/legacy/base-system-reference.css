@@ -7,7 +7,10 @@
 /* ========== Tokens (espelho de globals.css) ========== */
 :root {
   --font-sans: "Inter", "Geist Sans", system-ui, sans-serif;
-  --font-mono: "Geist Mono", monospace;
+  /* Espelha globals.css. "Geist Mono" nunca é carregada por esta app, por isso
+     sozinha caía no `monospace` do sistema — uma família diferente por SO. */
+  --font-mono: ui-monospace, "SF Mono", "Geist Mono", "JetBrains Mono",
+    "IBM Plex Mono", Menlo, Consolas, monospace;
   --radius: 0.625rem;
   --background: 0 0% 100%;
   --foreground: 0 0% 14.5%;

@@ -8,7 +8,16 @@
    - Tonal chips/badges, IBM Plex Mono for every data value
    ============================================================ */
 
-:root {
+/* Escopo: `body.route-balance-page`, adicionada/removida pelo próprio ecrã.
+ *
+ * Este bloco estava em `:root`. O Vite junta todo o CSS importado num único
+ * ficheiro, por isso "página autónoma" não isola nada: estes tokens
+ * sobrepunham-se aos de globals.css em toda a app, e como este ficheiro é
+ * importado depois, ganhava. O resultado era --radius-sm a 12px em vez de
+ * 6px, --radius-lg a 20px em vez de 16px e --font-mono a apontar para uma
+ * família que ninguém carrega, em todos os ecrãs do portal. Dentro do Route
+ * Balance nada muda — a página tem sempre a classe no body. */
+body.route-balance-page {
   --paper: #f4f5f7;
   --surface: #ffffff;
   --surface-2: #f0f2f5;
@@ -58,7 +67,7 @@
 
 /* ============ PAGE SCAFFOLD ============ */
 
-html { background: var(--paper); }
+html:has(> body.route-balance-page) { background: #f4f5f7; }
 
 body.route-balance-page {
   font-family: var(--font-ui);

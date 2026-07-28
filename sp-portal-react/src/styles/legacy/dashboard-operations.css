@@ -291,44 +291,10 @@
   font-size: 0.7rem;
 }
 
-#spDashboardFoldersBlock .opms-deliveries-table-wrap .opms-table-disco-style thead th {
-  padding: 0.25rem 0.5rem !important;
-  font-size: 0.65rem !important;
-  font-weight: 600 !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.03em !important;
-  background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%) !important;
-  color: #fff !important;
-  border-color: #1e40af !important;
-}
-
-#spDashboardFoldersBlock .opms-deliveries-table-wrap .opms-table-disco-style tbody td {
-  padding: 0.2rem 0.5rem !important;
-  vertical-align: middle !important;
-}
-
-#spDashboardFoldersBlock .opms-deliveries-table-wrap .opms-table-disco-style tbody tr:nth-child(odd),
-#spDashboardFoldersBlock .opms-deliveries-table-wrap .opms-table-disco-style tbody tr:nth-child(odd) > td,
-#spDashboardFoldersBlock .opms-deliveries-table-wrap .opms-table-disco-style tbody tr:nth-child(odd) > th {
-  background: #dbeafe !important;
-  --bs-table-bg: #dbeafe;
-}
-
-#spDashboardFoldersBlock .opms-deliveries-table-wrap .opms-table-disco-style tbody tr:nth-child(even),
-#spDashboardFoldersBlock .opms-deliveries-table-wrap .opms-table-disco-style tbody tr:nth-child(even) > td,
-#spDashboardFoldersBlock .opms-deliveries-table-wrap .opms-table-disco-style tbody tr:nth-child(even) > th {
-  background: #eff6ff !important;
-  --bs-table-bg: #eff6ff;
-}
-
-#spDashboardFoldersBlock .opms-deliveries-table-wrap .opms-table-disco-style tbody tr {
-  transition: none !important;
-}
-#spDashboardFoldersBlock .opms-deliveries-table-wrap .opms-table-disco-style tbody tr:hover > td,
-#spDashboardFoldersBlock .opms-deliveries-table-wrap .opms-table-disco-style tbody tr:hover > th {
-  background: rgba(59, 130, 246, 0.22) !important;
-  --bs-table-bg: rgba(59, 130, 246, 0.22);
-}
+/* A estilização da tabela em si vive no bloco `.opms-table-disco-style` mais
+   abaixo. O bloco que aqui existia repetia-o valor a valor, prefixado com
+   #spDashboardFoldersBlock só para ganhar especificidade que já não era
+   precisa — as duas cópias dessincronizavam-se a cada alteração. */
 
 /* Paginação: evitar corte do total (1–23 of 23) */
 #spDashboardFoldersBlock .opms-pagination-nav {
@@ -353,37 +319,54 @@
   padding-bottom: 0.5rem;
 }
 
-/* Estilo Disco em qualquer tabela (vehicles, modal, etc.) */
+/* Estilo Disco em qualquer tabela (vehicles, modal, etc.)
+ *
+ * Era o único elemento saturado do dashboard: cabeçalho azul cheio (#2563eb) e
+ * zebrado azul linha a linha, dentro de um ecrã que é todo vidro claro e
+ * indigo. Passa a ler-se pelo alinhamento — cabeçalho em lavagem clara,
+ * filetes em vez de zebra — que é também o que deixa os números à frente do
+ * fundo em vez de competirem com ele.
+ *
+ * Bootstrap 5 define o background das células em `td` via --bs-table-bg, por
+ * isso a cor tem de ser aplicada em `td`/`th` e não só no `tr`.
+ */
 .opms-table-disco-style thead th {
-  padding: 0.25rem 0.5rem !important;
+  padding: 0.45rem 0.6rem !important;
   font-size: 0.65rem !important;
-  font-weight: 600 !important;
+  font-weight: 650 !important;
   text-transform: uppercase !important;
-  letter-spacing: 0.03em !important;
-  background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%) !important;
-  color: #fff !important;
-  border-color: #1e40af !important;
+  letter-spacing: 0.09em !important;
+  background: linear-gradient(180deg, #f6f8fc 0%, #eef2f8 100%) !important;
+  color: #5a6580 !important;
+  border-top: 0 !important;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.12) !important;
 }
 
 .opms-table-disco-style tbody td {
-  padding: 0.2rem 0.5rem !important;
+  padding: 0.4rem 0.6rem !important;
   vertical-align: middle !important;
+  font-variant-numeric: tabular-nums;
+  color: #253048 !important;
 }
 
-/* Bootstrap 5 define background em td via --bs-table-bg, por isso é necessário
-   aplicar a cor directamente em td (não só no tr) para sobrescrever */
-.opms-table-disco-style tbody tr:nth-child(odd),
-.opms-table-disco-style tbody tr:nth-child(odd) > td,
-.opms-table-disco-style tbody tr:nth-child(odd) > th {
-  background: #dbeafe !important;
-  --bs-table-bg: #dbeafe;
+/* A primeira coluna é o identificador da linha (rota, matrícula): é o que se
+   procura ao percorrer a tabela, por isso ganha peso em vez de ficar igual
+   aos valores. */
+.opms-table-disco-style tbody td:first-child {
+  font-weight: 600 !important;
+  color: #131c2e !important;
 }
 
-.opms-table-disco-style tbody tr:nth-child(even),
-.opms-table-disco-style tbody tr:nth-child(even) > td,
-.opms-table-disco-style tbody tr:nth-child(even) > th {
-  background: #eff6ff !important;
-  --bs-table-bg: #eff6ff;
+.opms-table-disco-style tbody tr > td,
+.opms-table-disco-style tbody tr > th {
+  background: transparent !important;
+  --bs-table-bg: transparent;
+  border-top: 1px solid rgba(15, 23, 42, 0.06) !important;
+}
+
+.opms-table-disco-style tbody tr:first-child > td,
+.opms-table-disco-style tbody tr:first-child > th {
+  border-top: 0 !important;
 }
 
 .opms-table-disco-style tbody tr {
@@ -392,8 +375,8 @@
 
 .opms-table-disco-style tbody tr:hover > td,
 .opms-table-disco-style tbody tr:hover > th {
-  background: rgba(59, 130, 246, 0.22) !important;
-  --bs-table-bg: rgba(59, 130, 246, 0.22);
+  background: rgba(99, 102, 241, 0.07) !important;
+  --bs-table-bg: rgba(99, 102, 241, 0.07);
 }
 
 /* Listas estilo Disco: cores alternadas (compliance, etc.) */

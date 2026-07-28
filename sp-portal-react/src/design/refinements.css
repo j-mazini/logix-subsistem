@@ -1,0 +1,294 @@
+/**
+ * Refinements — camada final de acabamento.
+ *
+ * Carregada por último, depois de todo o legacy. Não muda layout, cor de marca
+ * nem estrutura de nenhuma página: só resolve os detalhes que faziam a interface
+ * parecer não-terminada — tipografia dos números, anéis de foco, scrollbars,
+ * profundidade dos cards, e a coerência entre camadas que se acumularam
+ * (refinements-v2 sobre v3 sobre modern-ui sobre liquid-glass).
+ *
+ * Regra: `!important` só onde o legacy também usa `!important` e precisa de ser
+ * batido. Tudo o resto vence por ordem de carregamento.
+ */
+
+/* =====================================================
+   1. Números
+   Dígitos proporcionais fazem as colunas de tabelas e os KPIs
+   "dançar" a cada actualização, porque o 1 é mais estreito que o 8.
+   Tabular fixa a largura da célula do dígito.
+   ===================================================== */
+table,
+.table,
+.metric-value,
+.kpi-value,
+.dashboard-kpi-card,
+.stat-value,
+[class*="metricValue"],
+[class*="kpiValue"],
+[class*="statValue"],
+time,
+code,
+kbd {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "calt" 0;
+}
+
+/* =====================================================
+   2. Mono
+   A app tinha seis stacks monoespaçadas diferentes espalhadas pelo legacy
+   ('Courier New', 'Monaco', 'IBM Plex Mono', "Geist Mono"...), o que dava
+   uma textura diferente por página. Uma só stack, via token.
+   ===================================================== */
+code,
+kbd,
+samp,
+pre {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  font-variant-ligatures: none;
+}
+
+/* =====================================================
+   3. Títulos de página
+   O legacy anima um gradiente de 220% que varre o título a cada 9s. Um
+   rótulo estático não deve estar em movimento permanente, e a varredura
+   deixava metade das letras num indigo claro sem contraste suficiente.
+   Fica o gradiente, com amplitude de valor curta: tinta quase preta com
+   um sopro de indigo, legível do início ao fim.
+   ===================================================== */
+@media (min-width: 768px) {
+  .dashboard-header h1,
+  .admin-header h1,
+  .sp-vendor-header h1,
+  .access-select-header h1,
+  .page-header-title,
+  .sp-page-title,
+  body.v3-motion .dashboard-header h1,
+  body.v3-motion .admin-header h1,
+  body.v3-motion .sp-vendor-header h1,
+  body.v3-motion .access-select-header h1,
+  body.v3-motion .page-header-title,
+  body.v3-motion .sp-page-title,
+  body.v3-motion .vendor-page-title {
+    background: linear-gradient(105deg, #131c2e 0%, #2b3350 55%, #4340a0 100%);
+    background-size: 100% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: var(--tracking-display);
+    animation: none;
+  }
+}
+
+/* =====================================================
+   4. Rótulos em caixa alta
+   Tracking uniforme para todas as micro-legendas do portal — estavam
+   entre 0.05em e 0.12em consoante a folha que as escrevia.
+   ===================================================== */
+.section-label,
+.card-label,
+.metric-label,
+.kpi-label,
+[class*="metricLabel"],
+[class*="sectionLabel"],
+[class*="kpiLabel"] {
+  letter-spacing: var(--tracking-caps);
+  font-variant-numeric: tabular-nums;
+}
+
+/* =====================================================
+   5. Selecção de texto
+   ===================================================== */
+::selection {
+  background: rgba(99, 102, 241, 0.22);
+  color: var(--color-text-primary);
+}
+
+/* =====================================================
+   6. Scrollbars
+   A barra cinzenta cheia do sistema corta a composição em todos os
+   wrappers de tabela. Fina, sem trilho, aparece só quando é útil.
+   ===================================================== */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(15, 23, 42, 0.18) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: rgba(15, 23, 42, 0.16);
+  border: 3px solid transparent;
+  border-radius: var(--radius-full);
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(15, 23, 42, 0.3);
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* =====================================================
+   7. Foco
+   Um anel único para toda a app. O halo branco interior abre uma folga
+   sobre o que estiver por trás, para o anel indigo se ler tanto sobre um
+   card branco como sobre os painéis de vidro.
+   ===================================================== */
+:focus-visible {
+  outline: none;
+  box-shadow: var(--ring-focus);
+}
+
+/* Elementos com fundo próprio precisam de manter a sua sombra e receber o
+   anel por cima — daí a lista explícita em vez de só `:focus-visible`.
+   `.styled-button` entra aqui porque route-balance.css lhe dá um anel azul
+   Bootstrap com uma classe de especificidade acima da regra base. */
+.btn:focus-visible,
+.beam-plate:focus-visible,
+.sp-portal-add-btn:focus-visible,
+.dashboard-tab:focus-visible,
+.styled-button:focus-visible {
+  box-shadow: var(--ring-focus) !important;
+}
+
+/* Dentro do Route Balance o anel da própria página é o correcto — é azul
+   porque toda a paleta desse ecrã é azul. */
+body.route-balance-page .styled-button:focus-visible {
+  box-shadow: var(--focus-ring) !important;
+}
+
+/* O rato nunca deve ver o anel. */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* =====================================================
+   8. Superfícies
+   O legacy aplica uma sombra difusa e quase igual a tudo, o que achata a
+   hierarquia: um card de KPI e um modal parecem estar à mesma altura.
+   Aqui a escala volta a ser progressiva, com a sombra de contacto curta
+   que dá o assentamento.
+   ===================================================== */
+.card,
+.sp-dashboard-card,
+.sp-dashboard-module-card,
+.liquid-glass-surface {
+  box-shadow: var(--shadow-base) !important;
+  border-color: var(--color-neutral-hairline) !important;
+}
+
+.card:hover,
+.sp-dashboard-card:hover,
+.sp-dashboard-module-card:hover,
+.liquid-glass-surface:hover {
+  box-shadow: var(--shadow-md) !important;
+}
+
+.modal-content {
+  box-shadow: var(--shadow-xl) !important;
+}
+
+/* =====================================================
+   9. Micro-interacções
+   Um único vocabulário de resposta: levanta ao passar, afunda ao carregar.
+   O `active` faltava em toda a app — sem ele um clique não tem retorno
+   táctil e a interface parece lenta mesmo quando não é.
+   ===================================================== */
+.btn,
+.beam-plate,
+.sp-portal-add-btn,
+.dashboard-tab {
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast),
+    background-color var(--transition-fast), border-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.btn:active,
+.sp-portal-add-btn:active,
+.dashboard-tab:active {
+  transform: translateY(0.5px) scale(0.985);
+}
+
+.beam-plate:active {
+  transform: scale(0.97);
+}
+
+/* =====================================================
+   10. Tabelas
+   ===================================================== */
+.table th,
+.spms-overview-table thead th,
+.last-day-routes-table thead th {
+  letter-spacing: var(--tracking-caps);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* O legacy desenha uma barra que cresce sob cada `th` em hover. Passar o
+   rato numa tabela larga acende uma barra atrás da outra; é ruído, não
+   affordance — nenhum destes cabeçalhos é clicável. */
+.table th::after {
+  display: none;
+}
+
+.table td,
+.table th {
+  border-color: var(--color-neutral-hairline);
+}
+
+/* =====================================================
+   11. Estados desactivados
+   Consistentes em vez de cada folha escolher a sua opacidade.
+   ===================================================== */
+[disabled],
+.disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.55;
+  filter: saturate(0.6);
+}
+
+/* =====================================================
+   12. Imagens e media
+   ===================================================== */
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+}
+
+img {
+  height: auto;
+  image-rendering: -webkit-optimize-contrast;
+}
+
+/* =====================================================
+   13. Âncoras e scroll
+   Cabeçalhos sticky escondiam o destino de qualquer salto por âncora.
+   ===================================================== */
+:target {
+  scroll-margin-top: var(--spacing-20);
+}
+
+/* =====================================================
+   14. Movimento reduzido
+   Reforça a regra base: também as micro-interacções desta camada.
+   ===================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .btn:active,
+  .sp-portal-add-btn:active,
+  .dashboard-tab:active,
+  .beam-plate:active {
+    transform: none;
+  }
+}
