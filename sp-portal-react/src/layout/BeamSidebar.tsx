@@ -20,6 +20,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { icon: 'bi-calendar-week', label: 'Week Planner', route: '/week-planner' },
       { icon: 'bi-shuffle', label: 'Route Balance', route: '/route-balance' },
+      { icon: 'bi-controller', label: 'Daily Game Plan', route: '/daily-game-plan' },
       { icon: 'bi-clock-history', label: 'Daily Operations Management', route: '/daily-operations-management' },
     ],
   },

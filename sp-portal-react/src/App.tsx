@@ -15,6 +15,7 @@ import { DeductionsDisbursementsRecharges } from './pages/DeductionsDisbursement
 import { Dashboard } from './pages/Dashboard/Dashboard';
 import { DailyFinancialInsights } from './pages/DailyFinancialInsights/DailyFinancialInsights';
 import { DailyOperationsManagement } from './pages/DailyOperationsManagement/DailyOperationsManagement';
+import { DailyGamePlan } from './pages/DailyGamePlan/DailyGamePlan';
 import { DailyOperationsReports } from './pages/DailyOperationsReports/DailyOperationsReports';
 import { RouteBalance } from './pages/RouteBalance/RouteBalance';
 import { SOPFeed } from './pages/SOPFeed/SOPFeed';
@@ -67,6 +68,7 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/daily-financial-insights" element={<DailyFinancialInsights />} />
           <Route path="/daily-operations-management" element={<DailyOperationsManagement />} />
+          <Route path="/daily-game-plan" element={<DailyGamePlan />} />
           <Route path="/daily-operations-reports" element={<DailyOperationsReports />} />
           {/* Vendors, Compliance e Vetting fundiram-se na Workforce. As rotas
               antigas continuam a responder, cada uma na sua aba. */}

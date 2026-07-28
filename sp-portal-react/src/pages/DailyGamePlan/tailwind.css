@@ -1,0 +1,6 @@
+/* Tailwind utilities for the Daily Game Plan feature only.
+   Scoped via tailwind.config.cjs `important: ':is(.daily-ops-tw-scope, .dgp-tw-scope)'`
+   and `corePlugins.preflight: false` so it cannot affect the rest of the app. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
