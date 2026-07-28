@@ -978,6 +978,12 @@
   border-radius: 0.5rem;
 }
 
+/* Um documento traz agora número e datas, por isso é um bloco de várias
+   linhas: o badge alinha ao topo em vez de flutuar a meio do bloco. */
+.compliance-page .document-item {
+  align-items: flex-start;
+}
+
 .compliance-page .document-name,
 .compliance-page .training-name {
   font-weight: 600;
@@ -991,6 +997,12 @@
   font-size: 0.78rem;
   color: var(--text-light);
   margin: 0.15rem 0 0;
+}
+
+/* Os tipos de documento vêm de DOCUMENT_TYPE_LABEL já escritos à mão, para
+   que as siglas fiquem "DBS"/"DVLA" e não "Dbs"/"Dvla" — capitalizar aqui
+   voltaria a estragá-las. Os tipos de formação continuam a ser o valor cru. */
+.compliance-page .training-type {
   text-transform: capitalize;
 }
 
@@ -999,6 +1011,49 @@
   font-size: 0.78rem;
   color: var(--text-light);
   margin: 0.1rem 0 0;
+}
+
+/* ===== Metadados do documento (número, datas) ===== */
+.compliance-page .document-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, max-content));
+  gap: 0.15rem 1.5rem;
+  margin: 0.5rem 0 0;
+}
+
+.compliance-page .document-meta:empty {
+  display: none;
+}
+
+.compliance-page .document-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.compliance-page .document-meta-item dt {
+  font-size: 0.65rem;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-light);
+}
+
+.compliance-page .document-meta-item dd {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Números de certificado e passaporte são identificadores para comparar
+   caracter a caracter contra um documento físico — mono e ligeiramente
+   espaçados tornam isso possível. */
+.compliance-page .document-meta-value--code {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
 }
 
 .compliance-page .document-expiration {

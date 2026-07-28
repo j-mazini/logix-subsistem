@@ -1,8 +1,26 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ComplianceState, UserProfile, VettingRecord, ProfileFilters } from '../types/compliance';
+import {
+  ComplianceState,
+  UserProfile,
+  VettingRecord,
+  ProfileFilters,
+  WorkforceTab,
+  isWorkforceTab,
+} from '../types/compliance';
 import { getAllMockVendors, type Vendor } from '../../../data/vendorsData';
+import { getExpirationStatus } from '../utils/expirationUtils';
 
 const TAB_STORAGE_KEY = 'compliance-active-tab';
+
+/**
+ * A aba guardada só é aceite se ainda existir. Sessões anteriores à fusão
+ * dos ecrãs guardaram `'profiles'` nesta chave; sem esta validação o estado
+ * inicial ficava num valor que nenhuma aba renderiza e a página abria vazia.
+ */
+function readStoredTab(): WorkforceTab {
+  const stored = localStorage.getItem(TAB_STORAGE_KEY);
+  return isWorkforceTab(stored) ? stored : 'vendors';
+}
 
 // Assigns a variety of vetting outcomes across the mock vendor roster so
 // every status/KPI in the UI has at least one example to show.
@@ -33,44 +51,69 @@ const VENDOR_ACCESS_BY_STATUS: Record<VettingRecord['status'], VettingRecord['ve
 
 const CHECKLIST_TEMPLATE = ['Right to Work check', 'DBS background check', 'DVLA licence check', 'Final approval'];
 
+/**
+ * Decide o badge do documento (`approved` / `expired`). Delega em
+ * getExpirationStatus para usar a mesma contagem por dia de calendário da
+ * linha "Status: Valid/Expired" logo ao lado — comparar instantes aqui e
+ * dias ali fazia as duas discordarem no próprio dia do vencimento.
+ */
 function isFutureDate(value?: string | null): boolean {
   if (!value) return false;
-  return new Date(value).getTime() > Date.now();
+  return getExpirationStatus(value) !== 'expired';
 }
 
+/**
+ * Mapeia um vendor do mock para os documentos que o perfil mostra.
+ *
+ * Os tipos `dbs` / `dvla` / `passport` existem em DocumentType e o
+ * ProfileDetail já tinha ramos a renderá-los, mas este builder emitia
+ * `id` / `license` / `proof-of-address`: nenhum desses ramos disparava, o
+ * número do DBS ia colado ao nome e as datas de validade nunca apareciam.
+ */
 function buildDocuments(vendor: Vendor) {
   const documents: UserProfile['documents'] = [];
 
   if (vendor.dbsNumber) {
     documents.push({
       id: `${vendor.id}-dbs`,
-      type: 'id',
-      name: `DBS certificate (${vendor.dbsNumber})`,
+      type: 'dbs',
+      name: 'DBS certificate',
       status: 'approved',
       uploadedAt: vendor.criminalRecordDate || vendor.startDate || new Date().toISOString(),
       url: '#',
+      dbsNumber: vendor.dbsNumber,
+      // A página Vendors rotula este campo como "Criminal record check date":
+      // o DBS é a verificação de registo criminal, por isso é a data da
+      // verificação — não uma validade.
+      dbsCheckDate: vendor.criminalRecordDate || undefined,
     });
   }
   if (vendor.licenceExpiringDate) {
     documents.push({
       id: `${vendor.id}-licence`,
-      type: 'license',
+      type: 'dvla',
       name: 'Driving licence',
       status: isFutureDate(vendor.licenceExpiringDate) ? 'approved' : 'expired',
       uploadedAt: vendor.startDate || new Date().toISOString(),
       expiresAt: vendor.licenceExpiringDate,
       url: '#',
+      // `vendor.dvlaCheckDate` (a data em que a verificação DVLA foi feita)
+      // também existe no mock e cabe em ComplianceDocument.checkDate, mas o
+      // perfil mostra apenas a validade — não fica guardada aqui enquanto não
+      // houver onde a ler.
+      dvlaExpiry: vendor.licenceExpiringDate,
     });
   }
   if (vendor.passportExpiringDate) {
     documents.push({
       id: `${vendor.id}-passport`,
-      type: 'proof-of-address',
+      type: 'passport',
       name: 'Passport',
       status: isFutureDate(vendor.passportExpiringDate) ? 'approved' : 'expired',
       uploadedAt: vendor.startDate || new Date().toISOString(),
       expiresAt: vendor.passportExpiringDate,
       url: '#',
+      passportExpiry: vendor.passportExpiringDate,
     });
   }
   if (vendor.visaValidity) {
@@ -194,7 +237,7 @@ export function useComplianceState() {
     profiles: [],
     vettings: [],
     selectedProfile: null,
-    activeTab: (localStorage.getItem(TAB_STORAGE_KEY) as 'profiles' | 'vetting') || 'profiles',
+    activeTab: readStoredTab(),
     loading: true,
     error: null,
     modals: {
@@ -251,7 +294,7 @@ export function useComplianceState() {
   /**
    * Change active tab and persist it
    */
-  const setActiveTab = useCallback((tab: 'profiles' | 'vetting') => {
+  const setActiveTab = useCallback((tab: WorkforceTab) => {
     setState((prev) => ({ ...prev, activeTab: tab }));
     localStorage.setItem(TAB_STORAGE_KEY, tab);
   }, []);

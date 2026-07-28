@@ -1,0 +1,154 @@
+/* =============================================================
+ * Lista de documentos vencidos / a vencer, aberta a partir do
+ * cartão de Announcements.
+ *
+ * A moldura do modal (.annc-modal*) é reutilizada de
+ * AnnouncementModal.css — é a mesma janela, com outro conteúdo.
+ * Só as classes de conteúdo são novas, sob o prefixo `cxa-`.
+ * ============================================================= */
+
+.cxa-dialog {
+  max-width: 38rem;
+}
+
+.cxa-title-icon {
+  color: var(--color-warning);
+}
+
+/* O ícone de aviso sobrepõe-se à regra genérica do título, que pinta
+   qualquer <i> com o indigo do portal. */
+.annc-modal-title i.cxa-title-icon {
+  color: var(--color-warning);
+}
+
+.cxa-summary {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.cxa-summary strong {
+  color: var(--color-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.cxa-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.cxa-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--color-neutral-border);
+  border-radius: var(--radius-md);
+  background: var(--color-neutral-background);
+}
+
+/* Uma barra na margem em vez de um fundo tingido: marca a linha sem
+   competir com o chip de contagem, que já é vermelho. */
+.cxa-item--expired {
+  border-left: 3px solid var(--color-error);
+}
+
+.cxa-item-main {
+  min-width: 0;
+}
+
+.cxa-vendor {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.3;
+}
+
+.cxa-email {
+  margin: 0.1rem 0 0;
+  font-size: 0.75rem;
+  color: var(--color-text-light);
+  overflow-wrap: anywhere;
+}
+
+.cxa-doc {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.4rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+}
+
+.cxa-doc-type {
+  padding: 0.05rem 0.4rem;
+  border-radius: var(--radius-full);
+  background: var(--color-primary-indigo-soft);
+  color: var(--color-primary-indigo);
+  font-size: 0.65rem;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.cxa-item-side {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+  text-align: right;
+}
+
+.cxa-countdown {
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 650;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.cxa-countdown--expired {
+  background: var(--color-error-soft);
+  color: var(--color-error);
+}
+
+.cxa-countdown--urgent {
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+}
+
+.cxa-countdown--soon {
+  background: var(--color-neutral-surface);
+  color: var(--color-text-secondary);
+}
+
+.cxa-date {
+  font-size: 0.7rem;
+  color: var(--color-text-light);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .cxa-item {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .cxa-item-side {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+    text-align: left;
+  }
+}

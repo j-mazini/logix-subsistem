@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { PortalLayout } from '../../layout/PortalLayout';
 import { useCurrentSp } from '../../hooks/useCurrentSp';
 import { useModalBehavior } from '../../hooks/useModalBehavior';
 import '../../styles/legacy/shared-pages.css';
@@ -96,7 +95,16 @@ function stepPaneId(step: Step): string {
   return 'vendorStep' + step.charAt(0).toUpperCase() + step.slice(1);
 }
 
-export function Vendors() {
+/**
+ * Corpo do ecrã de Vendors, sem moldura de página.
+ *
+ * Era o componente de rota `Vendors`, que trazia o seu próprio PortalLayout.
+ * Depois da fusão dos ecrãs de Vendors, Compliance e Vetting numa só página,
+ * a moldura passou a ser da Workforce e isto é apenas o conteúdo da aba —
+ * daí o wrapper `div` com as classes que antes iam no <main>, para as regras
+ * de vendors-page.css continuarem a aplicar-se.
+ */
+export function VendorsContent() {
   const sp = useCurrentSp();
 
   const [search, setSearch] = useState('');
@@ -270,11 +278,9 @@ export function Vendors() {
 
   if (!sp) {
     return (
-      <PortalLayout mainClassName="vendor-admin-main sp-vendor-main pt-4" title="Vendors">
-        <div id="spNotFound" className="alert alert-warning">
-          Service Provider not set. Open with <code>?sp=YourCompany</code>.
-        </div>
-      </PortalLayout>
+      <div id="spNotFound" className="alert alert-warning">
+        Service Provider not set. Open with <code>?sp=YourCompany</code>.
+      </div>
     );
   }
 
@@ -283,7 +289,7 @@ export function Vendors() {
   const driverDetailVendor = driverDetailId !== null ? findVendor(driverDetailId) : null;
 
   return (
-    <PortalLayout mainClassName="vendor-admin-main sp-vendor-main pt-4" title="Vendors">
+    <div className="vendor-admin-main sp-vendor-main">
       <div id="spVendorContent">
         {/* ============ PAGE INFO ============ */}
         <div className="vendor-page-header mb-4">
@@ -932,6 +938,6 @@ export function Vendors() {
           </>,
           document.body,
         )}
-    </PortalLayout>
+    </div>
   );
 }

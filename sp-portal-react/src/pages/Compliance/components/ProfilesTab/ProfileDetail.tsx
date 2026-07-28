@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { UserProfile } from '../../types/compliance';
-import { getExpirationStatus, getExpirationBadge } from '../../utils/expirationUtils';
+import { getExpirationStatus, getExpirationBadge, parsePortalDate } from '../../utils/expirationUtils';
+import { documentTypeLabel } from '../../utils/documentLabels';
 
 interface ProfileDetailProps {
   profile: UserProfile;
@@ -26,7 +27,7 @@ export function ProfileDetail({ profile, onClose, onUpdate }: ProfileDetailProps
   });
 
   const formatDate = (iso: string) => {
-    return new Date(iso).toLocaleDateString('en-GB', {
+    return parsePortalDate(iso).toLocaleDateString('en-GB', {
       day: '2-digit',
       month: 'short',
       year: 'numeric',
@@ -168,27 +169,50 @@ export function ProfileDetail({ profile, onClose, onUpdate }: ProfileDetailProps
                         <div key={doc.id} className="document-item">
                           <div className="document-info">
                             <p className="document-name">{doc.name}</p>
-                            <p className="document-type">{doc.type}</p>
+                            <p className="document-type">{documentTypeLabel(doc.type)}</p>
 
-                            {doc.type === 'dbs' && (
-                              <>
-                                {doc.dbsCheckDate && <p className="document-detail">Check date: {formatDate(doc.dbsCheckDate)}</p>}
-                                {doc.dbsNumber && <p className="document-detail">Number: {doc.dbsNumber}</p>}
-                              </>
-                            )}
+                            <dl className="document-meta">
+                              {doc.type === 'dbs' && (
+                                <>
+                                  {doc.dbsNumber && (
+                                    <div className="document-meta-item">
+                                      <dt>Certificate number</dt>
+                                      <dd className="document-meta-value--code">{doc.dbsNumber}</dd>
+                                    </div>
+                                  )}
+                                  {doc.dbsCheckDate && (
+                                    <div className="document-meta-item">
+                                      <dt>Check date</dt>
+                                      <dd>{formatDate(doc.dbsCheckDate)}</dd>
+                                    </div>
+                                  )}
+                                </>
+                              )}
 
-                            {doc.type === 'dvla' && (
-                              <>
-                                {doc.dvlaExpiry && <p className="document-detail">Expires: {formatDate(doc.dvlaExpiry)}</p>}
-                              </>
-                            )}
+                              {doc.type === 'dvla' && doc.dvlaExpiry && (
+                                <div className="document-meta-item">
+                                  <dt>Expiry date</dt>
+                                  <dd>{formatDate(doc.dvlaExpiry)}</dd>
+                                </div>
+                              )}
 
-                            {doc.type === 'passport' && (
-                              <>
-                                {doc.passportNumber && <p className="document-detail">Number: {doc.passportNumber}</p>}
-                                {doc.passportExpiry && <p className="document-detail">Expires: {formatDate(doc.passportExpiry)}</p>}
-                              </>
-                            )}
+                              {doc.type === 'passport' && (
+                                <>
+                                  {doc.passportNumber && (
+                                    <div className="document-meta-item">
+                                      <dt>Passport number</dt>
+                                      <dd className="document-meta-value--code">{doc.passportNumber}</dd>
+                                    </div>
+                                  )}
+                                  {doc.passportExpiry && (
+                                    <div className="document-meta-item">
+                                      <dt>Expiry date</dt>
+                                      <dd>{formatDate(doc.passportExpiry)}</dd>
+                                    </div>
+                                  )}
+                                </>
+                              )}
+                            </dl>
 
                             {doc.expiresAt && (
                               <p className="document-expiration">

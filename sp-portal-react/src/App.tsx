@@ -1,4 +1,4 @@
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate, useSearchParams } from 'react-router-dom';
 import { AnnouncementsProvider } from './context/AnnouncementsContext';
 import { AccessSelect } from './pages/AccessSelect/AccessSelect';
 import { Profile } from './pages/Profile/Profile';
@@ -16,21 +16,32 @@ import { Dashboard } from './pages/Dashboard/Dashboard';
 import { DailyFinancialInsights } from './pages/DailyFinancialInsights/DailyFinancialInsights';
 import { DailyOperationsManagement } from './pages/DailyOperationsManagement/DailyOperationsManagement';
 import { DailyOperationsReports } from './pages/DailyOperationsReports/DailyOperationsReports';
-import { Vendors } from './pages/Vendors/Vendors';
 import { RouteBalance } from './pages/RouteBalance/RouteBalance';
 import { SOPFeed } from './pages/SOPFeed/SOPFeed';
 import { Vehicles } from './pages/Vehicles/Vehicles';
 import {
   VettingAdminLayout,
   VettingChecklistPage,
-  VettingDashboardPage,
   VettingInterviewPage,
 } from './pages/Vetting';
 import { WeekPlanner } from './pages/WeekPlanner/WeekPlanner';
-import { Compliance } from './pages/Compliance/Compliance';
+import { Workforce } from './pages/Workforce/Workforce';
 import { LiveService } from './pages/LiveService/LiveService';
 import { useViewportAttribute } from './hooks/useViewportAttribute';
 import { useRefinementsMotion } from './hooks/useRefinementsMotion';
+
+/**
+ * Redirect para a Workforce numa aba concreta, preservando a query.
+ *
+ * `<Navigate to="/workforce?tab=x" />` não serve: descartaria o `?sp=`, e
+ * sem ele useCurrentSp não resolve o Service Provider e a página abre vazia.
+ */
+function WorkforceRedirect({ tab }: { tab: string }) {
+  const [params] = useSearchParams();
+  const next = new URLSearchParams(params);
+  next.set('tab', tab);
+  return <Navigate to={`/workforce?${next.toString()}`} replace />;
+}
 
 function App() {
   useViewportAttribute();
@@ -57,20 +68,24 @@ function App() {
           <Route path="/daily-financial-insights" element={<DailyFinancialInsights />} />
           <Route path="/daily-operations-management" element={<DailyOperationsManagement />} />
           <Route path="/daily-operations-reports" element={<DailyOperationsReports />} />
-          <Route path="/vendors" element={<Vendors />} />
-          {/* The page was called Drivers until it was renamed; keep old links working. */}
-          <Route path="/drivers" element={<Navigate to="/vendors" replace />} />
+          {/* Vendors, Compliance e Vetting fundiram-se na Workforce. As rotas
+              antigas continuam a responder, cada uma na sua aba. */}
+          <Route path="/vendors" element={<WorkforceRedirect tab="vendors" />} />
+          <Route path="/drivers" element={<WorkforceRedirect tab="vendors" />} />
           <Route path="/route-balance" element={<RouteBalance />} />
           <Route path="/sop-feed" element={<SOPFeed />} />
           <Route path="/vehicles" element={<Vehicles />} />
-          <Route path="/vetting-admin" element={<Navigate to="/vetting-dashboard" replace />} />
+          <Route path="/vetting-admin" element={<WorkforceRedirect tab="vetting" />} />
+          <Route path="/vetting-dashboard" element={<WorkforceRedirect tab="vetting" />} />
+          {/* Checklist e Knowledge test continuam em página inteira: são
+              fluxos longos por candidato, não uma vista de lista. */}
           <Route element={<VettingAdminLayout />}>
-            <Route path="/vetting-dashboard" element={<VettingDashboardPage />} />
             <Route path="/vetting-checklist" element={<VettingChecklistPage />} />
             <Route path="/vetting-interview" element={<VettingInterviewPage />} />
           </Route>
           <Route path="/week-planner" element={<WeekPlanner />} />
-          <Route path="/compliance" element={<Compliance />} />
+          <Route path="/workforce" element={<Workforce />} />
+          <Route path="/compliance" element={<WorkforceRedirect tab="compliance" />} />
           <Route path="/live-service" element={<LiveService />} />
         </Routes>
       </AnnouncementsProvider>

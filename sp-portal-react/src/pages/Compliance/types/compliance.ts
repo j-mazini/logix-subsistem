@@ -146,6 +146,19 @@ export interface ChecklistItem {
   section?: string; // For grouping (e.g., "2.1 Pre-Interview")
 }
 
+/**
+ * As três abas da página Workforce, que juntou os ecrãs de Vendors,
+ * Compliance e Vetting. A aba `compliance` era a antiga aba "Profiles" da
+ * página Compliance — é a mesma vista de perfis e documentos.
+ */
+export type WorkforceTab = 'vendors' | 'compliance' | 'vetting';
+
+export const WORKFORCE_TABS: WorkforceTab[] = ['vendors', 'compliance', 'vetting'];
+
+export function isWorkforceTab(value: string | null): value is WorkforceTab {
+  return value !== null && WORKFORCE_TABS.includes(value as WorkforceTab);
+}
+
 export interface ComplianceState {
   // Data
   profiles: UserProfile[];
@@ -156,7 +169,7 @@ export interface ComplianceState {
   selectedProfile: UserProfile | null;
 
   // UI
-  activeTab: 'profiles' | 'vetting';
+  activeTab: WorkforceTab;
   loading: boolean;
   error: string | null;
 

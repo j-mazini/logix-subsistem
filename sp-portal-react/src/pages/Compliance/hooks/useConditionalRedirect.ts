@@ -1,9 +1,14 @@
 import { useCallback } from 'react';
-import { UserProfile, VettingRecord, ConditionalRedirectEvent } from '../types/compliance';
+import {
+  UserProfile,
+  VettingRecord,
+  ConditionalRedirectEvent,
+  WorkforceTab,
+} from '../types/compliance';
 
 interface UseConditionalRedirectProps {
   vettings: VettingRecord[];
-  onTabChange: (tab: 'profiles' | 'vetting') => void;
+  onTabChange: (tab: WorkforceTab) => void;
   onSelectProfile: (profile: UserProfile | null) => void;
   onOpenProfileDetail: () => void;
 }
@@ -54,7 +59,7 @@ export function useConditionalRedirect({
             : 'No vetting record found',
         };
 
-        console.log('[Compliance] Conditional redirect triggered:', event);
+        console.log('[Workforce] Conditional redirect triggered:', event);
 
         // Dispatch a custom event for integration with other pages
         window.dispatchEvent(

@@ -9,7 +9,7 @@ import { useAdminCandidate } from './AdminCandidateContext';
 import styles from './AdminNavbar.module.css';
 
 const NAV_LINKS = [
-  { href: '/vetting-dashboard', label: 'Vetting' },
+  { href: '/workforce?tab=vetting', label: 'Vetting' },
   { href: '/vetting-checklist', label: 'Checklist' },
   { href: '/vetting-interview', label: 'Knowledge test' },
 ];

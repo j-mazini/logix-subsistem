@@ -106,6 +106,66 @@
   color: var(--color-primary-indigo);
 }
 
+.sp-announcement-header-title-text {
+  margin-right: auto;
+}
+
+/* ---- Contagem regressiva para o próximo vencimento ----
+   Vive na linha do título, encostada à direita: é o aviso preventivo, tem de
+   ser visível em todas as páginas sem roubar a linha ao próprio anúncio. */
+.sp-announcement-countdown {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex-shrink: 0;
+  padding: 0.1rem 0.5rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-full);
+  font-family: inherit;
+  font-size: 0.6875rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.5;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: filter var(--transition-fast), transform var(--transition-fast);
+}
+
+.sp-announcement-countdown i {
+  font-size: 0.7em;
+}
+
+.sp-announcement-countdown:hover {
+  filter: brightness(0.96);
+}
+
+.sp-announcement-countdown:active {
+  transform: scale(0.97);
+}
+
+/* O ícone herda a cor do chip, não o indigo da regra genérica acima. */
+.sp-announcement-header-title .sp-announcement-countdown i {
+  color: inherit;
+}
+
+.sp-announcement-countdown--critical {
+  background: var(--color-error-soft);
+  border-color: rgba(220, 38, 38, 0.25);
+  color: var(--color-error);
+}
+
+.sp-announcement-countdown--urgent {
+  background: var(--color-warning-soft);
+  border-color: rgba(217, 119, 6, 0.25);
+  color: var(--color-warning);
+}
+
+.sp-announcement-countdown--calm {
+  background: rgba(99, 102, 241, 0.1);
+  border-color: var(--color-primary-indigo-soft);
+  color: var(--color-primary-indigo);
+}
+
 .sp-announcement-header-desc {
   font-size: 0.6875rem;
   margin-top: 0.15rem;
@@ -167,6 +227,13 @@
   text-overflow: clip;
   white-space: normal;
   overflow-wrap: anywhere;
+}
+
+/* Afordância de que a linha abre a lista, não navega. */
+.sp-announcement-box-chevron {
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  opacity: 0.6;
 }
 
 .sp-announcement-box-count {

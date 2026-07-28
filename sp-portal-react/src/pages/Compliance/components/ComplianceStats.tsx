@@ -1,17 +1,17 @@
 import { useMemo } from 'react';
-import { UserProfile, VettingRecord } from '../types/compliance';
+import { UserProfile, VettingRecord, WorkforceTab } from '../types/compliance';
 
 interface ComplianceStatsProps {
   profiles: UserProfile[];
   vettings: VettingRecord[];
-  activeTab: 'profiles' | 'vetting';
-  onTabChange: (tab: 'profiles' | 'vetting') => void;
+  activeTab: WorkforceTab;
+  onTabChange: (tab: WorkforceTab) => void;
 }
 
 /**
  * KPI cards for the Profiles tab (the Vetting tab has its own KPIs — it
  * embeds the real Vetting dashboard, so this component is only rendered
- * while activeTab === 'profiles').
+ * while activeTab === 'compliance').
  */
 export function ComplianceStats({ profiles, activeTab, onTabChange }: ComplianceStatsProps) {
   const stats = useMemo(() => {
