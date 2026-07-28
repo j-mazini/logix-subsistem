@@ -151,6 +151,17 @@ export function Announcements() {
     return b.publishDate.getTime() - a.publishDate.getTime();
   });
 
+  // Overview of the whole set, not the filtered rows — the tiles are a summary
+  // of what exists, while the card head reports how much of it is on screen.
+  const countByStatus = (s: Status) => allAnnouncements.filter((a) => getStatus(a) === s).length;
+  const metrics: { label: string; value: number; tone: string }[] = [
+    { label: 'Total', value: allAnnouncements.length, tone: 'neutral' },
+    { label: 'Active', value: countByStatus('Active'), tone: 'active' },
+    { label: 'Scheduled', value: countByStatus('Scheduled'), tone: 'scheduled' },
+    { label: 'Expired', value: countByStatus('Expired'), tone: 'expired' },
+    { label: 'Mine', value: allAnnouncements.filter((a) => a.isMine).length, tone: 'mine' },
+  ];
+
   function handleClearFilters() {
     setSearch('');
     setFilterOrigin('all');
@@ -248,28 +259,37 @@ export function Announcements() {
   }
 
   return (
-    <PortalLayout pageClassName="announcements-page" mainClassName="va-container container-fluid px-3 px-lg-4 py-4" title="Announcements">
+    <PortalLayout
+      pageClassName="announcements-page"
+      mainClassName="va-container container-fluid px-3 px-lg-4 py-4"
+      title="Announcements"
+      titleIcon="bi-megaphone-fill"
+      subtitle="Messages from DHL plus your own announcements to depots, loops and routes."
+    >
       <div className={`loading-overlay${loading ? ' active' : ''}`} id="loadingOverlay">
         <div className="spinner" />
         <p>Loading announcements…</p>
       </div>
 
-      <div className="page-header-section">
-        <div className="page-header-welcome-text">
-          <p className="page-header-date">
-            <i className="bi bi-megaphone-fill" />
-            <span>Messages from DHL plus your own announcements to depots, loops and routes.</span>
-          </p>
-        </div>
+      <div className="ann-metrics" id="annMetrics">
+        {metrics.map((m) => (
+          <div className={`ann-metric ann-metric--${m.tone}`} key={m.label}>
+            <span className="ann-metric-label">{m.label}</span>
+            <span className="ann-metric-value">{m.value}</span>
+          </div>
+        ))}
       </div>
 
       <section className="va-card">
         <div className="va-card-head">
-          <div>
+          <div className="va-card-head-text">
             <div className="va-card-title">All Announcements</div>
             <div className="va-card-subtitle">DHL broadcasts are read-only here; you can create, edit and remove your own.</div>
           </div>
           <div className="va-card-head-actions">
+            <span className="ann-result-count">
+              {rows.length} of {allAnnouncements.length} shown
+            </span>
             <button type="button" className="styled-button styled-button--primary" id="btnNewAnnouncement" onClick={() => openModal(null)}>
               <i className="bi bi-plus-lg" /> New Announcement
             </button>
@@ -345,7 +365,7 @@ export function Announcements() {
               <option value="Critical">Critical</option>
             </select>
           </div>
-          <div className="ann-filter-group">
+          <div className="ann-filter-group ann-filter-group--wide">
             <label>Audience</label>
             <div className="ann-checkbox-group">
               {AUDIENCE_KEYS.map((key) => (
@@ -371,7 +391,15 @@ export function Announcements() {
 
         {rows.length === 0 ? (
           <div id="annEmptyState" className="va-empty-state">
-            <p className="va-empty-text">No announcements match your search.</p>
+            <i className="bi bi-megaphone va-empty-icon" aria-hidden="true" />
+            <p className="va-empty-text">
+              {allAnnouncements.length === 0 ? 'No announcements yet.' : 'No announcements match your search.'}
+            </p>
+            {allAnnouncements.length > 0 && (
+              <button type="button" className="styled-button styled-button--outline styled-button--sm" onClick={handleClearFilters}>
+                Clear filters
+              </button>
+            )}
           </div>
         ) : (
           <div className="va-table-scroll" id="annTableWrap">
@@ -393,8 +421,8 @@ export function Announcements() {
                 {rows.map((ann) => {
                   const status = getStatus(ann);
                   return (
-                    <tr key={ann.id}>
-                      <td>
+                    <tr key={ann.id} className={`ann-row ann-row--${status.toLowerCase()}`}>
+                      <td data-label="Origin">
                         {ann.isMine ? (
                           <span className="ann-origin-badge ann-origin-badge--mine">
                             <i className="bi bi-person-fill" /> You
@@ -405,46 +433,49 @@ export function Announcements() {
                           </span>
                         )}
                       </td>
-                      <td>
-                        <strong>{ann.title}</strong>
+                      <td data-label="Title" className="ann-title-cell">
+                        <strong className="ann-title-text">{ann.title}</strong>
+                        <span className="ann-title-preview">{ann.content}</span>
                       </td>
-                      <td>
+                      <td data-label="Type">
                         <span className={`ann-badge ann-badge-type-${ann.type.toLowerCase()}`}>
                           {TYPE_ICONS[ann.type]} {ann.type}
                         </span>
                       </td>
-                      <td>
+                      <td data-label="Urgency">
                         <span className={`ann-badge ann-badge-urgency-${ann.urgency.toLowerCase()}`}>
                           {URGENCY_ICONS[ann.urgency]} {ann.urgency}
                         </span>
                       </td>
-                      <td>
-                        {ann.audience.map((a) => (
-                          <span className="ann-audience-tag" key={a}>
-                            {a}
-                          </span>
-                        ))}
+                      <td data-label="Audience">
+                        <div className="ann-audience-tags">
+                          {ann.audience.map((a) => (
+                            <span className="ann-audience-tag" key={a}>
+                              {a}
+                            </span>
+                          ))}
+                        </div>
                       </td>
-                      <td>{formatDate(ann.publishDate)}</td>
-                      <td>{formatDate(ann.expirationDate)}</td>
-                      <td>
+                      <td data-label="Publish" className="ann-date-cell">
+                        {formatDate(ann.publishDate)}
+                      </td>
+                      <td data-label="Expires" className="ann-date-cell">
+                        {formatDate(ann.expirationDate)}
+                      </td>
+                      <td data-label="Status">
                         <span className={`va-status-badge ${status.toLowerCase()}`}>{status}</span>
                       </td>
-                      <td className="text-center">
+                      <td data-label="Actions" className="text-center">
                         {ann.isMine ? (
                           <div className="va-actions-cell">
-                            <button
-                              type="button"
-                              className="styled-button styled-button--outline styled-button--sm"
-                              title="Edit"
-                              onClick={() => openModal(ann.id)}
-                            >
+                            <button type="button" className="ann-icon-btn" title="Edit" aria-label={`Edit ${ann.title}`} onClick={() => openModal(ann.id)}>
                               <i className="bi bi-pencil" />
                             </button>
                             <button
                               type="button"
-                              className="styled-button styled-button--danger styled-button--sm"
+                              className="ann-icon-btn ann-icon-btn--danger"
                               title="Delete"
+                              aria-label={`Delete ${ann.title}`}
                               onClick={() => handleDelete(ann.id)}
                             >
                               <i className="bi bi-trash" />

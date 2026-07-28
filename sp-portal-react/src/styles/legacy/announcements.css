@@ -65,30 +65,65 @@ body.va-page {
   overflow-x: hidden;
 }
 
-.va-container {
+/* `width: 100%` is load-bearing: design/globals.css sets `main { margin-inline: auto }`,
+   which inside the flex-column .page-inner shrinks an auto-width <main> to fit-content. */
+.announcements-page .va-container {
+  width: 100%;
   max-width: 1720px;
   margin: 0 auto;
 }
 
+/* The page header (title, icon, subtitle) comes from PortalLayout's shared
+   .admin-header markup — this page deliberately owns no header styles of its
+   own. It used to render .page-header-section/.page-header-date, which
+   route-balance.css defines globally with a completely different masthead
+   treatment (a mono eyebrow and a dotted route-line motif); since every
+   page's CSS stays loaded at once in this SPA, that leaked in here. */
+
 /* =====================================================
-   HEADER
+   SUMMARY METRICS
    ===================================================== */
-.page-header-section {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+.ann-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.1rem;
 }
 
-.page-header-date {
-  font-family: 'Inter', sans-serif;
-  font-size: 0.875rem;
-  color: var(--text-light);
-  margin: 0.5rem 0 0;
+.ann-metric {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: var(--radius);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-left: 3px solid var(--metric-accent, var(--border-color));
+  background: rgba(255, 255, 255, 0.62);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
 }
-.page-header-date i { margin-right: 0.5rem; }
+
+.ann-metric-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+}
+
+.ann-metric-value {
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.ann-metric--neutral { --metric-accent: #94a3b8; }
+.ann-metric--active { --metric-accent: var(--success-green); }
+.ann-metric--scheduled { --metric-accent: var(--primary-blue); }
+.ann-metric--expired { --metric-accent: #cbd5e1; }
+.ann-metric--mine { --metric-accent: var(--accent-purple); }
 
 /* =====================================================
    BUTTONS
@@ -148,6 +183,7 @@ body.va-page {
   margin-bottom: 1.1rem;
 }
 
+.va-card-head-text { min-width: 0; flex: 1 1 260px; }
 .va-card-title { font-size: 0.95rem; font-weight: 700; color: var(--text-primary); }
 .va-card-subtitle { font-size: 0.78rem; color: var(--text-secondary); margin-top: 0.15rem; }
 
@@ -156,6 +192,14 @@ body.va-page {
   align-items: center;
   gap: 0.6rem;
   flex-wrap: wrap;
+}
+
+.ann-result-count {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .form-select.filter-select {
@@ -175,19 +219,27 @@ body.va-page {
 /* =====================================================
    FILTERS BAR (announcements-specific)
    ===================================================== */
+/* A grid rather than a flex row: every control then shares one baseline
+   (labels line up across the bar regardless of input height) and the columns
+   reflow on their own from six-up down to one-up without a breakpoint per
+   step. The search box gets a wider track; the actions cell is pushed to the
+   end of whatever the last row turns out to be. */
 .ann-filters {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
   gap: 0.9rem 1.1rem;
   background: var(--main-bg);
   border: 1px solid var(--border-color);
   border-radius: 10px;
   padding: 0.9rem 1rem;
   margin-bottom: 1.1rem;
-  align-items: flex-end;
+  align-items: end;
 }
-.ann-filter-group { display: flex; flex-direction: column; gap: 0.3rem; min-width: 130px; }
-.ann-filter-group--grow { flex: 1 1 220px; }
+.ann-filter-group { display: flex; flex-direction: column; gap: 0.3rem; min-width: 0; }
+/* Search and the three-checkbox audience group each need roughly two tracks
+   to avoid wrapping inside their own cell. */
+.ann-filter-group--grow,
+.ann-filter-group--wide { grid-column: span 2; }
 .ann-filter-group label {
   font-size: 0.68rem;
   font-weight: 700;
@@ -209,7 +261,7 @@ body.va-page {
   border-color: var(--primary-blue);
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
 }
-.ann-checkbox-group { display: flex; gap: 0.7rem; flex-wrap: wrap; padding-top: 0.25rem; }
+.ann-checkbox-group { display: flex; gap: 0.7rem; flex-wrap: wrap; align-items: center; min-height: 2.15rem; }
 .ann-checkbox-group label,
 .ann-checkbox-inline label {
   font-size: 0.8rem;
@@ -220,7 +272,10 @@ body.va-page {
   gap: 0.3rem;
   color: var(--text-primary);
 }
-.ann-filter-actions { display: flex; gap: 0.6rem; align-items: center; margin-left: auto; }
+/* Full-width closing row rather than a grid cell: pinned to a single track it
+   either squeezed the button or left a hole wherever the fields happened to
+   wrap. Right-aligned, it reads as the bar's footer at every width. */
+.ann-filter-actions { display: flex; gap: 0.6rem; align-items: center; justify-content: flex-end; grid-column: 1 / -1; }
 
 /* =====================================================
    EMPTY STATE
@@ -232,6 +287,20 @@ body.va-page {
   font-size: 0.9rem;
 }
 .va-empty-text { margin: 0; }
+
+/* Scoped: .va-empty-state is shared with requests-admin.css (see the collision
+   notes at the top of this file), so the richer treatment is announcements-only. */
+.announcements-page .va-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 3rem 1.5rem;
+  border: 1px dashed var(--border-color);
+  border-radius: 10px;
+  background: var(--main-bg);
+}
+.announcements-page .va-empty-icon { font-size: 1.6rem; color: var(--text-light); opacity: 0.65; }
 
 /* =====================================================
    TABLE
@@ -268,8 +337,68 @@ body.va-page {
 .va-table tbody tr:last-child td { border-bottom: none; }
 .va-table tbody tr:hover { background: rgba(99, 102, 241, 0.04); }
 
+/* Expired rows stay legible but visibly recede, so the live ones read first. */
+.ann-row--expired td { color: var(--text-light); }
+.ann-row--expired .ann-badge,
+.ann-row--expired .ann-origin-badge,
+.ann-row--expired .ann-audience-tag { opacity: 0.72; }
+
+.ann-title-cell { max-width: 26rem; text-align: left; }
+.ann-title-text { display: block; color: var(--text-primary); font-weight: 600; text-align: left; }
+.ann-title-preview {
+  text-align: left;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-top: 0.15rem;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: var(--text-secondary);
+}
+
+.ann-date-cell { white-space: nowrap; font-variant-numeric: tabular-nums; }
+
 .va-actions-cell { display: flex; align-items: center; justify-content: center; gap: 0.45rem; white-space: nowrap; }
+.announcements-page .va-actions-cell { gap: 0.35rem; }
 .va-cell-empty { color: var(--text-light); }
+
+/* Table actions are quiet by default and only take colour on hover — a solid
+   red delete button on every one of the SP's own rows dominated the grid. */
+.ann-icon-btn {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--card-bg);
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: color var(--transition-fast), border-color var(--transition-fast), background-color var(--transition-fast);
+}
+.ann-icon-btn:hover {
+  color: var(--primary-blue);
+  border-color: var(--primary-blue);
+  background: rgba(99, 102, 241, 0.08);
+}
+.ann-icon-btn:focus-visible {
+  outline: none;
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
+}
+.ann-icon-btn--danger:hover {
+  color: var(--danger-red);
+  border-color: var(--danger-red);
+  background: rgba(220, 38, 38, 0.08);
+}
+.ann-icon-btn--danger:focus-visible {
+  border-color: var(--danger-red);
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.18);
+}
 
 /* =====================================================
    BADGES (announcements-specific)
@@ -318,6 +447,7 @@ body.va-page {
 .ann-badge-urgency-high { background: #fed7aa; color: #9a3412; }
 .ann-badge-urgency-critical { background: #fecaca; color: #991b1b; }
 
+.ann-audience-tags { display: flex; flex-wrap: wrap; gap: 0.25rem; }
 .ann-audience-tag {
   background: var(--main-bg);
   color: var(--text-primary);
@@ -325,8 +455,8 @@ body.va-page {
   padding: 0.1rem 0.55rem;
   border-radius: 999px;
   font-size: 0.7rem;
-  margin-right: 0.2rem;
   display: inline-block;
+  white-space: nowrap;
 }
 
 /* =====================================================
@@ -493,15 +623,119 @@ body.va-page {
 /* =====================================================
    RESPONSIVE
    ===================================================== */
+/* Every rule below is scoped under .announcements-page. The va-* classes are
+   shared verbatim with requests-admin.css, which scopes its own responsive
+   rules under .requests-admin-page — leaving these bare would apply the
+   announcements mobile layout to that page too. */
+
+@media (max-width: 1200px) {
+  .announcements-page .ann-title-cell { max-width: 20rem; }
+}
+
+@media (max-width: 992px) {
+  .announcements-page .ann-metrics { grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); }
+  .announcements-page .ann-metric-value { font-size: 1.2rem; }
+}
+
+/* Below this width the nine-column grid can only be read by scrolling it
+   sideways, so each row becomes a self-contained card instead: the header row
+   is hidden and every cell prints its own label from the data-label attribute
+   the page puts on each <td>. */
+@media (max-width: 900px) {
+  .announcements-page .va-table { min-width: 0; }
+  .announcements-page .va-table-scroll { overflow-x: visible; border: none; border-radius: 0; }
+
+  .announcements-page .va-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .announcements-page .va-table,
+  .announcements-page .va-table tbody,
+  .announcements-page .va-table tr,
+  .announcements-page .va-table td { display: block; }
+
+  .announcements-page .va-table tbody tr {
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background: var(--card-bg);
+    padding: 0.35rem 0.9rem;
+    margin-bottom: 0.75rem;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+  }
+  .announcements-page .va-table tbody tr:last-child { margin-bottom: 0; }
+  .announcements-page .va-table tbody tr:hover { background: var(--card-bg); }
+
+  .announcements-page .va-table td {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px dashed var(--border-color);
+    text-align: right;
+  }
+  .announcements-page .va-table tbody tr td:last-child { border-bottom: none; }
+
+  .announcements-page .va-table td::before {
+    content: attr(data-label);
+    flex: 0 0 auto;
+    font-size: 0.66rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-secondary);
+    text-align: left;
+    padding-top: 0.1rem;
+  }
+
+  /* The title spans the full card width as its heading rather than sitting in
+     a label/value pair like the rest of the fields. */
+  .announcements-page .ann-title-cell {
+    max-width: none;
+    flex-direction: column;
+    align-items: stretch;
+    text-align: left;
+    gap: 0;
+  }
+  .announcements-page .ann-title-cell::before { display: none; }
+  .announcements-page .ann-title-text { font-size: 0.95rem; }
+  .announcements-page .ann-title-preview { -webkit-line-clamp: 3; line-clamp: 3; }
+
+  .announcements-page .ann-audience-tags { justify-content: flex-end; }
+  .announcements-page .va-actions-cell { justify-content: flex-end; }
+}
+
 @media (max-width: 768px) {
-  .va-card-head { flex-direction: column; align-items: stretch; }
-  .va-card-head-actions { width: 100%; }
-  .form-select.filter-select { min-width: 0; flex: 1; }
-  .ann-filters { flex-direction: column; align-items: stretch; }
-  .ann-filter-actions { margin-left: 0; justify-content: flex-end; }
-  .ann-form-grid { grid-template-columns: 1fr; }
-  .toast-container { left: 1rem; right: 1rem; }
-  .app-toast { max-width: none; }
+  .announcements-page .va-card { padding: 1rem; }
+  .announcements-page .va-card-head { flex-direction: column; align-items: stretch; }
+  /* The stacked head runs in column direction, where the row layout's
+     `flex: 1 1 260px` would be read as a 260px-tall text block. */
+  .announcements-page .va-card-head-text { flex: 0 0 auto; }
+  .announcements-page .va-card-head-actions { width: 100%; justify-content: space-between; }
+  .announcements-page .form-select.filter-select { min-width: 0; width: 100%; }
+  .announcements-page .ann-filters { grid-template-columns: 1fr; }
+  .announcements-page .ann-filter-group--grow,
+  .announcements-page .ann-filter-group--wide { grid-column: auto; }
+  .announcements-page .ann-filter-actions { grid-column: auto; }
+  .announcements-page .ann-filter-actions .styled-button { width: 100%; }
+  .announcements-page .ann-form-grid { grid-template-columns: 1fr; }
+  .announcements-page .va-modal-backdrop { padding: 1.25rem 0.75rem; }
+  .announcements-page .va-modal-body { padding: 1.1rem; }
+  .announcements-page .va-form-actions { flex-direction: column-reverse; }
+  .announcements-page .va-form-actions .styled-button { width: 100%; }
+  .announcements-page .toast-container { left: 1rem; right: 1rem; bottom: 1rem; }
+  .announcements-page .app-toast { max-width: none; }
+}
+
+@media (max-width: 520px) {
+  .announcements-page .ann-metrics { grid-template-columns: repeat(2, 1fr); }
+  .announcements-page .va-table td { flex-wrap: wrap; }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -8,6 +8,8 @@
  * and this SPA during rollout keeps the same data.
  */
 
+import { buildDhlSeedAvisos, buildSpSeedAvisos } from './announcementsMockData';
+
 export interface AvisoRecord {
   id: string;
   title: string;
@@ -36,6 +38,13 @@ export interface NewAvisoInput {
 }
 
 const STORAGE_KEY = 'dhl_avisos';
+/**
+ * Records which demo batches have already been written, so a user who deletes
+ * every seeded aviso doesn't get them back on the next page load. Separate
+ * from STORAGE_KEY because the aviso list itself is shared with the legacy
+ * static site, which knows nothing about seeding.
+ */
+const SEEDED_KEY = 'dhl_avisos_seeded';
 
 function loadRaw(): AvisoRecord[] {
   try {
@@ -60,9 +69,50 @@ function isVisibleTo(aviso: AvisoRecord, sp: string | null): boolean {
   return !!sp && aviso.spName === sp;
 }
 
+function loadSeededBatches(): string[] {
+  try {
+    const raw = JSON.parse(localStorage.getItem(SEEDED_KEY) || 'null');
+    return Array.isArray(raw) ? (raw as string[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Writes the demo announcements the first time a batch is needed: the global
+ * DHL broadcasts once, plus one batch per SP for that SP's own announcements
+ * (which is why this can't run at module load — the SP only becomes known
+ * once a route with ?sp= renders). Appends rather than replaces, so avisos
+ * created by the user or by the legacy static site survive untouched.
+ */
+function seedAvisosIfNeeded(sp: string | null): void {
+  const done = loadSeededBatches();
+  const pending: AvisoRecord[] = [];
+  const added: string[] = [];
+
+  if (!done.includes('dhl')) {
+    pending.push(...buildDhlSeedAvisos());
+    added.push('dhl');
+  }
+  const spBatch = sp ? `sp:${sp}` : null;
+  if (spBatch && !done.includes(spBatch)) {
+    pending.push(...buildSpSeedAvisos(sp!));
+    added.push(spBatch);
+  }
+  if (!pending.length) return;
+
+  saveRaw([...pending, ...loadRaw()]);
+  try {
+    localStorage.setItem(SEEDED_KEY, JSON.stringify([...done, ...added]));
+  } catch {
+    /* ignore */
+  }
+}
+
 /** All avisos visible to the given SP context (mirrors AvisosStorage.getAllAvisos()). */
 export function getAllAvisos(sp: string): AvisoRecord[] {
   const currentSp = sp || null;
+  seedAvisosIfNeeded(currentSp);
   return loadRaw().filter((a) => isVisibleTo(a, currentSp));
 }
 
