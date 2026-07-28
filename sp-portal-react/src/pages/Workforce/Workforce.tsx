@@ -7,8 +7,7 @@ import { useVendorSync } from '../Compliance/hooks/useVendorSync';
 import { ComplianceStats } from '../Compliance/components/ComplianceStats';
 import { WorkforceTabs } from './WorkforceTabs';
 import { isWorkforceTab, type WorkforceTab } from '../Compliance/types/compliance';
-import { useAnnouncements } from '../../context/AnnouncementsContext';
-import { getAllMockVendors } from '../../data/vendorsData';
+import * as workforce from '../../services/workforceService';
 import { useCurrentSp } from '../../hooks/useCurrentSp';
 import '../Compliance/Compliance.css';
 
@@ -23,7 +22,6 @@ import '../Compliance/Compliance.css';
 export function Workforce() {
   const complianceState = useComplianceState();
   const { state, selectProfile, setActiveTab, ...actions } = complianceState;
-  const { syncComplianceFromProfiles } = useAnnouncements();
   const sp = useCurrentSp();
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -62,12 +60,6 @@ export function Workforce() {
   // Mantém a página Vendor sincronizada a partir dos dados reais de Vetting
   useVendorSync();
 
-  // Alertas e contagem regressiva do cabeçalho: derivados no contexto a
-  // partir dos perfis desta página, para reflectirem edições locais.
-  useEffect(() => {
-    syncComplianceFromProfiles(state.profiles);
-  }, [state.profiles, syncComplianceFromProfiles]);
-
   // Evento de integração herdado da página Compliance. Nada no portal o
   // escuta hoje, mas está documentado como ponto de extensão — mantido com o
   // mesmo nome para não partir listeners externos.
@@ -85,7 +77,7 @@ export function Workforce() {
     }
   }, [state.loading, state.profiles.length, state.vettings.length]);
 
-  const vendorCount = getAllMockVendors().filter((v) => v.serviceProvider === sp).length;
+  const vendorCount = workforce.getVendors(sp).length;
 
   return (
     <PortalLayout

@@ -1,11 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 import { useCurrentSp } from '../../hooks/useCurrentSp';
 import { useModalBehavior } from '../../hooks/useModalBehavior';
 import '../../styles/legacy/shared-pages.css';
 import '../../styles/legacy/vendors-page.css';
+import * as workforce from '../../services/workforceService';
 import {
-  getAllMockVendors,
   getDepotsForSp,
   getRoutesForSp,
   computeCourierId,
@@ -111,7 +111,6 @@ export function VendorsContent() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [sortKey, setSortKey] = useState<SortKey>('name');
   const [sortDir, setSortDir] = useState<1 | -1>(1);
-  const [localVendors, setLocalVendors] = useState<Vendor[]>([]);
 
   const [showVendorModal, setShowVendorModal] = useState(false);
   const [editingVendorId, setEditingVendorId] = useState<number | null>(null);
@@ -127,13 +126,14 @@ export function VendorsContent() {
   useModalBehavior(() => setInfoModal(null), infoModal !== null);
   useModalBehavior(() => setDriverDetailId(null), driverDetailId !== null);
 
-  const allVendors = useMemo<Vendor[]>(() => {
-    const mock = getAllMockVendors().filter((v) => v.serviceProvider === sp);
-    const byId = new Map<number, Vendor>();
-    mock.forEach((v) => byId.set(v.id, v));
-    localVendors.forEach((v) => byId.set(v.id, v));
-    return Array.from(byId.values());
-  }, [sp, localVendors]);
+  // O roster vem do WorkforceService, que já sobrepõe as alterações da
+  // sessão ao mock. Era aqui que vivia o `localVendors` local — e era por
+  // isso que uma edição feita nesta aba não chegava às outras.
+  const roster = useSyncExternalStore(workforce.subscribe, workforce.getSnapshot);
+  const allVendors = useMemo<Vendor[]>(
+    () => roster.vendors.filter((v) => v.serviceProvider === sp),
+    [roster, sp],
+  );
 
   const filtered = useMemo(
     () => filterAndSortVendors(allVendors, search, statusFilter, sortKey, sortDir),
@@ -152,7 +152,7 @@ export function VendorsContent() {
   const routes = useMemo(() => getRoutesForSp(sp), [sp]);
 
   const findVendor = (id: number) => allVendors.find((v) => v.id === id) || null;
-  const isLocalVendor = (id: number) => localVendors.some((v) => v.id === id);
+  const isLocalVendor = (id: number) => workforce.isLocallyCreated(id);
 
   function handleSort(key: SortKey) {
     if (sortKey === key) setSortDir((d) => (d === 1 ? -1 : 1) as 1 | -1);
@@ -217,31 +217,16 @@ export function VendorsContent() {
     };
 
     if (editingVendorId !== null) {
-      setLocalVendors((prev) => {
-        const idx = prev.findIndex((x) => x.id === editingVendorId);
-        if (idx !== -1) {
-          const next = [...prev];
-          next[idx] = { ...next[idx], ...fd, id: editingVendorId, serviceProvider: sp };
-          return next;
-        }
-        const existing = allVendors.find((x) => x.id === editingVendorId);
-        if (existing) return [...prev, { ...existing, ...fd, id: existing.id, serviceProvider: sp }];
-        return prev;
-      });
+      workforce.updateVendor(editingVendorId, { ...fd, serviceProvider: sp });
     } else {
-      const maxId = Math.max(0, ...getAllMockVendors().map((v) => v.id), ...localVendors.map((v) => v.id));
-      setLocalVendors((prev) => [
-        ...prev,
-        {
-          ...fd,
-          id: maxId + 1,
-          serviceProvider: sp,
-          status: 'Active',
-          cargoTraining: !!fd.cargoTrainingDate,
-          dangerousGoodsTraining: !!fd.dangerousGoodsTrainingDate,
-          manualHandlingTraining: !!fd.manualHandlingTrainingDate,
-        } as Vendor,
-      ]);
+      workforce.createVendor({
+        ...fd,
+        serviceProvider: sp,
+        status: 'Active',
+        cargoTraining: !!fd.cargoTrainingDate,
+        dangerousGoodsTraining: !!fd.dangerousGoodsTrainingDate,
+        manualHandlingTraining: !!fd.manualHandlingTrainingDate,
+      } as workforce.VendorDraft);
     }
 
     setShowVendorModal(false);
@@ -249,7 +234,7 @@ export function VendorsContent() {
 
   function confirmDelete() {
     if (deleteVendorId === null) return;
-    setLocalVendors((prev) => prev.filter((v) => v.id !== deleteVendorId));
+    workforce.deleteVendor(deleteVendorId);
     setDeleteVendorId(null);
   }
 
