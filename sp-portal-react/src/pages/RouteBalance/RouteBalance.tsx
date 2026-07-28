@@ -127,6 +127,12 @@ const POSTCODES = SUBPOSTCODES.flatMap((sub) => Array.from({ length: 5 }, (_, i)
 const STREETS = ['High Street', 'Station Road', 'Church Lane', 'Victoria Avenue', 'Mill Road', 'Park View', 'Queensway', 'Riverside Drive'];
 const SHIPMENT_TYPES: ShipmentType[] = ['COY', 'COY-S1', 'COY-S2', 'FLY', 'NCY', 'PAL1'];
 
+/* Operation Summary bento — gauge geometry (speedometer, ring) */
+const OSB_SPD_PATH = 'M6,74 A54,54 0 0,1 114,74';
+const OSB_SPD_LEN = 170;
+const OSB_RING_LEN = 251;
+const OSB_LOOP_TARGET = 90;
+
 function rand(n: number): number {
   return Math.floor(Math.random() * n);
 }
@@ -744,6 +750,41 @@ function RouteBlockCard(props: RouteBlockCardProps) {
   );
 }
 
+/* ==================== DASHBOARD ANIMATION HELPERS ==================== */
+
+const prefersReducedMotion = () =>
+  typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/** Rolls a number to its new value instead of snapping, so a scope change reads as motion. */
+function useCountUp(value: number, duration = 620): number {
+  const [display, setDisplay] = useState(value);
+  const currentRef = useRef(value);
+
+  useEffect(() => {
+    const from = currentRef.current;
+    if (from === value) return;
+    if (prefersReducedMotion()) {
+      currentRef.current = value;
+      setDisplay(value);
+      return;
+    }
+    let raf = 0;
+    const start = performance.now();
+    const tick = (t: number) => {
+      const p = Math.min((t - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
+      const next = Math.round(from + (value - from) * eased);
+      currentRef.current = next;
+      setDisplay(next);
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [value, duration]);
+
+  return display;
+}
+
 /* ==================== MAIN COMPONENT ==================== */
 
 export function RouteBalance() {
@@ -759,6 +800,7 @@ export function RouteBalance() {
   const [sortKey, setSortKey] = useState<SortKey | null>(null);
   const [sortAsc, setSortAsc] = useState(true);
   const [dashboardFilter, setDashboardFilter] = useState<DashboardFilterKey | null>(null);
+  const [focusRouteId, setFocusRouteId] = useState<number | null>(null); // route picked in the summary table
 
   const [sentAm, setSentAm] = useState<Set<number>>(new Set());
   const [sentPm, setSentPm] = useState<Set<number>>(new Set());
@@ -863,10 +905,23 @@ export function RouteBalance() {
     [filteredRoutes, dashboardFilter, filterPM],
   );
 
+  /* ---------- route focus (click a row in the summary table) ---------- */
+  const focusRoute = focusRouteId != null ? routes.find((r) => r.id === focusRouteId) ?? null : null;
+
+  // Route focus scopes the Operation Summary cards only — the route blocks below
+  // always list every route.
   const routesToRender = rebalanceMode ? filteredRoutes : dashboardFilteredRoutes;
 
+  function toggleFocusRoute(route: RouteRow) {
+    const next = focusRouteId === route.id ? null : route.id;
+    setFocusRouteId(next);
+    showToast(next ? `Summary scoped to Route ${route.name}` : 'Route focus cleared', 'info');
+  }
+
   /* ---------- dashboard cards ---------- */
-  const allVisibleStops = routes.flatMap((r) => visibleStops(r));
+  // Every card reads the focused route when there is one, the whole operation otherwise.
+  const scopedRoutes = focusRoute ? [focusRoute] : routes;
+  const allVisibleStops = scopedRoutes.flatMap((r) => visibleStops(r));
   const totalStopsCard = allVisibleStops.length;
   const deliveriesCard = allVisibleStops.filter((s) => s.type === 'DEL').length;
   const pickupsCard = totalStopsCard - deliveriesCard;
@@ -875,8 +930,53 @@ export function RouteBalance() {
   const dsrCard = allVisibleStops.filter((s) => s.dsr).length;
   const specialCard = allVisibleStops.filter((s) => s.pre12 || s.asr || s.dsr).length;
   const avg = (arr: number[]) => (arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0);
-  const targetLoopCard = Math.round(avg(routes.map((r) => r.target)));
-  const sprCard = Math.round(avg(routes.map((r) => r.spr)));
+  const targetLoopCard = Math.round(avg(scopedRoutes.map((r) => r.target)));
+  const sprCard = Math.round(avg(scopedRoutes.map((r) => r.spr)));
+
+  /* ---------- bento gauges ---------- */
+  // Balance index: 100% when every route carries the same load, dropping with
+  // the widest deviation from the mean stop count.
+  const routeLoads = routes.map((r) => visibleStops(r).length);
+  const meanLoad = avg(routeLoads);
+  const maxLoad = routeLoads.length ? Math.max(...routeLoads) : 0;
+  const maxDeviation = meanLoad ? Math.max(...routeLoads.map((n) => Math.abs(n - meanLoad))) / meanLoad : 0;
+  const balancePct = Math.max(0, Math.min(100, Math.round(100 - maxDeviation * 100)));
+  const balanceTone = balancePct >= 85 ? 'ok' : balancePct >= 65 ? 'warn' : 'bad';
+  // One bar per route, so the spread behind the balance figure is visible at a glance.
+  // Always operation-wide, even under focus — it is the context the focused route sits in.
+  const routeBars = routes.map((r, i) => ({
+    id: r.id,
+    name: r.name,
+    stops: routeLoads[i],
+    height: maxLoad ? Math.max(8, Math.round((routeLoads[i] / maxLoad) * 100)) : 8,
+    off: meanLoad ? Math.abs(routeLoads[i] - meanLoad) / meanLoad > 0.2 : false,
+  }));
+  const meanBarPct = maxLoad ? Math.round((meanLoad / maxLoad) * 100) : 0;
+  const loopOk = targetLoopCard >= OSB_LOOP_TARGET;
+  const delPct = totalStopsCard ? Math.round((deliveriesCard / totalStopsCard) * 100) : 0;
+
+  /* ---------- animated readouts ----------
+     Numbers roll and gauges grow from zero on the first paint, so filtering or
+     scoping the dashboard is something you watch happen. */
+  // Held at zero behind the loading overlay, then everything rolls up together.
+  const gaugesReady = !loading;
+  const reveal = (v: number) => (gaugesReady ? v : 0);
+  const totalStopsAnim = useCountUp(reveal(totalStopsCard));
+  const deliveriesAnim = useCountUp(reveal(deliveriesCard));
+  const pickupsAnim = useCountUp(reveal(pickupsCard));
+  const specialAnim = useCountUp(reveal(specialCard));
+  const pre12Anim = useCountUp(reveal(pre12Card));
+  const asrAnim = useCountUp(reveal(asrCard));
+  const dsrAnim = useCountUp(reveal(dsrCard));
+  const targetLoopAnim = useCountUp(reveal(targetLoopCard));
+  const sprAnim = useCountUp(reveal(sprCard));
+  const balanceAnim = useCountUp(reveal(balancePct));
+  const delPctAnim = useCountUp(reveal(delPct));
+  // Shares ride the rolling numbers so a card never shows a count and a share that disagree.
+  const shareOfAnim = (n: number) => (totalStopsAnim ? `${Math.round((n / totalStopsAnim) * 100)}%` : '—');
+  const delDash = (((gaugesReady ? delPct : 0) / 100) * OSB_RING_LEN).toFixed(1);
+  const loopAngle = (-90 + (gaugesReady ? Math.min(targetLoopCard / 100, 1) : 0) * 180).toFixed(1);
+  const loopDash = (((gaugesReady ? Math.min(targetLoopCard, 100) : 0) / 100) * OSB_SPD_LEN).toFixed(1);
 
   function toggleDashboardFilter(key: DashboardFilterKey | 'all') {
     const k = key === 'all' ? null : key;
@@ -1249,6 +1349,14 @@ export function RouteBalance() {
         <section className="operation-summary">
           <div className="section-header">
             <h2>Operation Summary</h2>
+            {focusRoute && (
+              <div className="dashboard-filter-status">
+                <span className="dashboard-filter-status-label">Scoped to route <strong>{focusRoute.name}</strong></span>
+                <button type="button" className="dashboard-filter-clear-btn" onClick={() => toggleFocusRoute(focusRoute)}>
+                  <i className="bi bi-x-lg" /> Show all routes
+                </button>
+              </div>
+            )}
             {dashboardFilter && (
               <div className="dashboard-filter-status" id="dashboardFilterStatus">
                 <span className="dashboard-filter-status-label">Filtering Sub Postcodes by <strong id="dashboardFilterStatusName">{DASHBOARD_FILTER_LABELS[dashboardFilter]}</strong></span>
@@ -1273,7 +1381,13 @@ export function RouteBalance() {
                   </thead>
                   <tbody id="summaryTableBody">
                     {dashboardFilteredRoutes.map((route) => (
-                      <tr key={route.id}>
+                      <tr key={route.id}
+                        className={`summary-route-row${focusRouteId === route.id ? ' summary-route-row--focus' : ''}${focusRouteId != null && focusRouteId !== route.id ? ' summary-route-row--muted' : ''}`}
+                        role="button" tabIndex={0}
+                        aria-pressed={focusRouteId === route.id}
+                        title={focusRouteId === route.id ? 'Click to clear the route focus' : `Click to scope the dashboard to Route ${route.name}`}
+                        onClick={() => toggleFocusRoute(route)}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleFocusRoute(route); } }}>
                         <td><strong>{route.name}</strong></td>
                         <td>{route.driver}</td>
                         <td>{route.target}%</td>
@@ -1285,54 +1399,117 @@ export function RouteBalance() {
               </div>
             </div>
 
-            <div className="summary-cards" id="summaryCards">
-              <div className={`stat-card stat-card--filterable${dashboardFilter === null ? '' : ''}`} data-tooltip="Total stops across all routes · click to clear any filter" role="button" tabIndex={0}
-                onClick={() => toggleDashboardFilter('all')}>
-                <div className="stat-icon"><i className="bi bi-stack" /></div>
-                <div className="stat-content"><div className="stat-value" id="totalStopsCard">{totalStopsCard}</div><div className="stat-label">Total Stops</div></div>
+            <div className={`osb-grid${gaugesReady ? ' osb-grid--in' : ''}`} id="summaryCards">
+              {/* --- Hero: total stops + balance arc --- */}
+              <button type="button" className={`osb-card osb-stops${dashboardFilter || focusRoute ? ' osb-stops--clearable' : ''}`}
+                data-tooltip="Total stops across all routes · click to clear any filter"
+                onClick={() => { setFocusRouteId(null); toggleDashboardFilter('all'); }}>
+                <span className="osb-stops-main">
+                  <span className="osb-label"><i className="bi bi-stack" /> {focusRoute ? `Route ${focusRoute.name} stops` : 'Total stops'}</span>
+                  <span className="osb-stops-val" id="totalStopsCard">{totalStopsAnim}</span>
+                  <span className="osb-stops-meta">
+                    {focusRoute ? (
+                      <span className="osb-chip osb-chip--focus"><i className="bi bi-person-fill" />{focusRoute.driver}</span>
+                    ) : (
+                      <span className="osb-chip"><i className="bi bi-diagram-3" /><em id="totalRoutesCard">{routes.length}</em> routes</span>
+                    )}
+                    <span className="osb-chip"><i className="bi bi-speedometer2" />SPR <em id="sprCard">{sprAnim}</em></span>
+                  </span>
+                </span>
+                <span className={`osb-stops-gauge osb-stops-gauge--${balanceTone}`}>
+                  <span className="osb-bars" style={{ ['--osb-mean' as string]: `${meanBarPct}%` }}
+                    role="img" aria-label={`Stops per route — balance index ${balancePct}%`}>
+                    {routeBars.map((bar, i) => (
+                      <span key={bar.id}
+                        className={`osb-bar${bar.off ? ' osb-bar--off' : ''}${bar.id === focusRouteId ? ' osb-bar--focus' : ''}`}
+                        style={{ height: `${gaugesReady ? bar.height : 0}%`, transitionDelay: `${i * 45}ms` }}
+                        title={`Route ${bar.name} · ${bar.stops} stops`} />
+                    ))}
+                  </span>
+                  <span className="osb-gauge-cap">Route balance <em>{balanceAnim}%</em> <span>· avg {meanLoad.toFixed(1)}/route</span></span>
+                </span>
+              </button>
+
+              {/* --- Target loop speedometer --- */}
+              <div className={`osb-card osb-loop${loopOk ? ' osb-loop--ok' : ''}`} data-tooltip={`Average target loop across routes · goal ${OSB_LOOP_TARGET}%+`}>
+                <span className="osb-label"><i className="bi bi-bullseye" /> Target loop</span>
+                <div className="osb-loop-body">
+                  <svg className="osb-spd-svg" viewBox="0 0 120 82" aria-hidden="true">
+                    <path className="osb-spd-track" d={OSB_SPD_PATH} />
+                    <path className="osb-spd-zone" d={OSB_SPD_PATH}
+                      strokeDasharray={`${(OSB_SPD_LEN * (100 - OSB_LOOP_TARGET)) / 100} ${OSB_SPD_LEN}`}
+                      strokeDashoffset={-(OSB_SPD_LEN * OSB_LOOP_TARGET) / 100} />
+                    <path className="osb-spd-fill" d={OSB_SPD_PATH} strokeDasharray={`${loopDash} ${OSB_SPD_LEN}`} />
+                    <g className="osb-needle-g" style={{ transform: `rotate(${loopAngle}deg)` }}>
+                      <line x1="60" y1="74" x2="60" y2="30" className="osb-needle" />
+                    </g>
+                    <circle cx="60" cy="74" r="4.5" className="osb-needle-cap" />
+                  </svg>
+                  <div className="osb-loop-read">
+                    <span className="osb-spd-val" id="targetLoopCard">{targetLoopAnim}<em>%</em></span>
+                    <span className="osb-spd-status">{loopOk ? 'On target' : 'Below goal'}</span>
+                    <span className="osb-spd-goal">Goal {OSB_LOOP_TARGET}%+</span>
+                  </div>
+                </div>
               </div>
-              <div className="stat-card" data-tooltip="Average target loop">
-                <div className="stat-icon"><i className="bi bi-bullseye" /></div>
-                <div className="stat-content"><div className="stat-value" id="targetLoopCard">{targetLoopCard}%</div><div className="stat-label">Target Loop</div></div>
+
+              {/* --- Stop mix ring + clickable breakdown --- */}
+              <div className="osb-card osb-mix">
+                <span className="osb-label"><i className="bi bi-pie-chart" /> Stop mix</span>
+                <div className="osb-mix-body">
+                  <div className="osb-ring-wrap">
+                    <svg viewBox="0 0 100 100" aria-hidden="true">
+                      <circle className="osb-ring-bg" cx="50" cy="50" r="40" fill="none" strokeWidth={9} />
+                      <circle className="osb-ring-fg" cx="50" cy="50" r="40" fill="none" strokeWidth={9} style={{ strokeDasharray: `${delDash} ${OSB_RING_LEN}` }} transform="rotate(-90 50 50)" />
+                    </svg>
+                    <div className="osb-ring-inner">
+                      <span className="osb-ring-val">{delPctAnim}%</span>
+                      <span className="osb-ring-sub">DEL share</span>
+                    </div>
+                  </div>
+                  <div className="osb-mix-rows">
+                    <button type="button" className={`osb-mix-row osb-mix-row--del${dashboardFilter === 'del' ? ' is-on' : ''}`}
+                      data-tooltip="Click to show only DEL Sub Postcodes" onClick={() => toggleDashboardFilter('del')}>
+                      <span className="osb-mix-head"><span className="osb-dot" /><span className="osb-mix-lbl">Deliveries</span></span>
+                      <span className="osb-mix-val" id="deliveriesCard">{deliveriesAnim}<em>{shareOfAnim(deliveriesAnim)}</em></span>
+                    </button>
+                    <button type="button" className={`osb-mix-row osb-mix-row--pu${dashboardFilter === 'pu' ? ' is-on' : ''}`}
+                      data-tooltip="Click to show only PU Sub Postcodes" onClick={() => toggleDashboardFilter('pu')}>
+                      <span className="osb-mix-head"><span className="osb-dot" /><span className="osb-mix-lbl">Pickups</span></span>
+                      <span className="osb-mix-val" id="pickupsCard">{pickupsAnim}<em>{shareOfAnim(pickupsAnim)}</em></span>
+                    </button>
+                    <button type="button" className={`osb-mix-row osb-mix-row--special${dashboardFilter === 'special' ? ' is-on' : ''}`}
+                      data-tooltip="Pre 12 + ASR + DSR · click to show only Special Delivery Sub Postcodes" onClick={() => toggleDashboardFilter('special')}>
+                      <span className="osb-mix-head"><span className="osb-dot" /><span className="osb-mix-lbl">Special</span></span>
+                      <span className="osb-mix-val" id="specialCard">{specialAnim}<em>{shareOfAnim(specialAnim)}</em></span>
+                    </button>
+                    <div className="osb-mix-row osb-mix-row--total">
+                      <span className="osb-mix-head"><span className="osb-dot" /><span className="osb-mix-lbl">Total stops</span></span>
+                      <span className="osb-mix-val">{totalStopsAnim}<em>100%</em></span>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className={`stat-card stat-card--filterable${dashboardFilter === 'del' ? ' stat-card--active' : ''}`} data-tooltip="Total deliveries · click to show only DEL Sub Postcodes" role="button" tabIndex={0}
-                onClick={() => toggleDashboardFilter('del')}>
-                <div className="stat-icon"><i className="bi bi-box-seam" /></div>
-                <div className="stat-content"><div className="stat-value" id="deliveriesCard">{deliveriesCard}</div><div className="stat-label">Deliveries</div></div>
-              </div>
-              <div className={`stat-card stat-card--filterable${dashboardFilter === 'pu' ? ' stat-card--active' : ''}`} data-tooltip="Total pickups · click to show only PU Sub Postcodes" role="button" tabIndex={0}
-                onClick={() => toggleDashboardFilter('pu')}>
-                <div className="stat-icon"><i className="bi bi-arrow-repeat" /></div>
-                <div className="stat-content"><div className="stat-value" id="pickupsCard">{pickupsCard}</div><div className="stat-label">Pickups</div></div>
-              </div>
-              <div className="stat-card" data-tooltip="Estimated stops per route">
-                <div className="stat-icon"><i className="bi bi-speedometer2" /></div>
-                <div className="stat-content"><div className="stat-value" id="sprCard">{sprCard}</div><div className="stat-label">SPR (est.)</div></div>
-              </div>
-              <div className="stat-card" data-tooltip="Active routes">
-                <div className="stat-icon"><i className="bi bi-diagram-3" /></div>
-                <div className="stat-content"><div className="stat-value" id="totalRoutesCard">{routes.length}</div><div className="stat-label">Total Routes</div></div>
-              </div>
-              <div className={`stat-card stat-card--filterable${dashboardFilter === 'pre12' ? ' stat-card--active' : ''}`} data-tooltip="Pre 12 deliveries · click to show only Pre 12 Sub Postcodes" role="button" tabIndex={0}
-                onClick={() => toggleDashboardFilter('pre12')}>
-                <div className="stat-icon"><i className="bi bi-rocket-takeoff" /></div>
-                <div className="stat-content"><div className="stat-value" id="pre12Card">{pre12Card}</div><div className="stat-label">Pre 12</div></div>
-              </div>
-              <div className={`stat-card stat-card--filterable${dashboardFilter === 'asr' ? ' stat-card--active' : ''}`} data-tooltip="Achieved Service Rate · click to show only ASR Sub Postcodes" role="button" tabIndex={0}
-                onClick={() => toggleDashboardFilter('asr')}>
-                <div className="stat-icon"><i className="bi bi-check-circle" /></div>
-                <div className="stat-content"><div className="stat-value" id="asrCard">{asrCard}</div><div className="stat-label">ASR</div></div>
-              </div>
-              <div className={`stat-card stat-card--filterable${dashboardFilter === 'dsr' ? ' stat-card--active' : ''}`} data-tooltip="Delayed Service Rate · click to show only DSR Sub Postcodes" role="button" tabIndex={0}
-                onClick={() => toggleDashboardFilter('dsr')}>
-                <div className="stat-icon"><i className="bi bi-exclamation-circle" /></div>
-                <div className="stat-content"><div className="stat-value" id="dsrCard">{dsrCard}</div><div className="stat-label">DSR</div></div>
-              </div>
-              <div className={`stat-card stat-card--filterable${dashboardFilter === 'special' ? ' stat-card--active' : ''}`} data-tooltip="Pre 12 + ASR + DSR · click to show only Special Delivery Sub Postcodes" role="button" tabIndex={0}
-                onClick={() => toggleDashboardFilter('special')}>
-                <div className="stat-icon"><i className="bi bi-stars" /></div>
-                <div className="stat-content"><div className="stat-value" id="specialCard">{specialCard}</div><div className="stat-label">Special Deliveries</div></div>
-              </div>
+
+              {/* --- Service tiles --- */}
+              <button type="button" className={`osb-card osb-stat osb-pre12${dashboardFilter === 'pre12' ? ' osb-card--on' : ''}`}
+                data-tooltip="Pre 12 deliveries · click to show only Pre 12 Sub Postcodes" onClick={() => toggleDashboardFilter('pre12')}>
+                <i className="bi bi-rocket-takeoff osb-stat-ico" />
+                <span className="osb-stat-val" id="pre12Card">{pre12Anim}</span>
+                <span className="osb-stat-lbl">Pre 12 <em>{shareOfAnim(pre12Anim)} of stops</em></span>
+              </button>
+              <button type="button" className={`osb-card osb-stat osb-asr${dashboardFilter === 'asr' ? ' osb-card--on' : ''}`}
+                data-tooltip="Achieved Service Rate · click to show only ASR Sub Postcodes" onClick={() => toggleDashboardFilter('asr')}>
+                <i className="bi bi-check-circle osb-stat-ico" />
+                <span className="osb-stat-val" id="asrCard">{asrAnim}</span>
+                <span className="osb-stat-lbl">ASR <em>{shareOfAnim(asrAnim)} of stops</em></span>
+              </button>
+              <button type="button" className={`osb-card osb-stat osb-dsr${dashboardFilter === 'dsr' ? ' osb-card--on' : ''}`}
+                data-tooltip="Delayed Service Rate · click to show only DSR Sub Postcodes" onClick={() => toggleDashboardFilter('dsr')}>
+                <i className="bi bi-exclamation-circle osb-stat-ico" />
+                <span className="osb-stat-val" id="dsrCard">{dsrAnim}</span>
+                <span className="osb-stat-lbl">DSR <em>{shareOfAnim(dsrAnim)} of stops</em></span>
+              </button>
             </div>
           </div>
         </section>
