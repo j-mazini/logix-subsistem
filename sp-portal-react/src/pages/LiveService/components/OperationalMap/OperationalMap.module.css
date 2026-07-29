@@ -1,4 +1,4 @@
-/** Mapa operacional — Liquid Glass com SVG */
+/** Mapa operacional — Liquid Glass com mapa real de Londres (Leaflet + CARTO light) */
 
 @keyframes cardSlideUp {
   from { opacity: 0; transform: translateY(10px); }
@@ -8,12 +8,12 @@
 .mapContainer {
   display: flex;
   flex-direction: column;
-  border-radius: 0.9rem;
-  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 1.1rem;
+  border: 1px solid rgba(255, 255, 255, 0.5);
   background: rgba(255, 255, 255, 0.4);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.1);
   overflow: hidden;
   animation: cardSlideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -57,24 +57,223 @@
   flex-shrink: 0;
 }
 
-.mapSvg {
-  display: block;
-  width: 100%;
-  height: 320px;
-  margin: 0;
-  padding: 1rem;
-  border: none;
-  border-radius: 0;
-  background: transparent;
+/* Toolbar de report de campo (rua fechada, acidente, hazard) */
+.reportToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.2);
 }
 
-.marker {
+.reportLabel {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: #64748b;
+  margin-right: 0.15rem;
+}
+
+.reportButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(255, 255, 255, 0.6);
+  color: #475569;
+  font-size: 0.75rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: filter 0.2s ease;
+  transition: all 0.2s ease;
 }
 
-.marker:hover {
-  filter: brightness(1.08);
+.reportButton:hover {
+  background: #fff;
+  border-color: rgba(148, 163, 184, 0.4);
+}
+
+.reportButtonActive {
+  color: var(--report-color);
+  background: color-mix(in srgb, var(--report-color) 12%, white);
+  border-color: var(--report-color);
+}
+
+.reportIcon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.reportHint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: 0.25rem;
+  padding: 0.3rem 0.4rem 0.3rem 0.65rem;
+  border-radius: 0.5rem;
+  background: rgba(99, 102, 241, 0.12);
+  color: #4338ca;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.reportCancel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  border: none;
+  background: rgba(67, 56, 202, 0.15);
+  color: #4338ca;
+  cursor: pointer;
+}
+
+.reportCancel:hover {
+  background: rgba(67, 56, 202, 0.25);
+}
+
+.reportCancelIcon {
+  width: 11px;
+  height: 11px;
+}
+
+/* Altura em clamp() — cresce com a viewport (mapa "maior" em telas grandes)
+   mas com piso e teto para não ficar minúsculo nem descontrolado. */
+.mapCanvasWrap {
+  position: relative;
+  height: clamp(480px, 68vh, 820px);
+  overflow: hidden;
+  background: #eef2f7;
+}
+
+.mapCanvas {
+  position: absolute;
+  inset: 0;
+}
+
+/* canvasRef É o .leaflet-container (Leaflet inicializa em cima do próprio
+   elemento), por isso é uma classe composta no mesmo nó, não descendente. */
+.mapCanvasArmed {
+  cursor: crosshair;
+}
+
+@keyframes mapSkeletonPulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.8; }
+}
+
+/* Cobre o flash de fundo liso enquanto os tiles iniciais ainda não chegaram. */
+.mapSkeleton {
+  position: absolute;
+  inset: 0;
+  z-index: 300;
+  background: linear-gradient(135deg, #e2e8f0 0%, #eef2f7 50%, #e2e8f0 100%);
+  animation: mapSkeletonPulse 1.6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mapSkeleton {
+    animation: none;
+  }
+}
+
+/* Marcadores dos entregadores (L.divIcon) */
+.markerIcon {
+  background: transparent !important;
+  border: none !important;
+}
+
+.markerDot {
+  position: relative;
+  display: block;
+  width: 12px;
+  height: 12px;
+  margin: 3px;
+  border-radius: 50%;
+  background: var(--marker-color);
+  border: 2px solid #ffffff;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.35);
+  cursor: pointer;
+}
+
+.markerDot::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  background: var(--marker-color);
+  opacity: 0.16;
+}
+
+/* Marcadores numerados das paradas da rota estimada */
+.stopIcon {
+  background: transparent !important;
+  border: none !important;
+}
+
+.stopDot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  border: 2px solid #ffffff;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.35);
+}
+
+/* Marcadores de relatos de campo (rua fechada, acidente, hazard) */
+.hazardIcon {
+  background: transparent !important;
+  border: none !important;
+}
+
+.hazardDot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 0.45rem;
+  background: var(--hazard-color);
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.4);
+  cursor: pointer;
+  font-size: 0.8rem;
+  line-height: 1;
+  color: #fff;
+}
+
+/* Leaflet posiciona os marcadores via transform inline a cada tick de dados;
+   a transição faz o ponto deslizar até a nova posição em vez de saltar.
+   Suspensa durante pan/zoom (classe .suspendGlide no wrapper) — senão ela
+   briga com a própria animação do Leaflet e os marcadores "nadam" atrás
+   do cursor em vez de seguir o mapa 1:1. */
+.mapCanvasWrap :global(.leaflet-marker-icon) {
+  transition: transform 1s ease-out;
+  will-change: transform;
+}
+
+.mapCanvas.suspendGlide :global(.leaflet-marker-icon) {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mapCanvasWrap :global(.leaflet-marker-icon) {
+    transition: none;
+  }
 }
 
 .mapFooter {
@@ -101,8 +300,8 @@
 }
 
 @media (max-width: 880px) {
-  .mapSvg {
-    height: 280px;
+  .mapCanvasWrap {
+    height: clamp(400px, 58vh, 620px);
   }
 }
 
@@ -112,7 +311,60 @@
     padding: 0.75rem 0.9rem;
   }
 
-  .mapSvg {
-    height: 240px;
+  .mapCanvasWrap {
+    height: clamp(320px, 52vh, 480px);
   }
+}
+
+@media (max-height: 700px) {
+  .mapCanvasWrap {
+    height: clamp(380px, 58vh, 600px);
+  }
+}
+
+/* Leaflet — tema claro para casar com o resto do sistema */
+.mapCanvasWrap :global(.leaflet-container) {
+  background: #eef2f7;
+  font-family: inherit;
+}
+
+.mapCanvasWrap :global(.leaflet-control-attribution) {
+  background: rgba(255, 255, 255, 0.75);
+  color: #94a3b8;
+  font-size: 0.62rem;
+  backdrop-filter: blur(6px);
+}
+
+.mapCanvasWrap :global(.leaflet-control-attribution a) {
+  color: #64748b;
+}
+
+.mapCanvasWrap :global(.leaflet-control-zoom) {
+  border: 1px solid rgba(148, 163, 184, 0.25) !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08) !important;
+}
+
+.mapCanvasWrap :global(.leaflet-control-zoom a) {
+  background: rgba(255, 255, 255, 0.9) !important;
+  color: #475569 !important;
+  border-color: rgba(148, 163, 184, 0.2) !important;
+}
+
+.mapCanvasWrap :global(.leaflet-control-zoom a:hover) {
+  background: #ffffff !important;
+  color: #4338ca !important;
+}
+
+.mapCanvasWrap :global(.leaflet-tooltip) {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  color: #0f172a;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.3rem 0.55rem;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.1);
+}
+
+.mapCanvasWrap :global(.leaflet-tooltip-top:before) {
+  border-top-color: rgba(255, 255, 255, 0.95);
 }

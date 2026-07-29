@@ -22,6 +22,7 @@ const NAV_GROUPS: NavGroup[] = [
       { icon: 'bi-shuffle', label: 'Route Balance', route: '/route-balance' },
       { icon: 'bi-controller', label: 'Daily Game Plan', route: '/daily-game-plan' },
       { icon: 'bi-clock-history', label: 'Daily Operations Management', route: '/daily-operations-management' },
+      { icon: 'bi-broadcast', label: 'Live Service', route: '/live-service' },
     ],
   },
   {

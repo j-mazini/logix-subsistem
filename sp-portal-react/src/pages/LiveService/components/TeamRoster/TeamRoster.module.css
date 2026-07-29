@@ -104,9 +104,22 @@
   height: 14px;
 }
 
+@keyframes rowFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .tr {
   border-bottom: 1px solid rgba(255, 255, 255, 0.15);
   transition: background 0.25s ease;
+  animation: rowFadeIn 0.3s ease-out both;
+  animation-delay: calc(var(--i, 0) * 30ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tr {
+    animation: none;
+  }
 }
 
 .tr:last-child {
@@ -121,6 +134,27 @@
   padding: 0.8rem 0.9rem;
   vertical-align: middle;
   color: #0f172a;
+}
+
+.nameCell {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.2px;
 }
 
 .name {
@@ -183,7 +217,7 @@
 .batteryFill {
   height: 100%;
   border-radius: 2px;
-  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s ease;
 }
 
 .batteryText {

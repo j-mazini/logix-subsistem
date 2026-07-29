@@ -7,6 +7,7 @@ import {
   DeliveryStatus,
   DelivererStatus,
   ExceptionReason,
+  HazardReport,
 } from './types';
 
 function mulberry32(seed: number): () => number {
@@ -38,18 +39,29 @@ const DELIVERER_NAMES = [
   'Daniela Lima',
 ];
 
-const ADDRESSES = [
-  'Oxford Street, London',
-  'Piccadilly Circus, London',
-  'Baker Street, London',
-  'Regent Street, London',
-  'Bond Street, London',
-  'Covent Garden, London',
-  'Trafalgar Square, London',
-  'Kensington High Street, London',
-  'Tottenham Court Road, London',
-  'Leicester Square, London',
+// Marcos reais de Londres com postcode e coordenadas aproximadas — usados
+// tanto para o texto do endereço quanto para traçar a rota estimada no mapa.
+export interface LondonLocation {
+  name: string;
+  postcode: string;
+  lat: number;
+  lng: number;
+}
+
+export const LONDON_LOCATIONS: LondonLocation[] = [
+  { name: 'Oxford Street, London', postcode: 'W1D 1BS', lat: 51.5152, lng: -0.1418 },
+  { name: 'Piccadilly Circus, London', postcode: 'W1J 9HS', lat: 51.51, lng: -0.1337 },
+  { name: 'Baker Street, London', postcode: 'NW1 6XE', lat: 51.5226, lng: -0.1571 },
+  { name: 'Regent Street, London', postcode: 'W1B 5AH', lat: 51.5136, lng: -0.141 },
+  { name: 'Bond Street, London', postcode: 'W1S 1SQ', lat: 51.5142, lng: -0.1494 },
+  { name: 'Covent Garden, London', postcode: 'WC2E 8RF', lat: 51.5117, lng: -0.124 },
+  { name: 'Trafalgar Square, London', postcode: 'WC2N 5DN', lat: 51.508, lng: -0.1281 },
+  { name: 'Kensington High Street, London', postcode: 'W8 5SA', lat: 51.5009, lng: -0.1925 },
+  { name: 'Tottenham Court Road, London', postcode: 'W1T 7RA', lat: 51.5165, lng: -0.1308 },
+  { name: 'Leicester Square, London', postcode: 'WC2H 7NA', lat: 51.5106, lng: -0.1281 },
 ];
+
+const ADDRESSES = LONDON_LOCATIONS.map(l => l.name);
 
 const EXCEPTION_REASONS: ExceptionReason[] = ['absent', 'wrong_address', 'unreachable', 'damaged', 'refused'];
 
@@ -90,17 +102,19 @@ function generateDeliveries(deliverers: Deliverer[]): Delivery[] {
   for (let i = 0; i < 50; i++) {
     const status = rng() > 0.7 ? pick(statuses) : i < 20 ? 'delivered' : 'in_route';
     const deliverer = pick(deliverers);
+    const location = pick(LONDON_LOCATIONS);
 
     deliveries.push({
       id: `delivery-${i}`,
       packageId: `PKG-${String(100000 + i).slice(-5)}`,
       customerId: `CUST-${String(50000 + i).slice(-5)}`,
-      address: pick(ADDRESSES),
+      address: location.name,
+      postcode: location.postcode,
       status,
       assignedTo: deliverer.name,
       assignedToId: deliverer.id,
       scannedAt: status !== 'pending' ? new Date(Date.now() - randInt(60, 3600) * 1000).toISOString() : undefined,
-      note: rng() > 0.8 ? 'Cliente não estava em casa' : '',
+      note: rng() > 0.8 ? 'Customer was not at home' : '',
     });
   }
 
@@ -150,14 +164,33 @@ function generateExceptions(deliveries: Delivery[], deliverers: Deliverer[]): Ex
       resolved: false,
       // O motivo já tem linha própria (traduzida) no detalhe — aqui fica só a
       // observação do entregador, sem repetir a chave crua do enum.
-      notes: delivery.note || 'Sem observações do entregador.',
+      notes: delivery.note || 'No notes from the courier.',
     });
   }
 
   return exceptions;
 }
 
+function generateHazards(deliverers: Deliverer[]): HazardReport[] {
+  // Alguns relatos de campo já plantados no mapa, pra feature não nascer vazia.
+  const seeds: Array<{ type: HazardReport['type']; lat: number; lng: number; note: string }> = [
+    { type: 'road_closed', lat: 51.5136, lng: -0.141, note: 'Regent Street closed for filming' },
+    { type: 'accident', lat: 51.508, lng: -0.1281, note: 'Minor collision, one lane blocked' },
+  ];
+
+  return seeds.map((seed, i) => ({
+    id: `hazard-${i}`,
+    type: seed.type,
+    lat: seed.lat,
+    lng: seed.lng,
+    note: seed.note,
+    reportedBy: pick(deliverers).name,
+    createdAt: new Date(Date.now() - randInt(300, 5400) * 1000).toISOString(),
+  }));
+}
+
 export const MOCK_DELIVERERS = generateDeliverers();
 export const MOCK_DELIVERIES = generateDeliveries(MOCK_DELIVERERS);
 export const MOCK_SCANNER_EVENTS = generateScannerEvents(MOCK_DELIVERIES, MOCK_DELIVERERS);
 export const MOCK_EXCEPTIONS = generateExceptions(MOCK_DELIVERIES, MOCK_DELIVERERS);
+export const MOCK_HAZARDS = generateHazards(MOCK_DELIVERERS);

@@ -108,12 +108,25 @@
   font-weight: 500;
 }
 
+@keyframes feedItemIn {
+  from { opacity: 0; transform: translateX(-6px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
 .feedItem {
   display: flex;
   gap: 0.6rem;
   padding: 0.55rem 0.5rem;
   border-radius: 0.5rem;
   transition: background 0.25s ease;
+  animation: feedItemIn 0.35s ease-out both;
+  animation-delay: calc(var(--i, 0) * 35ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .feedItem {
+    animation: none;
+  }
 }
 
 .feedItem:hover {

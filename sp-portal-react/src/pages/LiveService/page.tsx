@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { PortalLayout } from '../../layout/PortalLayout';
 import { LiveKPICards } from './components/LiveKPICards/LiveKPICards';
 import { OperationalMap } from './components/OperationalMap/OperationalMap';
@@ -18,51 +19,53 @@ export default function Page() {
   const { events } = useScannerEvents();
   const { team } = useTeamStatus();
 
-  const activeCouriers = team.filter(m => m.status === 'active').length;
-  const openExceptions = exceptions.filter(e => !e.resolved).length;
+  const activeCouriers = useMemo(() => team.filter(m => m.status === 'active').length, [team]);
+  const openExceptions = useMemo(() => exceptions.filter(e => !e.resolved).length, [exceptions]);
 
   return (
     <PortalLayout mainClassName="live-service-main" title="Live Service">
-      <section className={styles.statusBar}>
-        <div className={styles.statusIntro}>
-          <span className={styles.liveBadge}>
-            <span className={styles.liveDot} />
-            Ao vivo
-          </span>
-          <p className={styles.statusSubtitle}>
-            O pulso da operação — visão geral em tempo real
-          </p>
+      <div className={styles.consoleRoot}>
+        <section className={styles.statusBar}>
+          <div className={styles.statusIntro}>
+            <span className={styles.liveBadge}>
+              <span className={styles.liveDot} />
+              Live
+            </span>
+            <p className={styles.statusSubtitle}>
+              The pulse of the operation — real-time overview
+            </p>
+          </div>
+
+          <div className={styles.statusChips}>
+            <span className={styles.chip}>
+              <strong key={activeCouriers} className={styles.pulse}>{activeCouriers}</strong> on route
+            </span>
+            <span className={`${styles.chip} ${openExceptions > 0 ? styles.chipAlert : ''}`}>
+              <strong key={openExceptions} className={styles.pulse}>{openExceptions}</strong> exceptions
+            </span>
+            <span className={styles.timestamp}>
+              {new Date(metrics.lastUpdated).toLocaleTimeString('en-GB', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+              })}
+            </span>
+          </div>
+        </section>
+
+        <LiveKPICards metrics={metrics} />
+
+        <div className={styles.mapSection}>
+          <OperationalMap deliverers={deliverers} />
         </div>
 
-        <div className={styles.statusChips}>
-          <span className={styles.chip}>
-            <strong>{activeCouriers}</strong> em rota
-          </span>
-          <span className={`${styles.chip} ${openExceptions > 0 ? styles.chipAlert : ''}`}>
-            <strong>{openExceptions}</strong> exceções
-          </span>
-          <span className={styles.timestamp}>
-            {new Date(metrics.lastUpdated).toLocaleTimeString('pt-BR', {
-              hour: '2-digit',
-              minute: '2-digit',
-              second: '2-digit',
-            })}
-          </span>
-        </div>
-      </section>
-
-      <LiveKPICards metrics={metrics} />
-
-      <div className={styles.mainGrid}>
-        <OperationalMap deliverers={deliverers} />
-
-        <aside className={styles.sidebar}>
+        <div className={styles.secondaryGrid}>
           <ExceptionTriage exceptions={exceptions} onResolve={resolveException} />
           <ScannerLiveFeed events={events} />
-        </aside>
-      </div>
+        </div>
 
-      <TeamRoster team={team} />
+        <TeamRoster team={team} />
+      </div>
     </PortalLayout>
   );
 }

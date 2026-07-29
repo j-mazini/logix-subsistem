@@ -82,6 +82,7 @@ const NAV_GROUPS: NavGroup[] = [
     { label: 'Week Planner', desc: 'Plan routes and crews for the week', icon: 'bi-calendar-week', route: '/week-planner' },
     { label: 'Route Balance', desc: 'Balance stops across live routes', icon: 'bi-sliders', route: '/route-balance' },
     { label: 'Daily Operations Management', desc: 'Run and adjust today’s operation', icon: 'bi-speedometer2', route: '/daily-operations-management' },
+    { label: 'Live Service', desc: 'Real-time operation control tower', icon: 'bi-broadcast', route: '/live-service' },
   ] },
   { title: 'Setup', icon: 'bi-gear', items: [
     { label: 'Vehicles', desc: 'Fleet, VRNs and vehicle status', icon: 'bi-truck', route: '/vehicles' },

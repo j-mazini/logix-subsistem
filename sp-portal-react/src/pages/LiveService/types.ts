@@ -7,6 +7,7 @@ export interface Delivery {
   packageId: string;
   customerId: string;
   address: string;
+  postcode: string;
   status: DeliveryStatus;
   assignedTo: string;
   assignedToId: string;
@@ -82,4 +83,17 @@ export interface HeatmapZone {
   radius: number;
   intensity: number; // 0-100
   packageCount: number;
+}
+
+/** Reportado por um entregador em campo — sinaliza um obstáculo no mapa. */
+export type HazardType = 'road_closed' | 'accident' | 'hazard';
+
+export interface HazardReport {
+  id: string;
+  type: HazardType;
+  lat: number;
+  lng: number;
+  note?: string;
+  reportedBy: string;
+  createdAt: string;
 }

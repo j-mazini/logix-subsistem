@@ -7,7 +7,32 @@ interface Props {
   events: ScannerEvent[];
 }
 
-export function ScannerLiveFeed({ events }: Props) {
+const ACTION_LABELS: Record<string, string> = {
+  pending: 'Pending',
+  in_route: 'On Route',
+  delivered: 'Delivered',
+  failed: 'Failed',
+  exception: 'Exception',
+};
+
+const getActionLabel = (action: string) => ACTION_LABELS[action] || action;
+
+function getActionIcon(action: string) {
+  const iconProps = { className: styles.actionIcon };
+  switch (action) {
+    case 'delivered':
+      return <CheckCircle2 {...iconProps} style={{ color: '#10b981' }} />;
+    case 'failed':
+    case 'exception':
+      return <AlertCircle {...iconProps} style={{ color: '#ef4444' }} />;
+    case 'in_route':
+      return <Loader {...iconProps} style={{ color: '#3b82f6' }} />;
+    default:
+      return <Package {...iconProps} style={{ color: '#6b7280' }} />;
+  }
+}
+
+export const ScannerLiveFeed = React.memo(function ScannerLiveFeed({ events }: Props) {
   const listRef = useRef<HTMLDivElement>(null);
   const newestId = events[0]?.id;
 
@@ -18,39 +43,13 @@ export function ScannerLiveFeed({ events }: Props) {
     listRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   }, [newestId]);
 
-  const getActionLabel = (action: string) => {
-    const labels: Record<string, string> = {
-      pending: 'Pendente',
-      in_route: 'Em Rota',
-      delivered: 'Entregue',
-      failed: 'Falha',
-      exception: 'Exceção',
-    };
-    return labels[action] || action;
-  };
-
-  const getActionIcon = (action: string) => {
-    const iconProps = { className: styles.actionIcon };
-    switch (action) {
-      case 'delivered':
-        return <CheckCircle2 {...iconProps} style={{ color: '#10b981' }} />;
-      case 'failed':
-      case 'exception':
-        return <AlertCircle {...iconProps} style={{ color: '#ef4444' }} />;
-      case 'in_route':
-        return <Loader {...iconProps} style={{ color: '#3b82f6' }} />;
-      default:
-        return <Package {...iconProps} style={{ color: '#6b7280' }} />;
-    }
-  };
-
   return (
     <div className={styles.feedContainer}>
       <div className={styles.feedHeader}>
-        <h3>Live Feed do Scanner — O "Ticker"</h3>
+        <h3>Scanner Feed</h3>
         <span className={styles.liveIndicator}>
           <span className={styles.liveDot}></span>
-          AO VIVO
+          LIVE
         </span>
       </div>
 
@@ -58,13 +57,17 @@ export function ScannerLiveFeed({ events }: Props) {
         {events.length === 0 ? (
           <div className={styles.emptyFeed}>
             <Package className={styles.emptyIcon} />
-            <p>Aguardando eventos do scanner...</p>
+            <p>Waiting for scanner events...</p>
           </div>
         ) : (
-          events.map(event => (
-            <div key={event.id} className={styles.feedItem}>
+          events.map((event, index) => (
+            <div
+              key={event.id}
+              className={styles.feedItem}
+              style={{ '--i': Math.min(index, 12) } as React.CSSProperties}
+            >
               <div className={styles.feedTime}>
-                {new Date(event.timestamp).toLocaleTimeString('pt-BR', {
+                {new Date(event.timestamp).toLocaleTimeString('en-GB', {
                   hour: '2-digit',
                   minute: '2-digit',
                   second: '2-digit',
@@ -78,7 +81,7 @@ export function ScannerLiveFeed({ events }: Props) {
 
                 <div className={styles.feedText}>
                   <div className={styles.feedMessage}>
-                    <strong>{event.delivererName}</strong> escaneou{' '}
+                    <strong>{event.delivererName}</strong> scanned{' '}
                     <span className={styles.packageId}>#{event.packageId}</span>{' '}
                     <span className={styles.action}>({getActionLabel(event.action)})</span>
                   </div>
@@ -95,9 +98,9 @@ export function ScannerLiveFeed({ events }: Props) {
 
       <div className={styles.feedFooter}>
         <p className={styles.footerText}>
-          {events.length} eventos • Atualizado em tempo real
+          {events.length} events • Updated in real time
         </p>
       </div>
     </div>
   );
-}
+});

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ChevronUp, ChevronDown, Battery, Package } from 'lucide-react';
 import { TeamMember } from '../../types';
 import styles from './TeamRoster.module.css';
@@ -10,7 +10,34 @@ interface Props {
 type SortField = 'name' | 'status' | 'totalDelivered' | 'batteryLevel' | 'avgTimePerStop';
 type SortOrder = 'asc' | 'desc';
 
-export function TeamRoster({ team }: Props) {
+const STATUS_COLORS: Record<string, string> = {
+  active: '#10b981',
+  break: '#f59e0b',
+  returning: '#3b82f6',
+  offline: '#6b7280',
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  active: 'On Route',
+  break: 'Break',
+  returning: 'Returning',
+  offline: 'Offline',
+};
+
+const getStatusColor = (status: string) => STATUS_COLORS[status] || '#6b7280';
+const getStatusLabel = (status: string) => STATUS_LABELS[status] || status;
+
+const getInitials = (name: string) =>
+  name
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(part => part[0]?.toUpperCase())
+    .join('');
+
+const getBatteryColor = (level: number) => (level > 50 ? '#10b981' : level > 20 ? '#f59e0b' : '#ef4444');
+
+export const TeamRoster = React.memo(function TeamRoster({ team }: Props) {
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
 
@@ -23,39 +50,21 @@ export function TeamRoster({ team }: Props) {
     }
   };
 
-  const sortedTeam = [...team].sort((a, b) => {
-    let aVal: any = a[sortField];
-    let bVal: any = b[sortField];
+  const sortedTeam = useMemo(() => {
+    return [...team].sort((a, b) => {
+      let aVal: any = a[sortField];
+      let bVal: any = b[sortField];
 
-    if (sortField === 'name') {
-      aVal = a.name.toLowerCase();
-      bVal = b.name.toLowerCase();
-    }
+      if (sortField === 'name') {
+        aVal = a.name.toLowerCase();
+        bVal = b.name.toLowerCase();
+      }
 
-    if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1;
-    if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
-    return 0;
-  });
-
-  const getStatusColor = (status: string) => {
-    const colors: Record<string, string> = {
-      active: '#10b981',
-      break: '#f59e0b',
-      returning: '#3b82f6',
-      offline: '#6b7280',
-    };
-    return colors[status] || '#6b7280';
-  };
-
-  const getStatusLabel = (status: string) => {
-    const labels: Record<string, string> = {
-      active: 'Em Rota',
-      break: 'Pausa',
-      returning: 'Retornando',
-      offline: 'Offline',
-    };
-    return labels[status] || status;
-  };
+      if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [team, sortField, sortOrder]);
 
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) return <div className={styles.sortIconPlaceholder} />;
@@ -65,8 +74,8 @@ export function TeamRoster({ team }: Props) {
   return (
     <div className={styles.rosterContainer}>
       <div className={styles.rosterHeader}>
-        <h3>Raio-X da Equipe — Status da Operação</h3>
-        <span className={styles.badge}>{team.length} ativos</span>
+        <h3>Team Status</h3>
+        <span className={styles.badge}>{team.length} active</span>
       </div>
 
       <div className={styles.tableWrapper}>
@@ -75,7 +84,7 @@ export function TeamRoster({ team }: Props) {
             <tr>
               <th className={styles.th}>
                 <button className={styles.sortButton} onClick={() => handleSort('name')}>
-                  Nome <SortIcon field="name" />
+                  Name <SortIcon field="name" />
                 </button>
               </th>
               <th className={styles.th}>
@@ -85,26 +94,38 @@ export function TeamRoster({ team }: Props) {
               </th>
               <th className={styles.th}>
                 <button className={styles.sortButton} onClick={() => handleSort('totalDelivered')}>
-                  Entregues <SortIcon field="totalDelivered" />
+                  Delivered <SortIcon field="totalDelivered" />
                 </button>
               </th>
               <th className={styles.th}>
                 <button className={styles.sortButton} onClick={() => handleSort('batteryLevel')}>
-                  <Battery className={styles.headerIcon} /> Bateria <SortIcon field="batteryLevel" />
+                  <Battery className={styles.headerIcon} /> Battery <SortIcon field="batteryLevel" />
                 </button>
               </th>
               <th className={styles.th}>
                 <button className={styles.sortButton} onClick={() => handleSort('avgTimePerStop')}>
-                  Tempo Med <SortIcon field="avgTimePerStop" />
+                  Avg Time <SortIcon field="avgTimePerStop" />
                 </button>
               </th>
             </tr>
           </thead>
           <tbody>
-            {sortedTeam.map(member => (
-              <tr key={member.id} className={styles.tr}>
+            {sortedTeam.map((member, index) => (
+              <tr
+                key={member.id}
+                className={styles.tr}
+                style={{ '--i': Math.min(index, 10) } as React.CSSProperties}
+              >
                 <td className={styles.td}>
-                  <span className={styles.name}>{member.name}</span>
+                  <div className={styles.nameCell}>
+                    <span
+                      className={styles.avatar}
+                      style={{ boxShadow: `0 0 0 2px ${getStatusColor(member.status)}` }}
+                    >
+                      {getInitials(member.name)}
+                    </span>
+                    <span className={styles.name}>{member.name}</span>
+                  </div>
                 </td>
                 <td className={styles.td}>
                   <div className={styles.statusBadge}>
@@ -130,12 +151,7 @@ export function TeamRoster({ team }: Props) {
                         className={styles.batteryFill}
                         style={{
                           width: `${member.batteryLevel}%`,
-                          backgroundColor:
-                            member.batteryLevel > 50
-                              ? '#10b981'
-                              : member.batteryLevel > 20
-                                ? '#f59e0b'
-                                : '#ef4444',
+                          backgroundColor: getBatteryColor(member.batteryLevel),
                         }}
                       ></div>
                     </div>
@@ -153,9 +169,9 @@ export function TeamRoster({ team }: Props) {
 
       <div className={styles.rosterFooter}>
         <p className={styles.footerNote}>
-          💡 Dica: Você pode arrastar entregas entre entregadores para reatribuir cargas (em breve)
+          💡 Tip: You'll be able to drag deliveries between couriers to reassign loads (coming soon)
         </p>
       </div>
     </div>
   );
-}
+});
