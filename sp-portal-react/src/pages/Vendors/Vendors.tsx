@@ -1,4 +1,4 @@
-import { useMemo, useState, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 import { useCurrentSp } from '../../hooks/useCurrentSp';
 import { useModalBehavior } from '../../hooks/useModalBehavior';
@@ -15,6 +15,7 @@ import {
   getSingleTrainingStatus,
   getDocumentItemStatus,
   getDocumentsStatus,
+  isVendorExpiring,
   isVendorPending,
   vendorTypeLabel,
   statusBadgeClass,
@@ -95,6 +96,87 @@ function stepPaneId(step: Step): string {
   return 'vendorStep' + step.charAt(0).toUpperCase() + step.slice(1);
 }
 
+const SORT_LABEL: Record<SortKey, string> = {
+  name: 'name',
+  vendorType: 'type',
+  route: 'route',
+  status: 'status',
+  startDate: 'start date',
+};
+
+const STEP_LABEL: Record<Step, string> = {
+  personal: 'Personal',
+  employment: 'Contract',
+  training: 'Training',
+  compliance: 'Compliance',
+};
+
+/**
+ * Espectro de conformidade.
+ *
+ * A página tinha seis nomes de estado (`active`, `verified`, `warning`,
+ * `expiring`, `pending`, `incomplete`) e cada um trazia a sua própria cor
+ * saturada, o que dava uma tabela onde tudo gritava ao mesmo tempo. Colapsam
+ * em quatro tons, e a saturação passa a significar urgência:
+ *
+ *   clear  — em dia          watch — expira em breve
+ *   breach — expirado        idle  — em falta / não aplicável
+ */
+type Tone = 'clear' | 'watch' | 'breach' | 'idle';
+
+const TONE_RANK: Record<Tone, number> = { breach: 3, watch: 2, idle: 1, clear: 0 };
+
+const TONE_BY_STATUS: Record<string, Tone> = {
+  // Classes devolvidas por getTrainingStatus / getDocumentsStatus / statusBadgeClass.
+  'status-badge-active': 'clear',
+  'status-badge-warning': 'watch',
+  'status-badge-expiring': 'breach',
+  'status-badge-pending': 'idle',
+  'status-badge-incomplete': 'idle',
+  'status-badge-inactive': 'idle',
+  'status-badge-default': 'idle',
+  // Estados por item, usados nas modais de detalhe.
+  active: 'clear',
+  verified: 'clear',
+  warning: 'watch',
+  expiring: 'breach',
+  pending: 'idle',
+};
+
+function tone(status: string | null | undefined): Tone {
+  return (status && TONE_BY_STATUS[status]) || 'idle';
+}
+
+function worstTone(tones: Tone[]): Tone {
+  return tones.reduce((a, b) => (TONE_RANK[b] > TONE_RANK[a] ? b : a), 'clear' as Tone);
+}
+
+function effectiveStatus(v: Vendor): string {
+  if (v.status) return v.status;
+  return !v.finishDate || new Date(v.finishDate) > new Date() ? 'Active' : 'Inactive';
+}
+
+/** Tom da guia lateral da linha: o pior entre formação e documentos. */
+function vendorTone(v: Vendor): Tone {
+  if (effectiveStatus(v) !== 'Active') return 'idle';
+  return worstTone([tone(getTrainingStatus(v).className), tone(getDocumentsStatus(v).className)]);
+}
+
+/** Um vendor "precisa de atenção" quando não pode rodar, ou está prestes a não poder. */
+function needsAttention(v: Vendor): boolean {
+  return effectiveStatus(v) === 'Active' && (isVendorExpiring(v) || isVendorPending(v));
+}
+
+function initials(v: Vendor): string {
+  const a = (v.firstName || '').trim()[0] || '';
+  const b = (v.lastName || '').trim()[0] || '';
+  return (a + b).toUpperCase() || '··';
+}
+
+function fullName(v: Vendor): string {
+  return `${v.firstName || ''} ${v.lastName || ''}`.trim();
+}
+
 /**
  * Corpo do ecrã de Vendors, sem moldura de página.
  *
@@ -121,6 +203,28 @@ export function VendorsContent() {
   const [infoModal, setInfoModal] = useState<{ vendorId: number; type: 'training' | 'documents' } | null>(null);
   const [driverDetailId, setDriverDetailId] = useState<number | null>(null);
 
+  // O menu de exportação era um dropdown do Bootstrap (`data-bs-toggle`), mas
+  // este SPA só carrega o CSS do Bootstrap — nunca o JS (ver index.html). O
+  // botão Export não abria nada; agora o menu é estado de React.
+  const [exportOpen, setExportOpen] = useState(false);
+  const exportRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!exportOpen) return;
+    function onPointerDown(e: MouseEvent) {
+      if (!exportRef.current?.contains(e.target as Node)) setExportOpen(false);
+    }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') setExportOpen(false);
+    }
+    document.addEventListener('mousedown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [exportOpen]);
+
   useModalBehavior(() => setShowVendorModal(false), showVendorModal);
   useModalBehavior(() => setDeleteVendorId(null), deleteVendorId !== null);
   useModalBehavior(() => setInfoModal(null), infoModal !== null);
@@ -135,18 +239,35 @@ export function VendorsContent() {
     [roster, sp],
   );
 
+  // Duas listas, de propósito. `searched` respeita só a pesquisa e alimenta as
+  // contagens das facetas; `filtered` acrescenta o filtro de estado e alimenta
+  // a tabela. Antes havia só a segunda, e as métricas saíam dela — ou seja,
+  // filtrar por "Active" fazia o contador Total passar a mostrar os activos.
+  // Contar sobre a pesquisa é o comportamento normal de uma busca facetada:
+  // cada faceta diz quantos resultados dá, antes de lá ir.
+  const searched = useMemo(
+    () => filterAndSortVendors(allVendors, search, 'all', sortKey, sortDir),
+    [allVendors, search, sortKey, sortDir],
+  );
+
   const filtered = useMemo(
     () => filterAndSortVendors(allVendors, search, statusFilter, sortKey, sortDir),
     [allVendors, search, statusFilter, sortKey, sortDir],
   );
 
-  // updateMetrics() in the original also derives its counts from the
-  // currently filtered/searched list, not the full roster.
-  const today = new Date();
-  const metricTotal = filtered.length;
-  const metricActive = filtered.filter((v) => (v.status ? v.status === 'Active' : !v.finishDate || new Date(v.finishDate) > today)).length;
-  const metricInactive = filtered.filter((v) => (v.status ? v.status === 'Inactive' : !!v.finishDate && new Date(v.finishDate) <= today)).length;
-  const metricPending = filtered.filter(isVendorPending).length;
+  const facets = useMemo(() => {
+    const count = (f: StatusFilter) => filterAndSortVendors(allVendors, search, f, sortKey, sortDir).length;
+    return [
+      // "Roster" é o total, não um estado — por isso não leva ponto de cor.
+      { id: 'all' as StatusFilter, label: 'Roster', value: searched.length, tone: null },
+      { id: 'active' as StatusFilter, label: 'Active', value: count('active'), tone: 'clear' as Tone },
+      { id: 'expiring' as StatusFilter, label: 'Expiring', value: count('expiring'), tone: 'breach' as Tone },
+      { id: 'pending' as StatusFilter, label: 'Pending', value: count('pending'), tone: 'watch' as Tone },
+      { id: 'inactive' as StatusFilter, label: 'Inactive', value: count('inactive'), tone: 'idle' as Tone },
+    ] as { id: StatusFilter; label: string; value: number; tone: Tone | null }[];
+  }, [allVendors, search, sortKey, sortDir, searched.length]);
+
+  const attention = useMemo(() => searched.filter(needsAttention).length, [searched]);
 
   const depots = useMemo(() => getDepotsForSp(sp), [sp]);
   const routes = useMemo(() => getRoutesForSp(sp), [sp]);
@@ -273,227 +394,311 @@ export function VendorsContent() {
   const infoVendor = infoModal ? findVendor(infoModal.vendorId) : null;
   const driverDetailVendor = driverDetailId !== null ? findVendor(driverDetailId) : null;
 
+  const isFiltered = statusFilter !== 'all' || search.trim() !== '';
+
   return (
     <div className="vendor-admin-main sp-vendor-main">
-      <div id="spVendorContent">
-        {/* ============ PAGE INFO ============ */}
-        <div className="vendor-page-header mb-4">
-          <div className="vendor-page-header-inner">
-            <div className="vendor-page-header-row">
-              <div className="vendor-page-header-title-block">
-                <p className="vendor-page-subtitle">Vendor management and information</p>
-                <div className="vendor-page-metrics">
-                  <div className="vendor-page-metric">
-                    <span className="vendor-page-metric-label">Total</span>
-                    <span className="vendor-page-metric-value" id="metricTotal">{metricTotal}</span>
-                  </div>
-                  <div className="vendor-page-metric">
-                    <span className="vendor-page-metric-label">Active</span>
-                    <span className="vendor-page-metric-value" id="metricActive">{metricActive}</span>
-                  </div>
-                  <div className="vendor-page-metric">
-                    <span className="vendor-page-metric-label">Inactive</span>
-                    <span className="vendor-page-metric-value" id="metricInactive">{metricInactive}</span>
-                  </div>
-                  <div className="vendor-page-metric">
-                    <span className="vendor-page-metric-label">Pending</span>
-                    <span className="vendor-page-metric-value" id="metricPending">{metricPending}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+      <div id="spVendorContent" className="vx-console">
+        {/* ============ Masthead: o que é o roster, e o que fazer com ele ============ */}
+        <div className="vx-masthead">
+          <div className="vx-masthead-id">
+            <span className="vx-eyebrow">Roster</span>
+            <p className="vx-summary">
+              {searched.length === 0 ? (
+                // "0 vendors · all documents current" seria verdade e inútil.
+                'No vendors match this search'
+              ) : (
+                <>
+                  <strong>{searched.length}</strong> {searched.length === 1 ? 'vendor' : 'vendors'}
+                  {' · '}
+                  {attention > 0 ? (
+                    <span className="vx-summary-alarm">
+                      {attention} {attention === 1 ? 'needs' : 'need'} attention
+                    </span>
+                  ) : (
+                    <span className="vx-summary-clear">all documents current</span>
+                  )}
+                </>
+              )}
+            </p>
           </div>
-        </div>
 
-        {/* VendorFilters */}
-        <div className="vendor-filters-bar mb-4">
-          <div className="vendor-filters-inner">
-            <div className="vendor-filters-search-wrap">
-              <input
-                type="search"
-                id="vendorSearch"
-                className="vendor-filters-search"
-                placeholder="Search by name or email..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-            <div className="vendor-filters-status-wrap">
-              <strong className="vendor-filters-status-label">Status:</strong>
-              <div className="vendor-filters-status-group" role="group">
-                {(['all', 'active', 'inactive', 'expiring', 'pending'] as StatusFilter[]).map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    className={`vendor-filters-status-btn${statusFilter === s ? ' active' : ''}`}
-                    onClick={() => setStatusFilter(s)}
-                  >
-                    {s.charAt(0).toUpperCase() + s.slice(1)}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="vendor-filters-actions">
-              <button type="button" className="btn btn-primary vendor-filters-new" id="addVendorBtn" onClick={openAddModal}>
-                New
+          <div className="vx-search">
+            <i className="bi bi-search vx-search-icon" aria-hidden="true" />
+            <input
+              type="search"
+              id="vendorSearch"
+              className="vx-search-input"
+              placeholder="Search name or email"
+              aria-label="Search vendors by name or email"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+
+          <div className="vx-actions-group">
+            <button type="button" className="vx-btn vx-btn-primary" id="addVendorBtn" onClick={openAddModal}>
+              <i className="bi bi-plus-lg" aria-hidden="true" />
+              Add vendor
+            </button>
+            <div className="dropdown" ref={exportRef}>
+              <button
+                type="button"
+                className="vx-btn vx-btn-ghost"
+                id="vendorExportBtn"
+                aria-expanded={exportOpen}
+                aria-haspopup="menu"
+                onClick={() => setExportOpen((o) => !o)}
+              >
+                <i className="bi bi-download" aria-hidden="true" />
+                Export
               </button>
-              <div className="dropdown">
-                <button
-                  type="button"
-                  className="btn btn-outline-secondary vendor-filters-export"
-                  id="vendorExportBtn"
-                  data-bs-toggle="dropdown"
-                  aria-expanded="false"
-                >
-                  Export
-                </button>
-                <ul className="dropdown-menu dropdown-menu-end">
-                  <li>
-                    <a
-                      className="dropdown-item"
-                      href="#"
-                      id="vendorExportPdf"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        window.print();
-                      }}
-                    >
-                      PDF
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      className="dropdown-item"
-                      href="#"
-                      id="vendorExportExcel"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        exportExcel();
-                      }}
-                    >
-                      Excel
-                    </a>
-                  </li>
-                </ul>
-              </div>
+              <ul className={`dropdown-menu dropdown-menu-end${exportOpen ? ' show' : ''}`} role="menu">
+                <li>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="dropdown-item"
+                    id="vendorExportPdf"
+                    onClick={() => {
+                      setExportOpen(false);
+                      window.print();
+                    }}
+                  >
+                    Print to PDF
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="dropdown-item"
+                    id="vendorExportExcel"
+                    onClick={() => {
+                      setExportOpen(false);
+                      exportExcel();
+                    }}
+                  >
+                    Download CSV
+                  </button>
+                </li>
+              </ul>
             </div>
           </div>
         </div>
 
-        {/* VendorTable */}
-        <div className="vendor-table-wrap">
-          <table className="vendor-table">
+        {/* ============ Facetas: cada métrica é o filtro que a produz ============ */}
+        <div className="vx-facets" role="group" aria-label="Filter roster by status">
+          {facets.map((f) => (
+            <button
+              key={f.id}
+              type="button"
+              aria-pressed={statusFilter === f.id}
+              className={`vx-facet${f.tone ? ` vx-tone-${f.tone}` : ''}${statusFilter === f.id ? ' is-on' : ''}`}
+              onClick={() => setStatusFilter(f.id)}
+            >
+              <span className="vx-facet-head">
+                {f.tone && <span className="vx-facet-dot" aria-hidden="true" />}
+                <span className="vx-facet-label">{f.label}</span>
+              </span>
+              <span className={`vx-facet-value${f.value === 0 ? ' is-zero' : ''}`}>{f.value}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* ============ Tabela ============ */}
+        <div className="vx-table-wrap">
+          {/* Sem linhas, um cabeçalho de colunas sozinho é só ruído — o estado
+              vazio substitui a tabela inteira, não apenas o seu corpo. */}
+          {filtered.length > 0 && (
+          <table className="vx-table">
             <thead>
               <tr>
                 {([
-                  ['name', 'Name', 'vendor-th-left'],
-                  ['vendorType', 'Vendor Type', ''],
-                  ['route', 'Route', ''],
-                  ['status', 'Status', ''],
-                  ['startDate', 'Start Date', ''],
-                ] as [SortKey, string, string][]).map(([key, label, extra]) => (
+                  ['name', 'Name'],
+                  ['vendorType', 'Type'],
+                  ['route', 'Route'],
+                  ['status', 'Status'],
+                  ['startDate', 'Started'],
+                ] as [SortKey, string][]).map(([key, label]) => (
                   <th
                     key={key}
-                    className={`vendor-th vendor-th-sort${extra ? ` ${extra}` : ''}${sortKey === key ? (sortDir === 1 ? ' asc' : ' desc') : ''}`}
+                    scope="col"
+                    className={`vx-th vx-th-sort${key === 'name' ? ' vx-th-name' : ''}${
+                      sortKey === key ? (sortDir === 1 ? ' is-asc' : ' is-desc') : ''
+                    }`}
+                    aria-sort={sortKey === key ? (sortDir === 1 ? 'ascending' : 'descending') : 'none'}
+                    tabIndex={0}
                     onClick={() => handleSort(key)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleSort(key);
+                      }
+                    }}
                   >
                     {label}
                   </th>
                 ))}
-                <th className="vendor-th vendor-th-sort">Training</th>
-                <th className="vendor-th vendor-th-sort">Documents</th>
-                <th className="vendor-th vendor-th-actions">Actions</th>
+                <th scope="col" className="vx-th">Training</th>
+                <th scope="col" className="vx-th">Documents</th>
+                <th scope="col" className="vx-th vx-th-end">
+                  <span className="visually-hidden">Actions</span>
+                </th>
               </tr>
             </thead>
             <tbody id="vendorTableBody">
               {filtered.map((v) => {
-                const name = `${v.firstName || ''} ${v.lastName || ''}`;
+                const name = fullName(v);
                 const t = getTrainingStatus(v);
                 const d = getDocumentsStatus(v);
                 const isLocal = isLocalVendor(v.id);
-                const status = v.status || (!v.finishDate || new Date(v.finishDate) > new Date() ? 'Active' : 'Inactive');
+                const status = effectiveStatus(v);
                 return (
                   <tr
                     key={v.id}
                     data-vendor-id={v.id}
-                    style={{ cursor: 'pointer' }}
+                    className={`vx-row vx-tone-${vendorTone(v)}`}
                     role="button"
                     tabIndex={0}
+                    aria-label={`Open ${name || 'vendor'} details`}
                     onClick={() => setDriverDetailId(v.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setDriverDetailId(v.id);
+                      }
+                    }}
                   >
-                    <td className="vendor-td-name">
-                      <span className="vendor-cell-name-strong">{name.trim() || '—'}</span>
-                      <span className="vendor-cell-email">{v.email || ''}</span>
+                    <td className="vx-td-name">
+                      <span className="vx-identity">
+                        <span className="vx-monogram" aria-hidden="true">{initials(v)}</span>
+                        <span className="vx-identity-text">
+                          <span className="vx-name">{name || '—'}</span>
+                          {v.email && <span className="vx-email">{v.email}</span>}
+                        </span>
+                      </span>
                     </td>
                     <td>{vendorTypeLabel(v)}</td>
-                    <td>{v.route || '—'}</td>
+                    <td>{v.route ? <span className="vx-route">{v.route}</span> : <span className="vx-none">—</span>}</td>
                     <td>
-                      <span className={`status-badge ${statusBadgeClass(v)}`}>{status}</span>
+                      <span className={`vx-state vx-tone-${tone(statusBadgeClass(v))}`}>
+                        <span className="vx-state-dot" aria-hidden="true" />
+                        {status}
+                      </span>
                     </td>
-                    <td>{formatDateOnly(v.startDate) || '—'}</td>
+                    <td>
+                      {formatDateOnly(v.startDate) ? (
+                        <span className="vx-date">{formatDateOnly(v.startDate)}</span>
+                      ) : (
+                        <span className="vx-none">—</span>
+                      )}
+                    </td>
                     <td>
                       <button
                         type="button"
-                        className={`vendor-badge-btn status-badge ${t.className}`}
+                        className={`vx-chip vx-tone-${tone(t.className)}`}
+                        aria-label={`Training for ${name}: ${t.label}. Open details`}
                         onClick={(e) => {
                           e.stopPropagation();
                           setInfoModal({ vendorId: v.id, type: 'training' });
                         }}
                       >
+                        <span className="vx-chip-dot" aria-hidden="true" />
                         {t.label}
                       </button>
                     </td>
                     <td>
                       <button
                         type="button"
-                        className={`vendor-badge-btn status-badge ${d.className}`}
+                        className={`vx-chip vx-tone-${tone(d.className)}`}
+                        aria-label={`Documents for ${name}: ${d.label}. Open details`}
                         onClick={(e) => {
                           e.stopPropagation();
                           setInfoModal({ vendorId: v.id, type: 'documents' });
                         }}
                       >
+                        <span className="vx-chip-dot" aria-hidden="true" />
                         {d.label}
                       </button>
                     </td>
-                    <td>
-                      <div className="d-flex justify-content-center gap-1">
+                    <td className="vx-td-actions">
+                      <span className="vx-row-actions">
                         <button
                           type="button"
-                          className="vendor-action-btn"
-                          aria-label="Edit vendor"
+                          className="vx-icon-btn"
+                          aria-label={`Edit ${name}`}
                           onClick={(e) => {
                             e.stopPropagation();
                             openEditModal(v.id);
                           }}
                         >
-                          <i className="bi bi-pencil-fill" />
+                          <i className="bi bi-pencil" aria-hidden="true" />
                         </button>
                         {isLocal && (
                           <button
                             type="button"
-                            className="vendor-action-btn vendor-action-delete"
-                            aria-label="Delete vendor"
+                            className="vx-icon-btn vx-icon-btn-danger"
+                            aria-label={`Delete ${name}`}
                             onClick={(e) => {
                               e.stopPropagation();
                               setDeleteVendorId(v.id);
                             }}
                           >
-                            <i className="bi bi-trash-fill" />
+                            <i className="bi bi-trash" aria-hidden="true" />
                           </button>
                         )}
-                      </div>
+                      </span>
                     </td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
+          )}
+
           {filtered.length === 0 && (
-            <div id="vendorEmptyState" className="vendor-table-empty">
-              No vendors match the current filters.
+            <div id="vendorEmptyState" className="vx-empty">
+              <span className="vx-empty-mark" aria-hidden="true">
+                <i className={`bi ${isFiltered ? 'bi-funnel' : 'bi-people'}`} />
+              </span>
+              <h3 className="vx-empty-title">{isFiltered ? 'Nothing matches these filters' : 'The roster is empty'}</h3>
+              <p className="vx-empty-text">
+                {isFiltered
+                  ? 'Widen the status filter or clear the search to see the rest of the roster.'
+                  : 'Add your first driver or subcontractor to start tracking training and documents.'}
+              </p>
+              {isFiltered ? (
+                <button
+                  type="button"
+                  className="vx-btn vx-btn-ghost"
+                  onClick={() => {
+                    setSearch('');
+                    setStatusFilter('all');
+                  }}
+                >
+                  Clear filters
+                </button>
+              ) : (
+                <button type="button" className="vx-btn vx-btn-primary" onClick={openAddModal}>
+                  <i className="bi bi-plus-lg" aria-hidden="true" />
+                  Add vendor
+                </button>
+              )}
             </div>
           )}
         </div>
+
+        {filtered.length > 0 && (
+          <div className="vx-footer">
+            <span className="vx-footer-count">
+              Showing <strong>{filtered.length}</strong> of <strong>{searched.length}</strong>
+            </span>
+            <span>
+              Sorted by <strong>{SORT_LABEL[sortKey]}</strong>, {sortDir === 1 ? 'ascending' : 'descending'}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* ===================== VendorModal (4-step) ===================== */}
@@ -502,52 +707,55 @@ export function VendorsContent() {
           <>
             <div className="modal-backdrop fade show sp-modal-backdrop-anim" onClick={() => setShowVendorModal(false)} />
             <div
-              className="modal fade show vendor-modal-liquid-glass sp-modal-anim"
+              className="modal fade show vx-scope sp-modal-anim"
               style={{ display: 'block' }}
               tabIndex={-1}
               role="dialog"
               aria-modal="true"
               aria-labelledby="vendorModalTitle"
             >
-              <div className="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
-                <div className="modal-content vendor-modal-content-lg">
-                  <div className="modal-header vendor-modal-header-lg border-0 pb-0">
-                    <h2 id="vendorModalTitle" className="modal-title">
-                      {editingVendorId !== null ? 'Edit vendor' : 'New vendor'}
-                    </h2>
+              {/* modal-lg, não modal-xl: são dois campos por linha, e a 1190px
+                  cada input ficava com meio ecrã de largura. */}
+              <div className="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+                <div className="modal-content vx-modal-content">
+                  <div className="vx-modal-header">
+                    <div className="vx-modal-header-id">
+                      <span className="vx-modal-eyebrow">{editingVendorId !== null ? 'Edit record' : 'New record'}</span>
+                      <h2 id="vendorModalTitle" className="vx-modal-title">
+                        {editingVendorId !== null ? fullName(findVendor(editingVendorId) || ({} as Vendor)) || 'Vendor' : 'Add a vendor'}
+                      </h2>
+                    </div>
                     <button
                       type="button"
-                      className="btn-close vendor-modal-close-lg"
+                      className="vx-modal-close"
                       aria-label="Close"
                       onClick={() => setShowVendorModal(false)}
-                    />
+                    >
+                      <i className="bi bi-x-lg" aria-hidden="true" />
+                    </button>
                   </div>
-                  <div className="modal-body vendor-modal-body-lg pt-0">
-                    <div className="vendor-modal-stepper vendor-modal-stepper-lg" id="vendorModalStepper">
-                      {STEPS.map((step) => (
+                  <div className="modal-body vx-modal-body">
+                    {/* Os quatro passos são uma sequência real, por isso vão numerados. */}
+                    <div className="vx-stepper" id="vendorModalStepper">
+                      {STEPS.map((step, i) => (
                         <button
                           key={step}
                           type="button"
-                          className={`vendor-modal-step${modalStep === step ? ' active' : ''}`}
+                          aria-current={modalStep === step ? 'step' : undefined}
+                          className={`vx-step${modalStep === step ? ' is-on' : ''}${
+                            STEPS.indexOf(modalStep) > i ? ' is-done' : ''
+                          }`}
                           onClick={() => setModalStep(step)}
                         >
-                          <i
-                            className={`bi ${
-                              step === 'personal'
-                                ? 'bi-person'
-                                : step === 'employment'
-                                  ? 'bi-briefcase'
-                                  : step === 'training'
-                                    ? 'bi-book'
-                                    : 'bi-shield-check'
-                            }`}
-                          />{' '}
-                          {step === 'personal' ? 'Personal' : step === 'employment' ? 'Contract' : step === 'training' ? 'Training' : 'Compliance'}
+                          <span className="vx-step-num" aria-hidden="true">
+                            {STEPS.indexOf(modalStep) > i ? <i className="bi bi-check-lg" /> : i + 1}
+                          </span>
+                          {STEP_LABEL[step]}
                         </button>
                       ))}
                     </div>
-                    <form id="vendorForm" className="vendor-form-lg" onSubmit={handleSubmit}>
-                      <div id={stepPaneId('personal')} className={`vendor-modal-pane vendor-modal-pane-lg${modalStep !== 'personal' ? ' hidden' : ''}`}>
+                    <form id="vendorForm" className="vx-form" onSubmit={handleSubmit}>
+                      <div id={stepPaneId('personal')} className={`vx-pane${modalStep !== 'personal' ? ' hidden' : ''}`}>
                         <div className="row g-3">
                           <div className="col-md-6">
                             <label htmlFor="vFirstName" className="form-label">First name</label>
@@ -559,7 +767,7 @@ export function VendorsContent() {
                           </div>
                           <div className="col-md-6">
                             <label htmlFor="vCourierId" className="form-label">Courier ID</label>
-                            <input type="text" id="vCourierId" className="form-control" readOnly maxLength={8} placeholder="Auto (first 7 of name + initials of surname)" value={form.courierId} />
+                            <input type="text" id="vCourierId" className="form-control" readOnly maxLength={8} placeholder="Generated from the name" value={form.courierId} />
                           </div>
                           <div className="col-md-6">
                             <label htmlFor="vEmail" className="form-label">Email</label>
@@ -575,7 +783,7 @@ export function VendorsContent() {
                           </div>
                         </div>
                       </div>
-                      <div id={stepPaneId('employment')} className={`vendor-modal-pane vendor-modal-pane-lg${modalStep !== 'employment' ? ' hidden' : ''}`}>
+                      <div id={stepPaneId('employment')} className={`vx-pane${modalStep !== 'employment' ? ' hidden' : ''}`}>
                         <div className="row g-3">
                           <div className="col-md-6">
                             <label htmlFor="vDepot" className="form-label">Depot</label>
@@ -612,7 +820,7 @@ export function VendorsContent() {
                           </div>
                         </div>
                       </div>
-                      <div id={stepPaneId('training')} className={`vendor-modal-pane vendor-modal-pane-lg${modalStep !== 'training' ? ' hidden' : ''}`}>
+                      <div id={stepPaneId('training')} className={`vx-pane${modalStep !== 'training' ? ' hidden' : ''}`}>
                         <div className="row g-3">
                           <div className="col-md-6">
                             <label htmlFor="vCargoDate" className="form-label">Cargo training date</label>
@@ -632,7 +840,7 @@ export function VendorsContent() {
                           </div>
                         </div>
                       </div>
-                      <div id={stepPaneId('compliance')} className={`vendor-modal-pane vendor-modal-pane-lg${modalStep !== 'compliance' ? ' hidden' : ''}`}>
+                      <div id={stepPaneId('compliance')} className={`vx-pane${modalStep !== 'compliance' ? ' hidden' : ''}`}>
                         <div className="row g-3">
                           <div className="col-md-6">
                             <label htmlFor="vCriminalRecordDate" className="form-label">Criminal record check date</label>
@@ -660,26 +868,29 @@ export function VendorsContent() {
                           </div>
                         </div>
                       </div>
-                      <div className="vendor-modal-footer vendor-modal-footer-lg mt-3 pt-3 border-top">
+                      <div className="vx-modal-footer">
                         <button
                           type="button"
-                          className={`btn btn-outline-secondary vendor-modal-btn-lg${STEPS.indexOf(modalStep) <= 0 ? ' hidden' : ''}`}
+                          className={`vx-btn vx-btn-ghost${STEPS.indexOf(modalStep) <= 0 ? ' hidden' : ''}`}
                           onClick={() => setModalStep(STEPS[Math.max(0, STEPS.indexOf(modalStep) - 1)])}
                         >
-                          Previous
+                          <i className="bi bi-arrow-left" aria-hidden="true" />
+                          Back
                         </button>
+                        <span className="vx-modal-footer-spacer" />
                         <button
                           type="button"
-                          className={`btn btn-outline-primary vendor-modal-btn-lg${STEPS.indexOf(modalStep) >= STEPS.length - 1 ? ' hidden' : ''}`}
+                          className={`vx-btn vx-btn-ghost${STEPS.indexOf(modalStep) >= STEPS.length - 1 ? ' hidden' : ''}`}
                           onClick={() => setModalStep(STEPS[Math.min(STEPS.length - 1, STEPS.indexOf(modalStep) + 1)])}
                         >
                           Next
+                          <i className="bi bi-arrow-right" aria-hidden="true" />
                         </button>
                         <button
                           type="submit"
-                          className={`btn btn-primary vendor-modal-btn-primary-lg${STEPS.indexOf(modalStep) < STEPS.length - 1 ? ' hidden' : ''}`}
+                          className={`vx-btn vx-btn-primary${STEPS.indexOf(modalStep) < STEPS.length - 1 ? ' hidden' : ''}`}
                         >
-                          Save
+                          {editingVendorId !== null ? 'Save changes' : 'Add vendor'}
                         </button>
                       </div>
                     </form>
@@ -742,89 +953,63 @@ export function VendorsContent() {
         createPortal(
           <>
             <div className="modal-backdrop fade show sp-modal-backdrop-anim" onClick={() => setInfoModal(null)} />
-            <div className="modal fade show sp-modal-anim" style={{ display: 'block' }} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="infoModalTitle">
+            <div className="modal fade show vx-scope sp-modal-anim" style={{ display: 'block' }} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="infoModalTitle">
               <div className="modal-dialog modal-dialog-centered">
-                <div className="modal-content">
-                  <div className="modal-header border-bottom flex-wrap">
-                    <div>
-                      <p className="vendor-info-modal-driver-label mb-1">Driver</p>
-                      <h5 className="vendor-info-modal-name mb-0" id="infoModalTitle">{`${infoVendor.firstName || ''} ${infoVendor.lastName || ''}`}</h5>
-                      <p className="vendor-info-modal-email small text-muted mb-0">{infoVendor.email || ''}</p>
+                <div className="modal-content vx-modal-content">
+                  <div className="vx-modal-header">
+                    <span className="vx-monogram" aria-hidden="true">{initials(infoVendor)}</span>
+                    <div className="vx-modal-header-id">
+                      <span className="vx-modal-eyebrow">{infoModal.type === 'training' ? 'Training' : 'Documents'}</span>
+                      <h2 className="vx-modal-title" id="infoModalTitle">{fullName(infoVendor) || '—'}</h2>
                     </div>
-                    <div className="d-flex align-items-start gap-2">
-                      <span className="vendor-info-modal-badge">{infoModal.type === 'training' ? 'Training Details' : 'Documents Details'}</span>
-                      <button type="button" className="btn-close" aria-label="Close" onClick={() => setInfoModal(null)} />
-                    </div>
+                    <button type="button" className="vx-modal-close" aria-label="Close" onClick={() => setInfoModal(null)}>
+                      <i className="bi bi-x-lg" aria-hidden="true" />
+                    </button>
                   </div>
-                  <div className="modal-body p-4">
-                    {infoModal.type === 'training' ? (
-                      (() => {
-                        const v = infoVendor;
-                        const cargoStatus = getSingleTrainingStatus(v.cargoTrainingDate);
-                        let cargoExpiry: string | null = null;
-                        if (v.cargoTrainingDate) {
-                          const d0 = parseYMD(v.cargoTrainingDate);
-                          if (d0) {
-                            const d = new Date(d0);
-                            d.setFullYear(d.getFullYear() + 2);
-                            cargoExpiry = formatDateOnly(d.toISOString().slice(0, 10));
-                          }
-                        }
-                        const items = [
-                          { label: 'Cargo Training', value: v.cargoTrainingDate ? formatDateOnly(v.cargoTrainingDate)! : 'Pending', detail: cargoExpiry ? `Expires: ${cargoExpiry}` : null, status: cargoStatus },
-                          { label: 'Dangerous Goods Training', value: v.dangerousGoodsTrainingDate ? formatDateOnly(v.dangerousGoodsTrainingDate)! : 'Pending', detail: null, status: getSingleTrainingStatus(v.dangerousGoodsTrainingDate) },
-                          { label: 'Manual Handling Training', value: v.manualHandlingTrainingDate ? formatDateOnly(v.manualHandlingTrainingDate)! : 'Pending', detail: null, status: getSingleTrainingStatus(v.manualHandlingTrainingDate) },
-                          { label: 'DHL Training Number', value: v.dhlTrainingNumber || 'N/A', detail: null, status: null as string | null },
-                        ];
-                        return items.map((item) => {
-                          const title = item.status === 'active' ? 'Complete' : item.status === 'warning' ? 'Expiring Soon' : item.status === 'expiring' ? 'Expired' : 'Pending';
-                          return (
-                            <div className="vendor-info-modal-item vendor-info-modal-item--has-flag" key={item.label}>
-                              <div className="vendor-info-modal-item-label-wrap">
-                                {item.status && <span className={`vendor-info-modal-flag vendor-info-modal-flag--${item.status}`} title={title} />}
-                                <div className="vendor-info-modal-item-head">
-                                  <span className="vendor-info-modal-item-label">{item.label}</span>
-                                  {item.detail && <span className="vendor-info-modal-item-detail">{item.detail}</span>}
-                                </div>
-                              </div>
-                              <div>
-                                {item.status ? (
-                                  <span className={`status-badge status-badge-${item.status}`}>{item.value}</span>
-                                ) : (
-                                  <span className="vendor-info-modal-item-value">{item.value}</span>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        });
-                      })()
-                    ) : (
-                      (() => {
-                        const v = infoVendor;
-                        const docItems = [
-                          { label: 'Criminal Record Check', value: v.criminalRecordDate ? formatDateOnly(v.criminalRecordDate)! : 'Pending', status: getDocumentItemStatus('criminalRecord', v) },
-                          { label: 'DVLA Check', value: v.dvlaCheckDate ? formatDateOnly(v.dvlaCheckDate)! : 'Pending', status: getDocumentItemStatus('dvlaCheck', v) },
-                          { label: 'Visa Validity', value: v.visaValidity ? formatDateOnly(v.visaValidity)! : 'N/A', status: getDocumentItemStatus('visa', v) },
-                          { label: 'Driving Licence Expiry', value: v.licenceExpiringDate ? formatDateOnly(v.licenceExpiringDate)! : 'N/A', status: getDocumentItemStatus('licence', v) },
-                          { label: 'Passport Expiry', value: v.passportExpiringDate ? formatDateOnly(v.passportExpiringDate)! : 'N/A', status: getDocumentItemStatus('passport', v) },
-                        ];
-                        return docItems.map((item) => (
-                          <div className="vendor-info-modal-item vendor-info-modal-item--has-flag" key={item.label}>
-                            <div className="vendor-info-modal-item-label-wrap">
-                              {item.status && <span className={`vendor-info-modal-flag vendor-info-modal-flag--${item.status}`} />}
-                              <span className="vendor-info-modal-item-label">{item.label}</span>
-                            </div>
-                            <div>
-                              {item.status ? (
-                                <span className={`status-badge status-badge-${item.status === 'verified' ? 'verified' : item.status}`}>{item.value}</span>
-                              ) : (
-                                <span className="vendor-info-modal-item-value">{item.value}</span>
-                              )}
-                            </div>
+                  <div className="vx-modal-body">
+                    <div className="vx-detail-list">
+                      {(infoModal.type === 'training'
+                        ? (() => {
+                            const v = infoVendor;
+                            let cargoExpiry: string | null = null;
+                            if (v.cargoTrainingDate) {
+                              const d0 = parseYMD(v.cargoTrainingDate);
+                              if (d0) {
+                                const d = new Date(d0);
+                                d.setFullYear(d.getFullYear() + 2);
+                                cargoExpiry = formatDateOnly(d.toISOString().slice(0, 10));
+                              }
+                            }
+                            return [
+                              { label: 'Cargo training', value: v.cargoTrainingDate ? formatDateOnly(v.cargoTrainingDate)! : 'Pending', detail: cargoExpiry ? `Expires ${cargoExpiry}` : null, status: getSingleTrainingStatus(v.cargoTrainingDate) as string | null },
+                              { label: 'Dangerous goods training', value: v.dangerousGoodsTrainingDate ? formatDateOnly(v.dangerousGoodsTrainingDate)! : 'Pending', detail: null, status: getSingleTrainingStatus(v.dangerousGoodsTrainingDate) as string | null },
+                              { label: 'Manual handling training', value: v.manualHandlingTrainingDate ? formatDateOnly(v.manualHandlingTrainingDate)! : 'Pending', detail: null, status: getSingleTrainingStatus(v.manualHandlingTrainingDate) as string | null },
+                              { label: 'DHL training number', value: v.dhlTrainingNumber || 'Not recorded', detail: null, status: null as string | null },
+                            ];
+                          })()
+                        : (() => {
+                            const v = infoVendor;
+                            return [
+                              { label: 'Criminal record check', value: v.criminalRecordDate ? formatDateOnly(v.criminalRecordDate)! : 'Pending', detail: null, status: getDocumentItemStatus('criminalRecord', v) as string | null },
+                              { label: 'DVLA check', value: v.dvlaCheckDate ? formatDateOnly(v.dvlaCheckDate)! : 'Pending', detail: null, status: getDocumentItemStatus('dvlaCheck', v) as string | null },
+                              { label: 'Visa validity', value: v.visaValidity ? formatDateOnly(v.visaValidity)! : 'Not applicable', detail: null, status: getDocumentItemStatus('visa', v) as string | null },
+                              { label: 'Driving licence expiry', value: v.licenceExpiringDate ? formatDateOnly(v.licenceExpiringDate)! : 'Not applicable', detail: null, status: getDocumentItemStatus('licence', v) as string | null },
+                              { label: 'Passport expiry', value: v.passportExpiringDate ? formatDateOnly(v.passportExpiringDate)! : 'Not applicable', detail: null, status: getDocumentItemStatus('passport', v) as string | null },
+                            ];
+                          })()
+                      ).map((item) => (
+                        <div className={`vx-detail-item vx-tone-${tone(item.status)}`} key={item.label}>
+                          <div className="vx-detail-item-id">
+                            {item.status && <span className="vx-state-dot" aria-hidden="true" />}
+                            <span>
+                              <span className="vx-detail-label">{item.label}</span>
+                              {item.detail && <span className="vx-detail-note">{item.detail}</span>}
+                            </span>
                           </div>
-                        ));
-                      })()
-                    )}
+                          <span className="vx-detail-value">{item.value}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -839,79 +1024,90 @@ export function VendorsContent() {
         createPortal(
           <>
             <div className="driver-detail-modal-backdrop sp-modal-backdrop-anim" onClick={() => setDriverDetailId(null)} />
-            <div className="driver-detail-modal-wrap" role="dialog" aria-modal="true" aria-labelledby="driverDetailModalTitle">
-              <div className="driver-detail-modal liquid-glass-modal sp-modal-anim" onClick={(e) => e.stopPropagation()}>
+            <div className="driver-detail-modal-wrap vx-scope" role="dialog" aria-modal="true" aria-labelledby="driverDetailModalTitle">
+              <div className="driver-detail-modal sp-modal-anim" onClick={(e) => e.stopPropagation()}>
                 <div className="driver-detail-modal-header">
+                  <span className="vx-monogram" aria-hidden="true">{initials(driverDetailVendor)}</span>
                   <div className="driver-detail-modal-header-inner">
-                    <span className="driver-detail-modal-badge">Driver</span>
+                    <span className="driver-detail-modal-badge">{vendorTypeLabel(driverDetailVendor)}</span>
                     <h2 id="driverDetailModalTitle" className="driver-detail-modal-title">
-                      {`${driverDetailVendor.firstName || ''} ${driverDetailVendor.lastName || ''}`.trim() || '—'}
+                      {fullName(driverDetailVendor) || '—'}
                     </h2>
                   </div>
                   <button type="button" className="driver-detail-modal-close" aria-label="Close" onClick={() => setDriverDetailId(null)}>
-                    <i className="bi bi-x-lg" />
+                    <i className="bi bi-x-lg" aria-hidden="true" />
                   </button>
                 </div>
                 <div className="driver-detail-modal-body">
+                  {/* The static page loads QRCode.js from a CDN (cdnjs qrcodejs);
+                      this SPA doesn't bundle that library, so — same as the
+                      original's own `typeof QRCode === 'undefined'` fallback
+                      branch — the code itself can't be drawn. The courier ID it
+                      would encode is shown instead, which is what the depot
+                      actually needs to read off this panel. */}
                   <div className="driver-detail-qr-wrap">
-                    <p className="driver-detail-qr-label">QR Code</p>
-                    {/* The static page loads QRCode.js from a CDN (cdnjs qrcodejs);
-                        this SPA doesn't bundle that library, so — same as the
-                        original's own `typeof QRCode === 'undefined'` fallback
-                        branch — it renders the "library not loaded" placeholder. */}
-                    <div className="driver-detail-qr-box">QR library not loaded</div>
+                    <div>
+                      <p className="driver-detail-qr-label">Courier ID</p>
+                      <span className="driver-detail-qr-id">
+                        {driverDetailVendor.courierId || computeCourierId(driverDetailVendor.firstName || '', driverDetailVendor.lastName || '')}
+                      </span>
+                      <p className="driver-detail-qr-note">Scannable code isn&apos;t available in this build.</p>
+                    </div>
+                    <div className="driver-detail-qr-box" aria-hidden="true">
+                      <i className="bi bi-qr-code" />
+                    </div>
                   </div>
                   <div className="driver-detail-grid">
-                    {[
+                    {([
                       {
                         title: 'Personal',
                         rows: [
-                          ['Courier ID', driverDetailVendor.courierId || computeCourierId(driverDetailVendor.firstName || '', driverDetailVendor.lastName || '')],
-                          ['First name', driverDetailVendor.firstName || '—'],
-                          ['Last name', driverDetailVendor.lastName || '—'],
-                          ['Email', driverDetailVendor.email || '—'],
-                          ['Phone', driverDetailVendor.phone || '—'],
-                          ['Date of birth', driverDetailVendor.dob ? formatDateOnly(driverDetailVendor.dob) || '—' : '—'],
+                          ['Email', driverDetailVendor.email || '', false],
+                          ['Phone', driverDetailVendor.phone || '', true],
+                          ['Date of birth', driverDetailVendor.dob ? formatDateOnly(driverDetailVendor.dob) || '' : '', true],
                         ],
                       },
                       {
                         title: 'Contract',
                         rows: [
-                          ['Depot', driverDetailVendor.depot || '—'],
-                          ['Vendor Type', vendorTypeLabel(driverDetailVendor)],
-                          ['Route', driverDetailVendor.route || '—'],
-                          ['Start date', formatDateOnly(driverDetailVendor.startDate) || '—'],
-                          ['Finish date', formatDateOnly(driverDetailVendor.finishDate) || '—'],
-                          ['Status', driverDetailVendor.status || '—'],
+                          ['Depot', driverDetailVendor.depot || '', false],
+                          ['Route', driverDetailVendor.route || '', true],
+                          ['Start date', formatDateOnly(driverDetailVendor.startDate) || '', true],
+                          ['Finish date', formatDateOnly(driverDetailVendor.finishDate) || '', true],
+                          ['Status', effectiveStatus(driverDetailVendor), false],
                         ],
                       },
                       {
                         title: 'Training',
                         rows: [
-                          ['Cargo training date', driverDetailVendor.cargoTrainingDate ? formatDateOnly(driverDetailVendor.cargoTrainingDate) || '—' : '—'],
-                          ['Dangerous goods training date', driverDetailVendor.dangerousGoodsTrainingDate ? formatDateOnly(driverDetailVendor.dangerousGoodsTrainingDate) || '—' : '—'],
-                          ['Manual handling training date', driverDetailVendor.manualHandlingTrainingDate ? formatDateOnly(driverDetailVendor.manualHandlingTrainingDate) || '—' : '—'],
-                          ['DHL Training Number', driverDetailVendor.dhlTrainingNumber || '—'],
+                          ['Cargo', driverDetailVendor.cargoTrainingDate ? formatDateOnly(driverDetailVendor.cargoTrainingDate) || '' : '', true],
+                          ['Dangerous goods', driverDetailVendor.dangerousGoodsTrainingDate ? formatDateOnly(driverDetailVendor.dangerousGoodsTrainingDate) || '' : '', true],
+                          ['Manual handling', driverDetailVendor.manualHandlingTrainingDate ? formatDateOnly(driverDetailVendor.manualHandlingTrainingDate) || '' : '', true],
+                          ['DHL training no.', driverDetailVendor.dhlTrainingNumber || '', true],
                         ],
                       },
                       {
                         title: 'Compliance',
                         rows: [
-                          ['Criminal record check date', driverDetailVendor.criminalRecordDate ? formatDateOnly(driverDetailVendor.criminalRecordDate) || '—' : '—'],
-                          ['DBS Number', driverDetailVendor.dbsNumber || '—'],
-                          ['DVLA check date', driverDetailVendor.dvlaCheckDate ? formatDateOnly(driverDetailVendor.dvlaCheckDate) || '—' : '—'],
-                          ['Visa validity', driverDetailVendor.visaValidity ? formatDateOnly(driverDetailVendor.visaValidity) || '—' : '—'],
-                          ['Licence expiring date', driverDetailVendor.licenceExpiringDate ? formatDateOnly(driverDetailVendor.licenceExpiringDate) || '—' : '—'],
-                          ['Passport expiring date', driverDetailVendor.passportExpiringDate ? formatDateOnly(driverDetailVendor.passportExpiringDate) || '—' : '—'],
+                          ['Criminal record check', driverDetailVendor.criminalRecordDate ? formatDateOnly(driverDetailVendor.criminalRecordDate) || '' : '', true],
+                          ['DBS number', driverDetailVendor.dbsNumber || '', true],
+                          ['DVLA check', driverDetailVendor.dvlaCheckDate ? formatDateOnly(driverDetailVendor.dvlaCheckDate) || '' : '', true],
+                          ['Visa validity', driverDetailVendor.visaValidity ? formatDateOnly(driverDetailVendor.visaValidity) || '' : '', true],
+                          ['Licence expiry', driverDetailVendor.licenceExpiringDate ? formatDateOnly(driverDetailVendor.licenceExpiringDate) || '' : '', true],
+                          ['Passport expiry', driverDetailVendor.passportExpiringDate ? formatDateOnly(driverDetailVendor.passportExpiringDate) || '' : '', true],
                         ],
                       },
-                    ].map((sec) => (
+                    ] as { title: string; rows: [string, string, boolean][] }[]).map((sec) => (
                       <section className="driver-detail-section" key={sec.title}>
                         <h3 className="driver-detail-section-title">{sec.title}</h3>
-                        {sec.rows.map(([label, value]) => (
+                        {sec.rows.map(([label, value, isData]) => (
                           <div className="driver-detail-row" key={label}>
                             <span className="driver-detail-row-label">{label}</span>
-                            <span className="driver-detail-row-value">{value}</span>
+                            <span
+                              className={`driver-detail-row-value${value ? (isData ? ' is-data' : '') : ' is-empty'}`}
+                            >
+                              {value || 'Not recorded'}
+                            </span>
                           </div>
                         ))}
                       </section>

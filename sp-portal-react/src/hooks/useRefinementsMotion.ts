@@ -21,6 +21,9 @@ const REVEAL_SELECTORS = [
   '.sp-folder-panel',
   '.sp-dashboard-carousel-block',
   '.vendor-table-wrap',
+  // A consola de Vendors substituiu `.vendor-page-header` + `.vendor-table-wrap`
+  // por uma superfície única; entra em cena como um bloco só, não em três.
+  '.vx-console',
   '.comm-item',
   '.sop-post-card',
   '.access-select-card',
@@ -33,11 +36,18 @@ const GLOW_SELECTORS = [
   '.dashboard-block',
   '.sp-folder-panel',
   '.vendor-table-wrap',
+  '.vx-console',
   '.access-select-card',
   '.card',
 ].join(',');
 
-const COUNT_SELECTORS = ['.dashboard-kpi-value', '.vendor-page-metric-value', '.sp-live-kpi-value', '.sfb-stat-val'].join(',');
+const COUNT_SELECTORS = [
+  '.dashboard-kpi-value',
+  '.vendor-page-metric-value',
+  '.vx-facet-value',
+  '.sp-live-kpi-value',
+  '.sfb-stat-val',
+].join(',');
 
 const REVEAL_DURATION = 650;
 const STAGGER_STEP = 65;
