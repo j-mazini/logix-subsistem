@@ -412,6 +412,13 @@ body.has-beam-sidebar .sidebar-inset {
     font-size: 0.88rem;
     max-width: calc(100vw - 2rem);
   }
+
+  /* The trigger is fixed at bottom:1rem over a 3rem circle: without this,
+     whatever scrolls to the end of the page (tab bars, table rows, stat
+     cards) ends up hidden underneath it. */
+  body.has-beam-sidebar .page-inner {
+    padding-bottom: calc(1rem + 3rem + 1rem);
+  }
 }
 
 @media (max-width: 380px) {
@@ -428,6 +435,10 @@ body.has-beam-sidebar .sidebar-inset {
 
   .beam-plates {
     width: calc(100vw - 1.5rem);
+  }
+
+  body.has-beam-sidebar .page-inner {
+    padding-bottom: calc(0.75rem + 2.75rem + 1rem);
   }
 
   .beam-group-items {

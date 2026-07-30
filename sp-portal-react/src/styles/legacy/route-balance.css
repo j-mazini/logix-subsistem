@@ -3688,7 +3688,13 @@ body.rebalance-mode-active .fab-all-postcodes { display: inline-flex; }
 @media (max-width: 900px) {
   .page-header-section { align-items: flex-start; flex-direction: column; }
   .header-info { width: 100%; flex-wrap: wrap; }
-  .header-info .info-item { flex: 1; min-width: 90px; }
+  /* 90px used to be narrower than the date/user values ("30/07/2026",
+     "João Silva") ever render at, so flex-shrink never got a chance to
+     wrap the row — it just squashed each cell and let .header-info's own
+     overflow:hidden clip the tail of the text instead. 128px matches what
+     those values actually need, so two cells per row is enforced properly
+     instead of four clipped ones. */
+  .header-info .info-item { flex: 1 1 45%; min-width: 128px; }
   .osb-mix-body { gap: 0.8rem; }
   .osb-ring-wrap { width: 88px; height: 88px; }
   .controls-bar { padding: 0.85rem; gap: 0.9rem; }
@@ -3711,12 +3717,27 @@ body.rebalance-mode-active .fab-all-postcodes { display: inline-flex; }
   .osb-stops-gauge { width: 100%; max-width: none; }
   .osb-loop { padding-bottom: 0.85rem; }
   .osb-stat-val { font-size: 1.25rem; }
-  .btn-group-main .styled-button { flex: 1; justify-content: center; }
+  /* 4 stat cards (Deliveries/Pickups/Special/Total) squeezed into one row
+     left each ~50px wide — too narrow for a value like "137" plus its "98%"
+     sub-value, which then rendered past its own card into the next one.
+     Stacking the ring above and halving the row to 2-up gives each card
+     enough room for both without either overlapping or losing its label
+     down to a single letter. */
+  .osb-mix-body { flex-direction: column; align-items: center; gap: 0.9rem; }
+  .osb-mix-rows { grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
+  /* flex:1 with labels like "Add New Flex Route" or "PM ASR/DSR Listing"
+     forced every button to equal-share the row width regardless of what
+     its text needed, shrinking each pill below its content size — the
+     overflowing text then rendered underneath the next pill instead of
+     wrapping. flex-basis:auto lets each button keep its natural width, so
+     .btn-group-main's existing flex-wrap actually gets a chance to wrap
+     them onto as many rows as needed. */
+  .btn-group-main .styled-button { flex: 0 1 auto; justify-content: center; }
   .route-block-content { padding: 1rem 1rem 1.1rem 1.2rem; }
   .route-block-header { padding: 0.9rem 1rem 0.7rem 1.2rem; }
   .route-progress { padding: 0 1rem 0.85rem 1.2rem; }
   .route-dash { grid-template-columns: repeat(2, 1fr); }
-  .route-buttons .styled-button { flex: 1; justify-content: center; }
+  .route-buttons .styled-button { flex: 0 1 auto; justify-content: center; }
   .filter-select { max-width: none; flex: 1; }
 }
 

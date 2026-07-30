@@ -81,7 +81,7 @@ export function FinalizedOperationView({ entries, dateLabel, adhocServices = [] 
 
                             {(normalWorking.length > 0 || normalOff.length > 0) && (
                                 <div className="overflow-x-auto rounded-xl border border-gray-200 mb-4">
-                                    <table className="w-full table-fixed text-sm">
+                                    <table className="w-full min-w-[560px] table-auto text-sm">
                                         <thead>
                                             <tr className="bg-gradient-to-r from-slate-50 to-gray-100 border-b-2 border-gray-200">
                                                 <th className="px-3 md:px-6 py-2 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Route</th>
@@ -121,7 +121,7 @@ export function FinalizedOperationView({ entries, dateLabel, adhocServices = [] 
                                         <h4 className="text-xs font-bold text-purple-900 uppercase tracking-wider">Adhoc Services</h4>
                                     </div>
                                     <div className="overflow-x-auto">
-                                        <table className="w-full table-fixed text-sm">
+                                        <table className="w-full min-w-[420px] table-auto text-sm">
                                             <thead>
                                                 <tr className="bg-gradient-to-r from-purple-50 to-purple-100 border-b-2 border-purple-200">
                                                     <th className="px-3 md:px-6 py-2 text-left text-xs font-bold text-purple-900 uppercase tracking-wider">Service</th>

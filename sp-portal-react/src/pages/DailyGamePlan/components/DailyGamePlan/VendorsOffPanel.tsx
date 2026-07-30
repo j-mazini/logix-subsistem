@@ -182,7 +182,7 @@ const VendorsOffPanel = memo(({
                     {!isCollapsed && (
                         <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}>
                             <div className="overflow-x-auto">
-                                <table className="w-full table-fixed">
+                                <table className="w-full min-w-[640px] table-auto">
                                     <thead>
                                         <tr className="bg-red-50/30 border-b border-red-100 text-[10px] font-bold text-red-800 uppercase tracking-widest">
                                             <th className="px-6 py-2.5 text-left w-[18%]">Name</th>

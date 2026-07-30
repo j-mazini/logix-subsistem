@@ -319,7 +319,13 @@ const DepositGroup = memo(({
                             ) : (
                                 <>
                                     <div className="overflow-x-auto overflow-y-visible">
-                                        <table className="w-full table-fixed">
+                                        {/* table-fixed divided columns equally regardless of content, so on
+                                            phone widths names like "Michael Brown" and plates like "UK EF56 GHI"
+                                            no longer fit their ~55px cell and rendered overflow:visible straight
+                                            over the next column. table-auto + a min-width lets the existing
+                                            overflow-x-auto wrapper do its job: real column widths, scrollable
+                                            below ~640px instead of overlapping. */}
+                                        <table className="w-full min-w-[640px] table-auto">
                                             <thead>
                                                 <tr className="bg-gradient-to-r from-slate-50 to-gray-100 border-b-2 border-gray-200 text-xs font-bold text-gray-700 uppercase tracking-wider">
                                                     <th className="px-3 md:px-6 py-2 text-left">Route</th>
@@ -380,7 +386,7 @@ const DepositGroup = memo(({
                                                 <h3 className="text-sm font-bold text-purple-900 uppercase tracking-wider">Adhoc Services</h3>
                                             </div>
                                             <div className="overflow-x-auto overflow-y-visible">
-                                                <table className="w-full table-fixed">
+                                                <table className="w-full min-w-[560px] table-auto">
                                                     <thead>
                                                         <tr className="bg-gradient-to-r from-purple-50 to-purple-100 border-b-2 border-purple-200 text-xs font-bold text-purple-900 uppercase tracking-wider">
                                                             <th className="px-3 md:px-6 py-2 text-left">Service</th>
