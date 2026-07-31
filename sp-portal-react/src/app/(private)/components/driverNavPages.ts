@@ -34,7 +34,7 @@ export const DRIVER_NAV_PAGES: DriverNavPage[] = [
   },
   {
     href: "/current-month",
-    label: "Mês",
+    label: "Month",
     icon: "bi-calendar-event",
     accent: "amber",
     allowedUserTypes: [USER_TYPE.ADMIN, USER_TYPE.DRIVER, USER_TYPE.SUPERVISOR],
@@ -55,14 +55,14 @@ export const DRIVER_NAV_PAGES: DriverNavPage[] = [
   },
   {
     href: "/requests",
-    label: "Pedidos",
+    label: "Requests",
     icon: "bi-inbox",
     accent: "indigo",
     allowedUserTypes: [USER_TYPE.ADMIN, USER_TYPE.DRIVER, USER_TYPE.SUPERVISOR],
   },
   {
     href: "/my-deliveries",
-    label: "Rota",
+    label: "Route",
     icon: "bi-signpost-split-fill",
     accent: "fuchsia",
     allowedUserTypes: [USER_TYPE.ADMIN, USER_TYPE.DRIVER, USER_TYPE.SUPERVISOR],
