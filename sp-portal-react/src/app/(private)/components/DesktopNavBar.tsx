@@ -40,8 +40,10 @@ export function DesktopNavBar() {
                     if (!active) navigate(page.href);
                   }}
                   aria-current={active ? "page" : undefined}
+                  aria-label={page.label}
+                  title={page.label}
                   className={[
-                    "flex items-center justify-center gap-2 h-12 flex-shrink-0 rounded-xl px-4",
+                    "flex items-center justify-center gap-2 h-12 flex-shrink-0 rounded-xl px-3 xl:px-4",
                     "outline-none border-0 cursor-pointer transition-colors whitespace-nowrap",
                     "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                     active
@@ -49,8 +51,8 @@ export function DesktopNavBar() {
                       : "bg-transparent text-muted-foreground hover:text-foreground",
                   ].join(" ")}
                 >
-                  <i className={`bi ${page.icon} text-[17px] ${active ? ACCENT_TEXT[page.accent] : ""}`} aria-hidden="true" />
-                  <span className={`text-sm font-medium ${active ? ACCENT_TEXT[page.accent] : ""}`}>{page.label}</span>
+                  <i className={`bi ${page.icon} text-[18px] xl:text-[17px] ${active ? ACCENT_TEXT[page.accent] : ""}`} aria-hidden="true" />
+                  <span className={`hidden xl:inline text-sm font-medium ${active ? ACCENT_TEXT[page.accent] : ""}`}>{page.label}</span>
                 </button>
               );
             })}

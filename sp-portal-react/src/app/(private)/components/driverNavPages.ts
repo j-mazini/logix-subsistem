@@ -67,4 +67,11 @@ export const DRIVER_NAV_PAGES: DriverNavPage[] = [
     accent: "fuchsia",
     allowedUserTypes: [USER_TYPE.ADMIN, USER_TYPE.DRIVER, USER_TYPE.SUPERVISOR],
   },
+  {
+    href: "/my-schedule",
+    label: "Schedule",
+    icon: "bi-calendar-week",
+    accent: "teal",
+    allowedUserTypes: [USER_TYPE.ADMIN, USER_TYPE.DRIVER, USER_TYPE.SUPERVISOR],
+  },
 ];

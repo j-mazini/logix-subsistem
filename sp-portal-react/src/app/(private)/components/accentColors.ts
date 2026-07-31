@@ -13,7 +13,8 @@ export type AccentKey =
   | "emerald"
   | "cyan"
   | "indigo"
-  | "fuchsia";
+  | "fuchsia"
+  | "teal";
 
 export const ACCENT_BADGE: Record<AccentKey, string> = {
   blue: "bg-blue-500/15 text-blue-600",
@@ -24,6 +25,7 @@ export const ACCENT_BADGE: Record<AccentKey, string> = {
   cyan: "bg-cyan-500/15 text-cyan-600",
   indigo: "bg-indigo-500/15 text-indigo-600",
   fuchsia: "bg-fuchsia-500/15 text-fuchsia-600",
+  teal: "bg-teal-500/15 text-teal-600",
 };
 
 export const ACCENT_TEXT: Record<AccentKey, string> = {
@@ -35,6 +37,7 @@ export const ACCENT_TEXT: Record<AccentKey, string> = {
   cyan: "text-cyan-600",
   indigo: "text-indigo-600",
   fuchsia: "text-fuchsia-600",
+  teal: "text-teal-600",
 };
 
 export const ACCENT_DOT: Record<AccentKey, string> = {
@@ -46,6 +49,7 @@ export const ACCENT_DOT: Record<AccentKey, string> = {
   cyan: "bg-cyan-500",
   indigo: "bg-indigo-500",
   fuchsia: "bg-fuchsia-500",
+  teal: "bg-teal-500",
 };
 
 export const ACCENT_GLOW: Record<AccentKey, string> = {
@@ -57,4 +61,5 @@ export const ACCENT_GLOW: Record<AccentKey, string> = {
   cyan: "from-cyan-500/15 via-sky-400/10 to-transparent",
   indigo: "from-indigo-500/15 via-blue-400/10 to-transparent",
   fuchsia: "from-fuchsia-500/15 via-pink-400/10 to-transparent",
+  teal: "from-teal-500/15 via-cyan-400/10 to-transparent",
 };

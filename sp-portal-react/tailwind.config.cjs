@@ -21,6 +21,7 @@ module.exports = {
     './src/pages/Invoices/**/*.{ts,tsx}',
     './src/pages/MobileInvoice/**/*.{ts,tsx}',
     './src/pages/MyDeliveries/**/*.{ts,tsx}',
+    './src/pages/MySchedule/**/*.{ts,tsx}',
     './src/pages/Requests/**/*.{ts,tsx}',
     './src/pages/Subcontractor/**/*.{ts,tsx}',
   ],

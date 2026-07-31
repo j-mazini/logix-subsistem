@@ -37,6 +37,7 @@ import { MobileInvoice } from './pages/MobileInvoice/MobileInvoice';
 import { Requests } from './pages/Requests/Requests';
 import { Subcontractor } from './pages/Subcontractor/Subcontractor';
 import { MyDeliveries } from './pages/MyDeliveries/MyDeliveries';
+import { MySchedule } from './pages/MySchedule/MySchedule';
 import { useViewportAttribute } from './hooks/useViewportAttribute';
 import { useRefinementsMotion } from './hooks/useRefinementsMotion';
 
@@ -110,6 +111,7 @@ function App() {
           <Route path="/requests" element={<Requests />} />
           <Route path="/subcontractor" element={<Subcontractor />} />
           <Route path="/my-deliveries" element={<MyDeliveries />} />
+          <Route path="/my-schedule" element={<MySchedule />} />
         </Routes>
       </AnnouncementsProvider>
     </HashRouter>
