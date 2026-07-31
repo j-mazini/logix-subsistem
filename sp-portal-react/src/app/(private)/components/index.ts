@@ -3,6 +3,7 @@ export { MobileNavBar } from "./MobileNavBar";
 export { DesktopNavBar } from "./DesktopNavBar";
 export { StandardPageLayout } from "./StandardPageLayout";
 export { PageHeader } from "./PageHeader";
+export { PageHeroCard } from "./PageHeroCard";
 export { PageContent } from "./PageContent";
 export { PageSection } from "./PageSection";
 export { DgpPageFrame } from "./DgpPageFrame";

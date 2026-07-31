@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from "react";
-import { StandardPageLayout, PageHeader, PageSection } from "@/app/(private)/components";
+import { StandardPageLayout, PageHeader, PageHeroCard, PageSection } from "@/app/(private)/components";
 import InvoiceDetailsModal, { InvoiceDetailsModalRef } from "./components/InvoiceDetailsModal";
 import { useMobileInvoices } from "./hooks/useMobileInvoices";
 import { InvoiceListContainer } from "./components/InvoiceListContainer";
@@ -60,6 +60,7 @@ export default function MobileInvoicePage() {
   return (
     <StandardPageLayout bottomPadding={mobileInvoiceStyles.bottomPadding}>
       <PageHeader />
+      <PageHeroCard icon="bi-file-earmark-text" title="Invoices" subtitle="Your monthly self-billing statements" accent="cyan" />
 
       <PageSection className={mobileInvoiceStyles.sectionPadding}>
         <div

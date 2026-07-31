@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { hasAuthSession } from "@/app/(private)/mockAuth";
 import { useDateStore } from "@/lib/date-store";
-import { StandardPageLayout, PageHeader, PageSection, PageContent } from "@/app/(private)/components";
+import { StandardPageLayout, PageHeader, PageHeroCard, PageSection, PageContent } from "@/app/(private)/components";
 import { DailyPerformanceData } from "./types";
 import { DaysCarousel } from "./DaysCarousel";
 import { OperationCard } from "./OperationCard";
@@ -104,6 +104,7 @@ export default function DailyPerformanceInsight() {
           onNextMonth={handleNextMonth}
         />
       </PageHeader>
+      <PageHeroCard icon="bi-speedometer" title="Insights" subtitle="Route performance for the selected day" accent="blue" />
 
       <PageSection>
         <DaysCarousel

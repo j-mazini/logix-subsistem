@@ -4,7 +4,7 @@ module.exports = {
   // nested under one of these scope classes so it can never leak into (or be
   // overridden by) the rest of the app's legacy CSS. :is(...) lets multiple pages
   // share one Tailwind build while keeping each page's own scope class.
-  important: ':is(.daily-ops-tw-scope, .dgp-tw-scope, .driver-tw-scope, .invoice-history-tw-scope, .invoices-tw-scope, .requests-inbox-tw-scope)',
+  important: ':is(.daily-ops-tw-scope, .dgp-tw-scope, .driver-tw-scope, .invoice-history-tw-scope, .invoices-tw-scope)',
   corePlugins: {
     preflight: false,
   },
@@ -21,7 +21,7 @@ module.exports = {
     './src/pages/Invoices/**/*.{ts,tsx}',
     './src/pages/MobileInvoice/**/*.{ts,tsx}',
     './src/pages/MyDeliveries/**/*.{ts,tsx}',
-    './src/pages/RequestsInbox/**/*.{ts,tsx}',
+    './src/pages/Requests/**/*.{ts,tsx}',
     './src/pages/Subcontractor/**/*.{ts,tsx}',
   ],
   theme: {

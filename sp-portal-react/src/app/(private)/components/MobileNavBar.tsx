@@ -14,6 +14,7 @@ import {
 } from "framer-motion";
 import { useAuth } from "../mockAuth";
 import { DRIVER_NAV_PAGES } from "./driverNavPages";
+import { ACCENT_TEXT, ACCENT_DOT } from "./accentColors";
 
 type Ripple = { id: string; x: number };
 
@@ -251,7 +252,7 @@ export function MobileNavBar() {
                         className={[
                           "absolute bottom-1 left-1/2 z-20",
                           "h-1.5 w-1.5 -translate-x-1/2 rounded-full",
-                          "bg-primary",
+                          ACCENT_DOT[page.accent],
                           "shadow-[0_0_0_4px_rgba(255,255,255,0.12),0_6px_16px_rgba(59,130,246,0.35)]",
                         ].join(" ")}
                         transition={
@@ -278,7 +279,7 @@ export function MobileNavBar() {
                           "bi",
                           page.icon,
                           "leading-none",
-                          active ? "text-primary" : "text-muted-foreground",
+                          active ? ACCENT_TEXT[page.accent] : "text-muted-foreground",
                           "text-[22px]",
                         ].join(" ")}
                         aria-hidden="true"

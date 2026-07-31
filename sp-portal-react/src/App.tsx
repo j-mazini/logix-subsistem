@@ -34,7 +34,7 @@ import { DailyPerformanceInsight } from './pages/DailyPerformanceInsight/DailyPe
 import { Deductions } from './pages/Deductions/Deductions';
 import { InvoiceHistory } from './pages/InvoiceHistory/InvoiceHistory';
 import { MobileInvoice } from './pages/MobileInvoice/MobileInvoice';
-import { RequestsInbox } from './pages/RequestsInbox/RequestsInbox';
+import { Requests } from './pages/Requests/Requests';
 import { Subcontractor } from './pages/Subcontractor/Subcontractor';
 import { MyDeliveries } from './pages/MyDeliveries/MyDeliveries';
 import { useViewportAttribute } from './hooks/useViewportAttribute';
@@ -107,7 +107,7 @@ function App() {
           <Route path="/deductions" element={<Deductions />} />
           <Route path="/invoice-history" element={<InvoiceHistory />} />
           <Route path="/mobile-invoice" element={<MobileInvoice />} />
-          <Route path="/requests-inbox" element={<RequestsInbox />} />
+          <Route path="/requests" element={<Requests />} />
           <Route path="/subcontractor" element={<Subcontractor />} />
           <Route path="/my-deliveries" element={<MyDeliveries />} />
         </Routes>

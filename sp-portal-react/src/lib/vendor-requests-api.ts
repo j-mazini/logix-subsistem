@@ -4,9 +4,9 @@
  * Stand-in for the Next.js source's `lib/vendor-requests-api.ts` (VendorRequest
  * CRUD over HTTP) and `lib/vendors-api.ts` / `hooks/useDayOffItems.ts`. Same
  * shapes and function names, backed by an in-memory store so mutations
- * (approve/reject from RequestsInbox, submissions from the Invoices/Requests
- * page) persist for the lifetime of the tab instead of resetting on refetch —
- * both pages share this one store.
+ * (approve/reject from RequestsAdmin, submissions from the Invoices/Requests
+ * pages) persist for the lifetime of the tab instead of resetting on refetch —
+ * all pages share this one store.
  */
 
 const NETWORK_DELAY_MS = 200;

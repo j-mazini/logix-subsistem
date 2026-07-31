@@ -1,5 +1,5 @@
 import { useMemo, useCallback } from "react";
-import { StandardPageLayout, PageHeader, PageSection, PageContent } from "@/app/(private)/components";
+import { StandardPageLayout, PageHeader, PageHeroCard, PageSection, PageContent } from "@/app/(private)/components";
 import { useDateStore } from "@/lib/date-store";
 import { MonthSelector } from "./components/MonthSelector";
 import { DaysCarousel } from "./components/DaysCarousel";
@@ -56,6 +56,7 @@ export default function SubcontractorPage() {
           onNextMonth={handleNextMonth}
         />
       </PageHeader>
+      <PageHeroCard icon="bi-person" title="Profile" subtitle="Your daily operations & payment breakdown" accent="violet" />
 
       <PageSection>
         <DaysCarousel

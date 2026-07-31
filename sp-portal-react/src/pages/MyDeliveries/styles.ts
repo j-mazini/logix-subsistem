@@ -3,10 +3,13 @@ export const myDeliveriesStyles = {
 
   headerCard:
     "liquid-glass-surface rounded-2xl overflow-hidden relative p-4 sm:p-5 mb-4",
-  headerTitle: "text-lg font-bold text-slate-900 flex items-center gap-2",
-  headerTitleIcon: "bi bi-signpost-split-fill text-indigo-600",
-  headerSubtitle: "text-xs text-slate-500 mt-0.5",
-  headerStatsRow: "flex gap-3 mt-4",
+  headerGlow: "absolute inset-0 bg-gradient-to-br from-fuchsia-500/15 via-pink-400/10 to-transparent pointer-events-none",
+  headerTopRow: "relative z-10 flex items-center gap-3",
+  headerIconBadge: "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-fuchsia-500/15 text-fuchsia-600",
+  headerTitle: "text-lg sm:text-xl font-bold text-slate-900 tracking-tight truncate",
+  headerTitleIcon: "bi bi-signpost-split-fill text-xl leading-none",
+  headerSubtitle: "text-xs sm:text-sm text-slate-500 mt-0.5 truncate",
+  headerStatsRow: "relative z-10 flex gap-3 mt-4",
   headerStat: "flex-1 rounded-xl bg-slate-50 border border-slate-100 p-3 text-center",
   headerStatValue: "text-xl font-bold text-slate-900 leading-none",
   headerStatLabel: "text-[0.65rem] font-semibold uppercase tracking-wide text-slate-500 mt-1 block",

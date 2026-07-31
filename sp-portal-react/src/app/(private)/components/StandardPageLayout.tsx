@@ -19,7 +19,7 @@ export function StandardPageLayout({
 }: StandardPageLayoutProps) {
   return (
     <GradientDotsBackground className="driver-tw-scope relative min-h-screen z-[1] pointer-events-auto overflow-x-hidden w-full">
-      <div className={`max-w-full min-h-screen ${bottomPadding}`}>
+      <div className={`max-w-full min-h-screen ${bottomPadding} md:pb-28`}>
         <div
           className="md:hidden"
           style={{
@@ -40,7 +40,6 @@ export function StandardPageLayout({
           transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
           className="mx-auto w-full max-w-full min-w-0 px-[clamp(0.75rem,4vw,1rem)] sm:px-6 lg:px-10 pt-4 sm:pt-8 lg:pt-9 pb-12 lg:pb-14 relative z-[1]"
         >
-          <DesktopNavBar />
           {children}
         </motion.main>
 
@@ -54,9 +53,10 @@ export function StandardPageLayout({
       </div>
 
       {/* Mounted per-page rather than in a shared root layout — this Vite
-          app has no Next.js-style app/(private)/layout.tsx wrapper, and
-          MobileNavBar is fixed-positioned so its place in the tree doesn't
-          affect layout. */}
+          app has no Next.js-style app/(private)/layout.tsx wrapper, and both
+          bars are fixed-positioned so their place in the tree doesn't affect
+          layout. */}
+      <DesktopNavBar />
       <MobileNavBar />
     </GradientDotsBackground>
   );

@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
-import { StandardPageLayout, PageHeader, PageSection, PageContent } from "@/app/(private)/components";
+import { StandardPageLayout, PageHeader, PageHeroCard, PageSection, PageContent } from "@/app/(private)/components";
 import { DayDetails } from "./DayDetails";
 import { formatCurrency, getVehicleIcon } from "./utils";
 import {
@@ -144,6 +144,7 @@ export default function CurrentMonthPage() {
   return (
     <StandardPageLayout bottomPadding="pb-[clamp(3.5rem,8vh,4.375rem)]">
       <PageHeader />
+      <PageHeroCard icon="bi-calendar-event" title="Current Month" subtitle="Your earnings for the selected month" accent="amber" />
 
       <PageSection>
         <MonthCarousel months={monthsCarousel} onMonthClick={handleMonthClick} />
