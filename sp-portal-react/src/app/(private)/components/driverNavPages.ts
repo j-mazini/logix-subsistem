@@ -51,4 +51,10 @@ export const DRIVER_NAV_PAGES: DriverNavPage[] = [
     icon: "bi-inbox",
     allowedUserTypes: [USER_TYPE.ADMIN, USER_TYPE.DRIVER, USER_TYPE.SUPERVISOR],
   },
+  {
+    href: "/my-deliveries",
+    label: "Rota",
+    icon: "bi-signpost-split-fill",
+    allowedUserTypes: [USER_TYPE.ADMIN, USER_TYPE.DRIVER, USER_TYPE.SUPERVISOR],
+  },
 ];

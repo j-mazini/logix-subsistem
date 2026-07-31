@@ -20,6 +20,7 @@ module.exports = {
     './src/pages/Deductions/**/*.{ts,tsx}',
     './src/pages/Invoices/**/*.{ts,tsx}',
     './src/pages/MobileInvoice/**/*.{ts,tsx}',
+    './src/pages/MyDeliveries/**/*.{ts,tsx}',
     './src/pages/RequestsInbox/**/*.{ts,tsx}',
     './src/pages/Subcontractor/**/*.{ts,tsx}',
   ],
