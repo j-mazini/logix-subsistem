@@ -1,0 +1,6 @@
+/* Tailwind utilities for the driver/courier personal pages only.
+   Scoped via tailwind.config.cjs `important: ':is(..., .driver-tw-scope)'`
+   and `corePlugins.preflight: false` so it cannot affect the rest of the app. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

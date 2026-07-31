@@ -147,6 +147,12 @@
   box-shadow: 0 8px 24px rgba(99, 102, 241, 0.2);
 }
 
+.iconDriver {
+  background: linear-gradient(135deg, #d1fae5 0%, #ccfbf1 100%);
+  color: #0d9488;
+  box-shadow: 0 8px 24px rgba(13, 148, 136, 0.2);
+}
+
 .card:hover .icon {
   transform: scale(1.1) rotate(4deg);
 }
@@ -188,6 +194,11 @@
 .badgeSp {
   background: #f8f8ff;
   color: #6366f1;
+}
+
+.badgeDriver {
+  background: #f0fdfa;
+  color: #0d9488;
 }
 
 .description {
@@ -241,6 +252,11 @@
   color: #6366f1;
 }
 
+.card:nth-child(3) .features li::before {
+  background: rgba(13, 148, 136, 0.1);
+  color: #0d9488;
+}
+
 .cta {
   position: relative;
   z-index: 1;
@@ -277,6 +293,17 @@
 
 .ctaSp:hover {
   box-shadow: 0 8px 24px rgba(99, 102, 241, 0.35);
+  transform: translateX(4px);
+}
+
+.ctaDriver {
+  background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+  color: white;
+  box-shadow: 0 4px 16px rgba(13, 148, 136, 0.25);
+}
+
+.ctaDriver:hover {
+  box-shadow: 0 8px 24px rgba(13, 148, 136, 0.35);
   transform: translateX(4px);
 }
 

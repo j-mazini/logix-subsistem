@@ -62,6 +62,30 @@ export function AccessSelect() {
             Access Portal
           </button>
         </div>
+
+        {/* Driver Portal Card */}
+        <div className={styles.card} onClick={() => navigate('/current-month')}>
+          <div className={`${styles.icon} ${styles.iconDriver}`}>
+            <i className="bi bi-truck-front"></i>
+          </div>
+          <div className={styles.cardHeader}>
+            <h2>Driver Portal</h2>
+            <span className={`${styles.badge} ${styles.badgeDriver}`}>DRIVER</span>
+          </div>
+          <p className={styles.description}>
+            Access your personal driver dashboard to view earnings, performance, deductions, and invoices.
+          </p>
+          <ul className={styles.features}>
+            <li>Monthly earnings</li>
+            <li>Performance insights</li>
+            <li>Deductions & invoices</li>
+            <li>Requests & schedule</li>
+          </ul>
+          <button className={`${styles.cta} ${styles.ctaDriver}`}>
+            <i className="bi bi-arrow-right"></i>
+            Access Driver Portal
+          </button>
+        </div>
       </div>
     </div>
   );

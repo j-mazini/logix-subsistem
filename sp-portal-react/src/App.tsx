@@ -28,6 +28,14 @@ import {
 import { WeekPlanner } from './pages/WeekPlanner/WeekPlanner';
 import { Workforce } from './pages/Workforce/Workforce';
 import { LiveService } from './pages/LiveService/LiveService';
+import { CurrentMonth } from './pages/CurrentMonth/CurrentMonth';
+import { CurrentPerformance } from './pages/CurrentPerformance/CurrentPerformance';
+import { DailyPerformanceInsight } from './pages/DailyPerformanceInsight/DailyPerformanceInsight';
+import { Deductions } from './pages/Deductions/Deductions';
+import { InvoiceHistory } from './pages/InvoiceHistory/InvoiceHistory';
+import { MobileInvoice } from './pages/MobileInvoice/MobileInvoice';
+import { RequestsInbox } from './pages/RequestsInbox/RequestsInbox';
+import { Subcontractor } from './pages/Subcontractor/Subcontractor';
 import { useViewportAttribute } from './hooks/useViewportAttribute';
 import { useRefinementsMotion } from './hooks/useRefinementsMotion';
 
@@ -89,6 +97,17 @@ function App() {
           <Route path="/workforce" element={<Workforce />} />
           <Route path="/compliance" element={<WorkforceRedirect tab="compliance" />} />
           <Route path="/live-service" element={<LiveService />} />
+          {/* Driver-facing personal pages: own shell (StandardPageLayout +
+              MobileNavBar), ported from the Next.js source's app/(private)/
+              courier section rather than the Service Provider admin shell. */}
+          <Route path="/current-month" element={<CurrentMonth />} />
+          <Route path="/current-performance" element={<CurrentPerformance />} />
+          <Route path="/daily-performance-insight" element={<DailyPerformanceInsight />} />
+          <Route path="/deductions" element={<Deductions />} />
+          <Route path="/invoice-history" element={<InvoiceHistory />} />
+          <Route path="/mobile-invoice" element={<MobileInvoice />} />
+          <Route path="/requests-inbox" element={<RequestsInbox />} />
+          <Route path="/subcontractor" element={<Subcontractor />} />
         </Routes>
       </AnnouncementsProvider>
     </HashRouter>
