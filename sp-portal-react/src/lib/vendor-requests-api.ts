@@ -1,10 +1,12 @@
 /**
- * Requests Inbox — mock API layer.
+ * Vendor requests — mock API layer.
  *
  * Stand-in for the Next.js source's `lib/vendor-requests-api.ts` (VendorRequest
  * CRUD over HTTP) and `lib/vendors-api.ts` / `hooks/useDayOffItems.ts`. Same
- * shapes and function names, backed by an in-memory store so approve/reject
- * mutations persist for the lifetime of the tab instead of resetting on refetch.
+ * shapes and function names, backed by an in-memory store so mutations
+ * (approve/reject from RequestsInbox, submissions from the Invoices/Requests
+ * page) persist for the lifetime of the tab instead of resetting on refetch —
+ * both pages share this one store.
  */
 
 const NETWORK_DELAY_MS = 200;
@@ -25,6 +27,24 @@ export interface VendorRequest {
   status: VendorRequestStatus;
   createdAt: string;
   updatedAt?: string;
+}
+
+export interface CreateVendorRequestDTO {
+  userId: number;
+  requestType: VendorRequestType;
+  startDate?: string;
+  endDate?: string;
+  prePaymentValue?: string;
+  notes?: string;
+  reason?: string;
+  status?: string;
+}
+
+export interface FetchVendorRequestsParams {
+  userId?: number;
+  servicePartnerId?: number;
+  month?: number;
+  year?: number;
 }
 
 export interface MockVendor {
@@ -160,23 +180,68 @@ function seedRequests(): VendorRequest[] {
     updatedAt: new Date(now.getFullYear(), now.getMonth() - 1, 21).toISOString(),
   });
 
+  // Mock driver persona (id 101, "Sam Carter" / Atlas Transport — see
+  // app/(private)/mockAuth.ts) gets its own small history so the Invoices
+  // page's "History" tab isn't empty on first load.
+  requests.push({
+    vendorRequestId: id++,
+    userId: 101,
+    requestType: 'DayOff',
+    startDate: toDateStr(daysAgo(8)),
+    endDate: toDateStr(daysAgo(8)),
+    reason: 'Personal',
+    status: 'approved',
+    createdAt: daysAgo(12).toISOString(),
+    updatedAt: daysAgo(11).toISOString(),
+  });
+  requests.push({
+    vendorRequestId: id++,
+    userId: 101,
+    requestType: 'PrePayment',
+    prePaymentValue: '100.00',
+    reason: 'Fuel advance',
+    status: 'pending',
+    createdAt: daysAgo(2).toISOString(),
+  });
+
   return requests;
 }
 
 let VENDOR_REQUESTS_STORE: VendorRequest[] = seedRequests();
+let nextVendorRequestId = VENDOR_REQUESTS_STORE.reduce((max, r) => Math.max(max, r.vendorRequestId), 0) + 1;
 
-export async function fetchVendorRequests(params: {
-  month?: number;
-  year?: number;
-  servicePartnerId?: number;
-}): Promise<VendorRequest[]> {
+export async function fetchVendorRequests(params: FetchVendorRequestsParams): Promise<VendorRequest[]> {
   await delay();
-  const { month, year } = params;
-  if (month == null || year == null) return [...VENDOR_REQUESTS_STORE];
-  return VENDOR_REQUESTS_STORE.filter((r) => {
-    const d = new Date(r.createdAt);
-    return d.getMonth() + 1 === month && d.getFullYear() === year;
-  });
+  const { userId, month, year } = params;
+  let results = [...VENDOR_REQUESTS_STORE];
+  if (userId != null) {
+    results = results.filter((r) => r.userId === userId);
+  }
+  if (month != null && year != null) {
+    results = results.filter((r) => {
+      const d = new Date(r.createdAt);
+      return d.getMonth() + 1 === month && d.getFullYear() === year;
+    });
+  }
+  return results;
+}
+
+export async function createVendorRequest(dto: CreateVendorRequestDTO): Promise<VendorRequest> {
+  await delay();
+  const record: VendorRequest = {
+    vendorRequestId: nextVendorRequestId++,
+    userId: dto.userId,
+    requestType: dto.requestType,
+    startDate: dto.startDate,
+    endDate: dto.endDate,
+    prePaymentValue: dto.prePaymentValue,
+    notes: dto.notes,
+    reason: dto.reason,
+    status: dto.status ?? 'pending',
+    createdAt: new Date().toISOString(),
+  };
+  VENDOR_REQUESTS_STORE = [...VENDOR_REQUESTS_STORE, record];
+  return record;
 }
 
 export async function fetchVendors(): Promise<MockVendor[]> {

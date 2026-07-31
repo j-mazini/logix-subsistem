@@ -162,8 +162,8 @@ export function BeamSidebar({ sp }: { sp: string }) {
             </div>
           ))}
           <Link
-            to={withSp('/select', sp)}
-            className={`beam-plate beam-plate--root beam-plate--switch${location.pathname === '/select' ? ' active' : ''}`}
+            to="/"
+            className={`beam-plate beam-plate--root beam-plate--switch${location.pathname === '/' ? ' active' : ''}`}
           >
             <i className="bi bi-arrow-left-right beam-plate-icon" />
             <span>Select access</span>

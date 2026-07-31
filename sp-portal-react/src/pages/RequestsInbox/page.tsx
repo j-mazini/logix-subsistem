@@ -13,7 +13,7 @@ import {
 import { Label } from "./components/ui/Label";
 import { MonthPicker } from "./components/ui/MonthPicker";
 import NavbarWrapper from "@/components/navbar-wrapper";
-import { DgpPageFrame, MobilePageShell } from "@/app/(private)/components";
+import { DgpPageFrame, MobilePageShell, StandardPageLayout } from "@/app/(private)/components";
 import { ModernPageHeader } from "@/components/modern-page-header";
 import {
   fetchVendorRequests,
@@ -21,7 +21,7 @@ import {
   rejectVendorRequest,
   fetchVendors,
   type VendorRequest,
-} from "./mock/mockRequestsData";
+} from "@/lib/vendor-requests-api";
 import { useServicePartners } from "@/hooks/useServicePartners";
 import type { AdminRequest, AdvanceRequest, DayOffOrHolidayRequest } from "./types";
 import { isAdvance, requestTypeLabel, normalizeStatus } from "./types";
@@ -425,15 +425,25 @@ export default function RequestsInboxPage() {
   }, [requestForScheduleTerms, scheduleTermsInput, feeValueInput, startMonthInput, handleApprove]);
 
   return (
-    <NavbarWrapper>
-      <div className="requests-inbox-tw-scope w-full min-w-0">
-        <DgpPageFrame
-          maxWidthClassName="w-full max-w-full"
-          containerClassName="w-full px-[3%] md:px-6 lg:px-8 py-[2%] md:py-6 space-y-[2%] md:space-y-6"
-          className="font-sans text-slate-800 text-sm"
-        >
-          <div id="main-content" className="flex-grow flex flex-col min-w-0 relative">
-            <div className="hidden md:block">
+    <>
+      {/* Desktop: admin shell (NavbarWrapper/BeamSidebar). Mobile gets its own
+          branch below with the driver shell (StandardPageLayout/MobileNavBar)
+          instead — this page is reachable from MobileNavBar's "Pedidos" tab,
+          so it must render that same bar on mobile like every other tab does.
+          The scope class must be an ANCESTOR of the hidden/md:block toggle —
+          tailwind.config.cjs's `important` selector only fires nested under
+          .requests-inbox-tw-scope (etc.), so a toggle div placed above/outside
+          it is never actually hidden and both branches render at once. */}
+      <div className="requests-inbox-tw-scope">
+      <div className="hidden md:block">
+        <NavbarWrapper>
+          <div className="w-full min-w-0">
+            <DgpPageFrame
+              maxWidthClassName="w-full max-w-full"
+              containerClassName="w-full px-[3%] md:px-6 lg:px-8 py-[2%] md:py-6 space-y-[2%] md:space-y-6"
+              className="font-sans text-slate-800 text-sm"
+            >
+              <div id="main-content" className="flex-grow flex flex-col min-w-0 relative">
               <main className="pt-[2%] md:pt-6 space-y-[2%] md:space-y-4">
                 <div className="mb-[2%] md:mb-4">
                   <ModernPageHeader
@@ -613,8 +623,18 @@ export default function RequestsInboxPage() {
                   </RequestSection>
                 </div>
               </main>
-            </div>
+              </div>
+            </DgpPageFrame>
+          </div>
+        </NavbarWrapper>
+      </div>
+      </div>
 
+      {/* Mobile: driver shell, so MobileNavBar (and its "Pedidos" tab) stays visible here too */}
+      <div className="requests-inbox-tw-scope">
+      <div className="md:hidden">
+        <StandardPageLayout>
+          <div>
             <MobilePageShell
               title="Vendor requests"
               subtitle={formatMonthLabel(selectedMonthKey)}
@@ -710,7 +730,8 @@ export default function RequestsInboxPage() {
               </MobileRequestSection>
             </MobilePageShell>
           </div>
-        </DgpPageFrame>
+        </StandardPageLayout>
+      </div>
       </div>
 
       <RequestDetailModal
@@ -806,7 +827,7 @@ export default function RequestsInboxPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </NavbarWrapper>
+    </>
   );
 }
 

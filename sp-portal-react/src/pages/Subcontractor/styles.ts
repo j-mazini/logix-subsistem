@@ -4,9 +4,9 @@ export const subcontractorStyles = {
 
   // Month selector
   monthSelectorContainer:
-    "flex items-center justify-between gap-[clamp(0.5rem,2vw,0.75rem)] font-semibold text-slate-700 text-sm flex-[0_0_60%] min-w-0 px-[clamp(0.75rem,3vw,1rem)] py-[clamp(0.625rem,2.5vw,0.75rem)] bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300",
+    "flex items-center justify-between gap-[clamp(0.5rem,2vw,0.75rem)] font-semibold text-slate-700 text-sm flex-[0_0_60%] min-w-0 px-[clamp(0.75rem,3vw,1rem)] py-[clamp(0.625rem,2.5vw,0.75rem)] liquid-glass-surface rounded-2xl transition-all duration-300",
   monthSelectorNavButton:
-    "w-[clamp(1.75rem,7vw,2rem)] h-[clamp(1.75rem,7vw,2rem)] rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center cursor-pointer hover:bg-blue-100 hover:text-blue-600 transition-all duration-300 flex-shrink-0",
+    "w-[clamp(1.75rem,7vw,2rem)] h-[clamp(1.75rem,7vw,2rem)] rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center cursor-pointer hover:bg-indigo-100 hover:text-indigo-600 transition-all duration-300 flex-shrink-0",
   monthSelectorMonth:
     "text-[clamp(0.95rem,3.6vw,1.125rem)] font-bold text-slate-800 whitespace-nowrap overflow-hidden text-ellipsis",
   monthSelectorYear:
@@ -28,18 +28,18 @@ export const subcontractorStyles = {
   operationsDividerLine:
     "absolute w-full h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent",
   operationsDividerDot:
-    "w-2 h-2 rounded-full bg-blue-500",
+    "w-2 h-2 rounded-full bg-indigo-500",
 
   // Operation card
   operationCardWrapper: "relative overflow-visible",
   operationCardAccent:
-    "absolute -left-2 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-500 to-blue-600 rounded-full opacity-0",
+    "absolute -left-2 top-0 bottom-0 w-1 bg-gradient-to-b from-indigo-500 to-purple-600 rounded-full opacity-0",
   operationCardMain:
-    "bg-white rounded-2xl p-[clamp(0.875rem,4vw,1rem)] sm:p-4 shadow-sm hover:shadow-lg transition-all duration-300 mb-3 box-border overflow-hidden border border-slate-100",
+    "liquid-glass-surface rounded-2xl overflow-hidden relative p-[clamp(0.875rem,4vw,1rem)] sm:p-4 transition-all duration-300 mb-3",
 
   // Route header
   routeHeader:
-    "relative bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 text-white p-[clamp(0.75rem,2.6vw,0.95rem)] rounded-2xl flex justify-between items-center text-[clamp(1.1rem,4.2vw,1.5rem)] font-bold mb-3 shadow-lg hover:shadow-xl transition-all duration-300 w-full box-border overflow-hidden min-w-0",
+    "relative bg-gradient-to-br from-indigo-500 via-indigo-600 to-purple-700 text-white p-[clamp(0.75rem,2.6vw,0.95rem)] rounded-2xl flex justify-between items-center text-[clamp(1.1rem,4.2vw,1.5rem)] font-bold mb-3 shadow-lg hover:shadow-xl transition-all duration-300 w-full box-border overflow-hidden min-w-0",
   routeHeaderPattern: "absolute inset-0 opacity-10",
   routeHeaderShimmer:
     "absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent",
@@ -58,7 +58,7 @@ export const subcontractorStyles = {
   stopsSectionWrapper: "mt-3 pt-3",
   stopsSectionTitle:
     "text-[0.7rem] sm:text-[0.75rem] font-bold mb-2.5 text-slate-600 uppercase tracking-wide flex items-center gap-2",
-  stopsSectionTitleIcon: "bi bi-stop-circle text-blue-600",
+  stopsSectionTitleIcon: "bi bi-stop-circle text-indigo-600",
   stopsGrid: "grid grid-cols-2 sm:grid-cols-4 gap-2",
   stopsCard:
     "text-center bg-slate-50 p-2 rounded-xl transition-all duration-300 group relative overflow-hidden min-w-0",
@@ -73,7 +73,7 @@ export const subcontractorStyles = {
 
   // Payment breakdown
   paymentCard:
-    "relative bg-white rounded-2xl p-[clamp(0.875rem,4vw,1rem)] sm:p-4 shadow-sm hover:shadow-lg transition-all duration-300 mb-3 box-border overflow-hidden border border-slate-100",
+    "liquid-glass-surface relative rounded-2xl overflow-hidden p-[clamp(0.875rem,4vw,1rem)] sm:p-4 transition-all duration-300 mb-3",
   paymentCornerTop:
     "absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-green-500/10 to-transparent rounded-bl-full",
   paymentCornerBottom:

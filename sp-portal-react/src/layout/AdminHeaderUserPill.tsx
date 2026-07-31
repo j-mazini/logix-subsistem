@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { withSp, initialsFor } from '../hooks/useCurrentSp';
+import { initialsFor } from '../hooks/useCurrentSp';
 
 /**
  * Port of admin-header.js + the .admin-header-user-pill/-menu markup shared
@@ -100,7 +100,7 @@ export function AdminHeaderPill({ sp, controls }: { sp: string; controls: AdminH
   );
 }
 
-export function AdminHeaderMenu({ sp, controls }: { sp: string; controls: AdminHeaderMenuControls }) {
+export function AdminHeaderMenu({ controls }: { controls: AdminHeaderMenuControls }) {
   const { open, menuRef, menuPos } = controls;
   const navigate = useNavigate();
 
@@ -116,7 +116,9 @@ export function AdminHeaderMenu({ sp, controls }: { sp: string; controls: AdminH
 
   function handleSelectAccess(e: React.MouseEvent) {
     e.preventDefault();
-    navigate(withSp('/select', sp));
+    // Index page (AccessSelect): pick DHL Administration / Service Provider / Driver Portal —
+    // not `/select`, which is just the SP re-login form.
+    navigate('/');
   }
 
   return (

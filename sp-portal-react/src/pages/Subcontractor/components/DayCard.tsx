@@ -38,8 +38,8 @@ export const DayCard = memo(function DayCard({
         snap-center cursor-pointer overflow-hidden
         border-2
         ${isSelected
-          ? 'bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 text-white border-blue-400/50 shadow-xl scale-105'
-          : 'bg-white text-slate-700 border-slate-200 hover:border-blue-300 hover:bg-blue-50/50 shadow-sm hover:shadow-lg'
+          ? 'bg-gradient-to-br from-indigo-500 via-indigo-600 to-purple-700 text-white border-indigo-400/50 shadow-xl scale-105'
+          : 'bg-white text-slate-700 border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/50 shadow-sm hover:shadow-lg'
         }
       `}
     >

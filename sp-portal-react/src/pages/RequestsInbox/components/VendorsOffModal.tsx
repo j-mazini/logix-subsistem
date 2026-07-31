@@ -9,7 +9,7 @@ import {
 } from "./ui/Dialog";
 import { Button } from "./ui/Button";
 import { Alert, AlertDescription } from "./ui/Alert";
-import { fetchAllDayOffItems, type DayOffItem } from "../mock/mockRequestsData";
+import { fetchAllDayOffItems, type DayOffItem } from "@/lib/vendor-requests-api";
 import { VendorsOffWeekView } from "./VendorsOffWeekView";
 
 interface VendorsOffModalProps {

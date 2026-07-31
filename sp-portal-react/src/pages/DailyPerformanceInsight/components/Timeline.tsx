@@ -16,7 +16,7 @@ export const Timeline = React.memo<TimelineProps>(({ operation }) => {
       label: 'Departed',
       value: formatTime(operation.deliveryDetails.departTime),
       icon: 'bi-arrow-right-circle',
-      gradient: 'from-blue-500 to-blue-600'
+      gradient: 'from-indigo-500 to-indigo-600'
     },
     {
       label: 'Break',

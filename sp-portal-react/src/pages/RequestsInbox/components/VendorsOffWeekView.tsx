@@ -1,5 +1,5 @@
 import React from "react";
-import type { DayOffItem } from "../mock/mockRequestsData";
+import type { DayOffItem } from "@/lib/vendor-requests-api";
 
 function toDateStr(d: Date): string {
   return d.toISOString().split('T')[0];

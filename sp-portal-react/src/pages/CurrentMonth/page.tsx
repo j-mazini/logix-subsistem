@@ -135,7 +135,9 @@ export default function CurrentMonthPage() {
 
   if (showDayDetails && selectedDateName) {
     return (
-      <DayDetails selectedDays={selectedDays} selectedDateName={selectedDateName} onBack={handleBack} />
+      <StandardPageLayout bottomPadding="pb-[clamp(3.5rem,8vh,4.375rem)]">
+        <DayDetails selectedDays={selectedDays} selectedDateName={selectedDateName} onBack={handleBack} />
+      </StandardPageLayout>
     );
   }
 

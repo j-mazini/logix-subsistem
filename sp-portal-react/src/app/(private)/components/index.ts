@@ -1,5 +1,6 @@
 export { MobileHeader } from "./MobileHeader";
 export { MobileNavBar } from "./MobileNavBar";
+export { DesktopNavBar } from "./DesktopNavBar";
 export { StandardPageLayout } from "./StandardPageLayout";
 export { PageHeader } from "./PageHeader";
 export { PageContent } from "./PageContent";

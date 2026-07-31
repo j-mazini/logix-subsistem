@@ -112,7 +112,7 @@ export default function DeductionsPage() {
             <select
               value={selectedServicePartnerId}
               onChange={(e) => setSelectedServicePartnerId(e.target.value)}
-              className="px-3 py-2 border border-gray-200 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-56"
+              className="px-3 py-2 border border-gray-200 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 w-56"
             >
               <option value="">All Service Partners</option>
               {servicePartners.map((sp) => (

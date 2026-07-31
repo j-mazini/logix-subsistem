@@ -91,11 +91,11 @@ const InvoiceDetailsModal = forwardRef<InvoiceDetailsModalRef, InvoiceDetailsMod
             <div className="space-y-3 p-4">
               <div className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-3 sm:flex-row sm:items-start sm:justify-between">
                 <div className="flex items-start gap-2">
-                  <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg bg-blue-900">
+                  <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg bg-indigo-900">
                     <span className="text-base font-bold text-white">AT</span>
                   </div>
                   <div>
-                    <h3 className="text-base font-bold text-blue-900">{invoiceDetails.company.companyName}</h3>
+                    <h3 className="text-base font-bold text-indigo-900">{invoiceDetails.company.companyName}</h3>
                     <div className="flex flex-wrap gap-x-3 text-xs text-slate-600">
                       <span>{invoiceDetails.company.companyStreet}</span>
                       <span>{invoiceDetails.company.companyEmail}</span>
@@ -103,35 +103,35 @@ const InvoiceDetailsModal = forwardRef<InvoiceDetailsModalRef, InvoiceDetailsMod
                     </div>
                   </div>
                 </div>
-                <div className="rounded-lg bg-blue-100 p-2 sm:p-3">
-                  <p className="text-[10px] font-bold uppercase text-blue-900">Self Billing Invoice</p>
-                  <p className="text-sm font-bold text-blue-900">#{invoiceDetails.invoiceNumber}</p>
+                <div className="rounded-lg bg-indigo-100 p-2 sm:p-3">
+                  <p className="text-[10px] font-bold uppercase text-indigo-900">Self Billing Invoice</p>
+                  <p className="text-sm font-bold text-indigo-900">#{invoiceDetails.invoiceNumber}</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                <div className="overflow-hidden rounded-lg border border-[#b3d9f5] bg-[#e3f2fd]">
-                  <div className="flex items-center gap-1.5 bg-[#1e3a8a] px-2 py-1.5">
+                <div className="overflow-hidden rounded-lg border border-indigo-200 bg-indigo-50">
+                  <div className="flex items-center gap-1.5 bg-indigo-900 px-2 py-1.5">
                     <i className="bi bi-person-fill text-xs text-white" />
                     <h4 className="text-[10px] font-bold text-white">Vendor Details</h4>
                   </div>
                   <div className="space-y-1 p-2 text-[10px]">
-                    <div><span>Name: </span><span className="font-semibold text-[#1e3a8a]">{invoiceDetails.vendor.name}</span></div>
+                    <div><span>Name: </span><span className="font-semibold text-indigo-900">{invoiceDetails.vendor.name}</span></div>
                     <div><span>Vendor ID: </span><span className="font-semibold">{invoiceDetails.vendor.vendorCode}</span></div>
-                    <div><span>Email: </span><span className="font-semibold text-[#1e3a8a] underline">{invoiceDetails.vendor.vendorEmail}</span></div>
+                    <div><span>Email: </span><span className="font-semibold text-indigo-900 underline">{invoiceDetails.vendor.vendorEmail}</span></div>
                   </div>
                 </div>
 
-                <div className="overflow-hidden rounded-lg border border-[#b3d9f5] bg-[#e3f2fd]">
-                  <div className="flex items-center gap-1.5 bg-[#1e3a8a] px-2 py-1.5">
+                <div className="overflow-hidden rounded-lg border border-indigo-200 bg-indigo-50">
+                  <div className="flex items-center gap-1.5 bg-indigo-900 px-2 py-1.5">
                     <i className="bi bi-calendar-fill text-xs text-white" />
                     <h4 className="text-[10px] font-bold text-white">Invoice Details</h4>
                   </div>
                   <div className="space-y-1 p-2 text-[10px]">
-                    <div><span>Invoice Date: </span><span className="font-semibold text-[#1e3a8a]">{formatDate(invoiceDetails.invoiceDate)}</span></div>
-                    <div><span>Due Date: </span><span className="font-semibold text-[#1e3a8a]">{formatDate(invoiceDetails.dueDate)}</span></div>
-                    <div><span>Payment Terms: </span><span className="font-semibold text-[#1e3a8a]">{invoiceDetails.paymentTerms}</span></div>
-                    <div><span>Total Stops: </span><span className="font-semibold text-[#1e3a8a]">{invoiceDetails.totalStops}</span></div>
+                    <div><span>Invoice Date: </span><span className="font-semibold text-indigo-900">{formatDate(invoiceDetails.invoiceDate)}</span></div>
+                    <div><span>Due Date: </span><span className="font-semibold text-indigo-900">{formatDate(invoiceDetails.dueDate)}</span></div>
+                    <div><span>Payment Terms: </span><span className="font-semibold text-indigo-900">{invoiceDetails.paymentTerms}</span></div>
+                    <div><span>Total Stops: </span><span className="font-semibold text-indigo-900">{invoiceDetails.totalStops}</span></div>
                   </div>
                 </div>
               </div>
@@ -140,7 +140,7 @@ const InvoiceDetailsModal = forwardRef<InvoiceDetailsModalRef, InvoiceDetailsMod
                 <div className="overflow-x-auto">
                   <table className="w-full text-[10px]">
                     <thead>
-                      <tr className="bg-[#1e3a8a]">
+                      <tr className="bg-indigo-900">
                         <th className="px-2 py-1 text-left font-bold uppercase text-white">Date</th>
                         <th className="px-2 py-1 text-left font-bold uppercase text-white">Route</th>
                         <th className="px-2 py-1 text-center font-bold uppercase text-white">VAT</th>
@@ -162,9 +162,9 @@ const InvoiceDetailsModal = forwardRef<InvoiceDetailsModalRef, InvoiceDetailsMod
               </div>
 
               <div className="flex flex-col gap-2 lg:flex-row">
-                <div className="flex-1 rounded-lg border border-[#fcc] bg-[#fee2e2] p-2">
+                <div className="flex-1 rounded-lg border border-red-200 bg-red-100 p-2">
                   <div className="mb-1.5 flex items-center gap-1.5">
-                    <i className="bi bi-exclamation-triangle-fill text-xs text-[#e74c3c]" />
+                    <i className="bi bi-exclamation-triangle-fill text-xs text-red-600" />
                     <h4 className="text-[10px] font-bold">Deductions</h4>
                   </div>
                   <div className="space-y-1 text-[10px]">
@@ -185,7 +185,7 @@ const InvoiceDetailsModal = forwardRef<InvoiceDetailsModalRef, InvoiceDetailsMod
                     )}
                     {totals.totalDeductions === 0 && <div className="text-slate-500">None</div>}
                     {totals.totalDeductions > 0 && (
-                      <div className="mt-1.5 flex justify-between border-t border-slate-300 pt-1.5 font-bold text-[#e74c3c]">
+                      <div className="mt-1.5 flex justify-between border-t border-slate-300 pt-1.5 font-bold text-red-600">
                         <span>Total Deductions:</span><span>-{formatCurrency(totals.totalDeductions)}</span>
                       </div>
                     )}
@@ -203,7 +203,7 @@ const InvoiceDetailsModal = forwardRef<InvoiceDetailsModalRef, InvoiceDetailsMod
                 </div>
               </div>
 
-              <div className="flex items-center justify-between rounded-lg bg-[#1e3a8a] px-4 py-4">
+              <div className="flex items-center justify-between rounded-lg bg-indigo-900 px-4 py-4">
                 <span className="text-[10px] font-bold text-white">Balance Due:</span>
                 <span className="text-base font-bold text-white">{formatCurrency(totals.balanceDue)}</span>
               </div>

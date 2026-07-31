@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { GradientDotsBackground } from "./GradientDotsBackground";
 import { WelcomeHeader } from "./WelcomeHeader";
 import { MobileNavBar } from "./MobileNavBar";
+import { DesktopNavBar } from "./DesktopNavBar";
 import "../tailwind.css";
 
 interface StandardPageLayoutProps {
@@ -39,6 +40,7 @@ export function StandardPageLayout({
           transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
           className="mx-auto w-full max-w-full min-w-0 px-[clamp(0.75rem,4vw,1rem)] sm:px-6 lg:px-10 pt-4 sm:pt-8 lg:pt-9 pb-12 lg:pb-14 relative z-[1]"
         >
+          <DesktopNavBar />
           {children}
         </motion.main>
 

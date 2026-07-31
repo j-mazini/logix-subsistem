@@ -85,7 +85,7 @@ export function PortalLayout({
                       <AdminHeaderPill sp={sp} controls={menuControls} />
                     </div>
                   </div>
-                  <AdminHeaderMenu sp={sp} controls={menuControls} />
+                  <AdminHeaderMenu controls={menuControls} />
                 </>
               )}
 

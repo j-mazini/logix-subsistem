@@ -20,7 +20,7 @@ export const ProgressSection = React.memo<ProgressSectionProps>(
         id="progressSection"
       >
         <h2 className={deductionsStyles.sectionTitle}>
-          <i className="bi bi-graph-up-arrow text-blue-600" />
+          <i className="bi bi-graph-up-arrow text-indigo-600" />
           Progress
         </h2>
         <div

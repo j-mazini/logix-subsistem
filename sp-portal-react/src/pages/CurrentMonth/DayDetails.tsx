@@ -16,7 +16,7 @@ export const DayDetails = memo(function DayDetails({
   onBack,
 }: DayDetailsProps) {
   return (
-    <div className={`driver-tw-scope ${currentMonthStyles.dayDetailsRoot}`}>
+    <div className={currentMonthStyles.dayDetailsRoot}>
       <MobileHeader />
 
       <button

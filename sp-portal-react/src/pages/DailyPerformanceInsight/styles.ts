@@ -11,8 +11,8 @@ export const dailyPerformanceInsightStyles = {
   emptyStateText: "text-slate-500",
 
   // Month Selector
-  monthSelectorContainer: "flex items-center justify-between gap-[clamp(0.5rem,2vw,0.75rem)] font-semibold text-slate-700 text-sm flex-1 min-w-0 max-w-full px-[clamp(0.75rem,3vw,1rem)] py-[clamp(0.625rem,2.5vw,0.75rem)] bg-white border border-slate-100 rounded-xl min-h-[44px] shadow-sm hover:shadow-md transition-all duration-300",
-  monthSelectorNavButton: "min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] w-[max(2.5rem,6vw)] h-[max(2.5rem,6vw)] sm:w-[max(2.75rem,7vw)] sm:h-[max(2.75rem,7vw)] rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 text-white flex items-center justify-center cursor-pointer hover:shadow-md transition-all duration-300 flex-shrink-0 touch-manipulation",
+  monthSelectorContainer: "flex items-center justify-between gap-[clamp(0.5rem,2vw,0.75rem)] font-semibold text-slate-700 text-sm flex-1 min-w-0 max-w-full px-[clamp(0.75rem,3vw,1rem)] py-[clamp(0.625rem,2.5vw,0.75rem)] liquid-glass-surface rounded-xl min-h-[44px] transition-all duration-300",
+  monthSelectorNavButton: "min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] w-[max(2.5rem,6vw)] h-[max(2.5rem,6vw)] sm:w-[max(2.75rem,7vw)] sm:h-[max(2.75rem,7vw)] rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center cursor-pointer hover:shadow-md transition-all duration-300 flex-shrink-0 touch-manipulation",
   monthSelectorNavIcon: "bi bi-chevron-left text-[clamp(0.75rem,3vw,0.875rem)]",
   monthSelectorNavIconRight: "bi bi-chevron-right text-[clamp(0.75rem,3vw,0.875rem)]",
   monthSelectorText: "flex-1 text-center text-[clamp(0.8rem,3.2vw,1.125rem)] font-bold text-slate-800 min-w-0 overflow-visible",
@@ -21,7 +21,7 @@ export const dailyPerformanceInsightStyles = {
   daysCarouselWrapper: "mb-4 sm:mb-5 -mx-1 px-1",
   daysCarouselScroll: "flex overflow-x-auto gap-2 sm:gap-3 py-2 pb-3 scroll-snap-type-x-mandatory [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
   dayCardBase: "min-w-[clamp(2.75rem,11vw,3.5rem)] min-h-[44px] h-[clamp(3.5rem,15vw,4.25rem)] rounded-xl flex flex-col items-center justify-center transition-all duration-300 flex-shrink-0 snap-center cursor-pointer border touch-manipulation",
-  dayCardSelected: "bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 text-white border-blue-400/30 shadow-lg scale-105",
+  dayCardSelected: "bg-gradient-to-br from-indigo-500 via-indigo-600 to-purple-700 text-white border-indigo-400/30 shadow-lg scale-105",
   dayCardUnselected: "bg-white text-slate-700 border-slate-200 hover:border-slate-300 shadow-sm hover:shadow-md",
   dayCardNumber: "text-[clamp(1.25rem,4.6vw,1.5rem)] font-bold leading-none",
   dayCardNumberSelected: "drop-shadow-sm",
@@ -34,7 +34,7 @@ export const dailyPerformanceInsightStyles = {
   operationCardDivider: "border-none border-t border-slate-200 my-6",
 
   // Verified Card
-  verifiedCard: "bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 text-white p-[clamp(1rem,2.2vw,1.25rem)] rounded-2xl text-[clamp(1.25rem,4.6vw,1.5rem)] font-bold mx-auto shadow-lg hover:shadow-xl transition-all duration-300 flex justify-between items-center w-full max-w-[min(92%,28rem)] border border-blue-400/20",
+  verifiedCard: "bg-gradient-to-br from-indigo-500 via-indigo-600 to-purple-700 text-white p-[clamp(1rem,2.2vw,1.25rem)] rounded-2xl text-[clamp(1.25rem,4.6vw,1.5rem)] font-bold mx-auto shadow-lg hover:shadow-xl transition-all duration-300 flex justify-between items-center w-full max-w-[min(92%,28rem)] border border-indigo-400/20",
   verifiedCardText: "drop-shadow-sm",
 
   // Vehicle Info
@@ -44,7 +44,7 @@ export const dailyPerformanceInsightStyles = {
   vehicleInfoText: "font-semibold",
 
   // Card Base
-  cardBase: "bg-white border border-slate-100 rounded-2xl p-[clamp(0.875rem,2.2vw,1.25rem)] shadow-sm hover:shadow-lg transition-all duration-300",
+  cardBase: "liquid-glass-surface rounded-2xl overflow-hidden relative p-[clamp(0.875rem,2.2vw,1.25rem)] transition-all duration-300",
 
   // Metrics Card
   metricsCardGrid: "grid grid-cols-2 gap-2 sm:gap-[clamp(0.875rem,2.8vw,1.25rem)]",
@@ -64,7 +64,7 @@ export const dailyPerformanceInsightStyles = {
 
   // Timeline
   timelineContainer: "flex justify-between relative px-2.5 py-3",
-  timelineLine: "absolute top-6 left-[12%] right-[12%] h-1 bg-gradient-to-r from-blue-200 via-amber-200 to-emerald-200 rounded-full z-[1]",
+  timelineLine: "absolute top-6 left-[12%] right-[12%] h-1 bg-gradient-to-r from-indigo-200 via-amber-200 to-emerald-200 rounded-full z-[1]",
   timelineItem: "flex flex-col items-center z-[2] relative bg-white px-2",
   timelineDot: "w-5 h-5 rounded-full bg-gradient-to-br mb-2 border-[3px] border-white shadow-lg flex items-center justify-center",
   timelineDotIcon: "bi text-xs text-white",
@@ -84,10 +84,10 @@ export const dailyPerformanceInsightStyles = {
   failedDeliveriesValue: "text-[clamp(1rem,3.5vw,1.25rem)] font-bold leading-none text-slate-800",
 
   // Notes Section
-  notesCard: "bg-[#fffef0] border-l-4 border-[#f5e6a3] p-[clamp(1rem,2.2vw,1.25rem)] rounded-xl mb-3 break-words shadow-sm hover:shadow-md transition-all duration-300",
+  notesCard: "bg-amber-50 border-l-4 border-amber-200 p-[clamp(1rem,2.2vw,1.25rem)] rounded-xl mb-3 break-words shadow-sm hover:shadow-md transition-all duration-300",
   notesHeader: "flex items-center gap-2 mb-3",
-  notesIconWrapper: "w-8 h-8 rounded-lg bg-[#f5e6a3]/30 flex items-center justify-center",
-  notesIcon: "bi bi-sticky text-[#b8941f] text-sm",
-  notesTitle: "text-xs font-bold text-[#8b6914] uppercase tracking-wider",
-  notesText: "text-[clamp(0.875rem,3.4vw,1rem)] text-[#8b6914] font-medium break-words whitespace-pre-wrap leading-relaxed",
+  notesIconWrapper: "w-8 h-8 rounded-lg bg-amber-200/40 flex items-center justify-center",
+  notesIcon: "bi bi-sticky text-amber-700 text-sm",
+  notesTitle: "text-xs font-bold text-amber-800 uppercase tracking-wider",
+  notesText: "text-[clamp(0.875rem,3.4vw,1rem)] text-amber-800 font-medium break-words whitespace-pre-wrap leading-relaxed",
 } as const;
