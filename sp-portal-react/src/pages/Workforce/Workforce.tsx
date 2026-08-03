@@ -84,6 +84,7 @@ export function Workforce() {
       pageClassName="compliance-page workforce-page"
       mainClassName="compliance-container container-fluid px-3 px-lg-4 py-4"
       title="Workforce"
+      hideAnnouncements
     >
       {state.loading && (
         <div className="compliance-loading">

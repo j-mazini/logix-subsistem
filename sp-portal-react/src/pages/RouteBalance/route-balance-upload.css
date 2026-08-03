@@ -72,6 +72,26 @@
 
 .disco-process-btn { width: 100%; justify-content: center; }
 
+.disco-mock-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--ink-faint);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.disco-mock-divider::before,
+.disco-mock-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--hairline);
+}
+
+.disco-mock-btn { width: 100%; justify-content: center; }
+
 .disco-actions {
   display: flex;
   flex-direction: column;

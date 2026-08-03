@@ -4,7 +4,7 @@ import { PortalLayout } from '../../layout/PortalLayout';
 import '../../styles/legacy/route-balance.css';
 import './route-balance-upload.css';
 import {
-  buildDiscoExcel, buildRouteRowsFromStops, FIXED_SIZE_CLASS_COLS, processDiscoFiles, ROUTE_BALANCE_SESSION_KEY,
+  buildDiscoExcel, buildRouteRowsFromStops, FIXED_SIZE_CLASS_COLS, generateMockRouteRows, processDiscoFiles, ROUTE_BALANCE_SESSION_KEY,
 } from './discoProcessing';
 import type { DiscoProcessResult } from './discoProcessing';
 
@@ -119,10 +119,16 @@ export function RouteBalanceUpload() {
     navigate('/route-balance', { state: { routes } });
   }
 
+  function workWithMockData() {
+    const routes = generateMockRouteRows();
+    sessionStorage.setItem(ROUTE_BALANCE_SESSION_KEY, JSON.stringify(routes));
+    navigate('/route-balance', { state: { routes } });
+  }
+
   const fileNames = files.length === 1 ? files[0].name : `${files.length} files`;
 
   return (
-    <PortalLayout mainClassName="route-balance-container container-fluid px-3 px-lg-4 py-4" title="Route Balance — Import">
+    <PortalLayout mainClassName="route-balance-container container-fluid px-3 px-lg-4 py-4" title="Route Balance — Import" hideAnnouncements>
       <div className="disco-upload">
         <p className="disco-upload-subtitle">
           Upload the DISCO export to build today&apos;s stops for Route Balance — extracts Pre-12, postcode totals and size-class breakdown, and seeds the routes below.
@@ -161,6 +167,11 @@ export function RouteBalanceUpload() {
 
             <button type="button" className="styled-button styled-button--primary disco-process-btn" disabled={!files.length || processing} onClick={runProcess}>
               {processing ? 'Processing…' : (result ? 'Reprocess' : 'Process')}
+            </button>
+
+            <div className="disco-mock-divider"><span>or</span></div>
+            <button type="button" className="styled-button styled-button--outline disco-mock-btn" onClick={workWithMockData}>
+              <i className="bi bi-magic" /> Work with Mock Data
             </button>
 
             {result && (

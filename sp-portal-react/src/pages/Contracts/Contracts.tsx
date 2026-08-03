@@ -422,7 +422,7 @@ export function Contracts() {
 
   if (!sp) {
     return (
-      <PortalLayout mainClassName={styles.contracts} title="Contracts">
+      <PortalLayout mainClassName={styles.contracts} title="Contracts" hideAnnouncements>
         <div className={styles.errorNotice}>
           Service Provider not set. Open with <code>?sp=YourCompany</code>.
         </div>
@@ -454,7 +454,7 @@ export function Contracts() {
   );
 
   return (
-    <PortalLayout mainClassName={styles.contracts} title="Contracts" actions={headerActions}>
+    <PortalLayout mainClassName={styles.contracts} title="Contracts" hideAnnouncements actions={headerActions}>
       <div className={styles.contractsContent}>
         <div className={styles.metricsRow}>
           <div className={styles.metricCard}>

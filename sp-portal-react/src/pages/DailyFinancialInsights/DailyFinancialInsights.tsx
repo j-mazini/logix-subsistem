@@ -339,7 +339,7 @@ export function DailyFinancialInsights() {
       : `Date: ${formatDateLong(dateFrom || dateTo)}`;
 
   return (
-    <PortalLayout mainClassName="dfi-container container-fluid px-3 px-lg-4 py-4" title="Daily Financial Insights">
+    <PortalLayout mainClassName="dfi-container container-fluid px-3 px-lg-4 py-4" title="Daily Financial Insights" hideAnnouncements>
       {/* ============ PAGE INFO (kept from the original header; not part of the standardized pattern) ============ */}
       <div className="page-header-section">
         <div className="page-header-welcome-text">

@@ -1184,7 +1184,7 @@ export function DeductionsDisbursementsRecharges() {
   }, [filteredData, monthKey]);
 
   return (
-    <PortalLayout mainClassName="ddr-container container-fluid px-3 px-lg-4 py-4" title="Deductions & Recharges">
+    <PortalLayout mainClassName="ddr-container container-fluid px-3 px-lg-4 py-4" title="Deductions & Recharges" hideAnnouncements>
       <div className={styles.page}>
         <p className={styles.pageSubtitle}>Period: {currentMonth.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}</p>
 

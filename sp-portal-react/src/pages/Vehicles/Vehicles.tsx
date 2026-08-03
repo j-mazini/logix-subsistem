@@ -266,7 +266,7 @@ export function Vehicles() {
 
   if (!sp) {
     return (
-      <PortalLayout mainClassName="vehicles-page-main" title="Vehicles">
+      <PortalLayout mainClassName="vehicles-page-main" title="Vehicles" hideAnnouncements>
         <div className="alert alert-warning">
           Service Provider not set. Open with <code>?sp=YourCompany</code>.
         </div>
@@ -282,7 +282,7 @@ export function Vehicles() {
   ];
 
   return (
-    <PortalLayout mainClassName="vehicles-page-main" title="Vehicles">
+    <PortalLayout mainClassName="vehicles-page-main" title="Vehicles" hideAnnouncements>
       <div className="vehicles-page-container">
         <VehiclePageHeader subtitle="Vehicle fleet management" metrics={metrics} />
 

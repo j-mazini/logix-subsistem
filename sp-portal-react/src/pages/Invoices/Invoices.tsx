@@ -832,7 +832,7 @@ export function Invoices() {
   }
 
   return (
-    <PortalLayout pageClassName="invoices-page" mainClassName="invoices-container container-fluid px-3 px-lg-4 py-4" title="Invoices">
+    <PortalLayout pageClassName="invoices-page" mainClassName="invoices-container container-fluid px-3 px-lg-4 py-4" title="Invoices" hideAnnouncements>
       {/* Loading Screen */}
       <div className={`loading-overlay${loadingHidden ? ' hidden' : ' active'}`} id="loadingOverlay">
         <div className="spinner" />

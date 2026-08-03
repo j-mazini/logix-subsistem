@@ -1,5 +1,5 @@
 import * as XLSX from 'xlsx';
-import type { RouteRow, ShipmentMetrics, ShipmentType, Stop } from './RouteBalance';
+import type { RouteRow, ShipmentMetrics, ShipmentType, SortAttendance, Stop } from './RouteBalance';
 
 /**
  * Ported from the standalone "Route Balancer" filter tool (recovered HTML
@@ -142,6 +142,18 @@ function processPostcode(postcode: unknown): string {
   return base;
 }
 
+/**
+ * Formats a bare DISCO postcode ("DA130RY") into standard UK "outward inward"
+ * form ("DA13 0RY") — the inward code is always the last 3 characters. Route
+ * Balance's subpostcodeOf() groups stops by splitting Stop.postcode on this
+ * space, so without it every full postcode would end up as its own group.
+ */
+function formatPostcode(postcode: unknown): string {
+  const s = String(postcode || '').replace(/\s/g, '').toUpperCase();
+  if (s.length <= 3) return s;
+  return `${s.slice(0, -3)} ${s.slice(-3)}`;
+}
+
 function formatSubpostcode(postcode: unknown): string {
   let s = String(postcode || '').replace(/\s/g, '').toUpperCase();
   if (s.length < 2) return s;
@@ -240,7 +252,7 @@ function processData(
   // only ever produced the three aggregate report tabs below.
   const dfStops: DiscoStopRow[] = df.map((r) => ({
     name: String(r[nameKey] ?? ''),
-    postcode: upper(r[postalKey]),
+    postcode: formatPostcode(r[postalKey]),
     address: String(r[addressKey] ?? ''),
     product: String(r[productKey] ?? '').trim(),
     bookingType: String(r[bookingTypeKey] ?? '').trim(),
@@ -524,5 +536,88 @@ export function buildRouteRowsFromStops(dfStops: DiscoStopRow[], options: BuildR
       shipmentBreakdown: [],
     });
   }
+  return routes;
+}
+
+/* ==================== MOCK DATA (ported from the pre-DISCO generateFakeData()) ====================
+   Lets Route Balance be exercised end-to-end — rebalancing, sending, exporting — without a real
+   DISCO export on hand, e.g. for demos or QA. */
+
+const MOCK_DRIVERS = [
+  'Carlos Silva', 'Ana Costa', 'João Martins', 'Maria Santos', 'Pedro Oliveira',
+  'Lucas Pereira', 'Sofia Alves', 'Ricardo Dias', 'Juliana Ribeiro', 'Felipe Costa',
+];
+const MOCK_VEHICLES = ['Van-001', 'Van-002', 'Van-003', 'Truck-001', 'Truck-002', 'Truck-003', 'Bike-001', 'Car-001'];
+const MOCK_SUBPOSTCODES = Array.from({ length: 8 }, (_, i) => `ME${i + 1}`);
+const MOCK_POSTCODES = MOCK_SUBPOSTCODES.flatMap((sub) => Array.from({ length: 5 }, (_, i) => `${sub} ${i + 1}AB`));
+const MOCK_STREETS = ['High Street', 'Station Road', 'Church Lane', 'Victoria Avenue', 'Mill Road', 'Park View', 'Queensway', 'Riverside Drive'];
+const MOCK_SHIPMENT_TYPES: ShipmentType[] = ['COY', 'COY-S1', 'COY-S2', 'FLY', 'NCY', 'PAL1'];
+
+function mockRand(n: number): number {
+  return Math.floor(Math.random() * n);
+}
+function mockPick<T>(arr: T[]): T {
+  return arr[mockRand(arr.length)];
+}
+
+/** Generates a full set of fake routes/stops for testing Route Balance without a DISCO import. */
+export function generateMockRouteRows(): RouteRow[] {
+  let stopId = 1;
+  const routes: RouteRow[] = [];
+
+  for (let i = 1; i <= 8; i++) {
+    const totalStops = 22 + mockRand(8);
+    const deliveries = Math.floor(totalStops * 0.72);
+    const completion = mockRand(101);
+    const completedStops = Math.round((totalStops * completion) / 100);
+    const name = `A-${String(i).padStart(2, '0')}`;
+
+    const stops: Stop[] = [];
+    for (let j = 0; j < totalStops; j++) {
+      const isPM = Math.random() > 0.68;
+      stops.push({
+        id: stopId++,
+        routeName: name,
+        stopNumber: j + 1,
+        postcode: mockPick(MOCK_POSTCODES),
+        address: `${1 + mockRand(200)} ${mockPick(MOCK_STREETS)}`,
+        customer: `Customer ${100 + mockRand(900)}`,
+        type: j < deliveries ? 'DEL' : 'PU',
+        pm: isPM,
+        // Pre-12 ("must deliver before 12:00") is AM-only — never roll it for PM stops.
+        pre12: !isPM && Math.random() > 0.78,
+        asr: Math.random() > 0.15,
+        dsr: Math.random() > 0.12,
+        status: j < completedStops ? 'completed' : 'pending',
+        shipmentType: mockPick(MOCK_SHIPMENT_TYPES),
+        pieces: 1 + mockRand(15),
+        physicalWeight: Math.round((50 + Math.random() * 750) * 100) / 100,
+      });
+    }
+
+    routes.push({
+      id: i,
+      name,
+      driver: MOCK_DRIVERS[(i - 1) % MOCK_DRIVERS.length],
+      vehicle: mockPick(MOCK_VEHICLES),
+      target: 80 + mockRand(16),
+      totalStops,
+      completedStops,
+      completion,
+      deliveries,
+      pickups: totalStops - deliveries,
+      pre12: stops.filter((s) => s.pre12).length,
+      asr: stops.filter((s) => s.asr).length,
+      dsr: stops.filter((s) => s.dsr).length,
+      spr: 90 + mockRand(80),
+      sortAttendance: mockPick<SortAttendance>(['yes', 'yes', 'yes', 'late', 'no']),
+      notes: '',
+      sendStatus: { am: 'pending', pm: 'pending' },
+      history: [],
+      stops,
+      ...totalsOf(stops),
+    });
+  }
+
   return routes;
 }

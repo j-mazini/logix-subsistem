@@ -1006,7 +1006,7 @@ export function WeekPlanner() {
   const fullWeekDates = getWeekDatesFiltered(currentWeekStart, showWeekends);
 
   return (
-    <PortalLayout mainClassName="wp-container container-fluid px-3 px-lg-4 py-4" title="Week Planner">
+    <PortalLayout mainClassName="wp-container container-fluid px-3 px-lg-4 py-4" title="Week Planner" hideAnnouncements>
       {/* ============ PAGE INFO (kept from the original header; not part of the standardized pattern) ============ */}
       <div className="page-header-section">
         <div className="page-header-welcome-text">

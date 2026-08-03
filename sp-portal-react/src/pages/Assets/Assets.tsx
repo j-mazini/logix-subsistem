@@ -646,7 +646,7 @@ export function Assets() {
   ];
 
   return (
-    <PortalLayout pageClassName="assets-page" mainClassName="am-container container-fluid px-3 px-lg-4 py-4" title="Assets Management">
+    <PortalLayout pageClassName="assets-page" mainClassName="am-container container-fluid px-3 px-lg-4 py-4" title="Assets Management" hideAnnouncements>
       <div className={`loading-overlay${loading ? ' active' : ''}`} id="loadingOverlay">
         <div className="spinner" />
         <p>Loading assets…</p>

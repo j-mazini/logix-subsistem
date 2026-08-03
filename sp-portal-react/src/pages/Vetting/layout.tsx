@@ -26,7 +26,7 @@ export function VettingAdminLayout() {
   const { pathname } = useLocation();
   return (
     <AdminCandidateProvider>
-      <PortalLayout mainClassName="vendor-admin-main" title={TITLES[pathname] ?? 'Driver Vetting'}>
+      <PortalLayout mainClassName="vendor-admin-main" title={TITLES[pathname] ?? 'Driver Vetting'} hideAnnouncements>
         <div className="vetting-v2-scope">
           <Outlet />
         </div>

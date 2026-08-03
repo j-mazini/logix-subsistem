@@ -511,7 +511,7 @@ export function AdhocInvoiceManagement() {
   const exportDisabled = displayRows.length === 0;
 
   return (
-    <PortalLayout mainClassName="adm-container container-fluid px-3 px-lg-4 py-4" title="Ad-hoc Invoice System">
+    <PortalLayout mainClassName="adm-container container-fluid px-3 px-lg-4 py-4" title="Ad-hoc Invoice System" hideAnnouncements>
       <div className={`loading-overlay${overlayActive ? ' active' : ''}`} id="loadingOverlay">
         <div className="spinner" />
         <p>Loading adhoc works invoices…</p>

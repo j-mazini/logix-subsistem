@@ -20,7 +20,7 @@ import '../../styles/legacy/route-balance.css';
 
 export type StopType = 'DEL' | 'PU';
 export type StopStatus = 'pending' | 'completed';
-type SortAttendance = 'yes' | 'late' | 'no';
+export type SortAttendance = 'yes' | 'late' | 'no';
 export type SendStatus = 'pending' | 'sent';
 type ToastType = 'success' | 'error' | 'info' | 'warning';
 type DashboardFilterKey = 'del' | 'pu' | 'pre12' | 'asr' | 'dsr' | 'special';
@@ -1210,7 +1210,7 @@ export function RouteBalance() {
   }
 
   return (
-    <PortalLayout mainClassName="route-balance-container container-fluid px-3 px-lg-4 py-4" title="Route Balance">
+    <PortalLayout mainClassName="route-balance-container container-fluid px-3 px-lg-4 py-4" title="Route Balance" hideAnnouncements>
       <div className="dashboard-view" id="dashboardView">
         {/* ============ PAGE INFO ============ */}
         <div className="page-header-section">

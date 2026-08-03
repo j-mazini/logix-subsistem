@@ -30,6 +30,8 @@ interface PortalLayoutProps {
    * themselves via useAdminHeaderPill.
    */
   header?: ReactNode;
+  /** Drop the Announcements card from this page's header. */
+  hideAnnouncements?: boolean;
   children: ReactNode;
 }
 
@@ -42,6 +44,7 @@ export function PortalLayout({
   actions,
   headerClassName,
   header,
+  hideAnnouncements = false,
   children,
 }: PortalLayoutProps) {
   const sp = useCurrentSp();
@@ -62,7 +65,7 @@ export function PortalLayout({
                 // so it sits directly beneath it instead.
                 <>
                   {header}
-                  <AnnouncementBox standalone />
+                  {!hideAnnouncements && <AnnouncementBox standalone />}
                 </>
               ) : (
                 <>
@@ -78,7 +81,7 @@ export function PortalLayout({
                       {subtitle && <p className="admin-header-subtitle">{subtitle}</p>}
                     </div>
 
-                    <AnnouncementBox />
+                    {!hideAnnouncements && <AnnouncementBox />}
 
                     <div className="admin-header-side admin-header-side--end">
                       {actions}
