@@ -70,7 +70,7 @@ const NAV_GROUPS: NavGroup[] = [
   },
   {
     label: 'Trace & Queries',
-    items: [{ icon: 'bi-search', label: 'Trace & Queries' }],
+    items: [{ icon: 'bi-search', label: 'Trace & Queries', route: '/trace-queries' }],
   },
 ];
 

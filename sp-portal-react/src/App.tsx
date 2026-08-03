@@ -40,6 +40,7 @@ import { Subcontractor } from './pages/Subcontractor/Subcontractor';
 import { MyDeliveries } from './pages/MyDeliveries/MyDeliveries';
 import { MySchedule } from './pages/MySchedule/MySchedule';
 import { DriverProfile } from './pages/DriverProfile/DriverProfile';
+import { TraceQueries } from './pages/TraceQueries/TraceQueries';
 import { useViewportAttribute } from './hooks/useViewportAttribute';
 import { useRefinementsMotion } from './hooks/useRefinementsMotion';
 
@@ -74,6 +75,7 @@ function App() {
           <Route path="/contracts" element={<Contracts />} />
           <Route path="/invoices" element={<Invoices />} />
           <Route path="/requests-admin" element={<RequestsAdmin />} />
+          <Route path="/trace-queries" element={<TraceQueries />} />
           <Route path="/vendor-performance" element={<VendorPerformance />} />
           <Route path="/adhoc-invoice-management" element={<AdhocInvoiceManagement />} />
           <Route path="/deductions-disbursements-recharges" element={<DeductionsDisbursementsRecharges />} />

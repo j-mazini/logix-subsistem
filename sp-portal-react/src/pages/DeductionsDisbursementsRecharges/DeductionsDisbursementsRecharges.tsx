@@ -1,5 +1,11 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { PortalLayout } from '../../layout/PortalLayout';
+import { MOCK_DRIVERS } from '../../data/mockDrivers';
+import {
+  subscribe as subscribeDuplicateStopDeductions,
+  getSnapshot as getDuplicateStopDeductionsSnapshot,
+  type DuplicateStopDeductionEntry,
+} from '../../services/duplicateStopReviewService';
 import styles from './DeductionsDisbursementsRecharges.module.css';
 
 /**
@@ -34,9 +40,10 @@ type DeductionCategory =
   | 'Traffic Penalties'
   | 'Pre-Payments'
   | 'Liquidation Damages'
-  | 'Other';
+  | 'Other'
+  | 'Duplicate Stop';
 
-type BackendType = 'fix-damage' | 'traffic-penalty' | 'pre-payment' | 'liquidation-damage' | 'other';
+type BackendType = 'fix-damage' | 'traffic-penalty' | 'pre-payment' | 'liquidation-damage' | 'other' | 'duplicate-stop';
 
 interface FormDataState {
   [key: string]: string | boolean | undefined;
@@ -57,10 +64,6 @@ interface DisplayDeduction {
   fields: FormDataState;
 }
 
-interface MockDriver {
-  userId: number;
-  fullName: string;
-}
 interface MockVehicle {
   vehicleId: number;
   registrationPlates: string;
@@ -97,8 +100,16 @@ const KPI_CARDS: KPICardDef[] = [
   { key: 'liquidation', title: 'Liquidation Damages', icon: 'bi-exclamation-triangle-fill', bg: '#ffeeed', color: '#f5222d', filterType: 'Liquidation Damages', hasAdd: true },
   { key: 'penalties', title: 'Traffic Penalties', icon: 'bi-cone-striped', bg: '#feefc7', color: '#92400e', filterType: 'Traffic Penalties', hasAdd: true },
   { key: 'other', title: 'Other', icon: 'bi-three-dots', bg: '#f4f4f5', color: '#71717a', filterType: 'Other', hasAdd: true },
+  // hasAdd: false on purpose — a Duplicate Stop deduction can only be
+  // generated from the Trace & Queries review flow (confirmDuplicateStop()),
+  // never created manually from this page.
+  { key: 'duplicate', title: 'Duplicate Stop', icon: 'bi-shield-exclamation', bg: '#fee2e2', color: '#991b1b', filterType: 'Duplicate Stop', hasAdd: false },
 ];
 
+// The 5 categories a user can create by hand via the "+" KPI cards above.
+// Duplicate Stop deliberately stays out of this list (see KPI_CARDS) — it's
+// still part of DeductionCategory/the Record maps below so injected records
+// render correctly.
 const CATEGORIES: DeductionCategory[] = ['Repairs & Damages', 'Traffic Penalties', 'Pre-Payments', 'Liquidation Damages', 'Other'];
 
 const REQUIRED_FIELDS_BY_CATEGORY: Record<DeductionCategory, string[]> = {
@@ -107,6 +118,7 @@ const REQUIRED_FIELDS_BY_CATEGORY: Record<DeductionCategory, string[]> = {
   'Pre-Payments': ['pre_refNumber', 'pre_vendor', 'pre_totalAmount', 'pre_paymentDate'],
   'Liquidation Damages': ['liq_refNumber', 'liq_vendor', 'liq_lqDate', 'liq_amount'],
   Other: ['oth_refNumber', 'oth_vendor', 'oth_incidentDate', 'oth_amount'],
+  'Duplicate Stop': ['oth_refNumber', 'oth_vendor', 'oth_incidentDate', 'oth_amount'],
 };
 
 const AMOUNT_FIELD_BY_CATEGORY: Record<DeductionCategory, string> = {
@@ -115,6 +127,7 @@ const AMOUNT_FIELD_BY_CATEGORY: Record<DeductionCategory, string> = {
   'Pre-Payments': 'pre_totalAmount',
   'Liquidation Damages': 'liq_amount',
   Other: 'oth_amount',
+  'Duplicate Stop': 'oth_amount',
 };
 
 const DATE_FIELD_BY_CATEGORY: Record<DeductionCategory, string> = {
@@ -123,6 +136,7 @@ const DATE_FIELD_BY_CATEGORY: Record<DeductionCategory, string> = {
   'Pre-Payments': 'pre_paymentDate',
   'Liquidation Damages': 'liq_lqDate',
   Other: 'oth_incidentDate',
+  'Duplicate Stop': 'oth_incidentDate',
 };
 
 const VENDOR_FIELD_BY_CATEGORY: Record<DeductionCategory, string> = {
@@ -131,6 +145,7 @@ const VENDOR_FIELD_BY_CATEGORY: Record<DeductionCategory, string> = {
   'Pre-Payments': 'pre_vendor',
   'Liquidation Damages': 'liq_vendor',
   Other: 'oth_vendor',
+  'Duplicate Stop': 'oth_vendor',
 };
 
 const REF_FIELD_BY_CATEGORY: Record<DeductionCategory, string> = {
@@ -139,6 +154,7 @@ const REF_FIELD_BY_CATEGORY: Record<DeductionCategory, string> = {
   'Pre-Payments': 'pre_refNumber',
   'Liquidation Damages': 'liq_refNumber',
   Other: 'oth_refNumber',
+  'Duplicate Stop': 'oth_refNumber',
 };
 
 const BACKEND_TYPE_BY_CATEGORY: Record<DeductionCategory, BackendType> = {
@@ -147,6 +163,7 @@ const BACKEND_TYPE_BY_CATEGORY: Record<DeductionCategory, BackendType> = {
   'Pre-Payments': 'pre-payment',
   'Liquidation Damages': 'liquidation-damage',
   Other: 'other',
+  'Duplicate Stop': 'duplicate-stop',
 };
 
 const REF_PREFIX_BY_CATEGORY: Record<DeductionCategory, string> = {
@@ -155,6 +172,7 @@ const REF_PREFIX_BY_CATEGORY: Record<DeductionCategory, string> = {
   'Pre-Payments': 'PRP',
   'Liquidation Damages': 'LQD',
   Other: 'OTH',
+  'Duplicate Stop': 'DUP',
 };
 
 /* ==================== Deterministic PRNG (same scheme as RouteBalance/DailyOperationsManagement) ==================== */
@@ -367,17 +385,34 @@ function calculateInstallments(
 
 /* ==================== Mock master data ==================== */
 
-const DRIVER_NAMES = [
-  'John Smith', 'Maria Santos', 'James Wilson', 'Ana Ferreira', 'Michael Brown',
-  'Sofia Rodrigues', 'Carlos Silva', 'Emily Clarke', 'Pedro Oliveira', 'Laura Bennett',
-  'Lucas Pereira', 'Grace Thompson',
-];
 const VEHICLE_PLATES = ['AB12 CDE', 'EF34 FGH', 'JK56 LMN', 'OP78 PQR', 'ST90 UVW', 'XY12 ZAB', 'CD34 EFG', 'GH56 IJK'];
 const ROUTE_NAMES = ['LON-01', 'LON-02', 'LON-03', 'MAN-01', 'MAN-02', 'BIR-01'];
 
-const MOCK_DRIVERS: MockDriver[] = DRIVER_NAMES.map((fullName, i) => ({ userId: i + 1, fullName }));
 const MOCK_VEHICLES: MockVehicle[] = VEHICLE_PLATES.map((registrationPlates, i) => ({ vehicleId: i + 1, registrationPlates }));
 const MOCK_ROUTES: MockRoute[] = ROUTE_NAMES.map((routeName, i) => ({ routeId: i + 1, routeName }));
+
+/** Maps a Trace & Queries confirmed-duplicate entry into this page's row shape. */
+function duplicateStopEntryToDisplayDeduction(entry: DuplicateStopDeductionEntry): DisplayDeduction {
+  return {
+    id: entry.refNumber,
+    dateOfIncident: entry.incidentDate,
+    courierName: entry.driverName,
+    type: 'Duplicate Stop',
+    amount: entry.amount,
+    status: 'Pending',
+    backendId: entry.backendId,
+    backendType: 'duplicate-stop',
+    userId: entry.driverUserId,
+    fields: {
+      type: 'Duplicate Stop',
+      oth_refNumber: entry.refNumber,
+      oth_vendor: entry.driverName,
+      oth_amount: String(entry.amount),
+      oth_incidentDate: entry.incidentDate,
+      oth_description: `Package ${entry.packageId} — confirmed duplicate stop. ${entry.note}`,
+    },
+  };
+}
 
 function buildInitialDeductions(): DisplayDeduction[] {
   const rng = rngForSeed('deductions-disbursements-recharges');
@@ -615,8 +650,13 @@ function DeductionsTable({ data, totalAmount, onView, onEdit, onDelete }: {
                 <td>
                   <div className={styles.rowActions}>
                     <button type="button" title="View" onClick={() => onView(item)}><i className="bi bi-eye-fill" /></button>
-                    <button type="button" title="Edit" onClick={() => onEdit(item)}><i className="bi bi-pencil-fill" /></button>
-                    <button type="button" title="Delete" className={styles.deleteAction} onClick={() => onDelete(item)}><i className="bi bi-trash-fill" /></button>
+                    {/* Duplicate Stop rows come from Trace & Queries and are managed there — view-only here. */}
+                    {item.backendType !== 'duplicate-stop' && (
+                      <>
+                        <button type="button" title="Edit" onClick={() => onEdit(item)}><i className="bi bi-pencil-fill" /></button>
+                        <button type="button" title="Delete" className={styles.deleteAction} onClick={() => onDelete(item)}><i className="bi bi-trash-fill" /></button>
+                      </>
+                    )}
                   </div>
                 </td>
               </tr>
@@ -856,6 +896,19 @@ function DeductionModal({
             {renderTextField('oth_scheduleTerms', 'Schedule Terms', { placeholder: 'e.g. 3' })}
           </>
         );
+      case 'Duplicate Stop':
+        // Always view-only in practice: this category has no Add button (see
+        // KPI_CARDS), so the only way this case renders is openModalForView()
+        // on a record injected by Trace & Queries.
+        return (
+          <>
+            {renderTextField('oth_refNumber', 'Reference Number', { readOnly: true, placeholder: 'Auto-generated' })}
+            {renderVendorField('oth_vendor', 'Driver')}
+            {renderAmountField('oth_amount', 'Amount')}
+            {renderTextField('oth_incidentDate', 'Incident Date', { type: 'date', readOnly: true })}
+            {renderDescriptionField('oth_description', 'Duplicate Stop Details')}
+          </>
+        );
       default:
         return null;
     }
@@ -984,6 +1037,15 @@ function DeductionModal({
 
 export function DeductionsDisbursementsRecharges() {
   const [deductions, setDeductions] = useState<DisplayDeduction[]>(() => buildInitialDeductions());
+  const duplicateStopStore = useSyncExternalStore(subscribeDuplicateStopDeductions, getDuplicateStopDeductionsSnapshot);
+  const duplicateStopRecords = useMemo(
+    () => duplicateStopStore.deductions.map(duplicateStopEntryToDisplayDeduction),
+    [duplicateStopStore]
+  );
+  // Records generated from Trace & Queries live in their own store (see
+  // duplicateStopReviewService) and are merged in here read-only — CRUD in
+  // this page only ever touches `deductions`.
+  const allDeductions = useMemo(() => [...duplicateStopRecords, ...deductions], [duplicateStopRecords, deductions]);
   const [currentMonth, setCurrentMonth] = useState(() => new Date());
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<'All' | DeductionCategory>('All');
@@ -1006,12 +1068,12 @@ export function DeductionsDisbursementsRecharges() {
   const monthKey = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}`;
 
   const monthRecords = useMemo(
-    () => deductions.filter((d) => d.dateOfIncident.startsWith(monthKey)),
-    [deductions, monthKey]
+    () => allDeductions.filter((d) => d.dateOfIncident.startsWith(monthKey)),
+    [allDeductions, monthKey]
   );
 
   const kpiTotals = useMemo(() => {
-    const totals: Record<string, number> = { Total: 0 };
+    const totals: Record<string, number> = { Total: 0, 'Duplicate Stop': 0 };
     for (const c of CATEGORIES) totals[c] = 0;
     for (const item of monthRecords) {
       if (item.amount > 0) {
