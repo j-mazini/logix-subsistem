@@ -180,6 +180,130 @@
 
 .disco-copy-btn:hover { background: var(--hairline-strong); }
 
+/* ---- Postcodes by route: the proposed split, one card per route ---- */
+
+.disco-route-hint {
+  margin: -0.25rem 0 0.75rem;
+  font-size: 0.78rem;
+  color: var(--ink-faint);
+}
+
+.disco-route-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 0.75rem;
+}
+
+.disco-route-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+}
+
+/* Routes the split left empty stay visible — they are the room the operator
+   has to move postcodes into on Route Balance. */
+.disco-route-card.is-empty { opacity: 0.55; border-style: dashed; }
+
+.disco-route-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.disco-route-name {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--accent-ink);
+}
+
+.disco-route-stops {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--ink-faint);
+}
+
+.disco-route-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+}
+
+.disco-route-meta span {
+  background: var(--surface);
+  border-radius: 999px;
+  padding: 0.1rem 0.45rem;
+}
+
+.disco-route-pre12 { color: var(--accent-ink); background: var(--accent-soft) !important; }
+
+.disco-route-subs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 260px;
+  overflow: auto;
+}
+
+.disco-route-sub-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--hairline);
+  padding-bottom: 0.2rem;
+  margin-bottom: 0.3rem;
+}
+
+.disco-route-sub-code {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.disco-route-sub-count { font-size: 0.68rem; color: var(--ink-faint); white-space: nowrap; }
+
+.disco-route-pcs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.disco-route-pc {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  padding: 0.1rem 0.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+}
+
+/* Stop count rides inside the chip so the postcode stays the thing you read. */
+.disco-route-pc em {
+  font-style: normal;
+  font-size: 0.66rem;
+  color: var(--ink-faint);
+  background: var(--surface-2);
+  border-radius: 999px;
+  padding: 0 0.3rem;
+}
+
+.disco-route-empty { margin: 0; font-size: 0.75rem; color: var(--ink-faint); }
+
 .disco-preview-table-wrap {
   max-height: 260px;
   overflow: auto;

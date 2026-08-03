@@ -450,18 +450,132 @@ function totalsOf(stops: Stop[]): Pick<RouteRow, 'totalStops' | 'deliveries' | '
   };
 }
 
+/** Same route count the mock generates, so an imported day lands on Route Balance looking like the mock one. */
+export const DEFAULT_ROUTE_COUNT = 8;
+
+/** Route Balance groups stops by outward code (its `subpostcodeOf` splits on the space), so the import splits on that same unit — a subpostcode never straddles two routes. */
+function subpostcodeOfRow(postcode: string): string {
+  return postcode.split(' ')[0];
+}
+
+function isDelivery(r: DiscoStopRow): boolean {
+  return !r.bookingType;
+}
+
+function isPre12(r: DiscoStopRow): boolean {
+  return TARGET_PRODUCTS.includes(r.product);
+}
+
+function routeNameAt(index: number): string {
+  return `A-${String(index + 1).padStart(2, '0')}`;
+}
+
+/**
+ * Splits the deduped rows across `routeCount` routes, whole subpostcodes at a
+ * time: biggest subpostcode first, each onto whichever route is lightest so
+ * far. Greedy, but that is enough to land the routes within a few stops of
+ * each other — the operator still rebalances by hand, this only replaces the
+ * old "everything on A-01, seven empty routes" starting point.
+ */
+function assignStopsToRoutes(dfStops: DiscoStopRow[], routeCount: number): DiscoStopRow[][] {
+  const bySub = new Map<string, DiscoStopRow[]>();
+  for (const r of dfStops) {
+    const code = subpostcodeOfRow(r.postcode);
+    if (!bySub.has(code)) bySub.set(code, []);
+    bySub.get(code)!.push(r);
+  }
+
+  const buckets = [...bySub.entries()].sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]));
+  const routes: DiscoStopRow[][] = Array.from({ length: Math.max(1, routeCount) }, () => []);
+  for (const [, rows] of buckets) {
+    let lightest = 0;
+    for (let i = 1; i < routes.length; i++) {
+      if (routes[i].length < routes[lightest].length) lightest = i;
+    }
+    routes[lightest].push(...rows);
+  }
+
+  // Stop numbers follow the postcode order so a route reads as a walk, not as
+  // the arbitrary row order the export happened to have.
+  for (const rows of routes) rows.sort((a, b) => a.postcode.localeCompare(b.postcode));
+  return routes;
+}
+
+export interface RoutePlanPostcode {
+  postcode: string;
+  stops: number;
+}
+
+export interface RoutePlanSubpostcode {
+  code: string;
+  stops: number;
+  deliveries: number;
+  pre12: number;
+  postcodes: RoutePlanPostcode[];
+}
+
+export interface RoutePlanRoute {
+  name: string;
+  stops: number;
+  deliveries: number;
+  pickups: number;
+  pre12: number;
+  subpostcodes: RoutePlanSubpostcode[];
+}
+
+/**
+ * The same split `buildRouteRowsFromStops` applies, reduced to counts — the
+ * import screen previews the route division before the operator commits to it.
+ */
+export function planRoutesFromStops(dfStops: DiscoStopRow[], routeCount = DEFAULT_ROUTE_COUNT): RoutePlanRoute[] {
+  return assignStopsToRoutes(dfStops, routeCount).map((rows, i) => {
+    const bySub = new Map<string, DiscoStopRow[]>();
+    for (const r of rows) {
+      const code = subpostcodeOfRow(r.postcode);
+      if (!bySub.has(code)) bySub.set(code, []);
+      bySub.get(code)!.push(r);
+    }
+
+    const subpostcodes: RoutePlanSubpostcode[] = [...bySub.entries()]
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([code, subRows]) => {
+        const byPc = new Map<string, number>();
+        for (const r of subRows) byPc.set(r.postcode, (byPc.get(r.postcode) || 0) + 1);
+        return {
+          code,
+          stops: subRows.length,
+          deliveries: subRows.filter(isDelivery).length,
+          pre12: subRows.filter(isPre12).length,
+          postcodes: [...byPc.entries()]
+            .sort((a, b) => a[0].localeCompare(b[0]))
+            .map(([postcode, stops]) => ({ postcode, stops })),
+        };
+      });
+
+    const deliveries = rows.filter(isDelivery).length;
+    return {
+      name: routeNameAt(i),
+      stops: rows.length,
+      deliveries,
+      pickups: rows.length - deliveries,
+      pre12: rows.filter(isPre12).length,
+      subpostcodes,
+    };
+  });
+}
+
 export interface BuildRouteRowsOptions {
-  /** How many additional empty routes to create for manual rebalancing. Default 7. */
-  emptyRoutes?: number;
-  seedRouteName?: string;
+  /** How many routes to spread the stops across. Default 8. */
+  routeCount?: number;
 }
 
 /**
  * Turns the deduped DISCO rows into the RouteRow[] shape RouteBalance
  * renders. The DISCO export carries no route/driver assignment — deciding
- * that is the whole point of Route Balance — so every stop lands on a
- * single seed route, plus a handful of empty routes ready to receive
- * postcodes via the existing "Move…" / "Move all…" rebalance tools.
+ * that is the whole point of Route Balance — so the split is only a starting
+ * proposal: whole subpostcodes spread across the routes by stop count, which
+ * the operator then reworks with the existing "Move…" / "Move all…" tools.
+ * Drivers and vehicles stay unassigned, since nothing in the export implies them.
  *
  * Known gaps versus the fake-data model (not present in the DISCO columns
  * this tool reads): `pm` (AM/PM shift) defaults to false, `asr`/`dsr`
@@ -470,73 +584,46 @@ export interface BuildRouteRowsOptions {
  * derived from Product and Size Class respectively.
  */
 export function buildRouteRowsFromStops(dfStops: DiscoStopRow[], options: BuildRouteRowsOptions = {}): RouteRow[] {
-  const { emptyRoutes = 7, seedRouteName = 'A-01' } = options;
+  const { routeCount = DEFAULT_ROUTE_COUNT } = options;
   let stopId = 1;
 
-  const seedStops: Stop[] = dfStops.map((r, i) => ({
-    id: stopId++,
-    routeName: seedRouteName,
-    stopNumber: i + 1,
-    postcode: r.postcode,
-    address: r.address,
-    customer: r.name,
-    type: r.bookingType ? 'PU' : 'DEL',
-    pm: false,
-    pre12: TARGET_PRODUCTS.includes(r.product),
-    asr: false,
-    dsr: false,
-    status: 'pending',
-    shipmentType: mapShipmentType(r.sizeClass),
-    pieces: r.pieces,
-    physicalWeight: r.phys,
-  }));
+  return assignStopsToRoutes(dfStops, routeCount).map((rows, i) => {
+    const name = routeNameAt(i);
+    const stops: Stop[] = rows.map((r, j) => ({
+      id: stopId++,
+      routeName: name,
+      stopNumber: j + 1,
+      postcode: r.postcode,
+      address: r.address,
+      customer: r.name,
+      type: r.bookingType ? 'PU' : 'DEL',
+      pm: false,
+      pre12: isPre12(r),
+      asr: false,
+      dsr: false,
+      status: 'pending',
+      shipmentType: mapShipmentType(r.sizeClass),
+      pieces: r.pieces,
+      physicalWeight: r.phys,
+    }));
 
-  const seedRoute: RouteRow = {
-    id: 1,
-    name: seedRouteName,
-    driver: 'Unassigned',
-    vehicle: 'TBD',
-    target: 85,
-    completedStops: 0,
-    completion: 0,
-    spr: 0,
-    sortAttendance: 'yes',
-    notes: '',
-    sendStatus: { am: 'pending', pm: 'pending' },
-    history: [],
-    stops: seedStops,
-    ...totalsOf(seedStops),
-  };
-
-  const routes: RouteRow[] = [seedRoute];
-  for (let i = 0; i < emptyRoutes; i++) {
-    const name = `A-${String(i + 2).padStart(2, '0')}`;
-    routes.push({
-      id: i + 2,
+    return {
+      id: i + 1,
       name,
       driver: 'Unassigned',
       vehicle: 'TBD',
       target: 85,
-      totalStops: 0,
       completedStops: 0,
       completion: 0,
-      deliveries: 0,
-      pickups: 0,
-      pre12: 0,
-      asr: 0,
-      dsr: 0,
       spr: 0,
-      sortAttendance: 'yes',
+      sortAttendance: 'yes' as SortAttendance,
       notes: '',
-      sendStatus: { am: 'pending', pm: 'pending' },
+      sendStatus: { am: 'pending' as const, pm: 'pending' as const },
       history: [],
-      stops: [],
-      totalPieces: 0,
-      totalPhysicalWeight: 0,
-      shipmentBreakdown: [],
-    });
-  }
-  return routes;
+      stops,
+      ...totalsOf(stops),
+    };
+  });
 }
 
 /* ==================== MOCK DATA (ported from the pre-DISCO generateFakeData()) ====================

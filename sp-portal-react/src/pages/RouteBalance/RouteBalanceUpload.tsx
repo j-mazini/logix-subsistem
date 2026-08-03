@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PortalLayout } from '../../layout/PortalLayout';
 import '../../styles/legacy/route-balance.css';
 import './route-balance-upload.css';
 import {
-  buildDiscoExcel, buildRouteRowsFromStops, FIXED_SIZE_CLASS_COLS, generateMockRouteRows, processDiscoFiles, ROUTE_BALANCE_SESSION_KEY,
+  buildDiscoExcel, buildRouteRowsFromStops, FIXED_SIZE_CLASS_COLS, generateMockRouteRows, planRoutesFromStops, processDiscoFiles, ROUTE_BALANCE_SESSION_KEY,
 } from './discoProcessing';
 import type { DiscoProcessResult } from './discoProcessing';
 
@@ -51,6 +51,9 @@ export function RouteBalanceUpload() {
   const [builtExcel, setBuiltExcel] = useState<ArrayBuffer | null>(null);
   const [copiedSection, setCopiedSection] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Same split continueToRouteBalance() commits, previewed before committing it.
+  const routePlan = useMemo(() => (result ? planRoutesFromStops(result.dfStops) : []), [result]);
 
   useEffect(() => {
     document.body.classList.add('route-balance-page');
@@ -99,10 +102,15 @@ export function RouteBalanceUpload() {
     URL.revokeObjectURL(url);
   }
 
-  function copySection(section: 'pre12' | 'postcodes' | 'sizeclass') {
+  function copySection(section: 'routes' | 'pre12' | 'postcodes' | 'sizeclass') {
     if (!result) return;
     let text = '';
-    if (section === 'pre12') text = toTSV(result.dfPre12, ['Postal Code', 'Name', 'Address']);
+    if (section === 'routes') {
+      text = routePlan
+        .flatMap((route) => route.subpostcodes.flatMap((sub) =>
+          sub.postcodes.map((pc) => [route.name, sub.code, pc.postcode, String(pc.stops)].join('\t'))))
+        .join('\n');
+    } else if (section === 'pre12') text = toTSV(result.dfPre12, ['Postal Code', 'Name', 'Address']);
     else if (section === 'postcodes') text = toTSV(result.dfPostcodes, ['subpostcode', 'total de deliveries'], (r) => String(r.subpostcode).toUpperCase() === 'TOTAL');
     else text = toTSV(result.dfSizeClass, FIXED_SIZE_CLASS_COLS, (r) => String(r.Subpostcode).toUpperCase() === 'TOTAL');
     if (!text) return;
@@ -210,7 +218,58 @@ export function RouteBalanceUpload() {
                   <div className="disco-summary-item"><strong>Postcodes</strong>{result.deliveriesCount} areas</div>
                   <div className="disco-summary-item"><strong>Size Class</strong>{result.dfSizeClass.length} rows</div>
                   <div className="disco-summary-item"><strong>Total Deliveries</strong>{result.totalDeliveries}</div>
+                  <div className="disco-summary-item"><strong>Routes</strong>{routePlan.filter((r) => r.stops > 0).length} of {routePlan.length}</div>
                 </div>
+
+                <section className="disco-preview-section">
+                  <div className="disco-preview-section-header">
+                    <span className="disco-preview-title">Postcodes by route</span>
+                    <button type="button" className="disco-copy-btn" onClick={() => copySection('routes')}>
+                      <i className="bi bi-clipboard" /> {copiedSection === 'routes' ? 'Copied!' : 'Copy'}
+                    </button>
+                  </div>
+                  <p className="disco-route-hint">
+                    Proposed split — whole subpostcodes balanced by stop count. Rebalance on Route Balance after continuing.
+                  </p>
+                  <div className="disco-route-grid">
+                    {routePlan.map((route) => (
+                      <article key={route.name} className={`disco-route-card${route.stops ? '' : ' is-empty'}`}>
+                        <header className="disco-route-card-head">
+                          <span className="disco-route-name">{route.name}</span>
+                          <span className="disco-route-stops">{route.stops} stops</span>
+                        </header>
+                        <div className="disco-route-meta">
+                          <span>{route.deliveries} DEL</span>
+                          <span>{route.pickups} PU</span>
+                          {route.pre12 > 0 && <span className="disco-route-pre12">{route.pre12} Pre-12</span>}
+                        </div>
+                        {route.subpostcodes.length ? (
+                          <div className="disco-route-subs">
+                            {route.subpostcodes.map((sub) => (
+                              <div key={sub.code} className="disco-route-sub">
+                                <div className="disco-route-sub-head">
+                                  <span className="disco-route-sub-code">{sub.code}</span>
+                                  <span className="disco-route-sub-count">
+                                    {sub.postcodes.length} PC · {sub.stops} stops
+                                  </span>
+                                </div>
+                                <div className="disco-route-pcs">
+                                  {sub.postcodes.map((pc) => (
+                                    <span key={pc.postcode} className="disco-route-pc" title={`${pc.stops} stop(s) in ${pc.postcode}`}>
+                                      {pc.postcode}<em>{pc.stops}</em>
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="disco-route-empty">No postcodes assigned</p>
+                        )}
+                      </article>
+                    ))}
+                  </div>
+                </section>
 
                 <section className="disco-preview-section">
                   <div className="disco-preview-section-header">
