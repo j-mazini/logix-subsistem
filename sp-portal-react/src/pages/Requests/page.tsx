@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Alert, AlertDescription, AlertTitle } from "./components/ui/Alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/Tabs";
-import { StandardPageLayout, PageHeader, PageHeroCard } from "@/app/(private)/components";
+import { StandardPageLayout, PageHeroCard } from "@/app/(private)/components";
 import { getUserIdFromToken, hasAuthSession } from "@/app/(private)/mockAuth";
 import {
   createVendorRequest,
@@ -273,7 +273,6 @@ export default function RequestsPage() {
 
   return (
     <StandardPageLayout bottomPadding="pb-[70px]">
-      <PageHeader alignHeader="right" />
       <PageHeroCard icon="bi-inbox" title="Requests" subtitle="Time off, holiday & advance payment requests" accent="indigo" />
 
       {status && (

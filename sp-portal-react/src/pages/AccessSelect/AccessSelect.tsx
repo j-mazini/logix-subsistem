@@ -64,7 +64,7 @@ export function AccessSelect() {
         </div>
 
         {/* Driver Portal Card */}
-        <div className={styles.card} onClick={() => navigate('/current-month')}>
+        <div className={styles.card} onClick={() => navigate('/daily-performance-insight')}>
           <div className={`${styles.icon} ${styles.iconDriver}`}>
             <i className="bi bi-truck-front"></i>
           </div>

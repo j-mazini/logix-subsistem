@@ -64,8 +64,12 @@ export function useAdminHeaderPill(): AdminHeaderMenuControls {
   return useAdminHeaderMenu();
 }
 
+/** Company logo in the pill; initials take over if it fails to load. Same image as the driver portal's UserPill. */
+const AVATAR_SRC = '/assets/atlas-transport-logo.png';
+
 export function AdminHeaderPill({ sp, controls }: { sp: string; controls: AdminHeaderMenuControls }) {
   const { open, setOpen, pillRef } = controls;
+  const [avatarFailed, setAvatarFailed] = useState(false);
   const initials = initialsFor(sp);
 
   return (
@@ -88,10 +92,19 @@ export function AdminHeaderPill({ sp, controls }: { sp: string; controls: AdminH
         }
       }}
     >
-      <span id="spHeaderAvatarFallback" className="admin-header-user-avatar admin-header-user-avatar-fallback">
-        {initials || '—'}
-      </span>
-      <img id="spHeaderAvatar" alt="" className="admin-header-user-avatar admin-header-user-avatar--img" style={{ display: 'none' }} />
+      {avatarFailed ? (
+        <span id="spHeaderAvatarFallback" className="admin-header-user-avatar admin-header-user-avatar-fallback">
+          {initials || '—'}
+        </span>
+      ) : (
+        <img
+          id="spHeaderAvatar"
+          src={AVATAR_SRC}
+          alt=""
+          className="admin-header-user-avatar admin-header-user-avatar--img"
+          onError={() => setAvatarFailed(true)}
+        />
+      )}
       <span className="admin-header-user-name" id="spHeaderName">
         {sp || '—'}
       </span>
@@ -111,13 +124,15 @@ export function AdminHeaderMenu({ controls }: { controls: AdminHeaderMenuControl
     } catch {
       /* ignore */
     }
-    navigate('/select');
+    // Index page (AccessSelect): pick DHL Administration / Service Provider /
+    // Driver Portal — same destination as the driver portal's UserPill, and
+    // not `/select`, which is just the SP re-login form.
+    navigate('/');
   }
 
   function handleSelectAccess(e: React.MouseEvent) {
     e.preventDefault();
-    // Index page (AccessSelect): pick DHL Administration / Service Provider / Driver Portal —
-    // not `/select`, which is just the SP re-login form.
+    // Keeps the current SP in session — switching portal, not signing out.
     navigate('/');
   }
 

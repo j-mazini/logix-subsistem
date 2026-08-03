@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
-import { StandardPageLayout, PageHeader, PageHeroCard, PageSection, PageContent } from "@/app/(private)/components";
+import { StandardPageLayout, PageHeroCard, PageSection, PageContent } from "@/app/(private)/components";
 import { MonthCarousel } from "./components/MonthCarousel";
 import { MonthlyAverages } from "./components/MonthlyAverages";
 import { DailyBreakdownTable } from "./components/DailyBreakdownTable";
@@ -22,7 +22,6 @@ export default function CurrentPerformancePage() {
 
   return (
     <StandardPageLayout bottomPadding="pb-[70px]">
-      <PageHeader alignHeader="right" />
       <PageHeroCard icon="bi-bar-chart-line" title="Performance" subtitle="Monthly averages & daily breakdown" accent="emerald" />
 
       <PageSection>

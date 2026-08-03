@@ -1,4 +1,4 @@
-import { StandardPageLayout, PageHeader, PageContent } from "@/app/(private)/components";
+import { StandardPageLayout, PageContent } from "@/app/(private)/components";
 import { useMyRoute } from "./hooks/useMyRoute";
 import { RouteHeaderCard } from "./components/RouteHeaderCard";
 import { ReorderHint } from "./components/ReorderHint";
@@ -21,7 +21,6 @@ export default function MyDeliveriesPage() {
 
   return (
     <StandardPageLayout bottomPadding="pb-[70px]">
-      <PageHeader />
 
       <PageContent>
         <RouteHeaderCard

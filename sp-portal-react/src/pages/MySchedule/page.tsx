@@ -1,4 +1,4 @@
-import { StandardPageLayout, PageHeader, PageHeroCard } from "@/app/(private)/components";
+import { StandardPageLayout, PageHeroCard } from "@/app/(private)/components";
 import { useMySchedule } from "./hooks/useMySchedule";
 import { ViewToggle } from "./components/ViewToggle";
 import { WeekNavHeader } from "./components/WeekNavHeader";
@@ -23,7 +23,6 @@ export default function MySchedulePage() {
 
   return (
     <StandardPageLayout bottomPadding="pb-[70px]">
-      <PageHeader alignHeader="right" />
       <PageHeroCard
         icon="bi-calendar-week"
         title="My Schedule"

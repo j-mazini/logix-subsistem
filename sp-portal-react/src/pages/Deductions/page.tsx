@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
-import { StandardPageLayout, PageHeader, PageHeroCard, PageSection, PageContent } from "@/app/(private)/components";
+import { StandardPageLayout, PageHeroCard, PageSection, PageContent } from "@/app/(private)/components";
 import { useDeductions } from "./hooks/useDeductions";
 import {
   MonthCarousel,
@@ -100,7 +100,6 @@ export default function DeductionsPage() {
 
   return (
     <StandardPageLayout bottomPadding="pb-[70px]">
-      <PageHeader />
       <PageHeroCard icon="bi-graph-down-arrow" title="Deductions" subtitle="Deductions applied to your pay" accent="rose" />
 
       <PageSection>

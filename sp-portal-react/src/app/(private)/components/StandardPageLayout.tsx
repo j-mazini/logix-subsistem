@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { motion } from "framer-motion";
 import { GradientDotsBackground } from "./GradientDotsBackground";
 import { WelcomeHeader } from "./WelcomeHeader";
+import { UserPill } from "./UserPill";
 import { MobileNavBar } from "./MobileNavBar";
 import { DesktopNavBar } from "./DesktopNavBar";
 import "../tailwind.css";
@@ -28,6 +29,13 @@ export function StandardPageLayout({
           }}
         />
 
+        {/* Identity pill, always here and only here: same content column and
+            same corner on every driver page and breakpoint. Pages render their
+            own header controls through PageHeader, below this row. */}
+        <div className="mx-auto w-full max-w-full min-w-0 px-[clamp(0.75rem,4vw,1rem)] sm:px-6 lg:px-10 pt-3 sm:pt-5 lg:pt-6 flex justify-end relative z-[2]">
+          <UserPill />
+        </div>
+
         {showWelcomeHeader && (
           <div className="hidden md:block">
             <WelcomeHeader />
@@ -38,7 +46,7 @@ export function StandardPageLayout({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
-          className="mx-auto w-full max-w-full min-w-0 px-[clamp(0.75rem,4vw,1rem)] sm:px-6 lg:px-10 pt-4 sm:pt-8 lg:pt-9 pb-12 lg:pb-14 relative z-[1]"
+          className="mx-auto w-full max-w-full min-w-0 px-[clamp(0.75rem,4vw,1rem)] sm:px-6 lg:px-10 pt-2 sm:pt-3 lg:pt-4 pb-12 lg:pb-14 relative z-[1]"
         >
           {children}
         </motion.main>

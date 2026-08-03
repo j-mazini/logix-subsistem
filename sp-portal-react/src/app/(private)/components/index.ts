@@ -1,4 +1,4 @@
-export { MobileHeader } from "./MobileHeader";
+export { UserPill } from "./UserPill";
 export { MobileNavBar } from "./MobileNavBar";
 export { DesktopNavBar } from "./DesktopNavBar";
 export { StandardPageLayout } from "./StandardPageLayout";
