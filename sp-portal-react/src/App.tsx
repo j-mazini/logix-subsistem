@@ -18,6 +18,7 @@ import { DailyOperationsManagement } from './pages/DailyOperationsManagement/Dai
 import { DailyGamePlan } from './pages/DailyGamePlan/DailyGamePlan';
 import { DailyOperationsReports } from './pages/DailyOperationsReports/DailyOperationsReports';
 import { RouteBalance } from './pages/RouteBalance/RouteBalance';
+import { RouteBalanceUpload } from './pages/RouteBalance/RouteBalanceUpload';
 import { SOPFeed } from './pages/SOPFeed/SOPFeed';
 import { Vehicles } from './pages/Vehicles/Vehicles';
 import {
@@ -84,6 +85,7 @@ function App() {
               antigas continuam a responder, cada uma na sua aba. */}
           <Route path="/vendors" element={<WorkforceRedirect tab="vendors" />} />
           <Route path="/drivers" element={<WorkforceRedirect tab="vendors" />} />
+          <Route path="/route-balance/upload" element={<RouteBalanceUpload />} />
           <Route path="/route-balance" element={<RouteBalance />} />
           <Route path="/sop-feed" element={<SOPFeed />} />
           <Route path="/vehicles" element={<Vehicles />} />

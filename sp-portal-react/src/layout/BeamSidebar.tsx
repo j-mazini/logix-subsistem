@@ -19,7 +19,7 @@ const NAV_GROUPS: NavGroup[] = [
     label: 'Planning & Operations',
     items: [
       { icon: 'bi-calendar-week', label: 'Week Planner', route: '/week-planner' },
-      { icon: 'bi-shuffle', label: 'Route Balance', route: '/route-balance' },
+      { icon: 'bi-shuffle', label: 'Route Balance', route: '/route-balance/upload' },
       { icon: 'bi-controller', label: 'Daily Game Plan', route: '/daily-game-plan' },
       { icon: 'bi-clock-history', label: 'Daily Operations Management', route: '/daily-operations-management' },
       { icon: 'bi-broadcast', label: 'Live Service', route: '/live-service' },

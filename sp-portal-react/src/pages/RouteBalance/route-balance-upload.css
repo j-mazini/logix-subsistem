@@ -1,0 +1,199 @@
+/* ============================================================
+   ROUTE BALANCE — DISCO import screen. Shares the "Soft Console"
+   tokens from route-balance.css (body.route-balance-page) rather
+   than redefining them, so it reads as the same feature.
+   ============================================================ */
+
+.disco-upload-subtitle {
+  color: var(--ink-soft);
+  margin-bottom: 1.25rem;
+  max-width: 720px;
+}
+
+.disco-upload-layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .disco-upload-layout { grid-template-columns: 1fr; }
+}
+
+.disco-upload-card,
+.disco-main-card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 1.25rem;
+}
+
+.disco-upload-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  position: sticky;
+  top: 1rem;
+}
+
+.disco-drop-zone {
+  border: 1.5px dashed var(--hairline-strong);
+  border-radius: var(--radius);
+  padding: 1.75rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  background: var(--surface-2);
+  transition: border-color var(--t-fast), background var(--t-fast);
+}
+
+.disco-drop-zone:hover,
+.disco-drop-zone.dragging { border-color: var(--accent); background: var(--accent-soft); }
+
+.disco-drop-zone.has-file { border-style: solid; border-color: var(--ok); }
+
+.disco-drop-icon { font-size: 1.75rem; color: var(--ink-faint); display: block; margin-bottom: 0.5rem; }
+
+.disco-drop-zone.has-file .disco-drop-icon { color: var(--ok); }
+
+.disco-drop-primary {
+  font-weight: 600;
+  margin: 0 0 0.25rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.disco-drop-secondary { margin: 0 0 0.35rem; font-size: 0.85rem; color: var(--ink-soft); }
+
+.disco-drop-link { color: var(--accent-ink); text-decoration: underline; }
+
+.disco-drop-formats { margin: 0; font-size: 0.74rem; color: var(--ink-faint); }
+
+.disco-process-btn { width: 100%; justify-content: center; }
+
+.disco-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.disco-actions .styled-button { width: 100%; justify-content: center; }
+
+.disco-main-card { min-height: 320px; }
+
+.disco-error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--danger-soft);
+  color: var(--danger);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+}
+
+.disco-preview-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  min-height: 280px;
+  color: var(--ink-faint);
+  text-align: center;
+}
+
+.disco-preview-empty-state i { font-size: 2rem; }
+
+.disco-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.disco-summary-item {
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+.disco-summary-item strong {
+  display: block;
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--ink-faint);
+  margin-bottom: 0.2rem;
+}
+
+.disco-preview-section + .disco-preview-section { margin-top: 1.5rem; }
+
+.disco-preview-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.disco-preview-title { font-weight: 600; font-size: 0.95rem; }
+
+.disco-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--surface-2);
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--radius-sm);
+  padding: 0.3rem 0.7rem;
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: background var(--t-fast);
+}
+
+.disco-copy-btn:hover { background: var(--hairline-strong); }
+
+.disco-preview-table-wrap {
+  max-height: 260px;
+  overflow: auto;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+}
+
+.disco-preview-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+
+.disco-preview-table th,
+.disco-preview-table td {
+  padding: 0.45rem 0.75rem;
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.disco-preview-table th {
+  background: var(--surface-2);
+  color: var(--ink-soft);
+  position: sticky;
+  top: 0;
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.disco-preview-table tbody tr:hover td { background: var(--accent-soft); }
+
+.disco-preview-empty { color: var(--ink-faint); font-size: 0.85rem; padding: 1rem; text-align: center; }

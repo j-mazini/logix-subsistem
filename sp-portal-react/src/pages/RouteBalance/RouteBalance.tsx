@@ -1,8 +1,10 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { PortalLayout } from '../../layout/PortalLayout';
 import { useCurrentSp } from '../../hooks/useCurrentSp';
 import { useModalBehavior } from '../../hooks/useModalBehavior';
+import { ROUTE_BALANCE_SESSION_KEY } from './discoProcessing';
 import '../../styles/legacy/route-balance.css';
 // Note: modal-behavior.css classes/hook used below are backdrop-agnostic —
 // this page must never import the portal dark CSS (see route-balance.css header).
@@ -16,18 +18,18 @@ import '../../styles/legacy/route-balance.css';
 
 /* ==================== TYPES ==================== */
 
-type StopType = 'DEL' | 'PU';
-type StopStatus = 'pending' | 'completed';
+export type StopType = 'DEL' | 'PU';
+export type StopStatus = 'pending' | 'completed';
 type SortAttendance = 'yes' | 'late' | 'no';
-type SendStatus = 'pending' | 'sent';
+export type SendStatus = 'pending' | 'sent';
 type ToastType = 'success' | 'error' | 'info' | 'warning';
 type DashboardFilterKey = 'del' | 'pu' | 'pre12' | 'asr' | 'dsr' | 'special';
 type SpecialCat = 'all' | 'pre12' | 'asr' | 'dsr';
 type SortKey = 'name' | 'driver' | 'target' | 'totalStops';
 type ShiftKey = 'am' | 'pm';
-type ShipmentType = 'COY' | 'COY-S1' | 'COY-S2' | 'FLY' | 'NCY' | 'PAL1';
+export type ShipmentType = 'COY' | 'COY-S1' | 'COY-S2' | 'FLY' | 'NCY' | 'PAL1';
 
-interface Stop {
+export interface Stop {
   id: number;
   routeName: string;
   stopNumber: number;
@@ -45,7 +47,7 @@ interface Stop {
   physicalWeight: number;
 }
 
-interface ShipmentMetrics {
+export interface ShipmentMetrics {
   type: ShipmentType;
   pieces: number;
   shipments: number;
@@ -62,7 +64,7 @@ interface HistoryEntry {
   timestamp: string;
 }
 
-interface RouteRow {
+export interface RouteRow {
   id: number;
   name: string;
   driver: string;
@@ -115,17 +117,16 @@ interface SubpostcodeGroup {
 
 const CURRENT_USER = 'João Silva';
 
-/* ==================== FAKE DATA (ported from generateFakeData()) ==================== */
+/* ==================== "Add Route" pickers ====================
+   Driver/vehicle assignment for a manually-added route still has no real
+   directory to pull from, so it keeps picking from this fixed list — same
+   as before real DISCO data replaced generateFakeData() below. */
 
 const DRIVERS = [
   'Carlos Silva', 'Ana Costa', 'João Martins', 'Maria Santos', 'Pedro Oliveira',
   'Lucas Pereira', 'Sofia Alves', 'Ricardo Dias', 'Juliana Ribeiro', 'Felipe Costa',
 ];
 const VEHICLES = ['Van-001', 'Van-002', 'Van-003', 'Truck-001', 'Truck-002', 'Truck-003', 'Bike-001', 'Car-001'];
-const SUBPOSTCODES = Array.from({ length: 8 }, (_, i) => `ME${i + 1}`);
-const POSTCODES = SUBPOSTCODES.flatMap((sub) => Array.from({ length: 5 }, (_, i) => `${sub} ${i + 1}AB`));
-const STREETS = ['High Street', 'Station Road', 'Church Lane', 'Victoria Avenue', 'Mill Road', 'Park View', 'Queensway', 'Riverside Drive'];
-const SHIPMENT_TYPES: ShipmentType[] = ['COY', 'COY-S1', 'COY-S2', 'FLY', 'NCY', 'PAL1'];
 
 /* Operation Summary bento — gauge geometry (speedometer, ring) */
 const OSB_SPD_PATH = 'M6,74 A54,54 0 0,1 114,74';
@@ -138,83 +139,6 @@ function rand(n: number): number {
 }
 function pick<T>(arr: T[]): T {
   return arr[rand(arr.length)];
-}
-
-function generateFakeData(): RouteRow[] {
-  let stopId = 1;
-  const routes: RouteRow[] = [];
-
-  for (let i = 1; i <= 8; i++) {
-    const totalStops = 22 + rand(8);
-    const deliveries = Math.floor(totalStops * 0.72);
-    const completion = rand(101);
-    const completedStops = Math.round((totalStops * completion) / 100);
-    const name = `A-${String(i).padStart(2, '0')}`;
-
-    const stops: Stop[] = [];
-    for (let j = 0; j < totalStops; j++) {
-      const isPM = Math.random() > 0.68;
-      stops.push({
-        id: stopId++,
-        routeName: name,
-        stopNumber: j + 1,
-        postcode: pick(POSTCODES),
-        address: `${1 + rand(200)} ${pick(STREETS)}`,
-        customer: `Customer ${100 + rand(900)}`,
-        type: j < deliveries ? 'DEL' : 'PU',
-        pm: isPM,
-        // Pre-12 ("must deliver before 12:00") is AM-only — never roll it for PM stops.
-        pre12: !isPM && Math.random() > 0.78,
-        asr: Math.random() > 0.15,
-        dsr: Math.random() > 0.12,
-        status: j < completedStops ? 'completed' : 'pending',
-        shipmentType: pick(SHIPMENT_TYPES),
-        pieces: 1 + rand(15),
-        physicalWeight: Math.round((50 + Math.random() * 750) * 100) / 100,
-      });
-    }
-
-    // Calculate shipment metrics
-    const totalPieces = stops.reduce((sum, s) => sum + s.pieces, 0);
-    const totalPhysicalWeight = Math.round(stops.reduce((sum, s) => sum + s.physicalWeight, 0) * 100) / 100;
-
-    const shipmentBreakdown: ShipmentMetrics[] = SHIPMENT_TYPES.map((type) => {
-      const typeStops = stops.filter((s) => s.shipmentType === type);
-      return {
-        type,
-        pieces: typeStops.reduce((sum, s) => sum + s.pieces, 0),
-        shipments: typeStops.length,
-        physicalWeight: Math.round(typeStops.reduce((sum, s) => sum + s.physicalWeight, 0) * 100) / 100,
-      };
-    }).filter((m) => m.shipments > 0);
-
-    routes.push({
-      id: i,
-      name,
-      driver: DRIVERS[(i - 1) % DRIVERS.length],
-      vehicle: pick(VEHICLES),
-      target: 80 + rand(16),
-      totalStops,
-      completedStops,
-      completion,
-      deliveries,
-      pickups: totalStops - deliveries,
-      pre12: stops.filter((s) => s.pre12).length,
-      asr: stops.filter((s) => s.asr).length,
-      dsr: stops.filter((s) => s.dsr).length,
-      spr: 90 + rand(80),
-      sortAttendance: pick<SortAttendance>(['yes', 'yes', 'yes', 'late', 'no']),
-      notes: '',
-      sendStatus: { am: 'pending', pm: 'pending' },
-      history: [],
-      stops,
-      totalPieces,
-      totalPhysicalWeight,
-      shipmentBreakdown,
-    });
-  }
-
-  return routes;
 }
 
 /* ==================== PURE HELPERS (ported 1:1 from script.js) ==================== */
@@ -787,12 +711,42 @@ function useCountUp(value: number, duration = 620): number {
 
 /* ==================== MAIN COMPONENT ==================== */
 
+/**
+ * Real stops come from the DISCO import screen (/route-balance/upload),
+ * carried in via router state. Router state doesn't survive a hard reload,
+ * so it's mirrored into sessionStorage on the way in and read back here —
+ * whichever is present wins, router state first. No import yet means there
+ * is nothing to balance, so the effect below sends the user back to upload.
+ */
+function loadImportedRoutes(locationState: unknown): RouteRow[] {
+  const fromState = (locationState as { routes?: RouteRow[] } | null)?.routes;
+  if (fromState?.length) return fromState;
+  const stored = sessionStorage.getItem(ROUTE_BALANCE_SESSION_KEY);
+  if (stored) {
+    try {
+      const parsed = JSON.parse(stored) as RouteRow[];
+      if (parsed?.length) return parsed;
+    } catch {
+      // ignore malformed sessionStorage, fall through to redirect
+    }
+  }
+  return [];
+}
+
 export function RouteBalance() {
   const sp = useCurrentSp();
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  const [routes, setRoutes] = useState<RouteRow[]>(() => generateFakeData());
+  const [routes, setRoutes] = useState<RouteRow[]>(() => loadImportedRoutes(location.state));
   const [loading, setLoading] = useState(true);
   const [now, setNow] = useState(() => new Date());
+
+  // No DISCO import for this session — nothing to balance, so go collect one.
+  useEffect(() => {
+    if (!routes.length) navigate('/route-balance/upload', { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [filterPM, setFilterPM] = useState(false);
   const [rebalanceMode, setRebalanceMode] = useState(false);
@@ -890,7 +844,11 @@ export function RouteBalance() {
       const q = searchQuery.toLowerCase();
       list = list.filter((r) => r.name.toLowerCase().includes(q) || r.driver.toLowerCase().includes(q));
     }
-    list = list.filter((r) => visibleStops(r).length > 0);
+    // Zero-stop routes stay in this list on purpose: rebalance mode (the
+    // only consumer that doesn't re-filter for visible stops itself, see
+    // routesToRender below) needs empty routes to render as "Move…"/"Move
+    // all…" targets — otherwise a freshly-imported empty route, or one
+    // created via "Add Route", could never receive anything.
     if (sortKey) {
       const dir = sortAsc ? 1 : -1;
       list.sort((a, b) => (a[sortKey] > b[sortKey] ? 1 : a[sortKey] < b[sortKey] ? -1 : 0) * dir);
@@ -2137,7 +2095,11 @@ export function RouteBalance() {
  *   original's setupIntakeListeners()/stageIntakeFile()/processIntakeFile() are dead
  *   code — no #intakeDropzone/#intakeFileInput elements exist in index.html and
  *   nothing in init()/enterDashboard() ever calls setupIntakeListeners(). Omitted
- *   entirely; the page always starts from generateFakeData(), same as the original.
+ *   entirely — that format expected route/driver/pm/pre12 already assigned per row,
+ *   which the real DISCO export never carries (deciding that assignment is the point
+ *   of this page). Real intake now happens on /route-balance/upload instead: it reads
+ *   raw DISCO rows and seeds one route with every stop plus a handful of empty ones,
+ *   for rebalancing here. generateFakeData() itself was removed once that landed.
  * - Native HTML5 drag-and-drop (dragging a delivery/postcode/subpostcode row onto
  *   another route card, or from the "All Postcodes" drawer) is skipped as genuinely
  *   complex interaction plumbing. Rebalance mode still works end-to-end through the
