@@ -287,6 +287,22 @@ body.route-balance-page {
 .styled-button--sent { background: var(--ok-soft); color: var(--ok); }
 .styled-button--sent:hover { background: color-mix(in srgb, var(--ok) 18%, transparent); }
 
+/* How many routes the next click will actually send. */
+.send-approved-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  margin-left: 0.4rem;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.24);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
 .styled-button--outline { background: var(--surface-2); color: var(--ink); }
 .styled-button--outline:hover { background: var(--hairline-strong); }
 
@@ -1382,6 +1398,18 @@ button.osb-card:hover .osb-stat-ico { transform: translateY(-2px) scale(1.14); o
   background: var(--danger-soft);
 }
 
+/* Approve check: stays lit once the route is armed for the batch send, so a
+   card's readiness reads from across the board without opening it. */
+.route-icon-btn--approved {
+  color: var(--ok);
+  background: var(--ok-soft);
+}
+
+.route-icon-btn--approved:hover {
+  color: var(--ok);
+  background: color-mix(in srgb, var(--ok) 18%, transparent);
+}
+
 /* Route collapse/action buttons in header */
 .route-collapse-btn {
   display: inline-flex;
@@ -1673,6 +1701,9 @@ button.osb-card:hover .osb-stat-ico { transform: translateY(-2px) scale(1.14); o
 .status-badge-pre12     { color: var(--warn); background: var(--warn-soft); }
 .status-badge-am        { color: var(--accent-ink); background: var(--accent-soft); }
 .status-badge-pm        { color: #5b47ab; background: #efebfc; }
+/* Approved: armed for the batch send but not gone yet — accent, so it never
+   gets mistaken for the green "Sent". */
+.status-badge-approved  { color: var(--accent-ink); background: var(--accent-soft); }
 
 .shift-badge {
   font-family: var(--font-mono);

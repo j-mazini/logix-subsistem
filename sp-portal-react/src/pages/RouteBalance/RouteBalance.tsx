@@ -21,7 +21,13 @@ import '../../styles/legacy/route-balance.css';
 export type StopType = 'DEL' | 'PU';
 export type StopStatus = 'pending' | 'completed';
 export type SortAttendance = 'yes' | 'late' | 'no';
-export type SendStatus = 'pending' | 'sent';
+/**
+ * A route's per-shift state on the way to the driver. `approved` sits between
+ * the other two: the check on the route card marks the route ready, and only
+ * approved routes are picked up by the "Send to Driver" batch button — sending
+ * is no longer something a single card can trigger on its own.
+ */
+export type SendStatus = 'pending' | 'approved' | 'sent';
 type ToastType = 'success' | 'error' | 'info' | 'warning';
 type DashboardFilterKey = 'del' | 'pu' | 'pre12' | 'asr' | 'dsr' | 'special';
 type SpecialCat = 'all' | 'pre12' | 'asr' | 'dsr';
@@ -257,7 +263,7 @@ interface RouteBlockCardProps {
   onPickCompareTarget: (targetId: number) => void;
   onSwapCompare: () => void;
   onCancelCompare: () => void;
-  onSendIndividual: () => void;
+  onToggleApproval: () => void;
   onRevert: () => void;
   onCollapse: () => void;
   onAddPostcode: () => void;
@@ -269,14 +275,22 @@ interface RouteBlockCardProps {
   onNotesBlur: (value: string) => void;
   onTransferStops: (sourceId: number, targetId: number, stopIds: number[], label: string) => void;
   onClickCard: () => void;
+  isDropSource: boolean;
+  isDropTarget: boolean;
+  onStartDrag: (stopIds: number[], label: string) => void;
+  onEndDrag: () => void;
+  onCardDragEnter: () => void;
+  onCardDragLeave: () => void;
+  onCardDrop: () => void;
 }
 
 function RouteBlockCard(props: RouteBlockCardProps) {
   const {
     route, otherRoutes, rebalanceMode, filterPM, dashboardFilter, shiftKey, selected,
     compareWithRoute, comparePickerOpen, onToggleCompare, onPickCompareTarget, onSwapCompare, onCancelCompare,
-    onSendIndividual, onRevert, onCollapse, onAddPostcode, onExportCsv, onSeeAllStops, isAllStopsOpen,
+    onToggleApproval, onRevert, onCollapse, onAddPostcode, onExportCsv, onSeeAllStops, isAllStopsOpen,
     onEditStop, onShipmentDetails, onNotesBlur, onTransferStops, onClickCard,
+    isDropSource, isDropTarget, onStartDrag, onEndDrag, onCardDragEnter, onCardDragLeave, onCardDrop,
   } = props;
 
   const [flipped, setFlipped] = useState(false);
@@ -354,7 +368,7 @@ function RouteBlockCard(props: RouteBlockCardProps) {
 
   return (
     <section
-      className={`route-block ${rebalanceMode ? 'rebalance-mode' : ''} ${flipped ? 'flipped' : ''} ${selected ? 'selected' : ''}`}
+      className={`route-block ${rebalanceMode ? 'rebalance-mode' : ''} ${flipped ? 'flipped' : ''} ${selected ? 'selected' : ''} ${isDropSource ? 'drop-source' : ''} ${isDropTarget ? 'drop-target' : ''}`}
       data-route-id={route.id}
       onClick={(e) => {
         if (rebalanceMode) return;
@@ -362,6 +376,14 @@ function RouteBlockCard(props: RouteBlockCardProps) {
         if (target.closest('[data-action], button, select, input, .postcode-editable')) return;
         onClickCard();
       }}
+      onDragOver={(e) => { if (rebalanceMode) e.preventDefault(); }}
+      onDragEnter={(e) => { if (!rebalanceMode) return; e.preventDefault(); onCardDragEnter(); }}
+      onDragLeave={(e) => {
+        if (!rebalanceMode) return;
+        if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+        onCardDragLeave();
+      }}
+      onDrop={(e) => { if (!rebalanceMode) return; e.preventDefault(); onCardDrop(); }}
     >
       <div className="route-block-flipper">
         <div className="route-block-face route-block-front" ref={frontRef}>
@@ -405,8 +427,19 @@ function RouteBlockCard(props: RouteBlockCardProps) {
                       )}
                     </div>
                   )}
-                  <button type="button" className="route-icon-btn" title={`Send this route's manifest to the driver (${shiftKey.toUpperCase()})`} aria-label="Send to driver" onClick={onSendIndividual}>
-                    <i className="bi bi-send" />
+                  <button
+                    type="button"
+                    className={`route-icon-btn${sendStatus === 'pending' ? '' : ' route-icon-btn--approved'}`}
+                    title={sendStatus === 'sent'
+                      ? `Manifest already sent to the driver (${shiftKey.toUpperCase()})`
+                      : sendStatus === 'approved'
+                        ? `Approved for the next "Send to Driver" (${shiftKey.toUpperCase()}) — click to withdraw`
+                        : `Approve this route so "Send to Driver" includes it (${shiftKey.toUpperCase()})`}
+                    aria-label="Approve route for sending"
+                    aria-pressed={sendStatus !== 'pending'}
+                    onClick={onToggleApproval}
+                  >
+                    <i className={`bi ${sendStatus === 'pending' ? 'bi-check2' : 'bi-check2-circle'}`} />
                   </button>
                   {hasHistory && (
                     <button type="button" className="route-icon-btn route-icon-btn--danger" title="Revert last action on this route" aria-label="Revert last action" onClick={onRevert}>
@@ -419,14 +452,25 @@ function RouteBlockCard(props: RouteBlockCardProps) {
                 </>
               ) : (
                 <>
-                  <span className={`status-badge status-badge-${sendStatus === 'sent' ? 'completed' : 'pending'}`} title={`${shiftKey.toUpperCase()} send status`}>
-                    {sendStatus === 'sent' ? 'Sent' : 'Pending'}
+                  <span className={`status-badge status-badge-${sendStatus === 'sent' ? 'completed' : sendStatus === 'approved' ? 'approved' : 'pending'}`} title={`${shiftKey.toUpperCase()} send status`}>
+                    {sendStatus === 'sent' ? 'Sent' : sendStatus === 'approved' ? 'Approved' : 'Pending'}
                   </span>
                   <button type="button" className="flip-btn" title="View Special Deliveries (Pre 12 / ASR / DSR)" onClick={() => setFlipped(true)}>
                     <i className="bi bi-stars" /> Special Deliveries
                   </button>
-                  <button type="button" className="route-icon-btn" title={`Send this route's manifest to the driver (${shiftKey.toUpperCase()})`} aria-label="Send to driver" onClick={onSendIndividual}>
-                    <i className="bi bi-send" />
+                  <button
+                    type="button"
+                    className={`route-icon-btn${sendStatus === 'pending' ? '' : ' route-icon-btn--approved'}`}
+                    title={sendStatus === 'sent'
+                      ? `Manifest already sent to the driver (${shiftKey.toUpperCase()})`
+                      : sendStatus === 'approved'
+                        ? `Approved for the next "Send to Driver" (${shiftKey.toUpperCase()}) — click to withdraw`
+                        : `Approve this route so "Send to Driver" includes it (${shiftKey.toUpperCase()})`}
+                    aria-label="Approve route for sending"
+                    aria-pressed={sendStatus !== 'pending'}
+                    onClick={onToggleApproval}
+                  >
+                    <i className={`bi ${sendStatus === 'pending' ? 'bi-check2' : 'bi-check2-circle'}`} />
                   </button>
                   {hasHistory && (
                     <button type="button" className="route-icon-btn route-icon-btn--danger" title="Revert last action on this route" aria-label="Revert last action" onClick={onRevert}>
@@ -459,7 +503,18 @@ function RouteBlockCard(props: RouteBlockCardProps) {
               <div className="route-table-responsive rebalance-postcode-list">
                 {groups.map((g) => (
                   <div className="rebalance-subpostcode-group" key={g.code}>
-                    <div className="rebalance-subpostcode-label" title={`${g.postcodes.length} postcode(s) under ${g.code}`}>
+                    <div
+                      className="rebalance-subpostcode-label"
+                      title={`${g.postcodes.length} postcode(s) under ${g.code}`}
+                      draggable
+                      onDragStart={(e) => {
+                        e.dataTransfer.effectAllowed = 'move';
+                        e.dataTransfer.setData('text/plain', g.code);
+                        const stopIds = route.stops.filter((s) => subpostcodeOf(s.postcode) === g.code).map((s) => s.id);
+                        onStartDrag(stopIds, g.code);
+                      }}
+                      onDragEnd={onEndDrag}
+                    >
                       <i className="bi bi-grip-vertical drag-handle" />
                       {g.code}
                       <span className="postcode-count-badge">{g.postcodes.length} postcode{g.postcodes.length === 1 ? '' : 's'}</span>
@@ -491,7 +546,17 @@ function RouteBlockCard(props: RouteBlockCardProps) {
                       const pcExpanded = expandedRebalancePcs.has(p.postcode);
                       return (
                         <div key={p.postcode}>
-                          <div className="pre12-flip-item rebalance-postcode-row">
+                          <div
+                            className="pre12-flip-item rebalance-postcode-row"
+                            draggable
+                            onDragStart={(e) => {
+                              e.stopPropagation();
+                              e.dataTransfer.effectAllowed = 'move';
+                              e.dataTransfer.setData('text/plain', p.postcode);
+                              onStartDrag(p.stops.map((s) => s.id), p.postcode);
+                            }}
+                            onDragEnd={(e) => { e.stopPropagation(); onEndDrag(); }}
+                          >
                             <button type="button" className={`rebalance-postcode-toggle ${pcExpanded ? 'expanded' : ''}`}
                               title={`${pcExpanded ? 'Hide' : 'Show'} individual deliveries in ${p.postcode}`}
                               onClick={(e) => { e.stopPropagation(); toggleRebalancePc(p.postcode); }}>
@@ -509,7 +574,18 @@ function RouteBlockCard(props: RouteBlockCardProps) {
                           {pcExpanded && (
                             <div className="rebalance-stop-list">
                               {p.stops.map((s) => (
-                                <div className="rebalance-stop-row" key={s.id}>
+                                <div
+                                  className="rebalance-stop-row"
+                                  key={s.id}
+                                  draggable
+                                  onDragStart={(e) => {
+                                    e.stopPropagation();
+                                    e.dataTransfer.effectAllowed = 'move';
+                                    e.dataTransfer.setData('text/plain', String(s.id));
+                                    onStartDrag([s.id], '1 delivery');
+                                  }}
+                                  onDragEnd={(e) => { e.stopPropagation(); onEndDrag(); }}
+                                >
                                   <i className="bi bi-grip-vertical drag-handle" />
                                   <span className={`rebalance-stop-type rebalance-stop-type--${s.type.toLowerCase()}`}>{s.type}</span>
                                   <span className="rebalance-stop-customer">{s.customer}</span>
@@ -767,6 +843,11 @@ export function RouteBalance() {
   const [compareTarget, setCompareTarget] = useState<Record<number, number>>({});
   const [comparePickerOpen, setComparePickerOpen] = useState<number | null>(null);
 
+  // Rebalance-mode drag-and-drop: dragPayload lives at this level (not per-card)
+  // since the source card sets it and the target card under the cursor reads it.
+  const [dragPayload, setDragPayload] = useState<{ sourceRouteId: number; stopIds: number[]; label: string } | null>(null);
+  const [dropTargetRouteId, setDropTargetRouteId] = useState<number | null>(null);
+
   const [addRouteModalOpen, setAddRouteModalOpen] = useState(false);
   const [newRouteName, setNewRouteName] = useState('');
   const [newRouteDriver, setNewRouteDriver] = useState(DRIVERS[0]);
@@ -1012,36 +1093,47 @@ export function RouteBalance() {
     showToast(`Route ${removed.name} closed — postcodes redistributed`, 'success');
   }
 
-  function sendToDriverIndividual(routeId: number) {
+  /** The check on the route card: arms the route for the next batch send, or withdraws it. Sending itself stays with "Send to Driver". */
+  function toggleRouteApproval(routeId: number) {
     const route = routes.find((r) => r.id === routeId);
     if (!route) return;
-    const sentSet = shiftKey === 'am' ? sentAm : sentPm;
     const oldValue = route.sendStatus[shiftKey] || 'pending';
-    if (sentSet.has(route.id) && oldValue === 'sent') {
+    if (oldValue === 'sent') {
       showToast(`Route ${route.name} (${shiftKey.toUpperCase()}) was already sent to ${route.driver}`, 'info');
       return;
     }
+    const newValue: SendStatus = oldValue === 'approved' ? 'pending' : 'approved';
     updateRoute(routeId, (r) => ({
       ...r,
-      sendStatus: { ...r.sendStatus, [shiftKey]: 'sent' },
+      sendStatus: { ...r.sendStatus, [shiftKey]: newValue },
       history: [...r.history, {
-        action: `Send to Driver (${shiftKey.toUpperCase()})`, field: 'sendStatus', shift: shiftKey,
-        oldValue, newValue: 'sent', author: CURRENT_USER, timestamp: new Date().toISOString(),
+        action: `${newValue === 'approved' ? 'Approve' : 'Withdraw approval'} (${shiftKey.toUpperCase()})`, field: 'sendStatus', shift: shiftKey,
+        oldValue, newValue, author: CURRENT_USER, timestamp: new Date().toISOString(),
       }],
     }));
-    if (shiftKey === 'am') setSentAm((prev) => new Set(prev).add(routeId));
-    else setSentPm((prev) => new Set(prev).add(routeId));
-    showToast(`Manifest sent to ${route.driver} (Route ${route.name}, ${shiftKey.toUpperCase()})`, 'success');
+    showToast(newValue === 'approved'
+      ? `Route ${route.name} approved for sending (${shiftKey.toUpperCase()})`
+      : `Approval withdrawn from route ${route.name} (${shiftKey.toUpperCase()})`, newValue === 'approved' ? 'success' : 'info');
   }
 
   function sendToDrivers() {
     const sentSet = shiftKey === 'am' ? sentAm : sentPm;
     const list = filteredRoutes.filter((r) => visibleStops(r).length > 0);
     if (!list.length) { showToast('No routes to send', 'error'); return; }
-    const resend = list.every((r) => sentSet.has(r.id));
+
+    // Approved routes are the payload. Once every visible route is already
+    // sent there is nothing left to approve, so the button keeps its old
+    // "click again to resend" behaviour instead of dead-ending.
+    const approved = list.filter((r) => (r.sendStatus[shiftKey] || 'pending') === 'approved');
+    const resend = !approved.length && list.every((r) => (r.sendStatus[shiftKey] || 'pending') === 'sent');
+    const targets = resend ? list : approved;
+    if (!targets.length) {
+      showToast(`No approved routes — tick the check on each route to approve it (${shiftKey.toUpperCase()})`, 'error');
+      return;
+    }
+
     setRoutes((prev) => prev.map((r) => {
-      if (!list.some((l) => l.id === r.id)) return r;
-      if (!(resend || !sentSet.has(r.id))) return r;
+      if (!targets.some((t) => t.id === r.id)) return r;
       const oldValue = r.sendStatus[shiftKey] || 'pending';
       return {
         ...r,
@@ -1053,10 +1145,10 @@ export function RouteBalance() {
       };
     }));
     const nextSet = new Set(sentSet);
-    list.forEach((r) => nextSet.add(r.id));
+    targets.forEach((r) => nextSet.add(r.id));
     if (shiftKey === 'am') setSentAm(nextSet); else setSentPm(nextSet);
-    const drivers = new Set(list.map((r) => r.driver)).size;
-    showToast(`${list.length} route manifest${list.length === 1 ? '' : 's'} ${resend ? 're-sent' : 'sent'} to ${drivers} driver${drivers === 1 ? '' : 's'} (${shiftKey.toUpperCase()})`, 'success');
+    const drivers = new Set(targets.map((r) => r.driver)).size;
+    showToast(`${targets.length} route manifest${targets.length === 1 ? '' : 's'} ${resend ? 're-sent' : 'sent'} to ${drivers} driver${drivers === 1 ? '' : 's'} (${shiftKey.toUpperCase()})`, 'success');
   }
 
   function revertLastAction(routeId: number) {
@@ -1176,6 +1268,7 @@ export function RouteBalance() {
   const sentSet = shiftKey === 'am' ? sentAm : sentPm;
   const visibleRoutesForSend = filteredRoutes.filter((r) => visibleStops(r).length > 0);
   const allSent = visibleRoutesForSend.length > 0 && visibleRoutesForSend.every((r) => sentSet.has(r.id));
+  const approvedCount = visibleRoutesForSend.filter((r) => (r.sendStatus[shiftKey] || 'pending') === 'approved').length;
 
   const editingStop = editStopId != null ? routes.flatMap((r) => r.stops).find((s) => s.id === editStopId) : null;
   const shipmentRoute = shipmentModalRouteId != null ? routes.find((r) => r.id === shipmentModalRouteId) : null;
@@ -1254,9 +1347,14 @@ export function RouteBalance() {
               <i className="bi bi-filetype-csv" /> Export Demi8
             </button>
             <button type="button" className={`styled-button ${allSent ? 'styled-button--sent' : 'styled-button--primary'}`}
-              title={allSent ? `All visible ${shiftKey.toUpperCase()} manifests sent — click to resend` : `Send all visible ${shiftKey.toUpperCase()} route manifests to their drivers`}
+              title={allSent
+                ? `All visible ${shiftKey.toUpperCase()} manifests sent — click to resend`
+                : approvedCount
+                  ? `Send the ${approvedCount} approved ${shiftKey.toUpperCase()} route manifest${approvedCount === 1 ? '' : 's'} to their drivers`
+                  : `Approve routes with the check on each card first (${shiftKey.toUpperCase()})`}
               onClick={sendToDrivers}>
               <i className={`bi ${allSent ? 'bi-check2-circle' : 'bi-send'}`} /> {allSent ? `Sent to Drivers (${shiftKey.toUpperCase()})` : `Send to Driver (${shiftKey.toUpperCase()})`}
+              {!allSent && approvedCount > 0 && <span className="send-approved-count">{approvedCount}</span>}
             </button>
             <button type="button" className="styled-button styled-button--outline" onClick={() => setPmListingModalOpen(true)}>
               <i className="bi bi-clipboard-data" /> PM ASR/DSR Listing
@@ -1473,7 +1571,7 @@ export function RouteBalance() {
         </section>
 
         {/* ============ ROUTE BLOCKS ============ */}
-        <section className={`route-blocks${rebalanceMode ? ' route-blocks--rebalance' : ''}`} id="routeBlocksContainer">
+        <section className={`route-blocks${rebalanceMode ? ' route-blocks--rebalance' : ''}${dragPayload ? ' rebalance-dragging' : ''}`} id="routeBlocksContainer">
           {!routesToRender.length && dashboardFilter ? (
             <div className="pre12-empty-state dashboard-filter-empty">
               <i className="bi bi-funnel" />
@@ -1520,7 +1618,7 @@ export function RouteBalance() {
                     return next;
                   });
                 }}
-                onSendIndividual={() => sendToDriverIndividual(route.id)}
+                onToggleApproval={() => toggleRouteApproval(route.id)}
                 onRevert={() => revertLastAction(route.id)}
                 onCollapse={() => collapseRoute(route.id)}
                 onAddPostcode={() => { setAddPostcodeRouteId(String(route.id)); setPostcodeInputVal(''); setPostcodeType('postcode'); setAddPostcodeModalOpen(true); }}
@@ -1532,6 +1630,21 @@ export function RouteBalance() {
                 onNotesBlur={(value) => updateRoute(route.id, (r) => ({ ...r, notes: value }))}
                 onTransferStops={transferStops}
                 onClickCard={() => setSelectedRouteId(route.id)}
+                isDropSource={dragPayload?.sourceRouteId === route.id}
+                isDropTarget={dropTargetRouteId === route.id}
+                onStartDrag={(stopIds, label) => setDragPayload({ sourceRouteId: route.id, stopIds, label })}
+                onEndDrag={() => { setDragPayload(null); setDropTargetRouteId(null); }}
+                onCardDragEnter={() => {
+                  if (dragPayload && dragPayload.sourceRouteId !== route.id) setDropTargetRouteId(route.id);
+                }}
+                onCardDragLeave={() => setDropTargetRouteId((prev) => (prev === route.id ? null : prev))}
+                onCardDrop={() => {
+                  if (dragPayload && dragPayload.sourceRouteId !== route.id) {
+                    transferStops(dragPayload.sourceRouteId, route.id, dragPayload.stopIds, `${dragPayload.label} → Route ${route.name}`);
+                  }
+                  setDragPayload(null);
+                  setDropTargetRouteId(null);
+                }}
               />
             ))
           )}
@@ -1894,8 +2007,8 @@ export function RouteBalance() {
                                 {stop.dsr && <span className="status-badge special-tag-dsr">DSR</span>}
                               </td>
                               <td>
-                                <span className={`status-badge status-badge-${route.sendStatus.pm === 'sent' ? 'completed' : 'pending'}`}>
-                                  {route.sendStatus.pm === 'sent' ? 'Sent' : 'Pending'}
+                                <span className={`status-badge status-badge-${route.sendStatus.pm === 'sent' ? 'completed' : route.sendStatus.pm === 'approved' ? 'approved' : 'pending'}`}>
+                                  {route.sendStatus.pm === 'sent' ? 'Sent' : route.sendStatus.pm === 'approved' ? 'Approved' : 'Pending'}
                                 </span>
                               </td>
                             </tr>
