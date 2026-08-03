@@ -139,9 +139,9 @@ export function generateInvoiceDetails(invoiceId: number): InvoiceDetailData {
       companyVatNumber: 'GB123456789',
     },
     vendor: {
-      name: 'Atlas Transport',
-      vendorCode: 'AT01',
-      vendorEmail: 'billing@atlas-transport.example',
+      name: 'TBX',
+      vendorCode: 'TBX01',
+      vendorEmail: 'billing@tbx.example',
     },
   };
 }

@@ -180,7 +180,7 @@ function seedRequests(): VendorRequest[] {
     updatedAt: new Date(now.getFullYear(), now.getMonth() - 1, 21).toISOString(),
   });
 
-  // Mock driver persona (id 101, "Sam Carter" / Atlas Transport — see
+  // Mock driver persona (id 101, "Sam Carter" / TBX — see
   // app/(private)/mockAuth.ts) gets its own small history so the Invoices
   // page's "History" tab isn't empty on first load.
   requests.push({

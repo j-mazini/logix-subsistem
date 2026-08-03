@@ -56,7 +56,7 @@ export default function SubcontractorPage() {
           onNextMonth={handleNextMonth}
         />
       </PageHeader>
-      <PageHeroCard icon="bi-person" title="Profile" subtitle="Your daily operations & payment breakdown" accent="violet" />
+      <PageHeroCard icon="bi-clipboard-data" title="Operations" subtitle="Your daily operations & payment breakdown" accent="slate" />
 
       <PageSection>
         <DaysCarousel

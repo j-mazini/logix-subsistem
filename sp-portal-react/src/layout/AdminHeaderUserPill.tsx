@@ -65,7 +65,7 @@ export function useAdminHeaderPill(): AdminHeaderMenuControls {
 }
 
 /** Company logo in the pill; initials take over if it fails to load. Same image as the driver portal's UserPill. */
-const AVATAR_SRC = '/assets/atlas-transport-logo.png';
+const AVATAR_SRC = '/assets/tbx-logo.png';
 
 export function AdminHeaderPill({ sp, controls }: { sp: string; controls: AdminHeaderMenuControls }) {
   const { open, setOpen, pillRef } = controls;

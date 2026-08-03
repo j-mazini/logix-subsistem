@@ -147,7 +147,7 @@ export function SOPFeed() {
     const newPost: SopPost = {
       id: Date.now(),
       author: 'Service Provider Admin',
-      authorAvatar: 'assets/atlas-transport-logo.png',
+      authorAvatar: 'assets/tbx-logo.png',
       timeAgo: 'Just now',
       type: 'update',
       title: title || (selectedDhlPost ? selectedDhlPost.title : 'Company update'),
@@ -196,7 +196,7 @@ export function SOPFeed() {
         if (p.id !== id) return p;
         const commentList = [
           ...p.commentList,
-          { author: spInfo?.owner || 'User', company: sp || '—', authorAvatar: 'assets/atlas-transport-logo.png', text, timeAgo: 'Just now' },
+          { author: spInfo?.owner || 'User', company: sp || '—', authorAvatar: 'assets/tbx-logo.png', text, timeAgo: 'Just now' },
         ];
         return { ...p, commentList, comments: commentList.length };
       });
@@ -233,7 +233,7 @@ export function SOPFeed() {
         <div className="sop-create-post-inner">
           <div className="d-flex align-items-start gap-3">
             <div className="sop-create-post-avatar">
-              <img src="/assets/atlas-transport-logo.png" alt="" />
+              <img src="/assets/tbx-logo.png" alt="" />
             </div>
             <div className="sop-create-post-input-wrap">
               <input
@@ -424,7 +424,7 @@ export function SOPFeed() {
                   </div>
                   <form className="sop-comments-form" onSubmit={(e) => submitComment(e, openPost.id)}>
                     <div className="sop-comments-input-wrap">
-                      <img src="/assets/atlas-transport-logo.png" alt="" className="sop-comment-input-avatar" width={32} height={32} />
+                      <img src="/assets/tbx-logo.png" alt="" className="sop-comment-input-avatar" width={32} height={32} />
                       <input
                         type="text"
                         className="sop-comments-input"

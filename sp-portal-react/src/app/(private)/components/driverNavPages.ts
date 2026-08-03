@@ -19,10 +19,19 @@ export const DRIVER_NAV_PAGES: DriverNavPage[] = [
     allowedUserTypes: [USER_TYPE.ADMIN, USER_TYPE.DRIVER, USER_TYPE.SUPERVISOR],
   },
   {
-    href: "/subcontractor",
+    href: "/my-profile",
     label: "Profile",
-    icon: "bi-person",
+    icon: "bi-person-circle",
     accent: "violet",
+    allowedUserTypes: [USER_TYPE.ADMIN, USER_TYPE.DRIVER, USER_TYPE.SUPERVISOR],
+  },
+  {
+    // Was labelled "Profile" while showing daily operations and payment
+    // breakdown — renamed when the driver got a real profile page above.
+    href: "/subcontractor",
+    label: "Operations",
+    icon: "bi-clipboard-data",
+    accent: "slate",
     allowedUserTypes: [USER_TYPE.ADMIN, USER_TYPE.DRIVER, USER_TYPE.SUPERVISOR],
   },
   {

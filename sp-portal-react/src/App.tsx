@@ -39,6 +39,7 @@ import { Requests } from './pages/Requests/Requests';
 import { Subcontractor } from './pages/Subcontractor/Subcontractor';
 import { MyDeliveries } from './pages/MyDeliveries/MyDeliveries';
 import { MySchedule } from './pages/MySchedule/MySchedule';
+import { DriverProfile } from './pages/DriverProfile/DriverProfile';
 import { useViewportAttribute } from './hooks/useViewportAttribute';
 import { useRefinementsMotion } from './hooks/useRefinementsMotion';
 
@@ -114,6 +115,7 @@ function App() {
           <Route path="/subcontractor" element={<Subcontractor />} />
           <Route path="/my-deliveries" element={<MyDeliveries />} />
           <Route path="/my-schedule" element={<MySchedule />} />
+          <Route path="/my-profile" element={<DriverProfile />} />
         </Routes>
       </AnnouncementsProvider>
     </HashRouter>

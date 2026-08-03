@@ -20,7 +20,7 @@ export const MOCK_DRIVER_USER: MockDriverUser = {
   id: 101,
   userTypeId: USER_TYPE.DRIVER,
   fullName: 'Sam Carter',
-  companyName: 'Atlas Transport',
+  companyName: 'TBX',
 };
 
 export function useAuth(): { user: MockDriverUser } {

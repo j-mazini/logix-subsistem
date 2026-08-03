@@ -18,6 +18,7 @@ module.exports = {
     './src/pages/CurrentPerformance/**/*.{ts,tsx}',
     './src/pages/DailyPerformanceInsight/**/*.{ts,tsx}',
     './src/pages/Deductions/**/*.{ts,tsx}',
+    './src/pages/DriverProfile/**/*.{ts,tsx}',
     './src/pages/Invoices/**/*.{ts,tsx}',
     './src/pages/MobileInvoice/**/*.{ts,tsx}',
     './src/pages/MyDeliveries/**/*.{ts,tsx}',
