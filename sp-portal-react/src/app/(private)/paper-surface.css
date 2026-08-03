@@ -1,0 +1,52 @@
+/* =============================================================
+ * Paper & ink surface for the driver shell, opt-in per page via
+ * <StandardPageLayout surface="paper">.
+ *
+ * The driver background is an animated aura of indigo/pink/cyan
+ * gradients injected by GradientDotsBackground. Rather than fork
+ * that component, this file wins on specificity (two classes) and
+ * switches the page to paper — so a screen converts by flipping a
+ * prop, and nothing changes for the screens that haven't.
+ * ============================================================= */
+
+.driver-paper.gradient-dots-background {
+  background: var(--pi-paper);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+  background-attachment: fixed;
+}
+
+/* The two aura layers are the whole "liquid glass" look — on paper they read
+   as a print defect. */
+.driver-paper.gradient-dots-background::before,
+.driver-paper.gradient-dots-background::after {
+  display: none !important;
+}
+
+/* The identity pill belongs to the shell, so it converts with the surface
+   instead of staying a floating glass chip on a printed page. */
+.driver-paper .user-pill {
+  background: var(--pi-surface);
+  border-color: var(--pi-rule);
+  box-shadow: var(--pi-shadow-card);
+  border-radius: var(--pi-radius);
+}
+
+.driver-paper .user-pill__avatar {
+  border-radius: var(--pi-radius-sm);
+}
+
+.driver-paper .user-pill__company {
+  font-family: var(--pi-font-display);
+  color: var(--pi-ink);
+}
+
+.driver-paper .user-pill__name {
+  color: var(--pi-ink-soft);
+}
+
+.driver-paper .user-pill__logout {
+  border-radius: var(--pi-radius-sm);
+  background: var(--pi-surface-2);
+  color: var(--pi-danger);
+}

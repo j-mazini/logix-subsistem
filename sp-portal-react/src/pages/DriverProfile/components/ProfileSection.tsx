@@ -11,8 +11,8 @@ interface ProfileSectionProps {
   children: ReactNode;
 }
 
-/** Glass card with an icon header — the driver-side equivalent of the SP profile's `.sp-profile-section`. */
-export function ProfileSection({ icon, title, subtitle, tone = "violet", children }: ProfileSectionProps) {
+/** Paper card with an icon header — the driver-side equivalent of the SP profile's `.sp-profile-section`. */
+export function ProfileSection({ icon, title, subtitle, tone = "accent", children }: ProfileSectionProps) {
   return (
     <section className={styles.sectionCard}>
       <header className={styles.sectionHeader}>

@@ -1,4 +1,4 @@
-import { StandardPageLayout, PageHeroCard } from "@/app/(private)/components";
+import { StandardPageLayout } from "@/app/(private)/components";
 import { MOCK_DRIVER_USER } from "@/app/(private)/mockAuth";
 import { DRIVER_WORK_INFO } from "@/app/(private)/driverProfileStorage";
 import { digitsOnly, formatNiNumber, formatSortCode } from "./utils";
@@ -12,13 +12,14 @@ export default function DriverProfilePage() {
   const { profile, dirty, toast, setField, setPhoto, removePhoto, save, discard } = useDriverProfile();
 
   return (
-    <StandardPageLayout bottomPadding="pb-[70px]">
-      <PageHeroCard
-        icon="bi-person-circle"
-        title="My Profile"
-        subtitle="Your personal details, photo and emergency contact"
-        accent="violet"
-      />
+    <StandardPageLayout bottomPadding="pb-[70px]" surface="paper">
+      <header className={styles.masthead}>
+        <p className={styles.mastheadEyebrow}>{MOCK_DRIVER_USER.companyName} · Driver record</p>
+        <h1 className={styles.mastheadTitle}>My Profile</h1>
+        <p className={styles.mastheadSubtitle}>
+          Your personal details, photo, payment and emergency contact
+        </p>
+      </header>
 
       <div className={styles.layout}>
         <div className={styles.identityColumn}>
@@ -80,7 +81,7 @@ export default function DriverProfilePage() {
             />
           </ProfileSection>
 
-          <ProfileSection icon="bi-geo-alt" title="Address" subtitle="Where your route starts from" tone="sky">
+          <ProfileSection icon="bi-geo-alt" title="Address" subtitle="Where your route starts from" tone="accent">
             <ProfileField
               id="driverAddressLine"
               label="Address"
@@ -107,7 +108,7 @@ export default function DriverProfilePage() {
             icon="bi-heart-pulse"
             title="Emergency contact"
             subtitle="Who we call if something happens on the road"
-            tone="amber"
+            tone="warn"
           >
             <ProfileField
               id="driverEmergencyName"
@@ -136,7 +137,7 @@ export default function DriverProfilePage() {
             icon="bi-bank"
             title="Bank details"
             subtitle="Where your weekly payment lands — only the depot's finance team sees this"
-            tone="emerald"
+            tone="ok"
           >
             <ProfileField
               id="driverBankHolder"
@@ -172,7 +173,7 @@ export default function DriverProfilePage() {
             icon="bi-file-earmark-text"
             title="Tax & legal"
             subtitle="What the depot needs to pay you correctly"
-            tone="emerald"
+            tone="ok"
           >
             <ProfileField
               id="driverNiNumber"
@@ -209,7 +210,7 @@ export default function DriverProfilePage() {
             icon="bi-card-heading"
             title="Driving licence"
             subtitle="Keep the expiry current — an out-of-date licence takes you off the rota"
-            tone="sky"
+            tone="accent"
           >
             <ProfileField
               id="driverLicenceNumber"
@@ -238,7 +239,7 @@ export default function DriverProfilePage() {
             icon="bi-building"
             title="Work details"
             subtitle="Set by your Service Provider — ask the depot to change these"
-            tone="slate"
+            tone="neutral"
           >
             <ProfileField id="driverCompany" label="Company" value={MOCK_DRIVER_USER.companyName} readOnly />
             <ProfileField id="driverRole" label="Role" value="Driver" readOnly />

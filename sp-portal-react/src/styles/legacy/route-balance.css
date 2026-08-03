@@ -18,65 +18,74 @@
  * família que ninguém carrega, em todos os ecrãs do portal. Dentro do Route
  * Balance nada muda — a página tem sempre a classe no body. */
 body.route-balance-page {
-  --paper: #f4f5f7;
-  --surface: #ffffff;
-  --surface-2: #f0f2f5;
-  --ink: #171b23;
-  --ink-soft: #5b6472;
-  --ink-faint: #98a0ad;
-  --hairline: #edeff3;
-  --hairline-strong: #dfe3e9;
+  /* Paper & ink: os nomes locais mantêm-se — é o que as ~3500 linhas abaixo
+   * consomem — e passam a apontar para os tokens partilhados de
+   * styles/paper-ink.css. Trocar o acabamento desta página é agora trocar
+   * este mapa, não caçar hexadecimais pelo ficheiro. */
+  --paper: var(--pi-paper);
+  --surface: var(--pi-surface);
+  --surface-2: var(--pi-surface-2);
+  --ink: var(--pi-ink);
+  --ink-soft: var(--pi-ink-soft);
+  --ink-faint: var(--pi-ink-faint);
+  --hairline: var(--pi-rule);
+  --hairline-strong: var(--pi-rule-strong);
 
-  --accent: #0d6efd;
-  --accent-ink: #0a53c4;
-  --accent-soft: #e9f1fe;
+  --accent: var(--pi-accent);
+  --accent-ink: var(--pi-accent-ink);
+  --accent-soft: var(--pi-accent-soft);
 
-  --ok: #12805c;
-  --ok-soft: #e1f5ec;
-  --danger: #d63841;
-  --danger-soft: #fdecec;
-  --warn: #b45309;
-  --warn-soft: #fdf2e0;
-  --pending: #6b7280;
-  --pending-soft: #eef0f3;
+  --ok: var(--pi-ok);
+  --ok-soft: var(--pi-ok-soft);
+  --danger: var(--pi-danger);
+  --danger-soft: var(--pi-danger-soft);
+  --warn: var(--pi-warn);
+  --warn-soft: var(--pi-warn-soft);
+  --pending: var(--pi-pending);
+  --pending-soft: var(--pi-pending-soft);
 
-  --board-bg: #10151f;
-  --board-cell: #151b28;
-  --board-line: #232c3e;
-  --board-digit: #ffc24d;
-  --board-label: #7e8798;
+  --board-bg: var(--pi-board-bg);
+  --board-cell: var(--pi-board-cell);
+  --board-line: var(--pi-board-line);
+  --board-digit: var(--pi-board-digit);
+  --board-label: var(--pi-board-label);
 
-  --font-ui: 'Inter', system-ui, sans-serif;
-  --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', monospace;
+  --font-ui: var(--pi-font-ui);
+  --font-mono: var(--pi-font-mono);
+  --font-display: var(--pi-font-display);
 
-  --radius-lg: 20px;
-  --radius: 16px;
-  --radius-sm: 12px;
-  --shadow-card:
-    0 1px 2px rgba(16, 24, 40, 0.05),
-    0 6px 20px rgba(16, 24, 40, 0.06);
-  --shadow-hover:
-    0 2px 4px rgba(16, 24, 40, 0.06),
-    0 12px 28px rgba(16, 24, 40, 0.10);
-  --shadow-modal:
-    0 8px 20px rgba(16, 24, 40, 0.10),
-    0 28px 64px rgba(16, 24, 40, 0.18);
-  --focus-ring: 0 0 0 3px rgba(13, 110, 253, 0.22);
-  --t-fast: 0.16s ease;
+  --radius-lg: var(--pi-radius-lg);
+  --radius: var(--pi-radius);
+  --radius-sm: var(--pi-radius-sm);
+  --shadow-card: var(--pi-shadow-card);
+  --shadow-hover: var(--pi-shadow-hover);
+  --shadow-modal: var(--pi-shadow-modal);
+  --focus-ring: var(--pi-focus-ring);
+  --t-fast: var(--pi-t-fast);
 }
 
 /* ============ PAGE SCAFFOLD ============ */
 
-html:has(> body.route-balance-page) { background: #f4f5f7; }
+html:has(> body.route-balance-page) { background: var(--pi-paper); }
 
 body.route-balance-page {
   font-family: var(--font-ui);
   color: var(--ink);
   background-color: var(--paper);
-  /* dot-grid paper */
-  background-image: radial-gradient(rgba(23, 27, 35, 0.055) 1px, transparent 1px);
-  background-size: 22px 22px;
+  /* Grão de papel no lugar da grelha de pontos: a grelha lia-se como écrã,
+     e o que se quer é a superfície onde a operação é anotada. */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
   min-height: 100vh;
+}
+
+/* Títulos em serifa, valores em mono: a hierarquia do acabamento vem daqui,
+   não de mais cor. */
+body.route-balance-page .admin-header-title,
+body.route-balance-page .modal-title,
+body.route-balance-page .section-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 .route-balance-container { max-width: 1500px; margin: 0 auto; }
@@ -3781,4 +3790,53 @@ body.rebalance-mode-active .fab-all-postcodes { display: inline-flex; }
     animation-iteration-count: 1 !important;
   }
   .spinner { animation: none; }
+}
+
+/* ============ CHROME DO PORTAL, NO ACABAMENTO DA PÁGINA ============
+ *
+ * O cabeçalho, os botões primários e o gatilho da sidebar não são desta
+ * página: vêm de liquid-glass.css / sp-portal.css e das outras seis folhas
+ * que redefinem `.styled-button--primary` sem escopo nenhum — quem carrega
+ * por último ganha em toda a app. Enquanto essa consolidação não acontece,
+ * este bloco prende o chrome ao acabamento paper & ink apenas nesta página,
+ * com a especificidade (e o !important) que é preciso para vencer o glass.
+ *
+ * Quando o acabamento sair do piloto, este bloco sobe para a folha do chrome
+ * e desaparece daqui.
+ * ================================================================= */
+
+body.route-balance-page .admin-header {
+  border: 1px solid var(--hairline) !important;
+  background: var(--surface) !important;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: var(--shadow-card) !important;
+  border-radius: var(--radius) !important;
+}
+
+body.route-balance-page .styled-button--primary {
+  background: var(--accent);
+  color: var(--pi-ink-inverse);
+  border-radius: var(--radius-sm);
+}
+
+body.route-balance-page .styled-button--primary:hover:not(:disabled) {
+  background: var(--accent-ink);
+  transform: none;
+}
+
+body.route-balance-page .styled-button--outline {
+  border: 1px solid var(--hairline-strong);
+  background: var(--surface);
+  color: var(--ink-soft);
+  border-radius: var(--radius-sm);
+}
+
+/* O gatilho da sidebar é a única peça de marca visível em todas as páginas:
+   em tinta, e não em violeta, para não denunciar dois sistemas ao mesmo tempo. */
+body.route-balance-page .beam-trigger {
+  background: var(--pi-ink) !important;
+  color: var(--pi-ink-inverse) !important;
+  box-shadow: var(--shadow-card) !important;
+  border-radius: var(--radius-sm) !important;
 }
