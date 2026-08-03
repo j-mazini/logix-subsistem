@@ -6,26 +6,20 @@ import { UserPill } from "./UserPill";
 import { MobileNavBar } from "./MobileNavBar";
 import { DesktopNavBar } from "./DesktopNavBar";
 import "../tailwind.css";
-import "../paper-surface.css";
 
 interface StandardPageLayoutProps {
   children: ReactNode;
   showWelcomeHeader?: boolean;
   bottomPadding?: string;
-  /** "paper" swaps the gradient aura for the paper & ink surface — set per page as each one is converted. */
-  surface?: "default" | "paper";
 }
 
 export function StandardPageLayout({
   children,
   showWelcomeHeader = false,
   bottomPadding = "pb-[70px]",
-  surface = "default",
 }: StandardPageLayoutProps) {
   return (
-    <GradientDotsBackground
-      className={`driver-tw-scope relative min-h-screen z-[1] pointer-events-auto overflow-x-hidden w-full${surface === "paper" ? " driver-paper" : ""}`}
-    >
+    <GradientDotsBackground className="driver-tw-scope relative min-h-screen z-[1] pointer-events-auto overflow-x-hidden w-full">
       <div className={`max-w-full min-h-screen ${bottomPadding} md:pb-28`}>
         <div
           className="md:hidden"
