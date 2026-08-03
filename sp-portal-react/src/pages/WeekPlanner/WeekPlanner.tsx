@@ -3,6 +3,12 @@ import { createPortal } from 'react-dom';
 import { PortalLayout } from '../../layout/PortalLayout';
 import { useModalBehavior } from '../../hooks/useModalBehavior';
 import AvailableDrivers from './components/AvailableDrivers';
+import DayOffModal, { type DayOffEntry } from './components/DayOffModal';
+import DashboardStats from './components/DashboardStats';
+import TypesConfigModal from './components/TypesConfigModal';
+import AddAdhocServiceModal from './components/AddAdhocServiceModal';
+import FlexRouteModal from './components/FlexRouteModal';
+import AddManagementSupportModal from './components/AddManagementSupportModal';
 import '../../styles/legacy/week-planner.css';
 
 /* =====================================================
@@ -121,6 +127,7 @@ interface Route {
   id: number;
   depotId: number;
   name: string;
+  isFlex?: boolean;
 }
 function buildRoutesForDepot(depot: Depot): Route[] {
   const n = ROUTE_COUNT_BY_DEPOT[depot.id] || 6;
@@ -129,6 +136,13 @@ function buildRoutesForDepot(depot: Depot): Route[] {
   return routes;
 }
 const ROUTES_BY_DEPOT = new Map(DEPOTS.map((d) => [d.id, buildRoutesForDepot(d)]));
+
+/** Flex routes — extra routes hidden by default; a depot can show/hide them via "Manage Flex Routes". */
+const FLEX_ROUTE_NAMES = ['Overflow A', 'Overflow B', 'Weekend Surge', 'Peak Cover'];
+function buildFlexRoutesForDepot(depot: Depot): Route[] {
+  return FLEX_ROUTE_NAMES.map((name, i) => ({ id: depot.id * 100 + 50 + i, depotId: depot.id, name: `${depot.code}-FLEX-${i + 1} (${name})`, isFlex: true }));
+}
+const FLEX_ROUTES_BY_DEPOT = new Map(DEPOTS.map((d) => [d.id, buildFlexRoutesForDepot(d)]));
 
 const VENDOR_FIRST_NAMES = [
   'James', 'Oliver', 'Harry', 'George', 'Jack', 'Charlie', 'Thomas', 'Jacob',
@@ -168,6 +182,68 @@ function buildVendorPool(): PoolVendor[] {
 }
 const VENDOR_POOL = buildVendorPool();
 
+interface FleetVehicle {
+  id: number;
+  model: string;
+  plate: string;
+}
+function buildVehicleFleet(): FleetVehicle[] {
+  const fleet: FleetVehicle[] = [];
+  const rng = rngForSeed('week-planner-vehicle-fleet');
+  const letters = 'ABCDEFGHJKLMNPRSTUVWXYZ';
+  const l2 = () => letters[Math.floor(rng() * letters.length)];
+  for (let i = 0; i < VEHICLE_TYPES.length * 4; i++) {
+    const model = VEHICLE_TYPES[i % VEHICLE_TYPES.length];
+    const plate = `L${Math.floor(rng() * 9)}${Math.floor(rng() * 9)} ${l2()}${l2()}${l2()}`;
+    fleet.push({ id: i + 1, model, plate });
+  }
+  return fleet;
+}
+/** Independent fleet vehicles for the vehicle picker — decoupled from each vendor's initial vehicle/plate. */
+const VEHICLE_FLEET = buildVehicleFleet();
+
+export interface AdhocServiceCatalogItem {
+  id: number;
+  adhocName: string;
+  adhocReceivedPayment: number;
+  adhocVendorPayment: number;
+  [key: string]: string | number | boolean;
+}
+/** Seed catalog for Ad-Hoc Services — editable via Types Config's "Adhoc Services" tab, shared with the Add Ad-Hoc Service modal. */
+const DEFAULT_ADHOC_SERVICES: AdhocServiceCatalogItem[] = [
+  { id: 1, adhocName: 'CMP Unload', adhocReceivedPayment: 45, adhocVendorPayment: 30 },
+  { id: 2, adhocName: 'Flyer Sort', adhocReceivedPayment: 25, adhocVendorPayment: 18 },
+  { id: 3, adhocName: 'Boat', adhocReceivedPayment: 60, adhocVendorPayment: 42 },
+  { id: 4, adhocName: 'Pre-9 Delivery', adhocReceivedPayment: 35, adhocVendorPayment: 24 },
+];
+
+interface StaffMember {
+  id: number;
+  name: string;
+}
+/** Office/admin staff pool for Management & Support assignments — distinct from VENDOR_POOL (drivers), with a non-overlapping id range. */
+const MANAGEMENT_STAFF_POOL: StaffMember[] = [
+  { id: 501, name: 'Diana Cooper' },
+  { id: 502, name: 'Marcus Webb' },
+  { id: 503, name: 'Sophie Turner' },
+  { id: 504, name: 'Nathan Ford' },
+  { id: 505, name: 'Rachel Kim' },
+  { id: 506, name: 'Tom Bradley' },
+];
+
+export interface ManagementFunctionCatalogItem {
+  id: number;
+  title: string;
+  [key: string]: string | number | boolean;
+}
+/** Seed catalog for Management & Support functions — editable via Types Config's "Management Functions" tab. */
+const DEFAULT_MANAGEMENT_FUNCTIONS: ManagementFunctionCatalogItem[] = [
+  { id: 1, title: 'Team Leader - Ops' },
+  { id: 2, title: 'IT Support' },
+  { id: 3, title: 'HR Coordinator' },
+  { id: 4, title: 'Customer Service' },
+];
+
 const MOCK_NOTES = [
   'Vehicle arrived late.',
   'Extra stop confirmed by depot.',
@@ -194,6 +270,26 @@ interface WPRecord {
   status: string;
   isDayOff: string;
   isSort: string;
+  /** Ad-Hoc Services assignment — not tied to a real route; matched by adhocServiceId instead of routeId. */
+  isAdhoc: boolean;
+  adhocServiceId?: number;
+  /** Management & Support Team assignment — office/admin staff on a named function, not tied to a route. */
+  isManagementSupport: boolean;
+  managementFunctionId?: number;
+}
+
+/** Two records occupy the "same slot" (route+depot+supervisor, the same ad-hoc service, or the same management function) regardless of vendor/date. */
+function isSameSlot(a: WPRecord, b: WPRecord): boolean {
+  if (a.isAdhoc || b.isAdhoc) return a.isAdhoc === b.isAdhoc && a.adhocServiceId === b.adhocServiceId;
+  if (a.isManagementSupport || b.isManagementSupport) {
+    return a.isManagementSupport === b.isManagementSupport && a.managementFunctionId === b.managementFunctionId;
+  }
+  return a.isSupervisor === b.isSupervisor && a.depotId === b.depotId && a.routeId === b.routeId;
+}
+
+/** Management & Support assignments are staffed from MANAGEMENT_STAFF_POOL; everything else from VENDOR_POOL. */
+function personPoolFor(rec: Pick<WPRecord, 'isManagementSupport'>): { id: number; name: string }[] {
+  return rec.isManagementSupport ? MANAGEMENT_STAFF_POOL : VENDOR_POOL;
 }
 
 let weekPlannerIdCounter = 1;
@@ -249,6 +345,8 @@ function generateWeekRecords(weekStart: Date): WPRecord[] {
           status: 'Working',
           isDayOff: 'false',
           isSort: routeSort === 'yes' ? 'true' : 'false',
+          isAdhoc: false,
+          isManagementSupport: false,
         });
       });
     });
@@ -275,6 +373,8 @@ function generateWeekRecords(weekStart: Date): WPRecord[] {
         status: 'Working',
         isDayOff: 'false',
         isSort: 'false',
+        isAdhoc: false,
+        isManagementSupport: false,
       });
     });
   });
@@ -299,9 +399,13 @@ interface SupervisorPopoverState {
   top: number;
 }
 
+type ViewMode = 'weekly' | 'daily' | 'dashboard';
+
 export function WeekPlanner() {
   const [loading, setLoading] = useState(true);
-  const [currentWeekStart, setCurrentWeekStart] = useState(() => getWeekStart(new Date()));
+  const [currentDay, setCurrentDay] = useState(() => new Date());
+  const currentWeekStart = useMemo(() => getWeekStart(currentDay), [currentDay]);
+  const [viewMode, setViewMode] = useState<ViewMode>('weekly');
   const [showWeekends, setShowWeekends] = useState(false);
   const [collapsedDepots, setCollapsedDepots] = useState<Set<number>>(new Set());
   const [editingRecord, setEditingRecord] = useState<WPRecord | null>(null);
@@ -309,10 +413,22 @@ export function WeekPlanner() {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const [renderVersion, setRenderVersion] = useState(0);
   const [isAvailableDriversOpen, setIsAvailableDriversOpen] = useState(false);
+  const [showDayOffModal, setShowDayOffModal] = useState(false);
+  const [showTypesConfigModal, setShowTypesConfigModal] = useState(false);
+  const [showAddAdhocModal, setShowAddAdhocModal] = useState(false);
+  const [adhocServiceCatalog, setAdhocServiceCatalog] = useState<AdhocServiceCatalogItem[]>(DEFAULT_ADHOC_SERVICES);
+  const [adhocCollapsed, setAdhocCollapsed] = useState(false);
+  const [visibleFlexRouteIds, setVisibleFlexRouteIds] = useState<Set<number>>(new Set());
+  const [flexModalDepotId, setFlexModalDepotId] = useState<number | null>(null);
+  const [showAddManagementModal, setShowAddManagementModal] = useState(false);
+  const [managementFunctionCatalog, setManagementFunctionCatalog] = useState<ManagementFunctionCatalogItem[]>(DEFAULT_MANAGEMENT_FUNCTIONS);
+  const [managementCollapsed, setManagementCollapsed] = useState(false);
+  const [dayOffEntries, setDayOffEntries] = useState<DayOffEntry[]>([]);
 
   const weekCache = useRef(new Map<string, WPRecord[]>());
   const dragPayload = useRef<DragPayload | null>(null);
   const toastIdRef = useRef(0);
+  const dayOffIdRef = useRef(0);
 
   useEffect(() => {
     const t = setTimeout(() => setLoading(false), 300);
@@ -353,12 +469,24 @@ export function WeekPlanner() {
     const assigned = new Set(records.map((r) => r.vendorId));
     return VENDOR_POOL.filter((v) => !assigned.has(v.id));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentWeekStart, renderVersion]);
+  }, [currentDay, renderVersion]);
 
   function shiftWeek(deltaDays: number) {
-    const d = new Date(currentWeekStart);
-    d.setDate(d.getDate() + deltaDays);
-    setCurrentWeekStart(getWeekStart(d));
+    setCurrentDay((prev) => {
+      const next = new Date(prev);
+      next.setDate(next.getDate() + deltaDays);
+      return next;
+    });
+  }
+
+  function shiftDay(deltaDays: number) {
+    setCurrentDay((prev) => {
+      const next = new Date(prev);
+      do {
+        next.setDate(next.getDate() + deltaDays);
+      } while (!showWeekends && isWeekend(next));
+      return next;
+    });
   }
 
   function findRecordById(id: number): WPRecord | null {
@@ -369,7 +497,7 @@ export function WeekPlanner() {
     const payload = dragPayload.current;
     dragPayload.current = null;
     if (!payload) return;
-    const routes = ROUTES_BY_DEPOT.get(depotId) || [];
+    const routes = [...(ROUTES_BY_DEPOT.get(depotId) || []), ...(FLEX_ROUTES_BY_DEPOT.get(depotId) || [])];
     const route = routes.find((r) => r.id === routeId);
 
     if (payload.type === 'vendor') {
@@ -396,6 +524,8 @@ export function WeekPlanner() {
         status: 'Working',
         isDayOff: 'false',
         isSort: 'false',
+        isAdhoc: false,
+        isManagementSupport: false,
       });
       showToast(`Assigned ${vendor.name} to ${route ? route.name : 'route'} on ${dateISO}.`, 'success');
       rerender();
@@ -418,17 +548,263 @@ export function WeekPlanner() {
     rerender();
   }
 
-  function saveAssignmentModal(vendorId: number, vehicle: string, plate: string, routeSort: 'yes' | 'no', status: string, notes: string) {
+  function handleDropOnAdhocCell(serviceId: number, dateISO: string) {
+    const payload = dragPayload.current;
+    dragPayload.current = null;
+    if (!payload) return;
+    const service = adhocServiceCatalog.find((s) => s.id === serviceId);
+    if (!service) return;
+
+    if (payload.type === 'vendor') {
+      const vendor = VENDOR_POOL.find((v) => v.id === payload.vendorId);
+      if (!vendor) return;
+      const alreadyHere = records.some((r) => r.isAdhoc && r.adhocServiceId === serviceId && r.date === dateISO && r.vendorId === vendor.id);
+      if (alreadyHere) {
+        showToast(`${vendor.name} is already assigned to this cell.`, 'error');
+        return;
+      }
+      records.push({
+        weekPlannerId: weekPlannerIdCounter++,
+        depotId: DEPOTS[0].id,
+        routeId: null,
+        isSupervisor: false,
+        date: dateISO,
+        name: vendor.name,
+        vendorId: vendor.id,
+        route: service.adhocName,
+        routeSort: 'no',
+        notes: '',
+        vehicle: vendor.vehicle,
+        registrationPlate: vendor.plate,
+        status: 'Working',
+        isDayOff: 'false',
+        isSort: 'false',
+        isAdhoc: true,
+        adhocServiceId: serviceId,
+        isManagementSupport: false,
+      });
+      showToast(`Assigned ${vendor.name} to ${service.adhocName} on ${dateISO}.`, 'success');
+      rerender();
+      return;
+    }
+
+    const rec = records.find((r) => r.weekPlannerId === payload.id);
+    if (!rec) return;
+    if (rec.isAdhoc && rec.adhocServiceId === serviceId && rec.date === dateISO) return; // no-op, same cell
+    const duplicate = records.some((r) => r !== rec && r.isAdhoc && r.adhocServiceId === serviceId && r.date === dateISO && r.vendorId === rec.vendorId);
+    if (duplicate) {
+      showToast(`${rec.name} is already assigned to this cell.`, 'error');
+      return;
+    }
+    rec.isAdhoc = true;
+    rec.adhocServiceId = serviceId;
+    rec.routeId = null;
+    rec.route = service.adhocName;
+    rec.date = dateISO;
+    showToast(`Moved ${rec.name} to ${service.adhocName} on ${dateISO}.`, 'success');
+    rerender();
+  }
+
+  function saveAdhocService(data: { userId: number; serviceId: number; dates: string[]; notes: string }) {
+    const vendor = VENDOR_POOL.find((v) => v.id === data.userId);
+    const service = adhocServiceCatalog.find((s) => s.id === data.serviceId);
+    if (!vendor || !service) return;
+    if (data.dates.length === 0) {
+      throw new Error('Select at least one day.');
+    }
+
+    let created = 0;
+    let skipped = 0;
+    data.dates.forEach((dateISO) => {
+      const alreadyHere = records.some((r) => r.isAdhoc && r.adhocServiceId === service.id && r.date === dateISO && r.vendorId === vendor.id);
+      if (alreadyHere) {
+        skipped++;
+        return;
+      }
+      created++;
+      records.push({
+        weekPlannerId: weekPlannerIdCounter++,
+        depotId: DEPOTS[0].id,
+        routeId: null,
+        isSupervisor: false,
+        date: dateISO,
+        name: vendor.name,
+        vendorId: vendor.id,
+        route: service.adhocName,
+        routeSort: 'no',
+        notes: data.notes,
+        vehicle: vendor.vehicle,
+        registrationPlate: vendor.plate,
+        status: 'Working',
+        isDayOff: 'false',
+        isSort: 'false',
+        isAdhoc: true,
+        adhocServiceId: service.id,
+        isManagementSupport: false,
+      });
+    });
+
+    if (created === 0) {
+      throw new Error(`${vendor.name} is already assigned to ${service.adhocName} on the selected date(s).`);
+    }
+
+    const parts = [`${created} day${created === 1 ? '' : 's'} added`];
+    if (skipped > 0) parts.push(`${skipped} already assigned`);
+    showToast(`${service.adhocName} assigned to ${vendor.name} (${parts.join(', ')}).`, 'success');
+    setShowAddAdhocModal(false);
+    rerender();
+  }
+
+  function handleDropOnManagementCell(functionId: number, dateISO: string) {
+    const payload = dragPayload.current;
+    dragPayload.current = null;
+    if (!payload) return;
+    const fn = managementFunctionCatalog.find((f) => f.id === functionId);
+    if (!fn) return;
+
+    if (payload.type === 'vendor') {
+      const staff = MANAGEMENT_STAFF_POOL.find((v) => v.id === payload.vendorId);
+      if (!staff) return;
+      const alreadyHere = records.some(
+        (r) => r.isManagementSupport && r.managementFunctionId === functionId && r.date === dateISO && r.vendorId === staff.id,
+      );
+      if (alreadyHere) {
+        showToast(`${staff.name} is already assigned to this cell.`, 'error');
+        return;
+      }
+      records.push({
+        weekPlannerId: weekPlannerIdCounter++,
+        depotId: DEPOTS[0].id,
+        routeId: null,
+        isSupervisor: false,
+        date: dateISO,
+        name: staff.name,
+        vendorId: staff.id,
+        route: fn.title,
+        routeSort: 'no',
+        notes: '',
+        vehicle: '',
+        registrationPlate: '',
+        status: 'Working',
+        isDayOff: 'false',
+        isSort: 'false',
+        isAdhoc: false,
+        isManagementSupport: true,
+        managementFunctionId: functionId,
+      });
+      showToast(`Assigned ${staff.name} to ${fn.title} on ${dateISO}.`, 'success');
+      rerender();
+      return;
+    }
+
+    const rec = records.find((r) => r.weekPlannerId === payload.id);
+    if (!rec) return;
+    if (rec.isManagementSupport && rec.managementFunctionId === functionId && rec.date === dateISO) return; // no-op, same cell
+    const duplicate = records.some(
+      (r) => r !== rec && r.isManagementSupport && r.managementFunctionId === functionId && r.date === dateISO && r.vendorId === rec.vendorId,
+    );
+    if (duplicate) {
+      showToast(`${rec.name} is already assigned to this cell.`, 'error');
+      return;
+    }
+    rec.isManagementSupport = true;
+    rec.managementFunctionId = functionId;
+    rec.isAdhoc = false;
+    rec.routeId = null;
+    rec.route = fn.title;
+    rec.date = dateISO;
+    showToast(`Moved ${rec.name} to ${fn.title} on ${dateISO}.`, 'success');
+    rerender();
+  }
+
+  function saveManagementSupport(data: { userId: number; functionId: number; dates: string[]; notes: string }) {
+    const staff = MANAGEMENT_STAFF_POOL.find((v) => v.id === data.userId);
+    const fn = managementFunctionCatalog.find((f) => f.id === data.functionId);
+    if (!staff || !fn) return;
+    if (data.dates.length === 0) {
+      throw new Error('Select at least one day.');
+    }
+
+    let created = 0;
+    let skipped = 0;
+    data.dates.forEach((dateISO) => {
+      const alreadyHere = records.some(
+        (r) => r.isManagementSupport && r.managementFunctionId === fn.id && r.date === dateISO && r.vendorId === staff.id,
+      );
+      if (alreadyHere) {
+        skipped++;
+        return;
+      }
+      created++;
+      records.push({
+        weekPlannerId: weekPlannerIdCounter++,
+        depotId: DEPOTS[0].id,
+        routeId: null,
+        isSupervisor: false,
+        date: dateISO,
+        name: staff.name,
+        vendorId: staff.id,
+        route: fn.title,
+        routeSort: 'no',
+        notes: data.notes,
+        vehicle: '',
+        registrationPlate: '',
+        status: 'Working',
+        isDayOff: 'false',
+        isSort: 'false',
+        isAdhoc: false,
+        isManagementSupport: true,
+        managementFunctionId: fn.id,
+      });
+    });
+
+    if (created === 0) {
+      throw new Error(`${staff.name} is already assigned to ${fn.title} on the selected date(s).`);
+    }
+
+    const parts = [`${created} day${created === 1 ? '' : 's'} added`];
+    if (skipped > 0) parts.push(`${skipped} already assigned`);
+    showToast(`${fn.title} assigned to ${staff.name} (${parts.join(', ')}).`, 'success');
+    setShowAddManagementModal(false);
+    rerender();
+  }
+
+  function applyFlexRouteVisibility(depotId: number, selectedIds: Set<number>) {
+    const depotFlexIds = new Set((FLEX_ROUTES_BY_DEPOT.get(depotId) || []).map((r) => r.id));
+    setVisibleFlexRouteIds((prev) => {
+      const next = new Set(prev);
+      depotFlexIds.forEach((id) => next.delete(id));
+      selectedIds.forEach((id) => next.add(id));
+      return next;
+    });
+    setFlexModalDepotId(null);
+  }
+
+  function hideFlexRoute(route: Route) {
+    setVisibleFlexRouteIds((prev) => {
+      const next = new Set(prev);
+      next.delete(route.id);
+      return next;
+    });
+    showToast(`${route.name} hidden from the planner. Re-add it any time via "Manage Flex Routes".`, 'info');
+  }
+
+  function saveAssignmentModal(vendorId: number, vehicleId: number, routeSort: 'yes' | 'no', status: string, notes: string) {
     const rec = editingRecord;
     if (!rec) return;
-    const vendor = VENDOR_POOL.find((v) => v.id === vendorId);
-    if (vendor) {
-      rec.vendorId = vendor.id;
-      rec.name = vendor.name;
+    const person = personPoolFor(rec).find((v) => v.id === vendorId);
+    if (person) {
+      rec.vendorId = person.id;
+      rec.name = person.name;
     }
-    rec.vehicle = vehicle.trim();
-    rec.registrationPlate = plate.trim();
-    if (!rec.isSupervisor) {
+    if (!rec.isManagementSupport) {
+      const fleetVehicle = VEHICLE_FLEET.find((v) => v.id === vehicleId);
+      if (fleetVehicle) {
+        rec.vehicle = fleetVehicle.model;
+        rec.registrationPlate = fleetVehicle.plate;
+      }
+    }
+    if (!rec.isSupervisor && !rec.isAdhoc && !rec.isManagementSupport) {
       rec.routeSort = routeSort;
       rec.isSort = routeSort === 'yes' ? 'true' : 'false';
     }
@@ -446,6 +822,90 @@ export function WeekPlanner() {
     const idx = records.findIndex((r) => r.weekPlannerId === rec.weekPlannerId);
     if (idx >= 0) records.splice(idx, 1);
     showToast(`Removed ${rec.name} from ${rec.route}.`, 'success');
+    setEditingRecord(null);
+    rerender();
+  }
+
+  /** Assign this vendor+vehicle to the same route for every day of the week, overwriting whoever else is there. */
+  function assignWeekFromModal(vendorId: number, vehicleId: number, routeSort: 'yes' | 'no') {
+    const rec = editingRecord;
+    if (!rec) return;
+    const person = personPoolFor(rec).find((v) => v.id === vendorId);
+    const fleetVehicle = VEHICLE_FLEET.find((v) => v.id === vehicleId);
+    if (!person || (!rec.isManagementSupport && !fleetVehicle)) return;
+
+    const vendorDayOffDates = new Set(dayOffEntries.filter((e) => e.userId === vendorId).map((e) => e.date));
+    let created = 0;
+    let overwritten = 0;
+    let skipped = 0;
+
+    fullWeekDates.forEach((date) => {
+      const dateISO = formatDateISO(date);
+      if (vendorDayOffDates.has(dateISO)) {
+        skipped++;
+        return;
+      }
+      const existing = records.find((r) => isSameSlot(r, rec) && r.date === dateISO);
+      if (existing) {
+        if (existing.vendorId !== person.id) overwritten++;
+        existing.vendorId = person.id;
+        existing.name = person.name;
+        if (!rec.isManagementSupport && fleetVehicle) {
+          existing.vehicle = fleetVehicle.model;
+          existing.registrationPlate = fleetVehicle.plate;
+        }
+        if (!existing.isSupervisor && !existing.isAdhoc && !existing.isManagementSupport) {
+          existing.routeSort = routeSort;
+          existing.isSort = routeSort === 'yes' ? 'true' : 'false';
+        }
+        existing.status = 'Working';
+        existing.isDayOff = 'false';
+      } else {
+        created++;
+        records.push({
+          weekPlannerId: rec.isSupervisor ? -(weekPlannerIdCounter++) : weekPlannerIdCounter++,
+          depotId: rec.depotId,
+          routeId: rec.routeId,
+          isSupervisor: rec.isSupervisor,
+          date: dateISO,
+          name: person.name,
+          vendorId: person.id,
+          route: rec.route,
+          routeSort,
+          notes: '',
+          vehicle: !rec.isManagementSupport && fleetVehicle ? fleetVehicle.model : '',
+          registrationPlate: !rec.isManagementSupport && fleetVehicle ? fleetVehicle.plate : '',
+          status: 'Working',
+          isDayOff: 'false',
+          isSort: !rec.isSupervisor && !rec.isAdhoc && !rec.isManagementSupport && routeSort === 'yes' ? 'true' : 'false',
+          isAdhoc: rec.isAdhoc,
+          adhocServiceId: rec.adhocServiceId,
+          isManagementSupport: rec.isManagementSupport,
+          managementFunctionId: rec.managementFunctionId,
+        });
+      }
+    });
+
+    const parts = [`${created} added`, `${overwritten} overwritten`];
+    if (skipped > 0) parts.push(`${skipped} skipped (day off)`);
+    showToast(`Assigned ${person.name} to ${rec.route} for the week (${parts.join(', ')}).`, 'success');
+    setEditingRecord(null);
+    rerender();
+  }
+
+  /** Remove every assignment for this vendor on this route across the whole week. */
+  function removeWeekFromModal() {
+    const rec = editingRecord;
+    if (!rec) return;
+    let removed = 0;
+    for (let i = records.length - 1; i >= 0; i--) {
+      const r = records[i];
+      if (isSameSlot(r, rec) && r.vendorId === rec.vendorId) {
+        records.splice(i, 1);
+        removed++;
+      }
+    }
+    showToast(`Removed ${rec.name} from ${rec.route} for the week (${removed} day${removed === 1 ? '' : 's'}).`, 'success');
     setEditingRecord(null);
     rerender();
   }
@@ -485,10 +945,48 @@ export function WeekPlanner() {
         status: 'Working',
         isDayOff: 'false',
         isSort: 'false',
+        isAdhoc: false,
+        isManagementSupport: false,
       });
     }
     showToast(`Team Leader for ${dateISO} set to ${vendor.name}.`, 'success');
     setSupervisorPopover(null);
+    rerender();
+  }
+
+  function saveDayOff(data: { userId: number; dates: string[]; reason: string; notes: string }) {
+    const vendor = VENDOR_POOL.find((v) => v.id === data.userId);
+    if (!vendor) return;
+
+    const alreadyOffDates = new Set(dayOffEntries.filter((e) => e.userId === data.userId).map((e) => e.date));
+    const datesToCreate = data.dates.filter((d) => !alreadyOffDates.has(d));
+    if (datesToCreate.length === 0) {
+      throw new Error(`${vendor.name} is already marked as day off for the selected date(s).`);
+    }
+
+    // Remove any existing assignments (route or Team Leader) for this vendor on these dates,
+    // across every week already generated — mirrors the source app hard-deleting conflicting
+    // assignments when a day off is registered.
+    const targetDates = new Set(datesToCreate);
+    weekCache.current.forEach((weekRecords) => {
+      for (let i = weekRecords.length - 1; i >= 0; i--) {
+        const rec = weekRecords[i];
+        if (rec.vendorId === data.userId && targetDates.has(rec.date)) {
+          weekRecords.splice(i, 1);
+        }
+      }
+    });
+
+    const newEntries: DayOffEntry[] = datesToCreate.map((date) => ({
+      id: `${data.userId}-${date}-${dayOffIdRef.current++}`,
+      userId: data.userId,
+      date,
+      reason: data.reason,
+      notes: data.notes,
+    }));
+    setDayOffEntries((prev) => [...prev, ...newEntries]);
+    showToast(`Day off registered for ${vendor.name} (${datesToCreate.length} day${datesToCreate.length === 1 ? '' : 's'}).`, 'success');
+    setShowDayOffModal(false);
     rerender();
   }
 
@@ -502,7 +1000,10 @@ export function WeekPlanner() {
     return () => document.removeEventListener('keydown', onKeyDown);
   }, []);
 
-  const weekDates = getWeekDatesFiltered(currentWeekStart, showWeekends);
+  const weekDates = viewMode === 'daily' ? [currentDay] : getWeekDatesFiltered(currentWeekStart, showWeekends);
+  const dailyLabel = currentDay.toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric' });
+  // Full week (independent of Weekly/Daily toggle) — target range for the modal's Assign Week / Remove Week bulk actions.
+  const fullWeekDates = getWeekDatesFiltered(currentWeekStart, showWeekends);
 
   return (
     <PortalLayout mainClassName="wp-container container-fluid px-3 px-lg-4 py-4" title="Week Planner">
@@ -512,7 +1013,13 @@ export function WeekPlanner() {
           <p className="page-header-date">
             <i className="bi bi-calendar-week" />
             <span id="wpHeaderSubtitle">
-              Week of {currentWeekStart.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })} — {DEPOTS.length} depots
+              {viewMode === 'daily' ? 'Day' : 'Week'} of{' '}
+              {(viewMode === 'daily' ? currentDay : currentWeekStart).toLocaleDateString('en-GB', {
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric',
+              })}{' '}
+              — {DEPOTS.length} depots
             </span>
           </p>
         </div>
@@ -528,27 +1035,58 @@ export function WeekPlanner() {
       <div className="filters-bar wp-controls-bar">
         <div className="week-nav">
           <span className="week-nav-label">
-            <i className="bi bi-calendar3" /> Week
+            <i className={`bi ${viewMode === 'daily' ? 'bi-calendar-day' : 'bi-calendar3'}`} /> {viewMode === 'daily' ? 'Day' : 'Week'}
           </span>
           <div className="week-nav-controls">
-            <button type="button" className="date-nav-btn" id="btnPrevWeek" aria-label="Previous week" onClick={() => shiftWeek(-7)}>
+            <button
+              type="button"
+              className="date-nav-btn"
+              id="btnPrevWeek"
+              aria-label={viewMode === 'daily' ? 'Previous day' : 'Previous week'}
+              onClick={() => (viewMode === 'daily' ? shiftDay(-1) : shiftWeek(-7))}
+            >
               <i className="bi bi-chevron-left" />
+            </button>
+            <button type="button" className="date-nav-btn week-nav-today" id="btnThisWeek" onClick={() => setCurrentDay(new Date())}>
+              {viewMode === 'daily' ? 'Today' : 'This week'}
             </button>
             <button
               type="button"
-              className="date-nav-btn week-nav-today"
-              id="btnThisWeek"
-              onClick={() => setCurrentWeekStart(getWeekStart(new Date()))}
+              className="date-nav-btn"
+              id="btnNextWeek"
+              aria-label={viewMode === 'daily' ? 'Next day' : 'Next week'}
+              onClick={() => (viewMode === 'daily' ? shiftDay(1) : shiftWeek(7))}
             >
-              This week
-            </button>
-            <button type="button" className="date-nav-btn" id="btnNextWeek" aria-label="Next week" onClick={() => shiftWeek(7)}>
               <i className="bi bi-chevron-right" />
             </button>
             <span className="week-range-label" id="weekRangeLabel">
-              {formatWeekRangeLabel(currentWeekStart, showWeekends)}
+              {viewMode === 'daily' ? dailyLabel : formatWeekRangeLabel(currentWeekStart, showWeekends)}
             </span>
           </div>
+        </div>
+
+        <div className="wp-toggle-wrap wp-view-toggle" role="group" aria-label="Planner view">
+          <button
+            type="button"
+            className={`date-nav-btn${viewMode === 'weekly' ? ' is-active' : ''}`}
+            onClick={() => setViewMode('weekly')}
+          >
+            <i className="bi bi-calendar-week" /> Weekly
+          </button>
+          <button
+            type="button"
+            className={`date-nav-btn${viewMode === 'daily' ? ' is-active' : ''}`}
+            onClick={() => setViewMode('daily')}
+          >
+            <i className="bi bi-calendar-day" /> Daily
+          </button>
+          <button
+            type="button"
+            className={`date-nav-btn${viewMode === 'dashboard' ? ' is-active' : ''}`}
+            onClick={() => setViewMode('dashboard')}
+          >
+            <i className="bi bi-bar-chart-fill" /> Dashboard
+          </button>
         </div>
 
         <div className="wp-toggle-wrap">
@@ -562,6 +1100,38 @@ export function WeekPlanner() {
         </div>
 
         <div className="dfi-actions">
+          <button
+            type="button"
+            className="styled-button styled-button--outline"
+            onClick={() => setShowTypesConfigModal(true)}
+            title="Manage driver, vendor, user, vehicle types, cost models and adhoc services"
+          >
+            <i className="bi bi-sliders" /> Types Config
+          </button>
+          <button
+            type="button"
+            className="styled-button styled-button--outline"
+            onClick={() => setShowAddAdhocModal(true)}
+            title="Add an ad-hoc service assignment for a vendor"
+          >
+            <i className="bi bi-puzzle" /> Add Ad-Hoc
+          </button>
+          <button
+            type="button"
+            className="styled-button styled-button--outline"
+            onClick={() => setShowAddManagementModal(true)}
+            title="Add a Management & Support Team assignment"
+          >
+            <i className="bi bi-person-badge" /> Add Mgmt/Support
+          </button>
+          <button
+            type="button"
+            className="styled-button styled-button--outline"
+            onClick={() => setShowDayOffModal(true)}
+            title="Register a day off for a vendor"
+          >
+            <i className="bi bi-person-x" /> Day Off
+          </button>
           <button
             type="button"
             className="styled-button styled-button--outline"
@@ -586,30 +1156,56 @@ export function WeekPlanner() {
         </span>
       </div>
 
-      {/* ============ AVAILABLE DRIVERS DRAWER ============ */}
-      <AvailableDrivers
-        drivers={availableVendors.map((v) => ({
-          id: v.id,
-          userId: v.id,
-          name: v.name,
-          fullName: v.name,
-          vehicle: v.vehicle,
-          plate: v.plate || '',
-          vendorTypeId: v.vendorTypeId || 0,
-        }))}
-        weekDates={weekDates}
-        dayOffEntries={[]}
-        onVendorDragStart={(userId: number) => {
-          dragPayload.current = { type: 'vendor', vendorId: userId };
-        }}
-        isOpen={isAvailableDriversOpen}
-        onToggle={setIsAvailableDriversOpen}
-      />
+      {/* ============ DASHBOARD STATS ============ */}
+      {viewMode === 'dashboard' && (
+        <DashboardStats
+          weekDates={getWeekDates(currentWeekStart)}
+          records={records
+            .filter((r) => !r.isManagementSupport)
+            .map((r) => ({
+              date: r.date,
+              vendorId: r.vendorId,
+              name: r.name,
+              route: r.route,
+              routeId: r.routeId,
+              isSupervisor: r.isSupervisor,
+            }))}
+          routes={DEPOTS.flatMap((depot) => [
+            ...(ROUTES_BY_DEPOT.get(depot.id) || []),
+            ...(FLEX_ROUTES_BY_DEPOT.get(depot.id) || []).filter((r) => visibleFlexRouteIds.has(r.id)),
+          ].map((r) => ({ id: r.id, name: r.name })))}
+          vendors={VENDOR_POOL.map((v) => ({ id: v.id, name: v.name }))}
+        />
+      )}
 
-      {/* ============ DEPOT SECTIONS ============ */}
-      <div id="depotSections" className="wp-depot-list">
-        {DEPOTS.map((depot) => {
+      {viewMode !== 'dashboard' && (
+        <>
+          {/* ============ AVAILABLE DRIVERS DRAWER ============ */}
+          <AvailableDrivers
+            drivers={availableVendors.map((v) => ({
+              id: v.id,
+              userId: v.id,
+              name: v.name,
+              fullName: v.name,
+              vehicle: v.vehicle,
+              plate: v.plate || '',
+              vendorTypeId: v.vendorTypeId || 0,
+            }))}
+            weekDates={weekDates}
+            dayOffEntries={dayOffEntries}
+            onVendorDragStart={(userId: number) => {
+              dragPayload.current = { type: 'vendor', vendorId: userId };
+            }}
+            isOpen={isAvailableDriversOpen}
+            onToggle={setIsAvailableDriversOpen}
+          />
+
+          {/* ============ DEPOT SECTIONS ============ */}
+          <div id="depotSections" className="wp-depot-list">
+            {DEPOTS.map((depot) => {
           const routes = ROUTES_BY_DEPOT.get(depot.id) || [];
+          const flexRoutesForDepot = (FLEX_ROUTES_BY_DEPOT.get(depot.id) || []).filter((r) => visibleFlexRouteIds.has(r.id));
+          const allRoutes = [...routes, ...flexRoutesForDepot];
           const depotRecords = records.filter((r) => r.depotId === depot.id);
           const supervisorByDate = new Map<string, WPRecord>();
           depotRecords.filter((r) => r.isSupervisor).forEach((r) => supervisorByDate.set(r.date, r));
@@ -637,10 +1233,23 @@ export function WeekPlanner() {
                   <div>
                     <h2 className="wp-depot-title">{depot.name}</h2>
                     <p className="wp-depot-subtitle">
-                      {routes.length} route{routes.length === 1 ? '' : 's'} scheduled
+                      {allRoutes.length} route{allRoutes.length === 1 ? '' : 's'} scheduled
+                      {flexRoutesForDepot.length > 0 && ` (${flexRoutesForDepot.length} flex)`}
                     </p>
                   </div>
                 </div>
+                <button
+                  type="button"
+                  className="styled-button styled-button--outline"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setFlexModalDepotId(depot.id);
+                  }}
+                  title="Show or hide flex routes for this depot"
+                >
+                  <i className="bi bi-signpost-split" /> Manage Flex Routes
+                  {flexRoutesForDepot.length > 0 && ` (${flexRoutesForDepot.length})`}
+                </button>
               </div>
 
               <div className="wp-depot-body">
@@ -691,10 +1300,27 @@ export function WeekPlanner() {
                       </div>
                     ))}
 
-                    {routes.map((route) => (
+                    {allRoutes.map((route) => (
                       <>
                         <div className="wp-cell-label" title={route.name} key={`label-${route.id}`}>
-                          {route.name}
+                          {route.isFlex ? (
+                            <span className="wp-cell-label-flex">
+                              <span>
+                                {route.name}
+                                <span className="wp-flex-badge">FLEX</span>
+                              </span>
+                              <button
+                                type="button"
+                                className="wp-flex-remove-btn"
+                                title="Hide this flex route"
+                                onClick={() => hideFlexRoute(route)}
+                              >
+                                <i className="bi bi-x" />
+                              </button>
+                            </span>
+                          ) : (
+                            route.name
+                          )}
                         </div>
                         {weekDates.map((date) => {
                           const dateISO = formatDateISO(date);
@@ -768,7 +1394,212 @@ export function WeekPlanner() {
             </section>
           );
         })}
-      </div>
+          </div>
+
+          {/* ============ AD-HOC SERVICES SECTION ============ */}
+          {adhocServiceCatalog.length > 0 && (
+            <section className={`wp-depot-section wp-adhoc-section${adhocCollapsed ? ' collapsed' : ''}`}>
+              <div className="wp-depot-header" onClick={() => setAdhocCollapsed((prev) => !prev)}>
+                <div className="wp-depot-header-left">
+                  <button type="button" className="wp-depot-collapse-btn" aria-label="Collapse ad-hoc services">
+                    <i className="bi bi-chevron-down" />
+                  </button>
+                  <div>
+                    <h2 className="wp-depot-title">
+                      <i className="bi bi-puzzle me-2" />
+                      Ad-Hoc Services
+                    </h2>
+                    <p className="wp-depot-subtitle">
+                      {adhocServiceCatalog.length} service{adhocServiceCatalog.length === 1 ? '' : 's'} configured
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="wp-depot-body">
+                <div className="wp-grid-scroll">
+                  <div className="wp-grid wp-grid-nosupervisor" style={{ gridTemplateColumns: `160px repeat(${weekDates.length}, minmax(120px, 1fr))` }}>
+                    <div className="wp-cell-head wp-head-corner">
+                      <span className="wp-day-name">Service</span>
+                    </div>
+                    {weekDates.map((date) => (
+                      <div key={`adhoc-head-${formatDateISO(date)}`} className={`wp-cell-head${isWeekend(date) ? ' is-weekend' : ''}`}>
+                        <span className="wp-day-name">{getDayNameShort(date)}</span>
+                        <span className="wp-day-date">{formatDateDMY(date)}</span>
+                      </div>
+                    ))}
+
+                    {adhocServiceCatalog.map((service) => (
+                      <>
+                        <div className="wp-cell-label" title={service.adhocName} key={`adhoc-label-${service.id}`}>
+                          {service.adhocName}
+                        </div>
+                        {weekDates.map((date) => {
+                          const dateISO = formatDateISO(date);
+                          const cellRecords = records.filter((r) => r.isAdhoc && r.adhocServiceId === service.id && r.date === dateISO);
+                          return (
+                            <div
+                              key={`adhoc-cell-${service.id}-${dateISO}`}
+                              className={`wp-cell-day${isWeekend(date) ? ' is-weekend' : ''}`}
+                              onDragOver={(e) => {
+                                e.preventDefault();
+                                e.dataTransfer.dropEffect = dragPayload.current?.type === 'vendor' ? 'copy' : 'move';
+                                (e.currentTarget as HTMLElement).classList.add('wp-drop-hover');
+                              }}
+                              onDragLeave={(e) => (e.currentTarget as HTMLElement).classList.remove('wp-drop-hover')}
+                              onDrop={(e) => {
+                                e.preventDefault();
+                                (e.currentTarget as HTMLElement).classList.remove('wp-drop-hover');
+                                handleDropOnAdhocCell(service.id, dateISO);
+                              }}
+                            >
+                              {cellRecords.length === 0 ? (
+                                <span className="wp-cell-empty">–</span>
+                              ) : (
+                                cellRecords.map((rec) => (
+                                  <div
+                                    key={rec.weekPlannerId}
+                                    className={`wp-card${rec.status === 'Day Off' || rec.status === 'OFF' ? ' wp-card--day-off' : ''}`}
+                                    draggable
+                                    title={`${rec.name} — click to edit`}
+                                    onDragStart={(e) => {
+                                      dragPayload.current = { type: 'assignment', id: rec.weekPlannerId };
+                                      e.dataTransfer.effectAllowed = 'move';
+                                      (e.currentTarget as HTMLElement).classList.add('dragging');
+                                    }}
+                                    onDragEnd={(e) => (e.currentTarget as HTMLElement).classList.remove('dragging')}
+                                    onClick={() => {
+                                      const found = findRecordById(rec.weekPlannerId);
+                                      if (found) setEditingRecord(found);
+                                    }}
+                                  >
+                                    <div className="wp-card-top">
+                                      <span className="wp-card-name">{rec.name}</span>
+                                    </div>
+                                    <div className="wp-card-bottom">
+                                      <span className="wp-plate">{rec.registrationPlate || '—'}</span>
+                                      {rec.notes && (
+                                        <span className="wp-card-notes-flag" title={rec.notes}>
+                                          !
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          );
+                        })}
+                      </>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* ============ MANAGEMENT & SUPPORT SECTION ============ */}
+          {managementFunctionCatalog.length > 0 && (
+            <section className={`wp-depot-section wp-adhoc-section${managementCollapsed ? ' collapsed' : ''}`}>
+              <div className="wp-depot-header" onClick={() => setManagementCollapsed((prev) => !prev)}>
+                <div className="wp-depot-header-left">
+                  <button type="button" className="wp-depot-collapse-btn" aria-label="Collapse management & support">
+                    <i className="bi bi-chevron-down" />
+                  </button>
+                  <div>
+                    <h2 className="wp-depot-title">
+                      <i className="bi bi-person-badge me-2" />
+                      Management &amp; Support
+                    </h2>
+                    <p className="wp-depot-subtitle">
+                      {managementFunctionCatalog.length} function{managementFunctionCatalog.length === 1 ? '' : 's'} configured
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="wp-depot-body">
+                <div className="wp-grid-scroll">
+                  <div className="wp-grid wp-grid-nosupervisor" style={{ gridTemplateColumns: `160px repeat(${weekDates.length}, minmax(120px, 1fr))` }}>
+                    <div className="wp-cell-head wp-head-corner">
+                      <span className="wp-day-name">Function</span>
+                    </div>
+                    {weekDates.map((date) => (
+                      <div key={`mgmt-head-${formatDateISO(date)}`} className={`wp-cell-head${isWeekend(date) ? ' is-weekend' : ''}`}>
+                        <span className="wp-day-name">{getDayNameShort(date)}</span>
+                        <span className="wp-day-date">{formatDateDMY(date)}</span>
+                      </div>
+                    ))}
+
+                    {managementFunctionCatalog.map((fn) => (
+                      <>
+                        <div className="wp-cell-label" title={fn.title} key={`mgmt-label-${fn.id}`}>
+                          {fn.title}
+                        </div>
+                        {weekDates.map((date) => {
+                          const dateISO = formatDateISO(date);
+                          const cellRecords = records.filter((r) => r.isManagementSupport && r.managementFunctionId === fn.id && r.date === dateISO);
+                          return (
+                            <div
+                              key={`mgmt-cell-${fn.id}-${dateISO}`}
+                              className={`wp-cell-day${isWeekend(date) ? ' is-weekend' : ''}`}
+                              onDragOver={(e) => {
+                                e.preventDefault();
+                                e.dataTransfer.dropEffect = dragPayload.current?.type === 'vendor' ? 'copy' : 'move';
+                                (e.currentTarget as HTMLElement).classList.add('wp-drop-hover');
+                              }}
+                              onDragLeave={(e) => (e.currentTarget as HTMLElement).classList.remove('wp-drop-hover')}
+                              onDrop={(e) => {
+                                e.preventDefault();
+                                (e.currentTarget as HTMLElement).classList.remove('wp-drop-hover');
+                                handleDropOnManagementCell(fn.id, dateISO);
+                              }}
+                            >
+                              {cellRecords.length === 0 ? (
+                                <span className="wp-cell-empty">–</span>
+                              ) : (
+                                cellRecords.map((rec) => (
+                                  <div
+                                    key={rec.weekPlannerId}
+                                    className={`wp-card${rec.status === 'Day Off' || rec.status === 'OFF' ? ' wp-card--day-off' : ''}`}
+                                    draggable
+                                    title={`${rec.name} — click to edit`}
+                                    onDragStart={(e) => {
+                                      dragPayload.current = { type: 'assignment', id: rec.weekPlannerId };
+                                      e.dataTransfer.effectAllowed = 'move';
+                                      (e.currentTarget as HTMLElement).classList.add('dragging');
+                                    }}
+                                    onDragEnd={(e) => (e.currentTarget as HTMLElement).classList.remove('dragging')}
+                                    onClick={() => {
+                                      const found = findRecordById(rec.weekPlannerId);
+                                      if (found) setEditingRecord(found);
+                                    }}
+                                  >
+                                    <div className="wp-card-top">
+                                      <span className="wp-card-name">{rec.name}</span>
+                                    </div>
+                                    {rec.notes && (
+                                      <div className="wp-card-bottom">
+                                        <span className="wp-card-notes-flag" title={rec.notes}>
+                                          !
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          );
+                        })}
+                      </>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+        </>
+      )}
 
       {createPortal(
         <>
@@ -784,9 +1615,78 @@ export function WeekPlanner() {
               <AssignmentModal
                 record={editingRecord}
                 depotName={DEPOTS.find((d) => d.id === editingRecord.depotId)?.name || ''}
+                showWeekends={showWeekends}
                 onClose={() => setEditingRecord(null)}
                 onSave={saveAssignmentModal}
                 onUnassign={unassignFromModal}
+                onAssignWeek={assignWeekFromModal}
+                onRemoveWeek={removeWeekFromModal}
+              />
+            )}
+          </div>
+
+          {/* ============ Day Off modal ============ */}
+          <div className={`wp-modal-backdrop${showDayOffModal ? ' sp-modal-backdrop-anim' : ''}`} id="dayOffModalBackdrop" hidden={!showDayOffModal}>
+            {showDayOffModal && (
+              <DayOffModal
+                onClose={() => setShowDayOffModal(false)}
+                onSave={saveDayOff}
+                vendors={VENDOR_POOL.map((v) => ({ id: v.id, name: v.name }))}
+                currentDate={currentDay}
+              />
+            )}
+          </div>
+
+          {/* ============ Types Configuration modal ============ */}
+          <div className={`wp-modal-backdrop${showTypesConfigModal ? ' sp-modal-backdrop-anim' : ''}`} id="typesConfigModalBackdrop" hidden={!showTypesConfigModal}>
+            {showTypesConfigModal && (
+              <TypesConfigModal
+                onClose={() => setShowTypesConfigModal(false)}
+                adhocServices={adhocServiceCatalog}
+                onAdhocServicesChange={setAdhocServiceCatalog}
+                managementFunctions={managementFunctionCatalog}
+                onManagementFunctionsChange={setManagementFunctionCatalog}
+              />
+            )}
+          </div>
+
+          {/* ============ Add Ad-Hoc Service modal ============ */}
+          <div className={`wp-modal-backdrop${showAddAdhocModal ? ' sp-modal-backdrop-anim' : ''}`} id="addAdhocModalBackdrop" hidden={!showAddAdhocModal}>
+            {showAddAdhocModal && (
+              <AddAdhocServiceModal
+                onClose={() => setShowAddAdhocModal(false)}
+                onSave={saveAdhocService}
+                vendors={VENDOR_POOL.map((v) => ({ id: v.id, name: v.name }))}
+                services={adhocServiceCatalog}
+                weekDates={getWeekDates(currentWeekStart)}
+                currentDay={currentDay}
+              />
+            )}
+          </div>
+
+          {/* ============ Add Management & Support modal ============ */}
+          <div className={`wp-modal-backdrop${showAddManagementModal ? ' sp-modal-backdrop-anim' : ''}`} id="addManagementModalBackdrop" hidden={!showAddManagementModal}>
+            {showAddManagementModal && (
+              <AddManagementSupportModal
+                onClose={() => setShowAddManagementModal(false)}
+                onSave={saveManagementSupport}
+                staff={MANAGEMENT_STAFF_POOL}
+                functions={managementFunctionCatalog.map((f) => ({ id: f.id, title: f.title }))}
+                weekDates={getWeekDates(currentWeekStart)}
+                currentDay={currentDay}
+              />
+            )}
+          </div>
+
+          {/* ============ Manage Flex Routes modal ============ */}
+          <div className={`wp-modal-backdrop${flexModalDepotId !== null ? ' sp-modal-backdrop-anim' : ''}`} id="flexRouteModalBackdrop" hidden={flexModalDepotId === null}>
+            {flexModalDepotId !== null && (
+              <FlexRouteModal
+                onClose={() => setFlexModalDepotId(null)}
+                onApply={(selectedIds) => applyFlexRouteVisibility(flexModalDepotId, selectedIds)}
+                depotName={DEPOTS.find((d) => d.id === flexModalDepotId)?.name || ''}
+                routes={(FLEX_ROUTES_BY_DEPOT.get(flexModalDepotId) || []).map((r) => ({ id: r.id, name: r.name }))}
+                initiallySelected={visibleFlexRouteIds}
               />
             )}
           </div>
@@ -829,22 +1729,34 @@ export function WeekPlanner() {
   );
 }
 
+function findFleetVehicleId(record: WPRecord): number {
+  const byPlate = VEHICLE_FLEET.find((v) => v.plate === record.registrationPlate);
+  if (byPlate) return byPlate.id;
+  const byModel = VEHICLE_FLEET.find((v) => v.model === record.vehicle);
+  return byModel ? byModel.id : (VEHICLE_FLEET[0]?.id ?? 0);
+}
+
 function AssignmentModal({
   record,
   depotName,
+  showWeekends,
   onClose,
   onSave,
   onUnassign,
+  onAssignWeek,
+  onRemoveWeek,
 }: {
   record: WPRecord;
   depotName: string;
+  showWeekends: boolean;
   onClose: () => void;
-  onSave: (vendorId: number, vehicle: string, plate: string, routeSort: 'yes' | 'no', status: string, notes: string) => void;
+  onSave: (vendorId: number, vehicleId: number, routeSort: 'yes' | 'no', status: string, notes: string) => void;
   onUnassign: () => void;
+  onAssignWeek: (vendorId: number, vehicleId: number, routeSort: 'yes' | 'no') => void;
+  onRemoveWeek: () => void;
 }) {
   const [vendorId, setVendorId] = useState(record.vendorId);
-  const [vehicle, setVehicle] = useState(record.vehicle || '');
-  const [plate, setPlate] = useState(record.registrationPlate || '');
+  const [vehicleId, setVehicleId] = useState(() => findFleetVehicleId(record));
   const [routeSort, setRouteSort] = useState<'yes' | 'no'>(record.routeSort || 'no');
   const [status, setStatus] = useState(record.status || 'Working');
   const [notes, setNotes] = useState(record.notes || '');
@@ -869,7 +1781,7 @@ function AssignmentModal({
         id="assignmentForm"
         onSubmit={(e) => {
           e.preventDefault();
-          onSave(vendorId, vehicle, plate, routeSort, status, notes);
+          onSave(vendorId, vehicleId, routeSort, status, notes);
         }}
       >
         <div className="wp-modal-meta" id="assignmentModalMeta">
@@ -878,29 +1790,31 @@ function AssignmentModal({
         <div className="dom-form-grid">
           <div className="dom-form-field span-2">
             <label className="dom-form-label" htmlFor="fieldVendorName">
-              Vendor
+              {record.isManagementSupport ? 'Staff Member' : 'Vendor'}
             </label>
             <select id="fieldVendorName" className="form-select" value={vendorId} onChange={(e) => setVendorId(Number(e.target.value))}>
-              {VENDOR_POOL.map((v) => (
+              {personPoolFor(record).map((v) => (
                 <option value={v.id} key={v.id}>
                   {v.name}
                 </option>
               ))}
             </select>
           </div>
-          <div className="dom-form-field">
-            <label className="dom-form-label" htmlFor="fieldVehicle">
-              Vehicle
-            </label>
-            <input id="fieldVehicle" type="text" placeholder="e.g. 7.5T Box Truck" value={vehicle} onChange={(e) => setVehicle(e.target.value)} />
-          </div>
-          <div className="dom-form-field">
-            <label className="dom-form-label" htmlFor="fieldPlate">
-              Registration Plate
-            </label>
-            <input id="fieldPlate" type="text" placeholder="e.g. LX68 XYZ" value={plate} onChange={(e) => setPlate(e.target.value)} />
-          </div>
-          {!record.isSupervisor && (
+          {!record.isManagementSupport && (
+            <div className="dom-form-field span-2">
+              <label className="dom-form-label" htmlFor="fieldVehicle">
+                Vehicle
+              </label>
+              <select id="fieldVehicle" className="form-select" value={vehicleId} onChange={(e) => setVehicleId(Number(e.target.value))}>
+                {VEHICLE_FLEET.map((v) => (
+                  <option value={v.id} key={v.id}>
+                    {v.model} — {v.plate}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          {!record.isSupervisor && !record.isAdhoc && !record.isManagementSupport && (
             <div className="dom-form-field">
               <label className="dom-form-label" htmlFor="fieldRouteSort">
                 Route Sort
@@ -928,18 +1842,27 @@ function AssignmentModal({
             <textarea id="fieldNotes" rows={3} placeholder="Optional notes…" value={notes} onChange={(e) => setNotes(e.target.value)} />
           </div>
         </div>
-        <div className="dom-form-actions wp-modal-actions">
-          <button type="button" className="styled-button styled-button--danger" id="btnUnassign" onClick={onUnassign}>
-            <i className="bi bi-trash" /> Unassign
+        <div className="wp-modal-actions-wrap">
+          <button
+            type="button"
+            className="styled-button styled-button--primary"
+            title="Assign this vendor and vehicle to this route for every day of the week"
+            onClick={() => onAssignWeek(vendorId, vehicleId, routeSort)}
+          >
+            <i className="bi bi-calendar-range" /> Assign Week{!showWeekends ? ' (Mon–Fri)' : ''}
           </button>
-          <div className="wp-modal-actions-right">
-            <button type="button" className="styled-button styled-button--outline" id="btnCancelAssignment" onClick={onClose}>
-              Cancel
-            </button>
-            <button type="submit" className="styled-button styled-button--primary" id="btnSaveAssignment">
-              Save
-            </button>
-          </div>
+          <button type="button" className="styled-button styled-button--warning" id="btnUnassign" onClick={onUnassign}>
+            <i className="bi bi-calendar-x" /> Remove Day
+          </button>
+          <button type="button" className="styled-button styled-button--danger" onClick={onRemoveWeek}>
+            <i className="bi bi-calendar2-x" /> Remove Week
+          </button>
+          <button type="button" className="styled-button styled-button--outline" id="btnCancelAssignment" onClick={onClose}>
+            Cancel
+          </button>
+          <button type="submit" className="styled-button styled-button--primary" id="btnSaveAssignment">
+            Save
+          </button>
         </div>
       </form>
     </div>
