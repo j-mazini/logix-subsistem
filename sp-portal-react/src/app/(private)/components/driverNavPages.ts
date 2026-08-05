@@ -83,4 +83,11 @@ export const DRIVER_NAV_PAGES: DriverNavPage[] = [
     accent: "teal",
     allowedUserTypes: [USER_TYPE.ADMIN, USER_TYPE.DRIVER, USER_TYPE.SUPERVISOR],
   },
+  {
+    href: "/my-cases",
+    label: "Cases",
+    icon: "bi-flag-fill",
+    accent: "orange",
+    allowedUserTypes: [USER_TYPE.ADMIN, USER_TYPE.DRIVER, USER_TYPE.SUPERVISOR],
+  },
 ];

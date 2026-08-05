@@ -17,6 +17,8 @@ import {
 import * as workforce from '../services/workforceService';
 import { getActiveAvisos, type AvisoRecord } from '../data/announcementsData';
 import { useCurrentSp } from '../hooks/useCurrentSp';
+import * as traceQueryCases from '../services/traceQueryCaseService';
+import { getCaseDeadlineAlerts, type CaseDeadlineEntry } from '../pages/TraceQueries/utils/caseDeadlineAlerts';
 
 interface AnnouncementsContextType {
   /** DHL/SP broadcasts currently live for this SP. */
@@ -35,6 +37,8 @@ interface AnnouncementsContextType {
    * uma lista que o contém.
    */
   nextExpiry: DocumentExpiryEntry | null;
+  /** DHL cases approaching or past their 3-day resolution deadline, worst-first. */
+  caseDeadlineEntries: CaseDeadlineEntry[];
   /** Combined count, used for the header bell badge. */
   totalCount: number;
   /** Re-reads the aviso store; call after any announcement CRUD. */
@@ -100,16 +104,20 @@ export function AnnouncementsProvider({ children }: { children: ReactNode }) {
     return getActiveAvisos(sp);
   }, [sp, version]);
 
+  const caseStore = useSyncExternalStore(traceQueryCases.subscribe, traceQueryCases.getSnapshot);
+  const caseDeadlines = useMemo(() => getCaseDeadlineAlerts(caseStore.cases), [caseStore]);
+
   const value = useMemo(
     () => ({
       systemAnnouncements,
       complianceAlerts: compliance.alerts,
       expiryEntries: compliance.entries,
       nextExpiry: compliance.nextExpiry,
-      totalCount: systemAnnouncements.length + compliance.alerts.length,
+      caseDeadlineEntries: caseDeadlines.entries,
+      totalCount: systemAnnouncements.length + compliance.alerts.length + caseDeadlines.entries.length,
       refreshAnnouncements,
     }),
-    [systemAnnouncements, compliance, refreshAnnouncements],
+    [systemAnnouncements, compliance, caseDeadlines, refreshAnnouncements],
   );
 
   return <AnnouncementsContext.Provider value={value}>{children}</AnnouncementsContext.Provider>;

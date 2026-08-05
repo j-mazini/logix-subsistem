@@ -6,6 +6,11 @@ import {
   getSnapshot as getDuplicateStopDeductionsSnapshot,
   type DuplicateStopDeductionEntry,
 } from '../../services/duplicateStopReviewService';
+import {
+  subscribe as subscribeTraceQueryLiqDeductions,
+  getSnapshot as getTraceQueryLiqDeductionsSnapshot,
+  type TraceQueryLiquidationDeductionEntry,
+} from '../../services/traceQueryCaseService';
 import styles from './DeductionsDisbursementsRecharges.module.css';
 
 /**
@@ -410,6 +415,29 @@ function duplicateStopEntryToDisplayDeduction(entry: DuplicateStopDeductionEntry
       oth_amount: String(entry.amount),
       oth_incidentDate: entry.incidentDate,
       oth_description: `Package ${entry.packageId} — confirmed duplicate stop. ${entry.note}`,
+    },
+  };
+}
+
+/** Maps a Trace & Queries DHL case closed-unresolved entry into this page's row shape. */
+function traceQueryLiquidationEntryToDisplayDeduction(entry: TraceQueryLiquidationDeductionEntry): DisplayDeduction {
+  return {
+    id: entry.refNumber,
+    dateOfIncident: entry.incidentDate,
+    courierName: entry.driverName,
+    type: 'Liquidation Damages',
+    amount: entry.amount,
+    status: 'Pending',
+    backendId: entry.backendId,
+    backendType: 'liquidation-damage',
+    userId: entry.driverUserId,
+    fields: {
+      type: 'Liquidation Damages',
+      liq_refNumber: entry.refNumber,
+      liq_vendor: entry.driverName,
+      liq_amount: String(entry.amount),
+      liq_lqDate: entry.incidentDate,
+      liq_description: `Case ${entry.caseId} (package ${entry.packageId}) — closed without resolution. ${entry.note}`,
     },
   };
 }
@@ -1042,10 +1070,18 @@ export function DeductionsDisbursementsRecharges() {
     () => duplicateStopStore.deductions.map(duplicateStopEntryToDisplayDeduction),
     [duplicateStopStore]
   );
-  // Records generated from Trace & Queries live in their own store (see
-  // duplicateStopReviewService) and are merged in here read-only — CRUD in
-  // this page only ever touches `deductions`.
-  const allDeductions = useMemo(() => [...duplicateStopRecords, ...deductions], [duplicateStopRecords, deductions]);
+  const traceQueryLiqStore = useSyncExternalStore(subscribeTraceQueryLiqDeductions, getTraceQueryLiqDeductionsSnapshot);
+  const traceQueryLiqRecords = useMemo(
+    () => traceQueryLiqStore.deductions.map(traceQueryLiquidationEntryToDisplayDeduction),
+    [traceQueryLiqStore]
+  );
+  // Records generated from Trace & Queries (both the Duplicate Stop review
+  // flow and DHL cases closed unresolved) live in their own stores and are
+  // merged in here read-only — CRUD in this page only ever touches `deductions`.
+  const allDeductions = useMemo(
+    () => [...duplicateStopRecords, ...traceQueryLiqRecords, ...deductions],
+    [duplicateStopRecords, traceQueryLiqRecords, deductions]
+  );
   const [currentMonth, setCurrentMonth] = useState(() => new Date());
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<'All' | DeductionCategory>('All');

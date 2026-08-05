@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAnnouncements } from '../context/AnnouncementsContext';
 import { AnnouncementModal } from './AnnouncementModal';
 import { ComplianceAlertsModal } from './ComplianceAlertsModal';
+import { TraceQueryDeadlineModal } from './TraceQueryDeadlineModal';
 import './AnnouncementBox.css';
 
 /**
@@ -26,20 +27,26 @@ interface AnnouncementBoxProps {
 /**
  * The Announcements card that used to live only in the Dashboard header.
  * PortalLayout now renders it on every portal page, inside the header row,
- * and it is the single global surface for both feeds:
+ * and it is the single global surface for all three feeds, in priority order:
  *
  * - the most urgent live DHL/SP broadcast (getActiveAvisos() sorts them),
  *   with a "+N more" pill, falling back to the original empty copy; clicking
  *   it opens AnnouncementModal with the full active list;
+ * - DHL cases approaching/past their 3-day resolution deadline (a live SLA,
+ *   so it sits above the compliance row below);
  * - a one-line roll-up of Compliance document-expiration alerts, shown only
  *   when there are drivers with expired or expiring documents.
  */
 export function AnnouncementBox({ standalone = false }: AnnouncementBoxProps) {
-  const { systemAnnouncements, complianceAlerts, expiryEntries, nextExpiry } = useAnnouncements();
+  const { systemAnnouncements, complianceAlerts, expiryEntries, nextExpiry, caseDeadlineEntries } = useAnnouncements();
   const [modalOpen, setModalOpen] = useState(false);
   const [alertsOpen, setAlertsOpen] = useState(false);
+  const [deadlinesOpen, setDeadlinesOpen] = useState(false);
   const latest = systemAnnouncements[0];
   const extra = Math.max(0, systemAnnouncements.length - 1);
+
+  const overdueCaseCount = caseDeadlineEntries.filter((e) => e.hoursRemaining < 0).length;
+  const urgentCaseCount = caseDeadlineEntries.length - overdueCaseCount;
 
   /*
    * Conta documentos, não vendors.
@@ -101,6 +108,41 @@ export function AnnouncementBox({ standalone = false }: AnnouncementBoxProps) {
             {extra > 0 && <span className="sp-announcement-box-count">+{extra} more</span>}
           </button>
 
+          {/* Case deadlines before compliance: a 3-day SLA on a live DHL
+              case is more time-critical than a document renewal, so it gets
+              first position in the block, not the second row. Overdue and
+              due-soon get their own coloured chips rather than one merged
+              sentence — a single amber line read as the same generic
+              warning as the compliance row right below it, so "overdue"
+              never stood out as more urgent than "due soon". */}
+          {caseDeadlineEntries.length > 0 && (
+            <button
+              type="button"
+              className="sp-announcement-box-trigger sp-announcement-box-trigger--cases"
+              aria-label="View DHL cases approaching their resolution deadline"
+              aria-haspopup="dialog"
+              onClick={() => setDeadlinesOpen(true)}
+            >
+              <i className="bi bi-flag-fill" aria-hidden="true" />
+              <span className="sp-announcement-box-text">Case deadlines</span>
+              <span className="sp-announcement-case-chips">
+                {overdueCaseCount > 0 && (
+                  <span className="sp-announcement-case-chip sp-announcement-case-chip--overdue">
+                    <i className="bi bi-exclamation-circle-fill" aria-hidden="true" />
+                    {overdueCaseCount} overdue
+                  </span>
+                )}
+                {urgentCaseCount > 0 && (
+                  <span className="sp-announcement-case-chip sp-announcement-case-chip--soon">
+                    <i className="bi bi-hourglass-split" aria-hidden="true" />
+                    {urgentCaseCount} due soon
+                  </span>
+                )}
+              </span>
+              <i className="bi bi-chevron-right sp-announcement-box-chevron" aria-hidden="true" />
+            </button>
+          )}
+
           {complianceAlerts.length > 0 && (
             <button
               type="button"
@@ -133,6 +175,10 @@ export function AnnouncementBox({ standalone = false }: AnnouncementBoxProps) {
 
       {alertsOpen && (
         <ComplianceAlertsModal entries={expiryEntries} onClose={() => setAlertsOpen(false)} />
+      )}
+
+      {deadlinesOpen && (
+        <TraceQueryDeadlineModal entries={caseDeadlineEntries} onClose={() => setDeadlinesOpen(false)} />
       )}
     </div>
   );

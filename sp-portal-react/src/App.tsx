@@ -38,6 +38,7 @@ import { MobileInvoice } from './pages/MobileInvoice/MobileInvoice';
 import { Requests } from './pages/Requests/Requests';
 import { Subcontractor } from './pages/Subcontractor/Subcontractor';
 import { MyDeliveries } from './pages/MyDeliveries/MyDeliveries';
+import { MyCases } from './pages/MyCases/MyCases';
 import { MySchedule } from './pages/MySchedule/MySchedule';
 import { DriverProfile } from './pages/DriverProfile/DriverProfile';
 import { TraceQueries } from './pages/TraceQueries/TraceQueries';
@@ -116,6 +117,7 @@ function App() {
           <Route path="/requests" element={<Requests />} />
           <Route path="/subcontractor" element={<Subcontractor />} />
           <Route path="/my-deliveries" element={<MyDeliveries />} />
+          <Route path="/my-cases" element={<MyCases />} />
           <Route path="/my-schedule" element={<MySchedule />} />
           <Route path="/my-profile" element={<DriverProfile />} />
         </Routes>
