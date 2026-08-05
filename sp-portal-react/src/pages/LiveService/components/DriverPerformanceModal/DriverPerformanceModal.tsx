@@ -31,6 +31,8 @@ const getInitials = (name: string) =>
 const formatTime = (date: Date) =>
   date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 
+const formatIsoTime = (iso: string) => formatTime(new Date(iso));
+
 const formatDuration = (minutes: number) => {
   const wholeMinutes = Math.max(0, Math.round(minutes));
   const hours = Math.floor(wholeMinutes / 60);
@@ -103,6 +105,15 @@ export function DriverPerformanceModal({ member, onClose }: Props) {
             {member.routeName}
           </span>
         </div>
+
+        {(member.departedAt || member.arrivedAt) && (
+          <div className={styles.timelineRow}>
+            <Clock className={styles.timelineIcon} />
+            {member.departedAt && <span>Departed {formatIsoTime(member.departedAt)}</span>}
+            {member.departedAt && member.arrivedAt && <span className={styles.timelineArrow}>→</span>}
+            {member.arrivedAt && <span>Arrived {formatIsoTime(member.arrivedAt)}</span>}
+          </div>
+        )}
 
         <div className={styles.etaCard}>
           {estimate.state === 'not_started' && (

@@ -142,6 +142,28 @@
   color: #94a3b8;
 }
 
+.timelineRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.25rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.timelineIcon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: #94a3b8;
+}
+
+.timelineArrow {
+  color: #94a3b8;
+}
+
 .etaCard {
   display: flex;
   align-items: center;
