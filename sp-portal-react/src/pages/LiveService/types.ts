@@ -1,6 +1,7 @@
 export type DeliveryStatus = 'pending' | 'in_route' | 'delivered' | 'failed' | 'exception';
-export type DelivererStatus = 'active' | 'break' | 'returning' | 'offline';
-export type ExceptionReason = 'absent' | 'wrong_address' | 'unreachable' | 'damaged' | 'refused';
+
+/** Ciclo de vida da rota de uma van: Sort (carregando) → Departed → Arrived. */
+export type RouteStatus = 'sort' | 'departed' | 'arrived';
 
 export interface Delivery {
   id: string;
@@ -18,82 +19,32 @@ export interface Delivery {
 export interface Deliverer {
   id: string;
   name: string;
-  status: DelivererStatus;
+  routeStatus: RouteStatus;
+  vehiclePlate: string;
+  routeName: string;
   latitude: number;
   longitude: number;
-  batteryLevel: number;
   assignedPackages: number;
   deliveredPackages: number;
   currentStop?: string;
   lastUpdate: string;
-  avgTimePerStop: number;
-}
-
-export interface LiveMetrics {
-  totalToday: number;
-  percentComplete: number;
-  delivered: number;
-  absent: number;
-  wrongAddress: number;
-  unreachable: number;
-  damaged: number;
-  refused: number;
-  avgTimePerStop: number;
-  lastUpdated: string;
-}
-
-export interface ScannerEvent {
-  id: string;
-  timestamp: string;
-  delivererId: string;
-  delivererName: string;
-  packageId: string;
-  action: DeliveryStatus;
-  note?: string;
-}
-
-export interface Exception {
-  id: string;
-  deliveryId: string;
-  packageId: string;
-  delivererName: string;
-  delivererId: string;
-  address: string;
-  reason: ExceptionReason;
-  createdAt: string;
-  resolved: boolean;
-  notes: string;
+  departedAt?: string;
+  arrivedAt?: string;
+  stopsPerHour: number;
+  /** % de paradas feitas dentro da janela prometida — mesmo conceito de "TW" do Vendor Performance. */
+  timeWindowPct: number;
 }
 
 export interface TeamMember {
   id: string;
   name: string;
-  status: DelivererStatus;
+  vehiclePlate: string;
+  routeName: string;
+  routeStatus: RouteStatus;
   totalAssigned: number;
   totalDelivered: number;
-  batteryLevel: number;
-  avgTimePerStop: number;
+  departedAt?: string;
+  arrivedAt?: string;
+  stopsPerHour: number;
   location: { lat: number; lng: number };
-}
-
-export interface HeatmapZone {
-  id: string;
-  lat: number;
-  lng: number;
-  radius: number;
-  intensity: number; // 0-100
-  packageCount: number;
-}
-
-/** Reportado por um entregador em campo — sinaliza um obstáculo no mapa. */
-export type HazardType = 'road_closed' | 'accident' | 'hazard';
-
-export interface HazardReport {
-  id: string;
-  type: HazardType;
-  lat: number;
-  lng: number;
-  note?: string;
-  reportedBy: string;
-  createdAt: string;
 }

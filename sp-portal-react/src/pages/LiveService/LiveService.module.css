@@ -135,25 +135,42 @@
   font-variant-numeric: tabular-nums;
 }
 
+.kpiScopeRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: -0.5rem 0.25rem 0.6rem;
+}
+
+.kpiScopeLabel {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: #6366f1;
+}
+
+.kpiScopeClear {
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  background: rgba(99, 102, 241, 0.1);
+  color: #4338ca;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.kpiScopeClear:hover {
+  background: rgba(99, 102, 241, 0.18);
+}
+
 /* Mapa em destaque — bloco cheio, isolado das outras seções */
 .mapSection {
   margin-bottom: 1.25rem;
   animation: spLiveBlockIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.1s both;
-}
-
-/* Exceções + scanner lado a lado, abaixo do mapa */
-.secondaryGrid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 1.25rem;
-  margin-bottom: 1.5rem;
-  animation: spLiveBlockIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.15s both;
-}
-
-@media (max-width: 880px) {
-  .secondaryGrid {
-    grid-template-columns: minmax(0, 1fr);
-  }
 }
 
 @media (max-width: 640px) {
@@ -169,8 +186,7 @@
     justify-content: space-between;
   }
 
-  .mapSection,
-  .secondaryGrid {
+  .mapSection {
     gap: 1rem;
   }
 }

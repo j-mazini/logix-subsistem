@@ -58,7 +58,7 @@ function minutesToTimeString(mins: number): string {
 }
 
 /* ==================== performance-utils.ts port ==================== */
-interface OperationLike {
+export interface OperationLike {
   deliveryDetails: {
     paidStops: { pu: number; ok: number; hn: number; pd?: number };
     unpaidStops: { nr: number; fp: number; rd: number; ca: number; ba: number; nh: number; cm: number };
@@ -69,7 +69,7 @@ interface OperationLike {
 }
 
 /** SPR (Stops Per Route) = total paid stops + total unpaid stops. */
-function calculateSPR(operation: OperationLike): number {
+export function calculateSPR(operation: OperationLike): number {
   const paidStops = operation.deliveryDetails.paidStops;
   const unpaidStops = operation.deliveryDetails.unpaidStops;
 
@@ -81,7 +81,7 @@ function calculateSPR(operation: OperationLike): number {
 }
 
 /** SPOR-H (Stops Per Hour). */
-function calculateSPORH(operation: OperationLike): number {
+export function calculateSPORH(operation: OperationLike): number {
   const departTime = operation.deliveryDetails.departTime;
   const arriveTime = operation.deliveryDetails.arriveTime;
 
@@ -105,7 +105,7 @@ function calculateSPORH(operation: OperationLike): number {
 }
 
 /** AFD (Attempted Failed Deliveries) percentage, with custom rounding rules. */
-function calculateAFD(operation: OperationLike): number {
+export function calculateAFD(operation: OperationLike): number {
   const unpaidStops = operation.deliveryDetails.unpaidStops;
 
   const totalFailedDeliveries =
@@ -153,7 +153,7 @@ function formatMonthYearShort(year: number, month: number): string {
 }
 
 /* ==================== day record + averages ==================== */
-interface DayRecord {
+export interface DayRecord {
   day: number;
   dayOfWeek: number;
   route: string;
@@ -175,7 +175,7 @@ interface DayRecord {
   arriveTime: string | null;
 }
 
-interface Averages {
+export interface Averages {
   avgTw: string;
   avgSpr: string;
   avgSporH: string;
@@ -184,7 +184,7 @@ interface Averages {
 
 /* ==================== calculateAverages — 1:1 port of PerformanceDetailView.tsx useMemo ==================== */
 /** Averages a month's daily rows, skipping 'N/A'/'--:--'/zero placeholder values, same as the source app. */
-function calculateAverages(monthData: DayRecord[]): Averages {
+export function calculateAverages(monthData: DayRecord[]): Averages {
   if (!monthData || monthData.length === 0) {
     return { avgTw: '--:--', avgSpr: '--:--', avgSporH: '--:--', avgAfd: '--:--' };
   }
@@ -292,7 +292,7 @@ function pctSpr(v: string): number { return Math.min(100, (parseNum(v) / 200) * 
 function pctSporH(v: string): number { return Math.min(100, (parseNum(v) / 20) * 100); }
 function pctAfd(v: string): number { return Math.min(100, parsePct(v)); }
 
-interface KpiCard {
+export interface KpiCard {
   key: string;
   label: string;
   sublabel: string;
@@ -305,7 +305,7 @@ interface KpiCard {
   chartType: string;
 }
 
-function buildKpiCards(stats: Averages, shortLabels: boolean): KpiCard[] {
+export function buildKpiCards(stats: Averages, shortLabels: boolean): KpiCard[] {
   return [
     {
       key: 'tw', label: shortLabels ? 'TW' : 'Avg TW', sublabel: 'Time window', value: stats.avgTw,

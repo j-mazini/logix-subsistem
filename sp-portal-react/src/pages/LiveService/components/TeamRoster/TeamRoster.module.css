@@ -1,4 +1,4 @@
-/** Team Roster — Liquid Glass */
+/** Team Roster — Liquid Glass, cards individuais por rota */
 
 @keyframes cardSlideUp {
   from { opacity: 0; transform: translateY(10px); }
@@ -45,63 +45,11 @@
   white-space: nowrap;
 }
 
-.tableWrapper {
-  overflow-x: auto;
-}
-
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.85rem;
-}
-
-.th {
-  padding: 0.7rem 0.9rem;
-  text-align: left;
-  white-space: nowrap;
-  background: rgba(255, 255, 255, 0.2);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  font-weight: 700;
-  text-transform: uppercase;
-  font-size: 0.7rem;
-  letter-spacing: 0.3px;
-  color: #64748b;
-}
-
-.sortButton {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0;
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-  color: #64748b;
-  transition: color 0.25s ease;
-}
-
-.sortButton:hover {
-  color: #0f172a;
-}
-
-.sortIcon {
-  width: 12px;
-  height: 12px;
-  color: #6366f1;
-}
-
-.sortIconPlaceholder {
-  width: 12px;
-  height: 12px;
-}
-
-.headerIcon {
-  width: 14px;
-  height: 14px;
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 0.85rem;
+  padding: 1rem 1.1rem;
 }
 
 @keyframes rowFadeIn {
@@ -109,37 +57,80 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-.tr {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-  transition: background 0.25s ease;
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  width: 100%;
+  padding: 0.85rem 0.95rem;
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.25s ease, box-shadow 0.25s ease, transform 0.15s ease;
   animation: rowFadeIn 0.3s ease-out both;
   animation-delay: calc(var(--i, 0) * 30ms);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .tr {
+  .card {
     animation: none;
   }
 }
 
-.tr:last-child {
-  border-bottom: none;
+.card:hover {
+  background: rgba(255, 255, 255, 0.75);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
 }
 
-.tr:hover {
-  background: rgba(255, 255, 255, 0.2);
+.card:active {
+  transform: scale(0.99);
 }
 
-.td {
-  padding: 0.8rem 0.9rem;
-  vertical-align: middle;
-  color: #0f172a;
-}
-
-.nameCell {
+.cardHeader {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.plateBlock {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.plateIcon {
+  width: 15px;
+  height: 15px;
+  color: #6366f1;
+  flex-shrink: 0;
+}
+
+.plate {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #0f172a;
+  letter-spacing: 0.3px;
+}
+
+.routeName {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.driverRow {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
 }
 
 .avatar {
@@ -159,6 +150,16 @@
 
 .name {
   font-weight: 600;
+  color: #0f172a;
+  font-size: 0.85rem;
+}
+
+.statusRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .statusBadge {
@@ -171,6 +172,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.2px;
+  color: #0f172a;
 }
 
 .statusDot {
@@ -180,80 +182,81 @@
   flex-shrink: 0;
 }
 
-.statusLabel {
+.timestamps {
+  font-size: 0.72rem;
   font-weight: 600;
+  color: #64748b;
+  font-variant-numeric: tabular-nums;
 }
 
-.packagesMetric {
-  display: inline-flex;
+.progressSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.progressLabel {
+  display: flex;
   align-items: center;
-  gap: 0.4rem;
+  justify-content: space-between;
+  font-size: 0.7rem;
   font-weight: 600;
+  color: #64748b;
+  font-variant-numeric: tabular-nums;
+}
+
+.progressBackground {
+  height: 5px;
+  background: rgba(148, 163, 184, 0.25);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #6366f1, #8b5cf6);
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sporh {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.16);
+}
+
+.sporhIcon {
+  width: 13px;
+  height: 13px;
+  align-self: center;
+  color: #94a3b8;
+}
+
+.sporhValue {
+  font-weight: 700;
+  font-size: 0.9rem;
   color: #0f172a;
   font-variant-numeric: tabular-nums;
 }
 
-.metricIcon {
-  width: 14px;
-  height: 14px;
-  color: #94a3b8;
-}
-
-.batteryMeter {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  min-width: 110px;
-}
-
-.batteryBackground {
-  flex: 1;
-  height: 4px;
-  background: rgba(148, 163, 184, 0.25);
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.batteryFill {
-  height: 100%;
-  border-radius: 2px;
-  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s ease;
-}
-
-.batteryText {
-  min-width: 34px;
-  text-align: right;
-  font-size: 0.75rem;
-  font-weight: 600;
+.sporhLabel {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
   color: #64748b;
-  font-variant-numeric: tabular-nums;
-}
-
-.time {
-  font-weight: 500;
-  color: #475569;
-  font-variant-numeric: tabular-nums;
-}
-
-.rosterFooter {
-  padding: 0.75rem 0.9rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.footerNote {
-  margin: 0;
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: #64748b;
-  font-style: italic;
 }
 
 @media (max-width: 640px) {
-  .rosterHeader,
-  .th,
-  .td,
-  .rosterFooter {
+  .rosterHeader {
     padding-left: 0.75rem;
     padding-right: 0.75rem;
+  }
+
+  .cardGrid {
+    grid-template-columns: 1fr;
+    padding: 0.85rem 0.75rem;
   }
 }

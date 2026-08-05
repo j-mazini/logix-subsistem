@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
-import { Battery, Clock, MapPin, Package, X } from 'lucide-react';
-import { Deliverer, Delivery } from '../../types';
+import { Car, Clock, Gauge, MapPin, Package, X } from 'lucide-react';
+import { Deliverer, Delivery, RouteStatus } from '../../types';
 import styles from './DriverDetailPanel.module.css';
 
 interface Props {
@@ -9,18 +9,16 @@ interface Props {
   onClose: () => void;
 }
 
-const STATUS_LABELS: Record<string, string> = {
-  active: 'On Route',
-  break: 'Break',
-  returning: 'Returning',
-  offline: 'Offline',
+const STATUS_LABELS: Record<RouteStatus, string> = {
+  sort: 'Sort',
+  departed: 'Departed',
+  arrived: 'Arrived',
 };
 
-const STATUS_COLORS: Record<string, string> = {
-  active: '#10b981',
-  break: '#f59e0b',
-  returning: '#3b82f6',
-  offline: '#6b7280',
+const STATUS_COLORS: Record<RouteStatus, string> = {
+  sort: '#6b7280',
+  departed: '#3b82f6',
+  arrived: '#10b981',
 };
 
 const DELIVERY_STATUS_LABELS: Record<string, string> = {
@@ -39,8 +37,8 @@ const DELIVERY_STATUS_COLORS: Record<string, string> = {
   exception: '#ef4444',
 };
 
-const getStatusLabel = (status: string) => STATUS_LABELS[status] || status;
-const getStatusColor = (status: string) => STATUS_COLORS[status] || '#6b7280';
+const getStatusLabel = (status: RouteStatus) => STATUS_LABELS[status];
+const getStatusColor = (status: RouteStatus) => STATUS_COLORS[status];
 const getDeliveryStatusLabel = (status: string) => DELIVERY_STATUS_LABELS[status] || status;
 const getDeliveryStatusColor = (status: string) => DELIVERY_STATUS_COLORS[status] || '#6b7280';
 
@@ -52,7 +50,12 @@ const getInitials = (name: string) =>
     .map(part => part[0]?.toUpperCase())
     .join('');
 
-/** Painel encaixado na lateral direita do mapa — sem backdrop, não bloqueia o resto do mapa. */
+const formatTime = (iso: string) =>
+  new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+
+/** Painel encaixado na lateral direita do mapa — sem backdrop, não bloqueia o resto da tela.
+ * Aberto tanto pelo clique num van/lista no mapa quanto pelo card da equipe (o mapa rola
+ * até a view nesse segundo caso, já que é onde o painel aparece). */
 export function DriverDetailPanel({ deliverer, deliveries, onClose }: Props) {
   useEffect(() => {
     const onKeydown = (e: KeyboardEvent) => {
@@ -68,7 +71,7 @@ export function DriverDetailPanel({ deliverer, deliveries, onClose }: Props) {
         <div className={styles.headerInfo}>
           <span
             className={styles.avatar}
-            style={{ boxShadow: `0 0 0 2px ${getStatusColor(deliverer.status)}` }}
+            style={{ boxShadow: `0 0 0 2px ${getStatusColor(deliverer.routeStatus)}` }}
           >
             {getInitials(deliverer.name)}
           </span>
@@ -77,9 +80,9 @@ export function DriverDetailPanel({ deliverer, deliveries, onClose }: Props) {
             <div className={styles.statusBadge}>
               <span
                 className={styles.statusDot}
-                style={{ backgroundColor: getStatusColor(deliverer.status) }}
+                style={{ backgroundColor: getStatusColor(deliverer.routeStatus) }}
               />
-              {getStatusLabel(deliverer.status)}
+              {getStatusLabel(deliverer.routeStatus)}
             </div>
           </div>
         </div>
@@ -91,8 +94,22 @@ export function DriverDetailPanel({ deliverer, deliveries, onClose }: Props) {
       <div className={styles.statsGrid}>
         <div className={styles.statCard}>
           <div className={styles.statHeader}>
+            <Car className={styles.statIcon} />
+            <span>Vehicle</span>
+          </div>
+          <div className={styles.statValue}>{deliverer.vehiclePlate}</div>
+        </div>
+        <div className={styles.statCard}>
+          <div className={styles.statHeader}>
+            <MapPin className={styles.statIcon} />
+            <span>Route</span>
+          </div>
+          <div className={styles.statValue}>{deliverer.routeName}</div>
+        </div>
+        <div className={styles.statCard}>
+          <div className={styles.statHeader}>
             <Package className={styles.statIcon} />
-            <span>Deliveries</span>
+            <span>Stops</span>
           </div>
           <div className={styles.statValue}>
             {deliverer.deliveredPackages}/{deliverer.assignedPackages}
@@ -100,26 +117,21 @@ export function DriverDetailPanel({ deliverer, deliveries, onClose }: Props) {
         </div>
         <div className={styles.statCard}>
           <div className={styles.statHeader}>
-            <Battery className={styles.statIcon} />
-            <span>Battery</span>
+            <Gauge className={styles.statIcon} />
+            <span>SPOR-H</span>
           </div>
-          <div className={styles.statValue}>{Math.round(deliverer.batteryLevel)}%</div>
-        </div>
-        <div className={styles.statCard}>
-          <div className={styles.statHeader}>
-            <Clock className={styles.statIcon} />
-            <span>Avg Time/Stop</span>
-          </div>
-          <div className={styles.statValue}>{deliverer.avgTimePerStop.toFixed(1)} min</div>
-        </div>
-        <div className={styles.statCard}>
-          <div className={styles.statHeader}>
-            <MapPin className={styles.statIcon} />
-            <span>Current Stop</span>
-          </div>
-          <div className={styles.statValueSmall}>{deliverer.currentStop || '—'}</div>
+          <div className={styles.statValue}>{deliverer.stopsPerHour.toFixed(1)}</div>
         </div>
       </div>
+
+      {(deliverer.departedAt || deliverer.arrivedAt) && (
+        <div className={styles.timelineRow}>
+          <Clock className={styles.timelineIcon} />
+          {deliverer.departedAt && <span>Departed {formatTime(deliverer.departedAt)}</span>}
+          {deliverer.departedAt && deliverer.arrivedAt && <span className={styles.timelineArrow}>→</span>}
+          {deliverer.arrivedAt && <span>Arrived {formatTime(deliverer.arrivedAt)}</span>}
+        </div>
+      )}
 
       <div className={styles.deliveriesSection}>
         <div className={styles.deliveriesHeader}>

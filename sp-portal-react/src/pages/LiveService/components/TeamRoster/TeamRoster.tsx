@@ -1,31 +1,27 @@
-import React, { useMemo, useState } from 'react';
-import { ChevronUp, ChevronDown, Battery, Package } from 'lucide-react';
-import { TeamMember } from '../../types';
+import React, { useMemo } from 'react';
+import { Car, Gauge } from 'lucide-react';
+import { RouteStatus, TeamMember } from '../../types';
 import styles from './TeamRoster.module.css';
 
 interface Props {
   team: TeamMember[];
+  onSelect: (id: string) => void;
 }
 
-type SortField = 'name' | 'status' | 'totalDelivered' | 'batteryLevel' | 'avgTimePerStop';
-type SortOrder = 'asc' | 'desc';
-
-const STATUS_COLORS: Record<string, string> = {
-  active: '#10b981',
-  break: '#f59e0b',
-  returning: '#3b82f6',
-  offline: '#6b7280',
+const STATUS_COLORS: Record<RouteStatus, string> = {
+  sort: '#6b7280',
+  departed: '#3b82f6',
+  arrived: '#10b981',
 };
 
-const STATUS_LABELS: Record<string, string> = {
-  active: 'On Route',
-  break: 'Break',
-  returning: 'Returning',
-  offline: 'Offline',
+const STATUS_LABELS: Record<RouteStatus, string> = {
+  sort: 'Sort',
+  departed: 'Departed',
+  arrived: 'Arrived',
 };
 
-const getStatusColor = (status: string) => STATUS_COLORS[status] || '#6b7280';
-const getStatusLabel = (status: string) => STATUS_LABELS[status] || status;
+const getStatusColor = (status: RouteStatus) => STATUS_COLORS[status];
+const getStatusLabel = (status: RouteStatus) => STATUS_LABELS[status];
 
 const getInitials = (name: string) =>
   name
@@ -35,142 +31,86 @@ const getInitials = (name: string) =>
     .map(part => part[0]?.toUpperCase())
     .join('');
 
-const getBatteryColor = (level: number) => (level > 50 ? '#10b981' : level > 20 ? '#f59e0b' : '#ef4444');
+const formatTime = (iso: string) =>
+  new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 
-export const TeamRoster = React.memo(function TeamRoster({ team }: Props) {
-  const [sortField, setSortField] = useState<SortField>('name');
-  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
-
-  const handleSort = (field: SortField) => {
-    if (sortField === field) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortOrder('asc');
-    }
-  };
-
-  const sortedTeam = useMemo(() => {
-    return [...team].sort((a, b) => {
-      let aVal: any = a[sortField];
-      let bVal: any = b[sortField];
-
-      if (sortField === 'name') {
-        aVal = a.name.toLowerCase();
-        bVal = b.name.toLowerCase();
-      }
-
-      if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1;
-      if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
-      return 0;
-    });
-  }, [team, sortField, sortOrder]);
-
-  const SortIcon = ({ field }: { field: SortField }) => {
-    if (sortField !== field) return <div className={styles.sortIconPlaceholder} />;
-    return sortOrder === 'asc' ? <ChevronUp className={styles.sortIcon} /> : <ChevronDown className={styles.sortIcon} />;
-  };
+export const TeamRoster = React.memo(function TeamRoster({ team, onSelect }: Props) {
+  const sortedTeam = useMemo(
+    () => [...team].sort((a, b) => a.routeName.localeCompare(b.routeName)),
+    [team]
+  );
 
   return (
     <div className={styles.rosterContainer}>
       <div className={styles.rosterHeader}>
         <h3>Team Status</h3>
-        <span className={styles.badge}>{team.length} active</span>
+        <span className={styles.badge}>{team.length} routes</span>
       </div>
 
-      <div className={styles.tableWrapper}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th className={styles.th}>
-                <button className={styles.sortButton} onClick={() => handleSort('name')}>
-                  Name <SortIcon field="name" />
-                </button>
-              </th>
-              <th className={styles.th}>
-                <button className={styles.sortButton} onClick={() => handleSort('status')}>
-                  Status <SortIcon field="status" />
-                </button>
-              </th>
-              <th className={styles.th}>
-                <button className={styles.sortButton} onClick={() => handleSort('totalDelivered')}>
-                  Delivered <SortIcon field="totalDelivered" />
-                </button>
-              </th>
-              <th className={styles.th}>
-                <button className={styles.sortButton} onClick={() => handleSort('batteryLevel')}>
-                  <Battery className={styles.headerIcon} /> Battery <SortIcon field="batteryLevel" />
-                </button>
-              </th>
-              <th className={styles.th}>
-                <button className={styles.sortButton} onClick={() => handleSort('avgTimePerStop')}>
-                  Avg Time <SortIcon field="avgTimePerStop" />
-                </button>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {sortedTeam.map((member, index) => (
-              <tr
-                key={member.id}
-                className={styles.tr}
-                style={{ '--i': Math.min(index, 10) } as React.CSSProperties}
-              >
-                <td className={styles.td}>
-                  <div className={styles.nameCell}>
-                    <span
-                      className={styles.avatar}
-                      style={{ boxShadow: `0 0 0 2px ${getStatusColor(member.status)}` }}
-                    >
-                      {getInitials(member.name)}
-                    </span>
-                    <span className={styles.name}>{member.name}</span>
-                  </div>
-                </td>
-                <td className={styles.td}>
-                  <div className={styles.statusBadge}>
-                    <div
-                      className={styles.statusDot}
-                      style={{ backgroundColor: getStatusColor(member.status) }}
-                    ></div>
-                    <span className={styles.statusLabel}>{getStatusLabel(member.status)}</span>
-                  </div>
-                </td>
-                <td className={styles.td}>
-                  <div className={styles.packagesMetric}>
-                    <Package className={styles.metricIcon} />
-                    <span>
-                      {member.totalDelivered}/{member.totalAssigned}
-                    </span>
-                  </div>
-                </td>
-                <td className={styles.td}>
-                  <div className={styles.batteryMeter}>
-                    <div className={styles.batteryBackground}>
-                      <div
-                        className={styles.batteryFill}
-                        style={{
-                          width: `${member.batteryLevel}%`,
-                          backgroundColor: getBatteryColor(member.batteryLevel),
-                        }}
-                      ></div>
-                    </div>
-                    <span className={styles.batteryText}>{Math.round(member.batteryLevel)}%</span>
-                  </div>
-                </td>
-                <td className={styles.td}>
-                  <span className={styles.time}>{member.avgTimePerStop.toFixed(1)} min</span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <div className={styles.cardGrid}>
+        {sortedTeam.map((member, index) => {
+          const progress = member.totalAssigned > 0 ? Math.round((member.totalDelivered / member.totalAssigned) * 100) : 0;
 
-      <div className={styles.rosterFooter}>
-        <p className={styles.footerNote}>
-          💡 Tip: You'll be able to drag deliveries between couriers to reassign loads (coming soon)
-        </p>
+          return (
+            <button
+              key={member.id}
+              type="button"
+              className={styles.card}
+              style={{ '--i': Math.min(index, 10) } as React.CSSProperties}
+              onClick={() => onSelect(member.id)}
+            >
+              <div className={styles.cardHeader}>
+                <div className={styles.plateBlock}>
+                  <Car className={styles.plateIcon} />
+                  <span className={styles.plate}>{member.vehiclePlate}</span>
+                </div>
+                <span className={styles.routeName}>{member.routeName}</span>
+              </div>
+
+              <div className={styles.driverRow}>
+                <span
+                  className={styles.avatar}
+                  style={{ boxShadow: `0 0 0 2px ${getStatusColor(member.routeStatus)}` }}
+                >
+                  {getInitials(member.name)}
+                </span>
+                <span className={styles.name}>{member.name}</span>
+              </div>
+
+              <div className={styles.statusRow}>
+                <div className={styles.statusBadge}>
+                  <div className={styles.statusDot} style={{ backgroundColor: getStatusColor(member.routeStatus) }} />
+                  <span>{getStatusLabel(member.routeStatus)}</span>
+                </div>
+                {(member.departedAt || member.arrivedAt) && (
+                  <span className={styles.timestamps}>
+                    {member.departedAt && formatTime(member.departedAt)}
+                    {member.departedAt && member.arrivedAt && ' → '}
+                    {member.arrivedAt && formatTime(member.arrivedAt)}
+                  </span>
+                )}
+              </div>
+
+              <div className={styles.progressSection}>
+                <div className={styles.progressLabel}>
+                  <span>Stops</span>
+                  <span>
+                    {member.totalDelivered}/{member.totalAssigned} ({progress}%)
+                  </span>
+                </div>
+                <div className={styles.progressBackground}>
+                  <div className={styles.progressFill} style={{ width: `${progress}%` }}></div>
+                </div>
+              </div>
+
+              <div className={styles.sporh}>
+                <Gauge className={styles.sporhIcon} />
+                <span className={styles.sporhValue}>{member.stopsPerHour.toFixed(1)}</span>
+                <span className={styles.sporhLabel}>SPOR-H</span>
+              </div>
+            </button>
+          );
+        })}
       </div>
     </div>
   );

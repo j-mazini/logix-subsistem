@@ -1,14 +1,4 @@
-import {
-  Delivery,
-  Deliverer,
-  LiveMetrics,
-  ScannerEvent,
-  Exception,
-  DeliveryStatus,
-  DelivererStatus,
-  ExceptionReason,
-  HazardReport,
-} from './types';
+import { Delivery, Deliverer, DeliveryStatus, RouteStatus } from './types';
 
 function mulberry32(seed: number): () => number {
   let a = seed;
@@ -63,32 +53,71 @@ export const LONDON_LOCATIONS: LondonLocation[] = [
 
 const ADDRESSES = LONDON_LOCATIONS.map(l => l.name);
 
-const EXCEPTION_REASONS: ExceptionReason[] = ['absent', 'wrong_address', 'unreachable', 'damaged', 'refused'];
+// Depósito — ponto de partida/retorno das vans. "Sort" (ainda carregando) e
+// "Arrived" (já de volta) ficam parados exatamente aqui, então mais de um
+// van pode ocupar o mesmo pino; só "Departed" se espalha pela rota.
+export const DEPOT = { lat: 51.5074, lng: -0.1278 };
 
+const ROUTE_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
+const PLATE_LETTERS = 'ABCDEFGHJKLMNOPRSTUVWXYZ';
+
+// Placa estilo UK (ex. "LX21 KPR"), gerada com o mesmo RNG seedado pra ficar
+// determinística entre reloads.
+function generatePlate(): string {
+  const area = pick(PLATE_LETTERS.split('')) + pick(PLATE_LETTERS.split(''));
+  const age = String(randInt(15, 73)).padStart(2, '0');
+  const suffix = Array.from({ length: 3 }, () => pick(PLATE_LETTERS.split(''))).join('');
+  return `${area}${age} ${suffix}`;
+}
+
+function generateRouteStatus(): RouteStatus {
+  const roll = rng();
+  if (roll < 0.2) return 'sort';
+  if (roll < 0.75) return 'departed';
+  return 'arrived';
+}
 
 function generateDeliverers(): Deliverer[] {
   const deliverers: Deliverer[] = [];
-  const statuses: DelivererStatus[] = ['active', 'break', 'returning', 'offline'];
 
   for (let i = 0; i < 10; i++) {
     const name = DELIVERER_NAMES[i];
-    const baseLat = 51.5074; // London
-    const baseLng = -0.1278;
     const assigned = randInt(30, 60);
+    const routeStatus = generateRouteStatus();
+
+    let deliveredPackages = 0;
+    let departedAt: string | undefined;
+    let arrivedAt: string | undefined;
+    const now = Date.now();
+
+    if (routeStatus === 'departed') {
+      deliveredPackages = Math.round(assigned * randFloat(0.1, 0.85));
+      departedAt = new Date(now - randInt(30, 180) * 60_000).toISOString();
+    } else if (routeStatus === 'arrived') {
+      deliveredPackages = Math.round(assigned * randFloat(0.92, 1));
+      const departedMinutesAgo = randInt(120, 300);
+      const arrivedMinutesAgo = randInt(5, 60);
+      departedAt = new Date(now - departedMinutesAgo * 60_000).toISOString();
+      arrivedAt = new Date(now - arrivedMinutesAgo * 60_000).toISOString();
+    }
 
     deliverers.push({
       id: `deliverer-${i}`,
       name,
-      status: rng() > 0.8 ? pick(statuses) : 'active',
-      latitude: baseLat + randFloat(-0.05, 0.05),
-      longitude: baseLng + randFloat(-0.05, 0.05),
-      batteryLevel: randInt(15, 100),
+      routeStatus,
+      vehiclePlate: generatePlate(),
+      routeName: `Route ${ROUTE_LETTERS[i]}`,
+      latitude: routeStatus === 'departed' ? DEPOT.lat + randFloat(-0.05, 0.05) : DEPOT.lat,
+      longitude: routeStatus === 'departed' ? DEPOT.lng + randFloat(-0.05, 0.05) : DEPOT.lng,
       assignedPackages: assigned,
-      // Entregues nunca pode exceder o atribuído — deriva-se como fração da carga.
-      deliveredPackages: Math.round(assigned * randFloat(0.15, 0.85)),
-      currentStop: pick(ADDRESSES),
-      lastUpdate: new Date(Date.now() - randInt(10, 300) * 1000).toISOString(),
-      avgTimePerStop: randFloat(4, 12),
+      deliveredPackages,
+      currentStop: routeStatus === 'departed' ? pick(ADDRESSES) : undefined,
+      lastUpdate: new Date(now - randInt(10, 300) * 1000).toISOString(),
+      departedAt,
+      arrivedAt,
+      stopsPerHour: randFloat(4, 14),
+      // Mesma faixa usada pelo mock do Vendor Performance (55–100% on-time).
+      timeWindowPct: randFloat(55, 100),
     });
   }
 
@@ -121,76 +150,5 @@ function generateDeliveries(deliverers: Deliverer[]): Delivery[] {
   return deliveries;
 }
 
-function generateScannerEvents(deliveries: Delivery[], deliverers: Deliverer[]): ScannerEvent[] {
-  const events: ScannerEvent[] = [];
-  const baseTime = Date.now();
-
-  for (let i = 0; i < 100; i++) {
-    const delivery = pick(deliveries.filter(d => d.status !== 'pending'));
-    const deliverer = deliverers.find(d => d.id === delivery.assignedToId) || pick(deliverers);
-
-    events.push({
-      id: `event-${i}`,
-      timestamp: new Date(baseTime - randInt(60, 7200) * 1000).toISOString(),
-      delivererId: deliverer.id,
-      delivererName: deliverer.name,
-      packageId: delivery.packageId,
-      action: delivery.status,
-      note: delivery.note,
-    });
-  }
-
-  return events.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-}
-
-function generateExceptions(deliveries: Delivery[], deliverers: Deliverer[]): Exception[] {
-  const exceptions: Exception[] = [];
-  const failedDeliveries = deliveries.filter(d => d.status === 'exception' || d.status === 'failed');
-
-  for (let i = 0; i < Math.min(5, failedDeliveries.length); i++) {
-    const delivery = failedDeliveries[i];
-    const deliverer = deliverers.find(d => d.id === delivery.assignedToId) || pick(deliverers);
-    const reason = pick(EXCEPTION_REASONS);
-
-    exceptions.push({
-      id: `exception-${i}`,
-      deliveryId: delivery.id,
-      packageId: delivery.packageId,
-      delivererName: deliverer.name,
-      delivererId: deliverer.id,
-      address: delivery.address,
-      reason,
-      createdAt: new Date(Date.now() - randInt(600, 3600) * 1000).toISOString(),
-      resolved: false,
-      // O motivo já tem linha própria (traduzida) no detalhe — aqui fica só a
-      // observação do entregador, sem repetir a chave crua do enum.
-      notes: delivery.note || 'No notes from the courier.',
-    });
-  }
-
-  return exceptions;
-}
-
-function generateHazards(deliverers: Deliverer[]): HazardReport[] {
-  // Alguns relatos de campo já plantados no mapa, pra feature não nascer vazia.
-  const seeds: Array<{ type: HazardReport['type']; lat: number; lng: number; note: string }> = [
-    { type: 'road_closed', lat: 51.5136, lng: -0.141, note: 'Regent Street closed for filming' },
-    { type: 'accident', lat: 51.508, lng: -0.1281, note: 'Minor collision, one lane blocked' },
-  ];
-
-  return seeds.map((seed, i) => ({
-    id: `hazard-${i}`,
-    type: seed.type,
-    lat: seed.lat,
-    lng: seed.lng,
-    note: seed.note,
-    reportedBy: pick(deliverers).name,
-    createdAt: new Date(Date.now() - randInt(300, 5400) * 1000).toISOString(),
-  }));
-}
-
 export const MOCK_DELIVERERS = generateDeliverers();
 export const MOCK_DELIVERIES = generateDeliveries(MOCK_DELIVERERS);
-export const MOCK_SCANNER_EVENTS = generateScannerEvents(MOCK_DELIVERIES, MOCK_DELIVERERS);
-export const MOCK_EXCEPTIONS = generateExceptions(MOCK_DELIVERIES, MOCK_DELIVERERS);
-export const MOCK_HAZARDS = generateHazards(MOCK_DELIVERERS);

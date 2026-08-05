@@ -23,15 +23,16 @@ export function useLiveTracking() {
   useEffect(() => {
     const interval = setInterval(() => {
       setDeliverers(prev =>
-        prev.map(d => ({
-          ...d,
-          latitude: d.latitude + randFloat(-0.001, 0.001),
-          longitude: d.longitude + randFloat(-0.001, 0.001),
-          lastUpdate: new Date().toISOString(),
-          // ~0.75%/min com piso em 5: a descarga tem de ser visível ao longo de
-          // uma sessão sem esgotar a frota inteira em poucos minutos.
-          batteryLevel: Math.max(5, d.batteryLevel - randFloat(0, 0.05)),
-        }))
+        prev.map(d =>
+          d.routeStatus === 'departed'
+            ? {
+                ...d,
+                latitude: d.latitude + randFloat(-0.001, 0.001),
+                longitude: d.longitude + randFloat(-0.001, 0.001),
+                lastUpdate: new Date().toISOString(),
+              }
+            : d
+        )
       );
     }, 2000);
 

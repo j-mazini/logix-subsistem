@@ -1,26 +1,38 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { PortalLayout } from '../../layout/PortalLayout';
 import { LiveKPICards } from './components/LiveKPICards/LiveKPICards';
 import { OperationalMap } from './components/OperationalMap/OperationalMap';
-import { ExceptionTriage } from './components/ExceptionTriage/ExceptionTriage';
-import { ScannerLiveFeed } from './components/ScannerLiveFeed/ScannerLiveFeed';
 import { TeamRoster } from './components/TeamRoster/TeamRoster';
-import { useLiveMetrics } from './hooks/useLiveMetrics';
+import { DriverPerformanceModal } from './components/DriverPerformanceModal/DriverPerformanceModal';
+import { useDailyVendorPerformance } from './hooks/useDailyVendorPerformance';
 import { useLiveTracking } from './hooks/useLiveTracking';
-import { useLiveExceptions } from './hooks/useLiveExceptions';
-import { useScannerEvents } from './hooks/useScannerEvents';
 import { useTeamStatus } from './hooks/useTeamStatus';
 import styles from './LiveService.module.css';
 
 export default function Page() {
-  const { metrics } = useLiveMetrics();
   const { deliverers } = useLiveTracking();
-  const { exceptions, resolveException } = useLiveExceptions();
-  const { events } = useScannerEvents();
   const { team } = useTeamStatus();
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [performanceId, setPerformanceId] = useState<string | null>(null);
 
-  const activeCouriers = useMemo(() => team.filter(m => m.status === 'active').length, [team]);
-  const openExceptions = useMemo(() => exceptions.filter(e => !e.resolved).length, [exceptions]);
+  const { kpiCards } = useDailyVendorPerformance(deliverers, selectedId);
+
+  const selectedDeliverer = useMemo(
+    () => (selectedId ? deliverers.find(d => d.id === selectedId) || null : null),
+    [selectedId, deliverers]
+  );
+
+  const onRoute = useMemo(() => team.filter(m => m.routeStatus === 'departed').length, [team]);
+
+  const lastUpdated = useMemo(
+    () => deliverers.reduce((latest, d) => (d.lastUpdate > latest ? d.lastUpdate : latest), deliverers[0]?.lastUpdate ?? ''),
+    [deliverers]
+  );
+
+  const performanceMember = useMemo(
+    () => (performanceId ? team.find(m => m.id === performanceId) || null : null),
+    [performanceId, team]
+  );
 
   return (
     <PortalLayout mainClassName="live-service-main" title="Live Service">
@@ -38,33 +50,44 @@ export default function Page() {
 
           <div className={styles.statusChips}>
             <span className={styles.chip}>
-              <strong key={activeCouriers} className={styles.pulse}>{activeCouriers}</strong> on route
+              <strong key={onRoute} className={styles.pulse}>{onRoute}</strong> on route
             </span>
-            <span className={`${styles.chip} ${openExceptions > 0 ? styles.chipAlert : ''}`}>
-              <strong key={openExceptions} className={styles.pulse}>{openExceptions}</strong> exceptions
-            </span>
-            <span className={styles.timestamp}>
-              {new Date(metrics.lastUpdated).toLocaleTimeString('en-GB', {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-              })}
-            </span>
+            {lastUpdated && (
+              <span className={styles.timestamp}>
+                {new Date(lastUpdated).toLocaleTimeString('en-GB', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit',
+                })}
+              </span>
+            )}
           </div>
         </section>
 
-        <LiveKPICards metrics={metrics} />
+        <div className={styles.kpiScopeRow}>
+          <span className={styles.kpiScopeLabel}>
+            {selectedDeliverer
+              ? `${selectedDeliverer.vehiclePlate} · ${selectedDeliverer.routeName} — Today`
+              : 'Fleet — Today'}
+          </span>
+          {selectedDeliverer && (
+            <button type="button" className={styles.kpiScopeClear} onClick={() => setSelectedId(null)}>
+              Back to fleet
+            </button>
+          )}
+        </div>
+
+        <LiveKPICards cards={kpiCards} />
 
         <div className={styles.mapSection}>
-          <OperationalMap deliverers={deliverers} />
+          <OperationalMap deliverers={deliverers} selectedId={selectedId} onSelect={setSelectedId} />
         </div>
 
-        <div className={styles.secondaryGrid}>
-          <ExceptionTriage exceptions={exceptions} onResolve={resolveException} />
-          <ScannerLiveFeed events={events} />
-        </div>
+        <TeamRoster team={team} onSelect={setPerformanceId} />
 
-        <TeamRoster team={team} />
+        {performanceMember && (
+          <DriverPerformanceModal member={performanceMember} onClose={() => setPerformanceId(null)} />
+        )}
       </div>
     </PortalLayout>
   );
