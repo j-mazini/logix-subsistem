@@ -235,6 +235,7 @@ export function RequestsAdmin() {
   const [filterVendorType, setFilterVendorType] = useState('all');
   const [selectedRequest, setSelectedRequest] = useState<VendorRequest | null>(null);
   const [scheduleTermsInput, setScheduleTermsInput] = useState('');
+  const [viewingRequest, setViewingRequest] = useState<VendorRequest | null>(null);
   const [loading, setLoading] = useState(true);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const toastIdRef = useRef(0);
@@ -245,6 +246,7 @@ export function RequestsAdmin() {
   }, []);
 
   useModalBehavior(() => closeScheduleTermsModal(), selectedRequest !== null);
+  useModalBehavior(() => setViewingRequest(null), viewingRequest !== null);
 
   function getVendorName(userId: number): string {
     const v = vendors.find((x) => x.userId === userId);
@@ -550,7 +552,19 @@ export function RequestsAdmin() {
                 </thead>
                 <tbody id="historyTableBody">
                   {historyRequests.map((r) => (
-                    <tr key={r.vendorRequestId}>
+                    <tr
+                      key={r.vendorRequestId}
+                      className="va-row-clickable"
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => setViewingRequest(r)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          setViewingRequest(r);
+                        }
+                      }}
+                    >
                       <td className="fw-semibold">{getRequestTypeLabel(r.requestType)}</td>
                       <td>{getVendorName(r.userId)}</td>
                       <td>{getDatesCell(r)}</td>
@@ -631,6 +645,85 @@ export function RequestsAdmin() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* ============ MODAL: Request Details (History row click) ============ */}
+      <div
+        className={`va-modal-backdrop${viewingRequest ? ' sp-modal-backdrop-anim' : ''}`}
+        id="requestDetailsModalBackdrop"
+        hidden={!viewingRequest}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) setViewingRequest(null);
+        }}
+      >
+        {viewingRequest && (
+          <div
+            className={`va-modal va-modal-small${viewingRequest ? ' sp-modal-anim' : ''}`}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="requestDetailsModalTitle"
+          >
+            <div className="va-modal-header">
+              <h2 className="va-modal-title" id="requestDetailsModalTitle">
+                {getRequestTypeLabel(viewingRequest.requestType)} Request
+              </h2>
+              <button type="button" className="va-modal-close" aria-label="Close" onClick={() => setViewingRequest(null)}>
+                <i className="bi bi-x-lg" />
+              </button>
+            </div>
+            <div className="va-modal-body">
+              <dl className="va-detail-grid">
+                <div className="va-detail-row">
+                  <dt className="va-detail-label">Vendor</dt>
+                  <dd className="va-detail-value">{getVendorName(viewingRequest.userId)}</dd>
+                </div>
+                <div className="va-detail-row">
+                  <dt className="va-detail-label">Status</dt>
+                  <dd className="va-detail-value">
+                    <span className={`va-status-badge ${getStatusClass(viewingRequest.status)}`}>
+                      {viewingRequest.status.charAt(0).toUpperCase() + viewingRequest.status.slice(1).toLowerCase()}
+                    </span>
+                  </dd>
+                </div>
+                <div className="va-detail-row">
+                  <dt className="va-detail-label">Date(s)</dt>
+                  <dd className="va-detail-value">{getDatesCell(viewingRequest)}</dd>
+                </div>
+                <div className="va-detail-row">
+                  <dt className="va-detail-label">Amount</dt>
+                  <dd className="va-detail-value">{getAmountCell(viewingRequest)}</dd>
+                </div>
+                <div className="va-detail-row va-detail-row--full">
+                  <dt className="va-detail-label">Reason</dt>
+                  <dd className="va-detail-value">{renderCellValue(viewingRequest.reason)}</dd>
+                </div>
+                <div className="va-detail-row va-detail-row--full">
+                  <dt className="va-detail-label">Notes</dt>
+                  <dd className="va-detail-value">{renderCellValue(viewingRequest.notes)}</dd>
+                </div>
+                {viewingRequest.requestType === 'PrePayment' && viewingRequest.scheduleTerms && (
+                  <div className="va-detail-row va-detail-row--full">
+                    <dt className="va-detail-label">Schedule Terms</dt>
+                    <dd className="va-detail-value">{viewingRequest.scheduleTerms}</dd>
+                  </div>
+                )}
+                <div className="va-detail-row">
+                  <dt className="va-detail-label">Created At</dt>
+                  <dd className="va-detail-value">{formatDateTime(viewingRequest.createdAt)}</dd>
+                </div>
+                <div className="va-detail-row">
+                  <dt className="va-detail-label">Updated At</dt>
+                  <dd className="va-detail-value">{viewingRequest.updatedAt ? formatDateTime(viewingRequest.updatedAt) : '-'}</dd>
+                </div>
+              </dl>
+              <div className="va-form-actions">
+                <button type="button" className="styled-button styled-button--outline" onClick={() => setViewingRequest(null)}>
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Toast Container */}

@@ -181,7 +181,7 @@
 
 .vehicle-modal-grid-2 {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
 }
 
@@ -191,12 +191,12 @@
 
 .vehicle-modal-grid-4 {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
 }
 
 @media (min-width: 992px) {
-  .vehicle-modal-grid-4 { grid-template-columns: repeat(4, 1fr); }
+  .vehicle-modal-grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 
 .vehicle-modal-label {

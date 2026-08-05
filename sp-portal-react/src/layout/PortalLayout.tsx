@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { BeamSidebar } from './BeamSidebar';
 import { AdminHeaderPill, AdminHeaderMenu, useAdminHeaderPill } from './AdminHeaderUserPill';
 import { AnnouncementBox } from './AnnouncementBox';
@@ -49,6 +49,20 @@ export function PortalLayout({
 }: PortalLayoutProps) {
   const sp = useCurrentSp();
   const menuControls = useAdminHeaderPill();
+
+  // The original static site rendered every portal page with
+  // <body class="has-beam-sidebar sp-portal">. Both classes gate large
+  // blocks of already-authored responsive CSS (sidebar-beam.css's mobile
+  // beam-trigger sizing, sp-portal.css's header column-stacking and page
+  // padding below 768/576px) — without them here, that CSS never matched
+  // anything and the mobile layout silently fell back to the unscoped,
+  // non-stacking desktop rules.
+  useEffect(() => {
+    document.body.classList.add('has-beam-sidebar', 'sp-portal');
+    return () => {
+      document.body.classList.remove('has-beam-sidebar', 'sp-portal');
+    };
+  }, []);
 
   return (
     <div className={`sidebar-wrapper${pageClassName ? ` ${pageClassName}` : ''}`} id="sidebarWrapper">

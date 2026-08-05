@@ -1298,13 +1298,13 @@ button.osb-card:hover .osb-stat-ico { transform: translateY(-2px) scale(1.14); o
 
 .route-blocks {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1.2rem;
 }
 
 @media (max-width: 900px) {
   .route-blocks {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -1958,14 +1958,14 @@ body.rebalance-mode-active .operation-summary { display: none; }
 /* Cards are always fully expanded — their postcode list scrolls internally
    (see .rebalance-postcode-list) rather than collapsing behind a click. */
 .route-blocks--rebalance {
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.7rem;
   align-items: start;
 }
 
 @media (max-width: 1100px) {
   .route-blocks--rebalance {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -3767,7 +3767,7 @@ body.rebalance-mode-active .fab-all-postcodes { display: inline-flex; }
   .route-block-content { padding: 1rem 1rem 1.1rem 1.2rem; }
   .route-block-header { padding: 0.9rem 1rem 0.7rem 1.2rem; }
   .route-progress { padding: 0 1rem 0.85rem 1.2rem; }
-  .route-dash { grid-template-columns: repeat(2, 1fr); }
+  .route-dash { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .route-buttons .styled-button { flex: 0 1 auto; justify-content: center; }
   .filter-select { max-width: none; flex: 1; }
 }

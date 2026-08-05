@@ -637,7 +637,7 @@
 /* ========== Compliance ========== */
 .dashboard-compliance-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1.5rem;
 }
 
@@ -955,7 +955,7 @@
 /* Responsivo */
 @media (max-width: 1023px) {
   .dashboard-compliance-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -1118,7 +1118,7 @@
 /* Grid de 3 cards */
 .dhl-notice-type-options {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.75rem;
 }
 .dhl-notice-type-card {

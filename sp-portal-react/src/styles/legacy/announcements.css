@@ -734,7 +734,7 @@ body.va-page {
 }
 
 @media (max-width: 520px) {
-  .announcements-page .ann-metrics { grid-template-columns: repeat(2, 1fr); }
+  .announcements-page .ann-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .announcements-page .va-table td { flex-wrap: wrap; }
 }
 
