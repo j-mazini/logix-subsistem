@@ -85,7 +85,7 @@ export const DRIVER_NAV_PAGES: DriverNavPage[] = [
   },
   {
     href: "/my-cases",
-    label: "Cases",
+    label: "My Querys",
     icon: "bi-flag-fill",
     accent: "orange",
     allowedUserTypes: [USER_TYPE.ADMIN, USER_TYPE.DRIVER, USER_TYPE.SUPERVISOR],

@@ -61,7 +61,7 @@ export default function MyCasesPage() {
   return (
     <StandardPageLayout bottomPadding="pb-[70px]">
       <PageContent>
-        <PageHeroCard icon="bi-flag-fill" title="My Cases" subtitle="DHL cases assigned to you" accent="orange" />
+        <PageHeroCard icon="bi-flag-fill" title="My Querys" subtitle="DHL cases assigned to you" accent="orange" />
 
         {status && (
           <div className={`flex items-center gap-2 rounded-xl border px-4 py-3 mb-4 text-sm font-medium ${status.type === "success" ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-red-200 bg-red-50 text-red-800"}`}>
