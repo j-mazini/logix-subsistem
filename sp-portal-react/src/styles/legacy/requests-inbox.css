@@ -1,0 +1,348 @@
+/* =====================================================
+   Requests Inbox — month-grouped Kanban view
+   Scoped to .requests-inbox-page (PortalLayout's pageClassName), which
+   already inherits the --primary-blue etc. tokens declared on
+   .requests-admin-page since both stylesheets are always loaded together
+   here (see requests-admin.css's own note about globally-loaded page CSS in
+   this SPA). Kept scoped anyway for resilience if that ever changes.
+   ===================================================== */
+
+.requests-inbox-page {
+  --ri-amber: #d97706;
+  --ri-amber-bg: linear-gradient(135deg, #fffbeb 0%, #fff7ed 100%);
+  --ri-amber-border: #fde68a;
+  --ri-emerald: #059669;
+  --ri-emerald-bg: linear-gradient(135deg, #ecfdf5 0%, #f0fdfa 100%);
+  --ri-emerald-border: #a7f3d0;
+  --ri-red: #dc2626;
+  --ri-red-bg: linear-gradient(135deg, #fef2f2 0%, #fef2f2 100%);
+  --ri-red-border: #fecaca;
+}
+
+.requests-inbox-page .ri-toolbar {
+  margin-bottom: 1rem;
+}
+.requests-inbox-page .ri-toolbar-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
+.requests-inbox-page .ri-search-filter {
+  flex: 1 1 220px;
+}
+.requests-inbox-page .ri-vendors-off-btn {
+  align-self: flex-end;
+}
+
+/* =====================================================
+   Dashboard tiles
+   ===================================================== */
+.requests-inbox-page .ri-status-tiles,
+.requests-inbox-page .ri-type-tiles {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+.requests-inbox-page .ri-status-tiles { grid-template-columns: repeat(3, 1fr); }
+.requests-inbox-page .ri-type-tiles { grid-template-columns: repeat(4, 1fr); margin-bottom: 1.25rem; }
+
+.requests-inbox-page .ri-tile {
+  border-radius: 0.75rem;
+  border: 1px solid var(--border-color);
+  background: var(--card-bg);
+  padding: 0.75rem 1rem;
+  box-shadow: var(--card-shadow);
+}
+.requests-inbox-page .ri-tile-head {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+.requests-inbox-page .ri-tile-value {
+  margin: 0.25rem 0 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+.requests-inbox-page .ri-tile--pending { border-color: var(--ri-amber-border); background: var(--ri-amber-bg); }
+.requests-inbox-page .ri-tile--pending .ri-tile-head { color: var(--ri-amber); }
+.requests-inbox-page .ri-tile--pending .ri-tile-value { color: #92400e; }
+.requests-inbox-page .ri-tile--approved { border-color: var(--ri-emerald-border); background: var(--ri-emerald-bg); }
+.requests-inbox-page .ri-tile--approved .ri-tile-head { color: var(--ri-emerald); }
+.requests-inbox-page .ri-tile--rejected { border-color: var(--ri-red-border); background: var(--ri-red-bg); }
+.requests-inbox-page .ri-tile--rejected .ri-tile-head { color: var(--ri-red); }
+.requests-inbox-page .ri-tile--total { border-color: #c7d2fe; background: linear-gradient(135deg, #eef2ff 0%, #ffffff 100%); }
+.requests-inbox-page .ri-tile--total .ri-tile-head { color: #4338ca; }
+.requests-inbox-page .ri-tile--total .ri-tile-value { color: #312e81; }
+
+/* =====================================================
+   Kanban board
+   ===================================================== */
+.requests-inbox-page .ri-kanban {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.requests-inbox-page .ri-column {
+  border-radius: 1rem;
+  border: 2px solid var(--border-color);
+  background: var(--card-bg);
+  box-shadow: var(--card-shadow);
+  overflow: hidden;
+}
+.requests-inbox-page .ri-column--pending { border-color: var(--ri-amber-border); background: var(--ri-amber-bg); }
+.requests-inbox-page .ri-column--approved { border-color: var(--ri-emerald-border); background: var(--ri-emerald-bg); }
+.requests-inbox-page .ri-column--rejected { border-color: var(--ri-red-border); background: var(--ri-red-bg); }
+
+.requests-inbox-page .ri-column-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.9rem 1.1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+.requests-inbox-page .ri-column-head-left {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+.requests-inbox-page .ri-column-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 0.5rem;
+  color: #fff;
+  font-size: 1rem;
+}
+.requests-inbox-page .ri-column--pending .ri-column-icon { background: var(--ri-amber); }
+.requests-inbox-page .ri-column--approved .ri-column-icon { background: var(--ri-emerald); }
+.requests-inbox-page .ri-column--rejected .ri-column-icon { background: var(--ri-red); }
+
+.requests-inbox-page .ri-column-title { margin: 0; font-size: 0.95rem; font-weight: 700; color: var(--text-primary); }
+.requests-inbox-page .ri-column-subtitle { margin: 0.1rem 0 0; font-size: 0.72rem; color: var(--text-secondary); }
+.requests-inbox-page .ri-column-count {
+  border-radius: 999px;
+  padding: 0.15rem 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #fff;
+}
+.requests-inbox-page .ri-column--pending .ri-column-count { background: var(--ri-amber); }
+.requests-inbox-page .ri-column--approved .ri-column-count { background: var(--ri-emerald); }
+.requests-inbox-page .ri-column--rejected .ri-column-count { background: var(--ri-red); }
+
+.requests-inbox-page .ri-column-body { padding: 0.9rem; max-height: 76vh; overflow-y: auto; }
+
+.requests-inbox-page .ri-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 2.2rem 1rem;
+  text-align: center;
+  color: var(--text-light);
+}
+.requests-inbox-page .ri-empty i { font-size: 1.5rem; }
+.requests-inbox-page .ri-empty p { margin: 0; font-size: 0.85rem; }
+
+.requests-inbox-page .ri-month-group + .ri-month-group { margin-top: 1.25rem; }
+.requests-inbox-page .ri-month-label {
+  margin: 0 0 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+.requests-inbox-page .ri-card-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+/* =====================================================
+   Request card
+   ===================================================== */
+.requests-inbox-page .ri-card {
+  border-radius: 0.75rem;
+  border: 2px solid var(--border-color);
+  background: var(--card-bg);
+  overflow: hidden;
+  transition: box-shadow var(--transition-fast), border-color var(--transition-fast);
+}
+.requests-inbox-page .ri-card--pending { border-color: var(--ri-amber-border); }
+.requests-inbox-page .ri-card--approved { border-color: var(--ri-emerald-border); }
+.requests-inbox-page .ri-card--rejected { border-color: var(--ri-red-border); }
+.requests-inbox-page .ri-card:hover { box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08); }
+
+.requests-inbox-page .ri-card-main {
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0.75rem 0.9rem;
+  font-family: inherit;
+}
+.requests-inbox-page .ri-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.requests-inbox-page .ri-card-type {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--primary-blue);
+}
+.requests-inbox-page .ri-card-status {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: capitalize;
+}
+.requests-inbox-page .ri-card-summary {
+  margin-top: 0.35rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.requests-inbox-page .ri-card-meta {
+  margin-top: 0.25rem;
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+.requests-inbox-page .ri-card-actions {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.6rem 0.9rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  background: rgba(0, 0, 0, 0.02);
+}
+.requests-inbox-page .ri-card-actions .styled-button { flex: 1; }
+
+/* =====================================================
+   Detail modal sections
+   ===================================================== */
+.requests-inbox-page .ri-detail-section + .ri-detail-section { margin-top: 1.1rem; }
+.requests-inbox-page .ri-detail-section-title {
+  margin: 0 0 0.6rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-light);
+}
+
+/* =====================================================
+   Schedule Terms form fields (native selects/inputs, no shadcn)
+   ===================================================== */
+.requests-inbox-page .ri-form-field { margin-bottom: 1rem; }
+.requests-inbox-page .ri-form-field select,
+.requests-inbox-page .ri-form-field input {
+  width: 100%;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.55rem 0.7rem;
+  font-size: 0.87rem;
+  font-family: inherit;
+  color: var(--text-primary);
+  background: var(--card-bg);
+}
+.requests-inbox-page .ri-form-field select:focus,
+.requests-inbox-page .ri-form-field input:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+}
+
+/* =====================================================
+   Vendors Off modal
+   ===================================================== */
+.requests-inbox-page .va-modal-large { max-width: 960px; }
+
+.requests-inbox-page .ri-vo-carousel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.requests-inbox-page .ri-vo-month { margin: 0; font-size: 1.05rem; font-weight: 700; color: var(--text-primary); }
+
+.requests-inbox-page .ri-vo-weeks { display: flex; flex-direction: column; gap: 1.25rem; }
+.requests-inbox-page .ri-vo-week-title { margin: 0 0 0.5rem; font-size: 0.82rem; font-weight: 700; color: var(--text-primary); }
+.requests-inbox-page .ri-vo-week-empty {
+  text-align: center;
+  padding: 1rem;
+  font-size: 0.75rem;
+  color: var(--text-light);
+}
+
+.requests-inbox-page .ri-vo-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  border: 1px solid var(--border-color);
+  border-radius: 0.6rem;
+  overflow: hidden;
+}
+.requests-inbox-page .ri-vo-day {
+  border-right: 1px solid var(--border-color);
+  min-height: 110px;
+  background: var(--card-bg);
+}
+.requests-inbox-page .ri-vo-day:last-child { border-right: none; }
+.requests-inbox-page .ri-vo-day--weekend { background: var(--main-bg); }
+.requests-inbox-page .ri-vo-day-head {
+  padding: 0.4rem;
+  text-align: center;
+  border-bottom: 1px solid var(--border-color);
+  background: rgba(0, 0, 0, 0.02);
+}
+.requests-inbox-page .ri-vo-day-name { display: block; font-size: 0.68rem; font-weight: 700; color: var(--text-secondary); }
+.requests-inbox-page .ri-vo-day-num { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-primary); }
+.requests-inbox-page .ri-vo-day-body { padding: 0.4rem; display: flex; flex-direction: column; gap: 0.3rem; }
+.requests-inbox-page .ri-vo-day-empty { display: block; text-align: center; font-size: 0.72rem; color: var(--text-light); padding-top: 0.5rem; }
+.requests-inbox-page .ri-vo-chip {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--ri-red);
+  background: var(--ri-red-bg);
+  border: 1px solid var(--ri-red-border);
+  border-radius: 0.4rem;
+  padding: 0.2rem 0.4rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* =====================================================
+   Responsive
+   ===================================================== */
+@media (max-width: 1100px) {
+  .requests-inbox-page .ri-kanban { grid-template-columns: 1fr; }
+  .requests-inbox-page .ri-column-body { max-height: none; }
+}
+@media (max-width: 768px) {
+  .requests-inbox-page .ri-status-tiles { grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+  .requests-inbox-page .ri-type-tiles { grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
+  .requests-inbox-page .ri-tile { padding: 0.55rem 0.7rem; }
+  .requests-inbox-page .ri-tile-value { font-size: 1.15rem; }
+  .requests-inbox-page .ri-toolbar-row { flex-direction: column; align-items: stretch; }
+  .requests-inbox-page .ri-vendors-off-btn { width: 100%; justify-content: center; }
+  .requests-inbox-page .ri-vo-grid { grid-template-columns: repeat(7, minmax(60px, 1fr)); overflow-x: auto; }
+  .requests-inbox-page .va-modal-large { max-width: 100%; }
+}

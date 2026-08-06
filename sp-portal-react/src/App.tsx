@@ -10,6 +10,7 @@ import { Logistics } from './pages/Logistics/Logistics';
 import { Contracts } from './pages/Contracts/Contracts';
 import { Invoices } from './pages/Invoices/Invoices';
 import { RequestsAdmin } from './pages/RequestsAdmin/RequestsAdmin';
+import { RequestsInbox } from './pages/RequestsInbox/RequestsInbox';
 import { VendorPerformance } from './pages/VendorPerformance/VendorPerformance';
 import { AdhocInvoiceManagement } from './pages/AdhocInvoiceManagement/AdhocInvoiceManagement';
 import { DeductionsDisbursementsRecharges } from './pages/DeductionsDisbursementsRecharges/DeductionsDisbursementsRecharges';
@@ -78,6 +79,7 @@ function App() {
           <Route path="/contracts" element={<Contracts />} />
           <Route path="/invoices" element={<Invoices />} />
           <Route path="/requests-admin" element={<RequestsAdmin />} />
+          <Route path="/requests-inbox" element={<RequestsInbox />} />
           <Route path="/trace-queries" element={<TraceQueries />} />
           <Route path="/vendor-performance" element={<VendorPerformance />} />
           <Route path="/adhoc-invoice-management" element={<AdhocInvoiceManagement />} />

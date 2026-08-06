@@ -67,7 +67,10 @@ const NAV_GROUPS: NavGroup[] = [
   },
   {
     label: 'Vendor Requests',
-    items: [{ icon: 'bi-inbox', label: 'Vendor Requests', route: '/requests-admin' }],
+    items: [
+      { icon: 'bi-inbox', label: 'Vendor Requests', route: '/requests-admin' },
+      { icon: 'bi-inbox-fill', label: 'Requests Inbox', route: '/requests-inbox' },
+    ],
   },
   {
     label: 'Trace & Queries',
