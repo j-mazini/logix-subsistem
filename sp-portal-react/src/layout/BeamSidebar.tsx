@@ -31,6 +31,7 @@ const NAV_GROUPS: NavGroup[] = [
       { icon: 'bi-truck', label: 'Vehicles', route: '/vehicles' },
       { icon: 'bi-phone', label: 'Assets', route: '/assets' },
       { icon: 'bi-file-earmark-text', label: 'Contract Management', route: '/contracts' },
+      { icon: 'bi-signpost-split', label: 'Loops & Routes', route: '/logistics' },
     ],
   },
   {

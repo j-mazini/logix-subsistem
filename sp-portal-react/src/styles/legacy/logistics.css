@@ -1,0 +1,285 @@
+/* =====================================================
+   Loops & Routes (Logistics) — ported from the Next.js source's
+   app/(private)/logistics/Logistics.css. Vanilla local-state CRUD,
+   no backend. Scoped to `.logistics-page` (PortalLayout's
+   pageClassName) rather than `:root`, same convention as every other
+   ported page in this SPA (see requests-admin.css for the rationale).
+   ===================================================== */
+
+.logistics-page {
+  --lg-sidebar-bg: #ffffff;
+  --lg-main-bg: #f7f8fa;
+  --lg-text-dark: #2c3e50;
+  --lg-text-light: #8491a1;
+  --lg-border-color: #e9ecef;
+  --lg-primary-blue: #0d6efd;
+  --lg-card-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  --lg-badge-child-bg: #ffebeb;
+  --lg-badge-child-text: #dc3545;
+  --lg-badge-flex-bg: #e9d5ff;
+  --lg-badge-flex-text: #9333ea;
+  --lg-badge-postcode-bg: #e9ecef;
+  --lg-badge-postcode-text: #495057;
+}
+
+.logistics-page .lg-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.logistics-page .lg-page-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--lg-text-dark);
+}
+
+.logistics-page .lg-search-wrapper {
+  width: 300px;
+  max-width: 100%;
+  position: relative;
+}
+.logistics-page .lg-search-wrapper i {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--lg-text-light);
+}
+.logistics-page .lg-search-wrapper input {
+  width: 100%;
+  padding: 0.5rem 0.75rem 0.5rem 2.2rem;
+  border: 1px solid var(--lg-border-color);
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+}
+.logistics-page .lg-search-wrapper input:focus {
+  outline: none;
+  border-color: var(--lg-primary-blue);
+  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.12);
+}
+
+.logistics-page .loop-card {
+  background-color: #fff;
+  border: 1px solid var(--lg-border-color);
+  border-radius: 0.5rem;
+  margin-bottom: 2rem;
+  box-shadow: var(--lg-card-shadow);
+}
+
+.logistics-page .loop-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--lg-border-color);
+}
+
+.logistics-page .loop-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--lg-text-dark);
+  margin: 0;
+}
+
+.logistics-page .btn-add-route {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: none;
+  background: var(--lg-primary-blue);
+  color: #fff;
+  padding: 0.5rem 1rem;
+  border-radius: 0.4rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.logistics-page .btn-add-route:hover { background: #0b5ed7; }
+
+.logistics-page .loop-body { padding: 1.5rem; }
+
+.logistics-page .rates-section {
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+}
+.logistics-page .rates-section strong {
+  font-weight: 500;
+  color: var(--lg-text-dark);
+}
+.logistics-page .rates-section span {
+  margin-right: 1rem;
+  color: var(--lg-text-light);
+}
+
+.logistics-page .lg-table-responsive { overflow-x: auto; }
+.logistics-page .lg-table {
+  width: 100%;
+  border-collapse: collapse;
+  vertical-align: middle;
+}
+.logistics-page .lg-table thead th {
+  font-weight: 500;
+  color: var(--lg-text-light);
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  border: none;
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+}
+.logistics-page .lg-table tbody td {
+  border-top: 1px solid var(--lg-border-color);
+  font-size: 0.9rem;
+  padding: 0.6rem 0.75rem;
+}
+
+.logistics-page .badge-custom {
+  display: inline-block;
+  padding: 0.4em 0.8em;
+  font-weight: 500;
+  font-size: 0.75rem;
+  border-radius: 0.3rem;
+}
+.logistics-page .badge-child { background-color: var(--lg-badge-child-bg); color: var(--lg-badge-child-text); }
+.logistics-page .badge-flex { background-color: var(--lg-badge-flex-bg); color: var(--lg-badge-flex-text); }
+.logistics-page .badge-postcode { background-color: var(--lg-badge-postcode-bg); color: var(--lg-badge-postcode-text); margin: 0 0.25rem 0.25rem 0; }
+
+.logistics-page .action-icon {
+  color: var(--lg-primary-blue);
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  margin: 0 0.3rem;
+  cursor: pointer;
+  padding: 0.2rem;
+}
+.logistics-page .action-icon:hover { opacity: 0.75; }
+
+/* Modal — same va-modal pattern as requests-admin.css / announcements.css */
+.logistics-page .va-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 3rem 1rem;
+  overflow-y: auto;
+  z-index: 2000;
+}
+.logistics-page .va-modal {
+  background: #fff;
+  border-radius: 14px;
+  width: 100%;
+  max-width: 920px;
+  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.35);
+  animation: lgModalFadeIn 0.25s ease-out;
+}
+@keyframes lgModalFadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+.logistics-page .va-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.1rem 1.4rem;
+  border-bottom: 1px solid var(--lg-border-color);
+  background: var(--lg-main-bg);
+  border-radius: 14px 14px 0 0;
+}
+.logistics-page .va-modal-title { font-size: 1.1rem; font-weight: 700; color: var(--lg-text-dark); margin: 0; }
+.logistics-page .va-modal-close {
+  border: none;
+  background: transparent;
+  color: var(--lg-text-light);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.logistics-page .va-modal-close:hover { background: rgba(0,0,0,0.06); color: var(--lg-text-dark); }
+.logistics-page .va-modal-body { padding: 1.4rem; max-height: 70vh; overflow-y: auto; }
+.logistics-page .va-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1rem 1.4rem;
+  border-top: 1px solid var(--lg-border-color);
+}
+
+.logistics-page .form-section-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--lg-text-dark);
+  margin: 0 0 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--lg-border-color);
+}
+.logistics-page .lg-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.logistics-page .lg-form-grid.lg-form-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.logistics-page .lg-form-grid.lg-form-grid-6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.logistics-page .lg-form-field { display: flex; flex-direction: column; gap: 0.35rem; }
+.logistics-page .lg-form-field label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--lg-text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.logistics-page .lg-form-field input,
+.logistics-page .lg-form-field select,
+.logistics-page .lg-form-field textarea {
+  border: 1px solid var(--lg-border-color);
+  border-radius: 8px;
+  padding: 0.5rem 0.65rem;
+  font-size: 0.87rem;
+  font-family: inherit;
+  color: var(--lg-text-dark);
+  background: #fff;
+}
+.logistics-page .lg-form-field input:focus,
+.logistics-page .lg-form-field select:focus,
+.logistics-page .lg-form-field textarea:focus {
+  outline: none;
+  border-color: var(--lg-primary-blue);
+  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.12);
+}
+.logistics-page .lg-input-group { display: flex; gap: 0.5rem; }
+.logistics-page .lg-input-group input { flex: 1; min-width: 0; }
+
+.logistics-page .styled-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 8px;
+  padding: 0.55rem 1.1rem;
+  font-size: 0.87rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+.logistics-page .styled-button--primary {
+  background: var(--lg-primary-blue);
+  color: #fff;
+}
+.logistics-page .styled-button--primary:hover { background: #0b5ed7; }
+.logistics-page .styled-button--outline {
+  background: #fff;
+  color: var(--lg-text-dark);
+  border-color: var(--lg-border-color);
+}
+.logistics-page .styled-button--outline:hover { background: var(--lg-main-bg); }
+
+@media (max-width: 992px) {
+  .logistics-page .loop-body { padding: 1rem; }
+  .logistics-page .lg-form-grid.lg-form-grid-6 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
