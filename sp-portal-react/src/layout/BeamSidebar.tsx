@@ -54,6 +54,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { icon: 'bi-receipt', label: 'Invoices', route: '/invoices' },
       { icon: 'bi-journal-text', label: 'Financial Invoices', route: '/financial-invoices' },
+      { icon: 'bi-building-gear', label: 'Service Partner Invoices', route: '/service-partner-invoices' },
       { icon: 'bi-dash-circle', label: 'Deductions', route: '/deductions-disbursements-recharges' },
       { icon: 'bi-file-plus', label: 'Ad-hoc Invoice System', route: '/adhoc-invoice-management' },
     ],
