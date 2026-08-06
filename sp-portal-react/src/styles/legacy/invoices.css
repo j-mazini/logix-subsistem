@@ -190,53 +190,51 @@ body.invoices-page {
    ===================================================== */
 .workflow-stages {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
 }
 
 .workflow-stage {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.15rem;
-  padding: 0.9rem 1rem;
+  padding: 0.85rem 1rem;
   background: var(--bg-primary);
   border: 1.5px solid var(--border-color);
   border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
   font-family: inherit;
+  text-align: left;
   cursor: pointer;
   transition: all var(--transition);
 }
 
 .workflow-stage:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
 
-.stage-name { font-size: 0.9rem; font-weight: 700; }
-.stage-count { font-size: 0.78rem; color: var(--text-secondary); }
-.stage-amount { font-size: 0.85rem; font-weight: 600; }
+/* Standardized KPI card layout, shared with .category-card / .summary-card:
+   label (top) → big value (middle) → small caption (bottom). */
+.stage-name { font-size: 0.72rem; font-weight: 700; color: var(--text-primary); margin: 0 0 0.25rem; text-transform: uppercase; letter-spacing: 0.02em; }
+.stage-amount { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.01em; margin: 0 0 0.15rem; }
+.stage-count { font-size: 0.7rem; color: var(--text-light); }
 
 .workflow-stage.stage-current { border-color: var(--primary-blue); }
-.workflow-stage.stage-current .stage-name,
 .workflow-stage.stage-current .stage-amount { color: var(--primary-blue); }
 
 .workflow-stage.stage-pending { border-color: var(--stage-pending); }
-.workflow-stage.stage-pending .stage-name,
 .workflow-stage.stage-pending .stage-amount { color: var(--stage-pending); }
 
 .workflow-stage.stage-ready { border-color: var(--stage-ready); }
-.workflow-stage.stage-ready .stage-name,
 .workflow-stage.stage-ready .stage-amount { color: var(--stage-ready); }
 
 .workflow-stage.stage-invoiced { border-color: var(--stage-invoiced); }
-.workflow-stage.stage-invoiced .stage-name,
 .workflow-stage.stage-invoiced .stage-amount { color: var(--stage-invoiced); }
 
 .workflow-stage.stage-scheduled { border-color: #0284c7; }
-.workflow-stage.stage-scheduled .stage-name,
 .workflow-stage.stage-scheduled .stage-amount { color: #0284c7; }
 
 .workflow-stage.stage-history { border-color: var(--text-light); }
-.workflow-stage.stage-history .stage-name,
 .workflow-stage.stage-history .stage-amount { color: var(--text-light); }
 
 .workflow-stage.active {
@@ -387,30 +385,33 @@ body.invoices-page {
    CATEGORY CARDS (View 2)
    ===================================================== */
 .group-label {
-  font-size: 0.85rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
   margin: 0 0 0.5rem;
 }
 
 .category-cards {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 0.75rem;
-  flex-wrap: wrap;
   margin-bottom: 1rem;
 }
 
 .category-card {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 0.35rem;
-  min-width: 130px;
-  padding: 0.9rem 1rem;
+  align-items: flex-start;
+  gap: 0.15rem;
+  padding: 0.85rem 1rem;
   background: var(--bg-primary);
   border: 1.5px solid var(--border-color);
   border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
   font-family: inherit;
+  text-align: left;
   cursor: pointer;
   transition: all var(--transition);
 }
@@ -423,18 +424,18 @@ body.invoices-page {
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
 }
 
-.category-name { font-size: 0.85rem; font-weight: 700; color: var(--text-primary); text-align: center; }
+/* Same standardized KPI layout as .workflow-stage / .summary-card. */
+.category-name { font-size: 0.72rem; font-weight: 700; color: var(--text-primary); margin: 0 0 0.25rem; text-transform: uppercase; letter-spacing: 0.02em; }
+.category-amount { font-size: 1.25rem; font-weight: 800; color: var(--primary-blue); letter-spacing: -0.01em; margin: 0 0 0.15rem; }
 
 .category-count {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 600;
-  padding: 0.15rem 0.6rem;
+  padding: 0.1rem 0.5rem;
   border-radius: 9999px;
   background: rgba(99, 102, 241, 0.12);
   color: var(--primary-blue);
 }
-
-.category-amount { font-size: 0.9rem; font-weight: 700; color: var(--primary-blue); }
 
 .category-card[data-cat="Repairs & Damages"] .category-amount { color: var(--danger-red); }
 .category-card[data-cat="Repairs & Damages"] .category-count { background: rgba(220, 38, 38, 0.12); color: var(--danger-red); }
@@ -452,15 +453,15 @@ body.invoices-page {
    ===================================================== */
 .summary-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
   margin-bottom: 1rem;
 }
 
 .summary-card {
-  padding: 1.25rem 1.5rem;
+  padding: 0.85rem 1rem;
   background: var(--bg-primary);
-  border: 1px solid var(--border-color);
+  border: 1.5px solid var(--border-color);
   border-radius: var(--radius);
   box-shadow: var(--shadow-sm);
   transition: all var(--transition);
@@ -468,23 +469,26 @@ body.invoices-page {
 
 .summary-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
 
+/* Same standardized KPI layout as .workflow-stage / .category-card. */
 .summary-label {
-  font-size: 0.8rem;
+  font-size: 0.72rem;
   font-weight: 700;
   color: var(--text-primary);
-  margin: 0 0 0.35rem;
+  margin: 0 0 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .summary-value {
-  font-size: 1.6rem;
+  font-size: 1.25rem;
   font-weight: 800;
   color: var(--primary-blue);
-  margin: 0 0 0.25rem;
+  margin: 0 0 0.15rem;
   letter-spacing: -0.01em;
 }
 
 .summary-sub {
-  font-size: 0.78rem;
+  font-size: 0.7rem;
   color: var(--text-light);
   margin: 0;
 }

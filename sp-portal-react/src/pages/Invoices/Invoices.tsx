@@ -85,6 +85,24 @@ type ViewName = 'workflow' | 'deductions' | 'schedule' | 'history';
 const gbp = (v: number) =>
   '£' + v.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+const recordsLabel = (n: number) => `${n} record${n === 1 ? '' : 's'}`;
+
+/** Most recent `period` ("Mon YYYY") among records — the "current month" default for
+ *  the workflow/schedule month selectors, since this is mock data with no real clock tie-in. */
+function latestPeriodOf(records: { period: string }[]): string {
+  if (records.length === 0) return '';
+  return records.reduce((latest, r) => (new Date(r.period).getTime() > new Date(latest).getTime() ? r.period : latest), records[0].period);
+}
+
+/** Most recent YYYY-MM among records' `payDate` — same "current month" default, for History. */
+function latestMonthOf(records: { payDate: string }[]): string {
+  if (records.length === 0) return '';
+  return records.reduce((latest, r) => {
+    const m = r.payDate.slice(0, 7);
+    return m > latest ? m : latest;
+  }, '');
+}
+
 const fmtDate = (iso: string) => {
   const [y, m, d] = iso.split('-');
   return `${d}/${m}/${y}`;
@@ -451,10 +469,20 @@ export function Invoices() {
   /* ---------- VIEW 1 — Processing Workflow ---------- */
   const [workflowRecords, setWorkflowRecords] = useState<WorkflowRecord[]>(INITIAL_WORKFLOW_RECORDS);
   const [workflowFilter, setWorkflowFilter] = useState<WorkflowStatus | null>(null);
+  const [workflowPeriod, setWorkflowPeriod] = useState(() => latestPeriodOf(INITIAL_WORKFLOW_RECORDS));
   const [workflowSelected, setWorkflowSelected] = useState<Set<string>>(new Set());
   const [batchAction, setBatchAction] = useState('');
 
-  const workflowVisible = workflowFilter ? workflowRecords.filter((r) => r.status === workflowFilter) : workflowRecords;
+  const workflowPeriods = useMemo(
+    () =>
+      Array.from(new Set(workflowRecords.map((r) => r.period))).sort(
+        (a, b) => new Date(b).getTime() - new Date(a).getTime(),
+      ),
+    [workflowRecords],
+  );
+
+  const workflowByPeriod = workflowPeriod ? workflowRecords.filter((r) => r.period === workflowPeriod) : workflowRecords;
+  const workflowVisible = workflowFilter ? workflowByPeriod.filter((r) => r.status === workflowFilter) : workflowByPeriod;
   const workflowVisibleTotal = workflowVisible.reduce((s, r) => s + r.amount, 0);
   const workflowSelectAllChecked = workflowVisible.length > 0 && workflowVisible.every((r) => workflowSelected.has(r.id));
 
@@ -731,20 +759,30 @@ export function Invoices() {
   /* ---------- VIEW 3 — Schedule for Payment ---------- */
   const [scheduleRecords, setScheduleRecords] = useState<ScheduleRecord[]>(INITIAL_SCHEDULE_RECORDS);
   const [scheduleSelected, setScheduleSelected] = useState<Set<string>>(new Set());
+  const [schedulePeriod, setSchedulePeriod] = useState(() => latestPeriodOf(INITIAL_SCHEDULE_RECORDS));
 
-  const schedulePending = scheduleRecords.filter((r) => r.status === 'Scheduled');
+  const schedulePeriods = useMemo(
+    () =>
+      Array.from(new Set(scheduleRecords.map((r) => r.period))).sort(
+        (a, b) => new Date(b).getTime() - new Date(a).getTime(),
+      ),
+    [scheduleRecords],
+  );
+
+  const scheduleByPeriod = schedulePeriod ? scheduleRecords.filter((r) => r.period === schedulePeriod) : scheduleRecords;
+  const schedulePending = scheduleByPeriod.filter((r) => r.status === 'Scheduled');
   const schTotalAmount = schedulePending.reduce((s, r) => s + r.amount, 0);
   const schTotalDeductions = schedulePending.reduce((s, r) => s + r.deduction, 0);
   const schNextRun = schedulePending.length ? '17 April 2025' : '—';
-  const schTotAmount = scheduleRecords.reduce((s, r) => s + r.amount, 0);
-  const schTotDeductions = scheduleRecords.reduce((s, r) => s + r.deduction, 0);
-  const schTotPayment = scheduleRecords.reduce((s, r) => s + (r.amount - r.deduction), 0);
-  const scheduleSelectAllChecked = scheduleRecords.length > 0 && scheduleRecords.every((r) => scheduleSelected.has(r.id));
+  const schTotAmount = scheduleByPeriod.reduce((s, r) => s + r.amount, 0);
+  const schTotDeductions = scheduleByPeriod.reduce((s, r) => s + r.deduction, 0);
+  const schTotPayment = scheduleByPeriod.reduce((s, r) => s + (r.amount - r.deduction), 0);
+  const scheduleSelectAllChecked = scheduleByPeriod.length > 0 && scheduleByPeriod.every((r) => scheduleSelected.has(r.id));
 
   function handleScheduleSelectAll(checked: boolean) {
     setScheduleSelected((prev) => {
       const next = new Set(prev);
-      scheduleRecords.forEach((r) => (checked ? next.add(r.id) : next.delete(r.id)));
+      scheduleByPeriod.forEach((r) => (checked ? next.add(r.id) : next.delete(r.id)));
       return next;
     });
   }
@@ -819,9 +857,20 @@ export function Invoices() {
   const [histFrom, setHistFrom] = useState('2024-10-08');
   const [histTo, setHistTo] = useState('2025-04-08');
   const [histSub, setHistSub] = useState('');
+  const [histMonth, setHistMonth] = useState(() => latestMonthOf(historyRecords));
+
+  const historyMonths = useMemo(
+    () =>
+      Array.from(new Set(historyRecords.map((r) => r.payDate.slice(0, 7)))).sort((a, b) => b.localeCompare(a)),
+    [],
+  );
 
   const historyFiltered = historyRecords.filter(
-    (r) => (!histFrom || r.payDate >= histFrom) && (!histTo || r.payDate <= histTo) && (!histSub || r.sub === histSub),
+    (r) =>
+      (!histFrom || r.payDate >= histFrom) &&
+      (!histTo || r.payDate <= histTo) &&
+      (!histSub || r.sub === histSub) &&
+      (!histMonth || r.payDate.slice(0, 7) === histMonth),
   );
   const historyTotal = historyFiltered.reduce((s, r) => s + r.amount, 0);
 
@@ -829,6 +878,11 @@ export function Invoices() {
     setHistFrom(histFromInput);
     setHistTo(histToInput);
     setHistSub(histSubInput);
+  }
+
+  function formatMonthOption(yearMonth: string) {
+    const [y, m] = yearMonth.split('-');
+    return new Date(Number(y), Number(m) - 1, 1).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
   }
 
   return (
@@ -874,9 +928,30 @@ export function Invoices() {
 
       {/* ================= VIEW 1 — INVOICE PROCESSING WORKFLOW ================= */}
       <section className={`view-panel${activeView === 'workflow' ? ' active' : ''}`} id="view-workflow">
+        <div className="filters-bar">
+          <div className="filter-inline">
+            <label className="filter-label" htmlFor="workflowMonth">
+              Month:
+            </label>
+            <select
+              className="form-select"
+              id="workflowMonth"
+              value={workflowPeriod}
+              onChange={(e) => setWorkflowPeriod(e.target.value)}
+            >
+              <option value="">All Months</option>
+              {workflowPeriods.map((p) => (
+                <option key={p} value={p}>
+                  {p}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
         <div className="workflow-stages" id="workflowStages">
           {WORKFLOW_STATUSES.map((stage) => {
-            const recs = workflowRecords.filter((r) => r.status === stage);
+            const recs = workflowByPeriod.filter((r) => r.status === stage);
             const stageClass =
               stage === 'Current Period'
                 ? 'stage-current'
@@ -896,8 +971,8 @@ export function Invoices() {
                 onClick={() => handleStageClick(stage)}
               >
                 <span className="stage-name">{stage}</span>
-                <span className="stage-count">{recs.length} records</span>
                 <span className="stage-amount">{gbp(recs.reduce((s, r) => s + r.amount, 0))}</span>
+                <span className="stage-count">{recordsLabel(recs.length)}</span>
               </button>
             );
           })}
@@ -988,7 +1063,7 @@ export function Invoices() {
             </table>
           </div>
           <div className="table-footer">
-            <span id="workflowCount">Total: {workflowVisible.length} records</span>
+            <span id="workflowCount">Total: {recordsLabel(workflowVisible.length)}</span>
           </div>
         </div>
       </section>
@@ -1049,8 +1124,8 @@ export function Invoices() {
             }}
           >
             <span className="category-name">All Categories</span>
-            <span className="category-count">{dedBase.length} records</span>
             <span className="category-amount">{gbp(dedAllTotal)}</span>
+            <span className="category-count">{recordsLabel(dedBase.length)}</span>
           </button>
           {dedCatData.map((c) => (
             <button
@@ -1063,8 +1138,8 @@ export function Invoices() {
               }}
             >
               <span className="category-name">{c.cat}</span>
-              <span className="category-count">{c.count} records</span>
               <span className="category-amount">{gbp(c.total)}</span>
+              <span className="category-count">{recordsLabel(c.count)}</span>
             </button>
           ))}
         </div>
@@ -1164,6 +1239,27 @@ export function Invoices() {
 
       {/* ================= VIEW 3 — SCHEDULE FOR PAYMENT ================= */}
       <section className={`view-panel${activeView === 'schedule' ? ' active' : ''}`} id="view-schedule">
+        <div className="filters-bar">
+          <div className="filter-inline">
+            <label className="filter-label" htmlFor="scheduleMonth">
+              Month:
+            </label>
+            <select
+              className="form-select"
+              id="scheduleMonth"
+              value={schedulePeriod}
+              onChange={(e) => setSchedulePeriod(e.target.value)}
+            >
+              <option value="">All Months</option>
+              {schedulePeriods.map((p) => (
+                <option key={p} value={p}>
+                  {p}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
         <div className="summary-cards">
           <div className="summary-card">
             <p className="summary-label">Scheduled Payments</p>
@@ -1230,12 +1326,12 @@ export function Invoices() {
                 </tr>
               </thead>
               <tbody id="scheduleBody">
-                {scheduleRecords.length === 0 ? (
+                {scheduleByPeriod.length === 0 ? (
                   <tr className="empty-row">
                     <td colSpan={10}>No payments scheduled.</td>
                   </tr>
                 ) : (
-                  scheduleRecords.map((r) => {
+                  scheduleByPeriod.map((r) => {
                     const total = r.amount - r.deduction;
                     return (
                       <tr key={r.id} className={scheduleSelected.has(r.id) ? 'row-selected' : ''}>
@@ -1302,7 +1398,7 @@ export function Invoices() {
             </table>
           </div>
           <div className="table-footer">
-            <span id="scheduleCount">Total: {scheduleRecords.length} records</span>
+            <span id="scheduleCount">Total: {recordsLabel(scheduleByPeriod.length)}</span>
           </div>
         </div>
       </section>
@@ -1310,6 +1406,19 @@ export function Invoices() {
       {/* ================= VIEW 4 — INVOICES HISTORY ================= */}
       <section className={`view-panel${activeView === 'history' ? ' active' : ''}`} id="view-history">
         <div className="filters-bar">
+          <div className="filter-inline">
+            <label className="filter-label" htmlFor="histMonth">
+              Month:
+            </label>
+            <select className="form-select" id="histMonth" value={histMonth} onChange={(e) => setHistMonth(e.target.value)}>
+              <option value="">All Months</option>
+              {historyMonths.map((m) => (
+                <option key={m} value={m}>
+                  {formatMonthOption(m)}
+                </option>
+              ))}
+            </select>
+          </div>
           <div className="filter-inline">
             <label className="filter-label" htmlFor="histFrom">
               Period:
@@ -1340,6 +1449,19 @@ export function Invoices() {
               <i className="bi bi-search" />
               Search
             </button>
+          </div>
+        </div>
+
+        <div className="summary-cards">
+          <div className="summary-card">
+            <p className="summary-label">Invoices</p>
+            <p className="summary-value">{historyFiltered.length}</p>
+            <p className="summary-sub">{recordsLabel(historyFiltered.length)} for the selected filters</p>
+          </div>
+          <div className="summary-card">
+            <p className="summary-label">Total Amount</p>
+            <p className="summary-value">{gbp(historyTotal)}</p>
+            <p className="summary-sub">Across {recordsLabel(historyFiltered.length)}</p>
           </div>
         </div>
 
