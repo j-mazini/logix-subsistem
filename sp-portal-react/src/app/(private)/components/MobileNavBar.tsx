@@ -1,195 +1,103 @@
-import {
-  useEffect,
-  useRef,
-  useState,
-  useCallback,
-} from "react";
+import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import {
-  motion,
-  useMotionValue,
-  useMotionTemplate,
-  useReducedMotion,
-  useSpring,
-} from "framer-motion";
 import { useAuth } from "../mockAuth";
-import { DRIVER_NAV_PAGES } from "./driverNavPages";
-import { ACCENT_TEXT, ACCENT_DOT } from "./accentColors";
+import { useModalBehavior } from "../../../hooks/useModalBehavior";
+import { DRIVER_NAV_PAGES, type DriverNavPage } from "./driverNavPages";
+import { ACCENT_TEXT } from "./accentColors";
 
-type Ripple = { id: string; x: number };
+/**
+ * Flat bottom tab bar — 4 primary tabs (the daily-use driver screens) plus a
+ * "More" tab opening a sheet with the remaining 7. All 11 pages don't fit
+ * one screen width with visible labels; a horizontal-scroll bar was the
+ * first cut, this is the app-store-style "primary tabs + More" alternative.
+ *
+ * Uses explicit slate/white colors rather than the shadcn-style
+ * background/foreground/muted-foreground/border/ring tokens the old bar
+ * used — those aren't defined in tailwind.config.cjs's theme (empty
+ * `extend`), so utilities like `bg-background` and `text-muted-foreground`
+ * silently compile to nothing (verified against the built CSS).
+ */
+const PRIMARY_HREFS = ["/my-deliveries", "/my-schedule", "/subcontractor", "/mobile-invoice"];
 
 export function MobileNavBar() {
   const location = useLocation();
   const pathname = location.pathname;
   const navigate = useNavigate();
-  const reduceMotion = useReducedMotion();
-  const navRef = useRef<HTMLElement | null>(null);
-  const [ripples, setRipples] = useState<Ripple[]>([]);
-
-  // Pointer-follow glow (motion values => no rerender on move)
-  const pointerX = useMotionValue(0);
-  const pointerY = useMotionValue(0);
-  const glowX = useMotionValue(0);
-  const glowY = useMotionValue(0);
-  const glowOpacity = useMotionValue(0);
-  const pointerXSpring = useSpring(pointerX, { stiffness: 420, damping: 42, mass: 0.55 });
-  const pointerYSpring = useSpring(pointerY, { stiffness: 420, damping: 42, mass: 0.55 });
-  const glowXSpring = useSpring(glowX, { stiffness: 380, damping: 38, mass: 0.6 });
-  const glowYSpring = useSpring(glowY, { stiffness: 380, damping: 38, mass: 0.6 });
-  const glowOpacitySpring = useSpring(glowOpacity, {
-    stiffness: 260,
-    damping: 30,
-    mass: 0.5,
-  });
-
   const { user } = useAuth();
+  const [moreOpen, setMoreOpen] = useState(false);
+
+  useModalBehavior(() => setMoreOpen(false), moreOpen);
 
   const pages = DRIVER_NAV_PAGES.filter((page) => page.allowedUserTypes.includes(user.userTypeId));
+  const primaryPages = PRIMARY_HREFS.map((href) => pages.find((p) => p.href === href)).filter((p): p is DriverNavPage => p !== undefined);
+  const morePages = pages.filter((p) => !PRIMARY_HREFS.includes(p.href));
 
-  const isActive = (href: string) => {
-    return pathname === href || pathname.startsWith(href + "/");
-  };
+  const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
+  const isMoreActive = morePages.some((p) => isActive(p.href));
 
-  // Route transitions in this SPA are instant client renders (no server
-  // round-trip), so unlike the Next.js source there is no navigation-pending
-  // skeleton to trigger here — just navigate.
   const handleClick = (href: string) => {
-    if (pathname === href || pathname.startsWith(href + "/")) return;
+    setMoreOpen(false);
+    if (isActive(href)) return;
     navigate(href);
   };
 
-  const spawnRipple = useCallback((x: number) => {
-    const id =
-      typeof crypto !== "undefined" && "randomUUID" in crypto
-        ? crypto.randomUUID()
-        : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-    const ripple: Ripple = { id, x };
-    setRipples((prev) => [...prev, ripple].slice(-6));
-  }, []);
-
-  const handlePointerMove = useCallback(
-    (e: React.PointerEvent<HTMLElement>) => {
-      if (reduceMotion) return;
-      const el = navRef.current;
-      if (!el) return;
-
-      const rect = el.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-
-      pointerX.set(x);
-      pointerY.set(y);
-      glowX.set(x - 90);
-      glowY.set(y - 90);
-      glowOpacity.set(1);
-    },
-    [glowOpacity, glowX, glowY, pointerX, pointerY, reduceMotion]
-  );
-
-  const handlePointerLeave = useCallback(() => {
-    if (reduceMotion) return;
-    glowOpacity.set(0);
-  }, [glowOpacity, reduceMotion]);
-
-  const liquidSpecular = useMotionTemplate`radial-gradient(180px circle at ${pointerXSpring}px ${pointerYSpring}px, rgba(255,255,255,0.34), rgba(255,255,255,0.12) 26%, rgba(255,255,255,0) 62%)`;
-  const liquidChroma = useMotionTemplate`radial-gradient(260px circle at ${pointerXSpring}px ${pointerYSpring}px, rgba(59,130,246,0.18), rgba(236,72,153,0.12) 35%, rgba(14,165,233,0.08) 55%, rgba(0,0,0,0) 72%)`;
-
-  // Driver mock persona: bar is always shown (mirrors the source's
-  // `showMobileNav = user.userTypeId === DRIVER` branch — Admin/Supervisor
-  // desktop-vs-mobile screen gating doesn't apply since this subsystem has
-  // no multi-role login).
   if (pages.length === 0) return null;
 
   return (
-    <motion.nav
-      aria-label="Navigation"
-      initial={reduceMotion ? false : { y: 18, opacity: 0 }}
-      animate={reduceMotion ? undefined : { y: 0, opacity: 1 }}
-      transition={
-        reduceMotion
-          ? { duration: 0 }
-          : { duration: 0.45, ease: [0.22, 1, 0.36, 1] }
-      }
-      className="pages-nav fixed inset-x-0 bottom-0 z-50 md:hidden pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)]"
-    >
-      <div className="mx-auto w-full max-w-[560px] px-3">
-        <div className="rounded-2xl bg-gradient-to-br from-white/55 via-primary/25 to-white/10 p-[1px] shadow-[0_18px_50px_rgba(0,0,0,0.14)]">
-          <div
-            ref={(node) => {
-              navRef.current = node;
-            }}
-            onPointerMove={handlePointerMove}
-            onPointerLeave={handlePointerLeave}
-            onPointerDown={(e) => {
-              const el = navRef.current;
-              if (!el) return;
-              const rect = el.getBoundingClientRect();
-              spawnRipple(e.clientX - rect.left);
-            }}
-            className="relative overflow-hidden rounded-[1.15rem] bg-background/70 backdrop-blur-xl supports-[backdrop-filter]:bg-background/55 ring-1 ring-white/10"
-          >
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent opacity-60" />
-
-            {!reduceMotion && (
-              <motion.div
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-0"
-                style={{
-                  backgroundImage: liquidSpecular,
-                  opacity: glowOpacitySpring,
-                  mixBlendMode: "overlay",
-                }}
-              />
-            )}
-
-            {!reduceMotion && (
-              <motion.div
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-0"
-                style={{
-                  backgroundImage: liquidChroma,
-                  opacity: glowOpacitySpring,
-                  mixBlendMode: "color-dodge",
-                }}
-              />
-            )}
-
-            {!reduceMotion && (
-              <motion.div
-                aria-hidden="true"
-                className="pointer-events-none absolute left-0 top-0 h-[180px] w-[180px] rounded-full bg-primary/20 blur-2xl"
-                style={{
-                  x: glowXSpring,
-                  y: glowYSpring,
-                  opacity: glowOpacitySpring,
-                }}
-              />
-            )}
-
-            <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-              {ripples.map((r) => (
-                <motion.span
-                  key={r.id}
-                  className="absolute top-1/2 h-2 w-2 -translate-y-1/2 rounded-full bg-primary/25"
-                  style={{ left: r.x }}
-                  initial={{ opacity: 0.25, scale: 0 }}
-                  animate={{ opacity: 0, scale: 40 }}
-                  transition={
-                    reduceMotion
-                      ? { duration: 0 }
-                      : { duration: 0.6, ease: [0.2, 0.8, 0.2, 1] }
-                  }
-                  onAnimationComplete={() => {
-                    setRipples((prev) => prev.filter((x) => x.id !== r.id));
-                  }}
+    <>
+      <nav
+        aria-label="Navigation"
+        className="fixed inset-x-0 bottom-0 z-50 md:hidden border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom,0px)]"
+      >
+        <div className="flex w-full">
+          {primaryPages.map((page) => {
+            const active = isActive(page.href);
+            return (
+              <button
+                key={page.href}
+                type="button"
+                onClick={() => handleClick(page.href)}
+                aria-label={page.label}
+                aria-current={active ? "page" : undefined}
+                className="flex flex-1 flex-col items-center justify-center gap-1 py-2.5 px-1 outline-none border-0 bg-transparent cursor-pointer focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+              >
+                <i
+                  className={["bi", page.icon, "text-[20px] leading-none", active ? ACCENT_TEXT[page.accent] : "text-slate-400"].join(" ")}
+                  aria-hidden="true"
                 />
-              ))}
+                <span className={["text-[10px] font-medium leading-none", active ? ACCENT_TEXT[page.accent] : "text-slate-400"].join(" ")}>
+                  {page.label}
+                </span>
+              </button>
+            );
+          })}
+          <button
+            type="button"
+            onClick={() => setMoreOpen((v) => !v)}
+            aria-label="More"
+            aria-expanded={moreOpen}
+            aria-current={isMoreActive ? "page" : undefined}
+            className="flex flex-1 flex-col items-center justify-center gap-1 py-2.5 px-1 outline-none border-0 bg-transparent cursor-pointer focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+          >
+            <i className={["bi", moreOpen ? "bi-x-lg" : "bi-grid-3x3-gap-fill", "text-[20px] leading-none", isMoreActive || moreOpen ? "text-slate-900" : "text-slate-400"].join(" ")} aria-hidden="true" />
+            <span className={["text-[10px] font-medium leading-none", isMoreActive || moreOpen ? "text-slate-900" : "text-slate-400"].join(" ")}>More</span>
+          </button>
+        </div>
+      </nav>
+
+      {moreOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div className="absolute inset-0 bg-slate-900/40" onClick={() => setMoreOpen(false)} />
+          <div className="absolute inset-x-0 bottom-0 rounded-t-2xl bg-white pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] shadow-[0_-8px_30px_rgba(0,0,0,0.15)]">
+            <div className="flex items-center justify-between px-4 pt-4 pb-2">
+              <span className="text-sm font-semibold text-slate-900">More</span>
+              <button type="button" onClick={() => setMoreOpen(false)} aria-label="Close" className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 outline-none border-0 bg-transparent cursor-pointer hover:bg-slate-100">
+                <i className="bi bi-x-lg text-[16px]" aria-hidden="true" />
+              </button>
             </div>
-
-            <div className="flex w-full items-stretch justify-between gap-1 p-1.5">
-              {pages.map((page, index) => {
+            <div className="grid grid-cols-4 gap-2 px-3 pb-2">
+              {morePages.map((page) => {
                 const active = isActive(page.href);
-
                 return (
                   <button
                     key={page.href}
@@ -197,115 +105,19 @@ export function MobileNavBar() {
                     onClick={() => handleClick(page.href)}
                     aria-label={page.label}
                     aria-current={active ? "page" : undefined}
-                    className={[
-                      "relative flex h-12 min-w-0 flex-1 select-none items-center justify-center",
-                      "rounded-xl px-2",
-                      "outline-none border-0 bg-transparent cursor-pointer",
-                      "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-                      active ? "text-foreground" : "text-muted-foreground",
-                    ].join(" ")}
+                    className="flex flex-col items-center justify-center gap-1.5 rounded-xl py-3 px-1 outline-none border-0 bg-transparent cursor-pointer hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-slate-400"
                   >
-                    {active && (
-                      <motion.span
-                        layoutId="mobile-nav-active"
-                        className={[
-                          "absolute inset-0 rounded-xl",
-                          "bg-gradient-to-b from-white/20 via-primary/10 to-primary/5",
-                          "ring-1 ring-white/25",
-                          "shadow-[0_10px_26px_rgba(0,0,0,0.10),inset_0_1px_0_rgba(255,255,255,0.30),inset_0_-1px_0_rgba(0,0,0,0.06)]",
-                          "backdrop-blur-[2px]",
-                        ].join(" ")}
-                        transition={
-                          reduceMotion
-                            ? { duration: 0 }
-                            : { type: "spring", stiffness: 520, damping: 36, mass: 0.55 }
-                        }
-                      >
-                        {!reduceMotion && (
-                          <motion.span
-                            aria-hidden="true"
-                            className="pointer-events-none absolute inset-0 rounded-xl"
-                            style={{
-                              background:
-                                "linear-gradient(110deg, transparent 0%, rgba(255,255,255,0.30) 22%, rgba(255,255,255,0.06) 45%, transparent 70%)",
-                              maskImage:
-                                "radial-gradient(120px 60px at 50% 35%, black 0%, transparent 70%)",
-                              WebkitMaskImage:
-                                "radial-gradient(120px 60px at 50% 35%, black 0%, transparent 70%)",
-                            }}
-                            initial={{ opacity: 0, x: -18 }}
-                            animate={{ opacity: 1, x: 18 }}
-                            transition={{
-                              duration: 1.2,
-                              ease: [0.22, 1, 0.36, 1],
-                              repeat: Infinity,
-                              repeatType: "mirror",
-                            }}
-                          />
-                        )}
-                      </motion.span>
-                    )}
-
-                    {active && (
-                      <motion.span
-                        layoutId="mobile-nav-dot"
-                        className={[
-                          "absolute bottom-1 left-1/2 z-20",
-                          "h-1.5 w-1.5 -translate-x-1/2 rounded-full",
-                          ACCENT_DOT[page.accent],
-                          "shadow-[0_0_0_4px_rgba(255,255,255,0.12),0_6px_16px_rgba(59,130,246,0.35)]",
-                        ].join(" ")}
-                        transition={
-                          reduceMotion
-                            ? { duration: 0 }
-                            : { type: "spring", stiffness: 520, damping: 34, mass: 0.6 }
-                        }
-                      />
-                    )}
-
-                    <motion.span
-                      className="relative z-10 flex flex-col items-center justify-center"
-                      initial={reduceMotion ? false : { opacity: 0, y: 6 }}
-                      animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
-                      transition={
-                        reduceMotion
-                          ? { duration: 0 }
-                          : { duration: 0.35, ease: [0.22, 1, 0.36, 1], delay: index * 0.03 }
-                      }
-                      whileTap={reduceMotion ? undefined : { scale: 0.94 }}
-                    >
-                      <motion.i
-                        className={[
-                          "bi",
-                          page.icon,
-                          "leading-none",
-                          active ? ACCENT_TEXT[page.accent] : "text-muted-foreground",
-                          "text-[22px]",
-                        ].join(" ")}
-                        aria-hidden="true"
-                        animate={
-                          reduceMotion
-                            ? undefined
-                            : {
-                                y: active ? -1 : 0,
-                                scale: active ? 1.1 : 1,
-                              }
-                        }
-                        transition={
-                          reduceMotion
-                            ? { duration: 0 }
-                            : { type: "spring", stiffness: 520, damping: 34, mass: 0.6 }
-                        }
-                      />
-                      <span className="sr-only">{page.label}</span>
-                    </motion.span>
+                    <i className={["bi", page.icon, "text-[22px] leading-none", active ? ACCENT_TEXT[page.accent] : "text-slate-500"].join(" ")} aria-hidden="true" />
+                    <span className={["text-[11px] font-medium leading-none text-center", active ? ACCENT_TEXT[page.accent] : "text-slate-600"].join(" ")}>
+                      {page.label}
+                    </span>
                   </button>
                 );
               })}
             </div>
           </div>
         </div>
-      </div>
-    </motion.nav>
+      )}
+    </>
   );
 }
