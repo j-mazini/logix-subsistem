@@ -71,6 +71,7 @@ interface VendorRequest {
   reason: string;
   notes: string;
   scheduleTerms: string;
+  referenceNumber: string | null;
   createdAt: string;
   updatedAt: string | null;
 }
@@ -178,6 +179,7 @@ function generateMockRequests(vendors: Vendor[]): VendorRequest[] {
       reason: reasonsByType[requestType][Math.floor(rng() * reasonsByType[requestType].length)],
       notes: notesPool[Math.floor(rng() * notesPool.length)],
       scheduleTerms: '',
+      referenceNumber: null,
       createdAt: createdAt.toISOString(),
       updatedAt,
     });
@@ -224,13 +226,50 @@ function renderCellValue(value: string | null | undefined) {
   return String(value);
 }
 
+// Reference number for PrePayment deductions, generated on approval:
+// PRP-INITIALS-DDMMYY-SEQ (verbatim port of the Next.js source's
+// generatePrePaymentReferenceNumber — same format used by the Deductions
+// and Invoices pages' mock "PRP-..." entries elsewhere in this app).
+function generatePrePaymentReferenceNumber(vendorName: string, vendorRequestId: number): string {
+  const prefix = 'PRP';
+
+  let cleanName = vendorName.trim();
+  if (cleanName.startsWith('#')) {
+    cleanName = cleanName.substring(1).trim();
+  }
+  if (cleanName.toLowerCase().startsWith('vendor')) {
+    cleanName = cleanName.substring(6).trim();
+  }
+
+  const nameParts = cleanName.split(/\s+/).filter((part) => part.length > 0 && /[a-zA-Z]/.test(part));
+  let initials = '';
+  if (nameParts.length > 0) {
+    const firstName = nameParts[0];
+    const lastNames = nameParts.length > 1 ? nameParts.slice(1).join('') : '';
+    initials = (firstName.charAt(0).toUpperCase() + lastNames.toUpperCase()).replace(/[^A-Z]/g, '');
+  }
+
+  if (!initials || initials.length === 0) {
+    initials = `VND${vendorRequestId}`;
+  }
+
+  const today = new Date();
+  const day = String(today.getDate()).padStart(2, '0');
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const year = String(today.getFullYear()).slice(-2);
+  const dateStr = `${day}${month}${year}`;
+  const seq = String(vendorRequestId).padStart(3, '0');
+  return `${prefix}-${initials}-${dateStr}-${seq}`;
+}
+
 export function RequestsAdmin() {
   const master = useMemo(() => buildMasterData(), []);
-  const { vendorTypes, vendors } = master;
+  const { vendorTypes, servicePartners, vendors } = master;
 
   const [allRequests, setAllRequests] = useState<VendorRequest[]>(() => generateMockRequests(vendors));
   const [activeTab, setActiveTab] = useState<'requests' | 'history'>('requests');
   const [filterRequestType, setFilterRequestType] = useState<'all' | RequestType>('all');
+  const [filterServicePartnerId, setFilterServicePartnerId] = useState('');
   const [filterRecordType, setFilterRecordType] = useState('all');
   const [filterVendorType, setFilterVendorType] = useState('all');
   const [selectedRequest, setSelectedRequest] = useState<VendorRequest | null>(null);
@@ -258,6 +297,19 @@ export function RequestsAdmin() {
     const t = vendorTypes.find((vt) => vt.vendorTypeId === v.vendorTypeId);
     return t ? t.nameType : '';
   }
+  function getVendorServicePartnerId(userId: number): number | null {
+    const v = vendors.find((x) => x.userId === userId);
+    return v ? v.servicePartnerId : null;
+  }
+
+  // Service Partner scoping, ported from the Next.js source's
+  // `selectedServicePartnerId` select: there it's passed as a param to the
+  // requests fetch, so it narrows both tabs at once (not just Requests).
+  const bySelectedServicePartner = (rows: VendorRequest[]) => {
+    if (filterServicePartnerId === '') return rows;
+    const spId = Number(filterServicePartnerId);
+    return rows.filter((r) => getVendorServicePartnerId(r.userId) === spId);
+  };
 
   const pendingRequests = useMemo(() => {
     const now = new Date();
@@ -271,14 +323,17 @@ export function RequestsAdmin() {
       return created.getMonth() === thisMonth && created.getFullYear() === thisYear;
     });
 
+    rows = bySelectedServicePartner(rows);
     if (filterRequestType !== 'all') {
       rows = rows.filter((r) => r.requestType === filterRequestType);
     }
     return rows;
-  }, [allRequests, filterRequestType]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allRequests, filterRequestType, filterServicePartnerId, vendors]);
 
   const historyRequests = useMemo(() => {
     let rows = allRequests.filter((r) => r.status.toLowerCase() !== 'pending');
+    rows = bySelectedServicePartner(rows);
     if (filterRecordType !== 'all') {
       rows = rows.filter((r) => r.requestType === filterRecordType);
     }
@@ -287,7 +342,7 @@ export function RequestsAdmin() {
     }
     return rows;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allRequests, filterRecordType, filterVendorType, vendors, vendorTypes]);
+  }, [allRequests, filterRecordType, filterVendorType, filterServicePartnerId, vendors, vendorTypes]);
 
   const pendingCount = pendingRequests.length;
 
@@ -318,10 +373,22 @@ export function RequestsAdmin() {
   function handleApprove(request: VendorRequest, scheduleTerms?: string) {
     const trimmed = typeof scheduleTerms === 'string' ? scheduleTerms.trim() : '';
     const updatedAt = new Date().toISOString();
+    // PrePayment approvals get a deduction reference number, same
+    // PRP-INITIALS-DDMMYY-SEQ format used by the Deductions/Invoices pages.
+    const referenceNumber =
+      request.requestType === 'PrePayment'
+        ? generatePrePaymentReferenceNumber(getVendorName(request.userId), request.vendorRequestId)
+        : null;
     setAllRequests((prev) =>
       prev.map((r) =>
         r.vendorRequestId === request.vendorRequestId
-          ? { ...r, status: 'approved', updatedAt, scheduleTerms: trimmed !== '' ? trimmed : r.scheduleTerms }
+          ? {
+              ...r,
+              status: 'approved',
+              updatedAt,
+              scheduleTerms: trimmed !== '' ? trimmed : r.scheduleTerms,
+              referenceNumber: referenceNumber ?? r.referenceNumber,
+            }
           : r,
       ),
     );
@@ -402,6 +469,24 @@ export function RequestsAdmin() {
               <div className="va-card-subtitle">Pending requests submitted this month.</div>
             </div>
             <div className="va-card-head-actions">
+              {servicePartners.length > 0 && (
+                <label className="ra-filter" htmlFor="filterServicePartner">
+                  <span className="ra-filter-label">Service Partner</span>
+                  <select
+                    className="form-select filter-select"
+                    id="filterServicePartner"
+                    value={filterServicePartnerId}
+                    onChange={(e) => setFilterServicePartnerId(e.target.value)}
+                  >
+                    <option value="">All Service Partners</option>
+                    {servicePartners.map((sp) => (
+                      <option key={sp.servicePartnerId} value={String(sp.servicePartnerId)}>
+                        {sp.partnerName}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
               <label className="ra-filter" htmlFor="filterRequestType">
                 <span className="ra-filter-label">Request Type</span>
                 <select
@@ -701,6 +786,12 @@ export function RequestsAdmin() {
                   <dt className="va-detail-label">Notes</dt>
                   <dd className="va-detail-value">{renderCellValue(viewingRequest.notes)}</dd>
                 </div>
+                {viewingRequest.requestType === 'PrePayment' && viewingRequest.referenceNumber && (
+                  <div className="va-detail-row">
+                    <dt className="va-detail-label">Reference Number</dt>
+                    <dd className="va-detail-value">{viewingRequest.referenceNumber}</dd>
+                  </div>
+                )}
                 {viewingRequest.requestType === 'PrePayment' && viewingRequest.scheduleTerms && (
                   <div className="va-detail-row va-detail-row--full">
                     <dt className="va-detail-label">Schedule Terms</dt>

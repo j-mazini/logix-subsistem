@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PortalLayout } from '../../layout/PortalLayout';
+import { generateAdhocWorksPDF } from './utils/pdfExport';
 import '../../styles/legacy/adhoc-invoice-management.css';
 
 /* =====================================================
@@ -140,6 +141,14 @@ const SERVICE_PARTNERS: ServicePartner[] = [
   { servicePartnerId: 2, partnerName: 'Kent Express' },
   { servicePartnerId: 3, partnerName: 'Medway Movers' },
 ];
+
+/** Resolve a row's service partner display name (mirrors the Next.js
+ *  original's `row.servicePartnerName`, which the backend joins in — here
+ *  it's looked up from the mock SERVICE_PARTNERS list instead). */
+function servicePartnerNameFor(servicePartnerId: number | null): string {
+  if (servicePartnerId == null) return '—';
+  return SERVICE_PARTNERS.find((sp) => sp.servicePartnerId === servicePartnerId)?.partnerName ?? '—';
+}
 
 const DEPOTS = ['Maidstone', 'Chatham', 'Dartford', 'Ashford'];
 
@@ -395,6 +404,7 @@ export function AdhocInvoiceManagement() {
     const sheetRows = rows.map((r) => ({
       Date: formatDateDisplay(r.date),
       Vendor: r.vendorName,
+      'Service Partner': servicePartnerNameFor(r.servicePartnerId),
       Depot: r.depot,
       Route: r.route,
       'Adhoc service': r.adhocName,
@@ -407,6 +417,7 @@ export function AdhocInvoiceManagement() {
     sheetRows.push({
       Date: '',
       Vendor: '',
+      'Service Partner': '',
       Depot: '',
       Route: '',
       'Adhoc service': '',
@@ -422,89 +433,27 @@ export function AdhocInvoiceManagement() {
     showToast(`Exported ${rows.length} row(s) to XLSX.`, 'success');
   }
 
-  function handleExportPdf() {
+  async function handleExportPdf() {
     const rows = displayRows;
     if (rows.length === 0) return;
 
-    const totalReceived = rows.reduce((s, r) => s + (r.receivedPayment || 0), 0);
-    const totalVendor = rows.reduce((s, r) => s + (r.vendorPayment || 0), 0);
-
-    const printWindow = window.open('', '_blank', 'width=1000,height=800');
-    if (!printWindow) {
-      showToast('Please allow pop-ups to export PDF.', 'error');
-      return;
-    }
-
-    const escapeHtml = (text: unknown) => {
-      const div = document.createElement('div');
-      div.textContent = text == null ? '' : String(text);
-      return div.innerHTML;
-    };
-
-    const bodyRows = rows
-      .map(
-        (r) => `
-      <tr>
-        <td>${escapeHtml(formatDateDisplay(r.date))}</td>
-        <td>${escapeHtml(r.vendorName)}</td>
-        <td>${escapeHtml(r.depot)}</td>
-        <td>${escapeHtml(r.route)}</td>
-        <td>${escapeHtml(r.adhocName)}</td>
-        <td>${escapeHtml(r.adhocCategory)}</td>
-        <td class="amount">${formatCurrency(r.receivedPayment)}</td>
-        <td class="amount">${formatCurrency(r.vendorPayment)}</td>
-      </tr>
-    `,
-      )
-      .join('');
-
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html lang="en-GB">
-      <head>
-        <meta charset="UTF-8" />
-        <title>Adhoc Works — ${formatDateShort(weekStart)} - ${formatDateShort(weekEnd)} ${weekStart.getFullYear()}</title>
-        <style>
-          body { font-family: Arial, Helvetica, sans-serif; color: #0f172a; padding: 24px; }
-          h1 { font-size: 18px; margin: 0 0 4px; }
-          p.subtitle { font-size: 12px; color: #64748b; margin: 0 0 18px; }
-          table { width: 100%; border-collapse: collapse; font-size: 11px; }
-          th, td { border: 1px solid #cbd5e1; padding: 6px 8px; text-align: left; }
-          th { background: #f1f5f9; text-transform: uppercase; font-size: 9px; letter-spacing: 0.04em; }
-          td.amount, th.amount { text-align: right; }
-          tfoot td { font-weight: 700; text-align: right; }
-          @media print { body { padding: 0; } }
-        </style>
-      </head>
-      <body>
-        <h1>Ad-hoc Invoice System — Adhoc Works Invoice Management</h1>
-        <p class="subtitle">Week ${formatDateShort(weekStart)} - ${formatDateShort(weekEnd)} ${weekStart.getFullYear()}</p>
-        <table>
-          <thead>
-            <tr>
-              <th>Date</th><th>Vendor</th><th>Depot</th><th>Route</th>
-              <th>Adhoc service</th><th>Adhoc category</th>
-              <th class="amount">Adhoc received payment</th><th class="amount">Vendor payment</th>
-            </tr>
-          </thead>
-          <tbody>${bodyRows}</tbody>
-          <tfoot>
-            <tr>
-              <td colspan="6">Totals</td>
-              <td class="amount">${formatCurrency(totalReceived)}</td>
-              <td class="amount">${formatCurrency(totalVendor)}</td>
-            </tr>
-          </tfoot>
-        </table>
-      </body>
-      </html>
-    `);
-    printWindow.document.close();
-    printWindow.focus();
-    setTimeout(() => {
-      printWindow.print();
-    }, 300);
-    showToast(`Print dialog opened for ${rows.length} row(s).`, 'info');
+    await generateAdhocWorksPDF({
+      rows: rows.map((r) => ({
+        date: r.date,
+        vendorName: r.vendorName,
+        servicePartnerName: servicePartnerNameFor(r.servicePartnerId),
+        depot: r.depot,
+        route: r.route,
+        adhocName: r.adhocName,
+        adhocCategory: r.adhocCategory,
+        receivedPayment: r.receivedPayment,
+        vendorPayment: r.vendorPayment,
+      })),
+      weekLabel: weekRangeLabel,
+      formatDateDisplay,
+      filenameSuffix: weekFilenameSuffix(),
+    });
+    showToast(`Exported ${rows.length} row(s) to PDF.`, 'success');
   }
 
   const hasSearch = searchTerm.trim() !== '';
