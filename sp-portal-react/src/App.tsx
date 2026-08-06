@@ -13,6 +13,7 @@ import { RequestsAdmin } from './pages/RequestsAdmin/RequestsAdmin';
 import { RequestsInbox } from './pages/RequestsInbox/RequestsInbox';
 import { VendorPerformance } from './pages/VendorPerformance/VendorPerformance';
 import { AdhocInvoiceManagement } from './pages/AdhocInvoiceManagement/AdhocInvoiceManagement';
+import { FinancialInvoices } from './pages/FinancialInvoices/FinancialInvoices';
 import { DeductionsDisbursementsRecharges } from './pages/DeductionsDisbursementsRecharges/DeductionsDisbursementsRecharges';
 import { Dashboard } from './pages/Dashboard/Dashboard';
 import { DailyFinancialInsights } from './pages/DailyFinancialInsights/DailyFinancialInsights';
@@ -83,6 +84,7 @@ function App() {
           <Route path="/trace-queries" element={<TraceQueries />} />
           <Route path="/vendor-performance" element={<VendorPerformance />} />
           <Route path="/adhoc-invoice-management" element={<AdhocInvoiceManagement />} />
+          <Route path="/financial-invoices" element={<FinancialInvoices />} />
           <Route path="/deductions-disbursements-recharges" element={<DeductionsDisbursementsRecharges />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/daily-financial-insights" element={<DailyFinancialInsights />} />

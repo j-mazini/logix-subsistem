@@ -1,0 +1,432 @@
+/* =====================================================
+   Financial Invoices — Logixsphere portal
+   Ported from app/(private)/financial-invoices (Tailwind + shadcn/ui in the
+   Next.js source) into plain CSS, following the same body-scoped-token
+   convention as adhoc-invoice-management.css (this SPA loads every page's
+   CSS simultaneously, so tokens are scoped to body.fi-page, not :root).
+   ===================================================== */
+
+body.fi-page {
+  --fi-primary: #4f46e5;
+  --fi-primary-hover: #4338ca;
+  --fi-border: #e2e8f0;
+  --fi-text: #0f172a;
+  --fi-text-muted: #64748b;
+  --fi-bg: #f7f8fa;
+}
+
+.fi-container {
+  background: var(--fi-bg, #f7f8fa);
+}
+
+.fi-controls-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid var(--fi-border, #e2e8f0);
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.08);
+  margin-bottom: 1.25rem;
+}
+
+.fi-controls-left,
+.fi-controls-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.fi-search-wrap {
+  position: relative;
+  min-width: 220px;
+}
+.fi-search-wrap i {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  font-size: 0.85rem;
+}
+.fi-search-wrap input {
+  padding-left: 2rem;
+  height: 2.5rem;
+}
+
+.fi-controls-bar .filter-select {
+  height: 2.5rem;
+  min-width: 170px;
+}
+
+.fi-stats-section {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+@media (max-width: 768px) {
+  .fi-stats-section {
+    grid-template-columns: 1fr;
+  }
+}
+
+.fi-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  background: #fff;
+  border: 2px solid var(--fi-border, #e2e8f0);
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.06);
+}
+.fi-stat-card--blue { border-color: #bfdbfe; background: linear-gradient(135deg, #eff6ff 0%, #fff 100%); }
+.fi-stat-card--green { border-color: #bbf7d0; background: linear-gradient(135deg, #f0fdf4 0%, #fff 100%); }
+.fi-stat-card--amber { border-color: #fde68a; background: linear-gradient(135deg, #fffbeb 0%, #fff 100%); }
+
+.fi-stat-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+.fi-stat-card--blue .fi-stat-icon { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+.fi-stat-card--green .fi-stat-icon { background: linear-gradient(135deg, #10b981, #16a34a); }
+.fi-stat-card--amber .fi-stat-icon { background: linear-gradient(135deg, #f59e0b, #ea580c); }
+
+.fi-stat-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.fi-stat-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--fi-text-muted, #64748b);
+  margin-bottom: 0.25rem;
+}
+.fi-stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--fi-text, #0f172a);
+}
+
+.fi-table-card {
+  background: #fff;
+  border: 1px solid var(--fi-border, #e2e8f0);
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.08);
+  overflow: hidden;
+}
+.fi-table-scroll {
+  overflow-x: auto;
+}
+.fi-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+.fi-table th {
+  text-align: left;
+  padding: 0.7rem 1rem;
+  background: #f8fafc;
+  color: var(--fi-text-muted, #64748b);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid var(--fi-border, #e2e8f0);
+  white-space: nowrap;
+}
+.fi-table td {
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  white-space: nowrap;
+}
+.fi-table tbody tr:hover {
+  background: #f8fafc;
+}
+.fi-table-message {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: var(--fi-text-muted, #64748b);
+}
+
+.fi-sort-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+}
+.fi-sort-btn:hover { color: var(--fi-primary, #4f46e5); }
+.fi-sort-idle { opacity: 0.4; }
+
+.fi-link-btn {
+  background: none;
+  border: none;
+  color: var(--fi-primary, #4f46e5);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.3rem 0.6rem;
+  border-radius: 0.4rem;
+}
+.fi-link-btn:hover { background: #eef2ff; }
+
+.fi-muted { color: var(--fi-text-muted, #64748b); font-size: 0.8rem; }
+
+.fi-mobile-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.fi-mobile-message {
+  text-align: center;
+  padding: 1.5rem;
+  color: var(--fi-text-muted, #64748b);
+  font-size: 0.85rem;
+}
+.fi-mobile-card {
+  background: #fff;
+  border: 1px solid var(--fi-border, #e2e8f0);
+  border-radius: 0.6rem;
+  padding: 0.75rem;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+  cursor: pointer;
+}
+.fi-mobile-card:hover { background: #f8fafc; }
+.fi-mobile-card-head h3 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--fi-text, #0f172a);
+}
+.fi-mobile-card-head p {
+  font-size: 0.7rem;
+  color: var(--fi-text-muted, #64748b);
+  margin: 0;
+}
+.fi-mobile-sp { color: var(--fi-primary, #4f46e5) !important; }
+.fi-mobile-card-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  margin-top: 0.35rem;
+  color: var(--fi-text, #0f172a);
+}
+.fi-mobile-card-row span:first-child { color: var(--fi-text-muted, #64748b); }
+
+/* ---------- Modals ---------- */
+.fi-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 1050;
+}
+.fi-modal {
+  background: #fff;
+  border-radius: 0.75rem;
+  width: 100%;
+  max-width: 640px;
+  max-height: 92vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.2);
+}
+.fi-modal--multi { max-width: 780px; }
+
+.fi-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--fi-border, #e2e8f0);
+}
+.fi-modal-header h2 { font-size: 1rem; font-weight: 700; margin: 0; color: var(--fi-text, #0f172a); }
+.fi-modal-close {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 0.35rem;
+  border-radius: 0.4rem;
+}
+.fi-modal-close:hover { background: #f1f5f9; }
+
+.fi-modal-body { padding: 1.25rem; }
+.fi-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--fi-border, #e2e8f0);
+}
+.fi-multi-count {
+  margin-right: auto;
+  font-size: 0.8rem;
+  color: var(--fi-text-muted, #64748b);
+}
+
+.fi-form-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  padding: 0.6rem 0.85rem;
+  border-radius: 0.5rem;
+  font-size: 0.82rem;
+  margin-bottom: 0.9rem;
+  grid-column: 1 / -1;
+}
+
+.fi-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+@media (max-width: 560px) {
+  .fi-form-grid { grid-template-columns: 1fr; }
+}
+
+.fi-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--fi-text, #0f172a);
+}
+.fi-field--inline { max-width: 220px; margin-bottom: 1rem; }
+.fi-field input,
+.fi-field select {
+  height: 2.5rem;
+  border: 1px solid var(--fi-border, #e2e8f0);
+  border-radius: 0.5rem;
+  padding: 0 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 400;
+}
+.fi-field input:focus,
+.fi-field select:focus {
+  outline: none;
+  border-color: var(--fi-primary, #4f46e5);
+  box-shadow: 0 0 0 3px rgb(79 70 229 / 0.15);
+}
+
+.fi-multi-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--fi-border, #e2e8f0);
+  border-radius: 0.5rem;
+}
+.fi-multi-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+.fi-multi-table th {
+  text-align: left;
+  padding: 0.5rem 0.6rem;
+  background: #f8fafc;
+  border-bottom: 1px solid var(--fi-border, #e2e8f0);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  color: var(--fi-text-muted, #64748b);
+}
+.fi-multi-table td {
+  padding: 0.4rem 0.6rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+.fi-multi-row-selected { background: #eef2ff; }
+.fi-multi-input {
+  width: 100%;
+  height: 2rem;
+  border: 1px solid var(--fi-border, #e2e8f0);
+  border-radius: 0.4rem;
+  padding: 0 0.5rem;
+  font-size: 0.8rem;
+}
+
+/* ---------- Invoice details modal ---------- */
+.fi-details-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.fi-details-company { font-size: 1rem; font-weight: 700; color: var(--fi-primary, #4f46e5); margin: 0; }
+.fi-details-sub { font-size: 0.75rem; color: var(--fi-text-muted, #64748b); margin: 0.15rem 0 0; }
+.fi-details-number {
+  background: #eef2ff;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.85rem;
+  text-align: right;
+}
+.fi-details-number-label { font-size: 0.6rem; text-transform: uppercase; font-weight: 700; color: var(--fi-primary, #4f46e5); margin: 0; }
+.fi-details-number-value { font-size: 0.95rem; font-weight: 700; color: var(--fi-primary, #4f46e5); margin: 0; }
+
+.fi-details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+@media (max-width: 560px) {
+  .fi-details-grid { grid-template-columns: 1fr; }
+}
+.fi-details-card {
+  border: 1px solid #c7d2fe;
+  background: #eef2ff;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+.fi-details-card-head {
+  background: var(--fi-primary, #4f46e5);
+  color: #fff;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.fi-details-card-body {
+  padding: 0.6rem 0.7rem;
+  font-size: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.fi-details-card-body span { color: var(--fi-text-muted, #64748b); }
+
+.fi-details-total-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--fi-primary, #4f46e5);
+  color: #fff;
+  padding: 0.9rem 1.1rem;
+  border-radius: 0.5rem;
+  font-weight: 700;
+}
+.fi-details-total-banner span:last-child { font-size: 1.1rem; }
