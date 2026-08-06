@@ -619,6 +619,27 @@ body.vp-page {
 .vp-tw-danger { color: #dc2626; font-weight: 600; }
 .vp-tw-neutral { color: #94a3b8; font-style: italic; }
 
+.vp-row-clickable { cursor: pointer; }
+
+.vp-vendors-table .vp-vendor-name { display: block; color: var(--text-primary); }
+.vp-vendors-table .vp-vendor-email { display: block; font-size: 0.68rem; color: var(--text-light); font-weight: 400; }
+
+.vp-view-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--card-bg);
+  color: var(--primary-blue);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.vp-view-btn:hover { background: rgba(99, 102, 241, 0.08); border-color: var(--primary-blue); }
+
 .vp-table-message {
   text-align: center;
   padding: 2rem 1.5rem;

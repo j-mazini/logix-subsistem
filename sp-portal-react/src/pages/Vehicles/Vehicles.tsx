@@ -13,6 +13,7 @@ import { Pagination } from './components/Pagination';
 import { VehicleFormModal, type VehicleFormState } from './components/VehicleFormModal';
 import { DeleteVehicleModal } from './components/DeleteVehicleModal';
 import { VehicleDetailModal } from './components/VehicleDetailModal';
+import { generateVehiclesPDF } from './utils/pdfExport';
 import type { SortDir, SortKey } from './components/types';
 
 const BLANK_FORM: VehicleFormState = {
@@ -264,6 +265,16 @@ export function Vehicles() {
     URL.revokeObjectURL(a.href);
   }
 
+  function exportPdf() {
+    void generateVehiclesPDF({
+      vehicles: filteredSorted,
+      serviceProvider: sp,
+      statusFilter,
+      fuelFilter,
+      search,
+    });
+  }
+
   if (!sp) {
     return (
       <PortalLayout mainClassName="vehicles-page-main" title="Vehicles" hideAnnouncements>
@@ -297,7 +308,7 @@ export function Vehicles() {
             onFuelFilterChange={setFuelFilter}
             onAddClick={openAddModal}
             onExportExcel={exportExcel}
-            onExportPdf={() => window.print()}
+            onExportPdf={exportPdf}
           />
           <VehicleTable
             vehicles={pagedVehicles}

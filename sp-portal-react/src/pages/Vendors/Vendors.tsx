@@ -20,10 +20,14 @@ import {
   vendorTypeLabel,
   statusBadgeClass,
   filterAndSortVendors,
+  formatPhone,
+  isDuplicateVendorEmail,
   type Vendor,
   type StatusFilter,
   type SortKey,
+  type VendorTypeFilter,
 } from '../../data/vendorsData';
+import { generateVendorsPDF } from './utils/pdfExport';
 
 /**
  * Manual port of Bootstrap's bootstrap.bundle.min.js modal show/hide.
@@ -191,13 +195,21 @@ export function VendorsContent() {
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [vendorTypeFilter, setVendorTypeFilter] = useState<VendorTypeFilter>('all');
   const [sortKey, setSortKey] = useState<SortKey>('name');
   const [sortDir, setSortDir] = useState<1 | -1>(1);
+
+  // Paginação — o roster desta página cresce rápido e uma tabela sem fim é
+  // tão inútil quanto uma sem começo. Ported from the Next.js source's
+  // components/Pagination.tsx.
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(25);
 
   const [showVendorModal, setShowVendorModal] = useState(false);
   const [editingVendorId, setEditingVendorId] = useState<number | null>(null);
   const [modalStep, setModalStep] = useState<Step>('personal');
   const [form, setForm] = useState<VendorFormData>(EMPTY_FORM);
+  const [formError, setFormError] = useState<string | null>(null);
 
   const [deleteVendorId, setDeleteVendorId] = useState<number | null>(null);
   const [infoModal, setInfoModal] = useState<{ vendorId: number; type: 'training' | 'documents' } | null>(null);
@@ -207,6 +219,7 @@ export function VendorsContent() {
   // este SPA só carrega o CSS do Bootstrap — nunca o JS (ver index.html). O
   // botão Export não abria nada; agora o menu é estado de React.
   const [exportOpen, setExportOpen] = useState(false);
+  const [exportingPdf, setExportingPdf] = useState(false);
   const exportRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -246,17 +259,17 @@ export function VendorsContent() {
   // Contar sobre a pesquisa é o comportamento normal de uma busca facetada:
   // cada faceta diz quantos resultados dá, antes de lá ir.
   const searched = useMemo(
-    () => filterAndSortVendors(allVendors, search, 'all', sortKey, sortDir),
-    [allVendors, search, sortKey, sortDir],
+    () => filterAndSortVendors(allVendors, search, 'all', sortKey, sortDir, vendorTypeFilter),
+    [allVendors, search, sortKey, sortDir, vendorTypeFilter],
   );
 
   const filtered = useMemo(
-    () => filterAndSortVendors(allVendors, search, statusFilter, sortKey, sortDir),
-    [allVendors, search, statusFilter, sortKey, sortDir],
+    () => filterAndSortVendors(allVendors, search, statusFilter, sortKey, sortDir, vendorTypeFilter),
+    [allVendors, search, statusFilter, sortKey, sortDir, vendorTypeFilter],
   );
 
   const facets = useMemo(() => {
-    const count = (f: StatusFilter) => filterAndSortVendors(allVendors, search, f, sortKey, sortDir).length;
+    const count = (f: StatusFilter) => filterAndSortVendors(allVendors, search, f, sortKey, sortDir, vendorTypeFilter).length;
     return [
       // "Roster" é o total, não um estado — por isso não leva ponto de cor.
       { id: 'all' as StatusFilter, label: 'Roster', value: searched.length, tone: null },
@@ -265,9 +278,22 @@ export function VendorsContent() {
       { id: 'pending' as StatusFilter, label: 'Pending', value: count('pending'), tone: 'watch' as Tone },
       { id: 'inactive' as StatusFilter, label: 'Inactive', value: count('inactive'), tone: 'idle' as Tone },
     ] as { id: StatusFilter; label: string; value: number; tone: Tone | null }[];
-  }, [allVendors, search, sortKey, sortDir, searched.length]);
+  }, [allVendors, search, sortKey, sortDir, vendorTypeFilter, searched.length]);
 
   const attention = useMemo(() => searched.filter(needsAttention).length, [searched]);
+
+  // Volta à página 1 sempre que o conjunto filtrado muda — senão uma busca
+  // que reduz o total podia deixar a página actual vazia.
+  useEffect(() => {
+    setPage(1);
+  }, [search, statusFilter, vendorTypeFilter, sortKey, sortDir]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
+  const currentPage = Math.min(Math.max(1, page), totalPages);
+  const paged = useMemo(
+    () => filtered.slice((currentPage - 1) * perPage, currentPage * perPage),
+    [filtered, currentPage, perPage],
+  );
 
   const depots = useMemo(() => getDepotsForSp(sp), [sp]);
   const routes = useMemo(() => getRoutesForSp(sp), [sp]);
@@ -287,6 +313,7 @@ export function VendorsContent() {
     setEditingVendorId(null);
     setForm(EMPTY_FORM);
     setModalStep('personal');
+    setFormError(null);
     setShowVendorModal(true);
   }
 
@@ -296,10 +323,12 @@ export function VendorsContent() {
     setEditingVendorId(id);
     setForm(vendorToForm(v));
     setModalStep('personal');
+    setFormError(null);
     setShowVendorModal(true);
   }
 
   function updateForm<K extends keyof VendorFormData>(key: K, value: VendorFormData[K]) {
+    if (key === 'email' && formError) setFormError(null);
     setForm((f) => {
       const next = { ...f, [key]: value };
       if (key === 'firstName' || key === 'lastName') {
@@ -312,6 +341,15 @@ export function VendorsContent() {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.firstName.trim() || !form.lastName.trim() || !form.depot || !form.startDate) return;
+
+    // Ported from the Next.js source's page.tsx `handleSave` duplicate-email
+    // guard — only checked here, not on every keystroke, so typing an email
+    // that happens to collide mid-edit doesn't flash an error.
+    if (isDuplicateVendorEmail(allVendors, form.email, editingVendorId)) {
+      setFormError('This email is already registered. Please use another email.');
+      return;
+    }
+    setFormError(null);
 
     const fd = {
       firstName: form.firstName.trim(),
@@ -359,6 +397,18 @@ export function VendorsContent() {
     setDeleteVendorId(null);
   }
 
+  /**
+   * Alterna Active/Inactive sem apagar o registo. Ported from the Next.js
+   * source's `useVendors().deactivateVendor` — lá batia numa API real; aqui é
+   * só um patch de estado, reversível, e por isso disponível para qualquer
+   * vendor (ao contrário do delete, que só se aplica aos criados nesta
+   * sessão — ver `isLocalVendor`).
+   */
+  function toggleVendorActive(v: Vendor) {
+    const next = effectiveStatus(v) === 'Active' ? 'Inactive' : 'Active';
+    workforce.updateVendor(v.id, { status: next });
+  }
+
   function exportExcel() {
     const headers = ['Name', 'Email', 'Vendor Type', 'Route', 'Status', 'Start Date'];
     const rows = filtered.map((v) =>
@@ -382,6 +432,21 @@ export function VendorsContent() {
     URL.revokeObjectURL(a.href);
   }
 
+  async function exportPdf() {
+    setExportingPdf(true);
+    try {
+      await generateVendorsPDF({
+        vendors: filtered,
+        serviceProvider: sp,
+        statusFilter,
+        vendorTypeFilter,
+        search,
+      });
+    } finally {
+      setExportingPdf(false);
+    }
+  }
+
   if (!sp) {
     return (
       <div id="spNotFound" className="alert alert-warning">
@@ -394,7 +459,7 @@ export function VendorsContent() {
   const infoVendor = infoModal ? findVendor(infoModal.vendorId) : null;
   const driverDetailVendor = driverDetailId !== null ? findVendor(driverDetailId) : null;
 
-  const isFiltered = statusFilter !== 'all' || search.trim() !== '';
+  const isFiltered = statusFilter !== 'all' || vendorTypeFilter !== 'all' || search.trim() !== '';
 
   return (
     <div className="vendor-admin-main sp-vendor-main">
@@ -436,6 +501,20 @@ export function VendorsContent() {
             />
           </div>
 
+          {/* Filtro por Vendor Type — Driver vs. Subcontractor é uma dimensão
+              própria, separada dos estados de conformidade das facetas. */}
+          <select
+            className="vx-type-select"
+            id="vendorTypeFilter"
+            aria-label="Filter by vendor type"
+            value={vendorTypeFilter}
+            onChange={(e) => setVendorTypeFilter(e.target.value)}
+          >
+            <option value="all">All types</option>
+            <option value="1">Driver</option>
+            <option value="2">Subcontractor</option>
+          </select>
+
           <div className="vx-actions-group">
             <button type="button" className="vx-btn vx-btn-primary" id="addVendorBtn" onClick={openAddModal}>
               <i className="bi bi-plus-lg" aria-hidden="true" />
@@ -460,12 +539,13 @@ export function VendorsContent() {
                     role="menuitem"
                     className="dropdown-item"
                     id="vendorExportPdf"
+                    disabled={exportingPdf}
                     onClick={() => {
                       setExportOpen(false);
-                      window.print();
+                      void exportPdf();
                     }}
                   >
-                    Print to PDF
+                    {exportingPdf ? 'Generating PDF…' : 'Download PDF'}
                   </button>
                 </li>
                 <li>
@@ -548,7 +628,7 @@ export function VendorsContent() {
               </tr>
             </thead>
             <tbody id="vendorTableBody">
-              {filtered.map((v) => {
+              {paged.map((v) => {
                 const name = fullName(v);
                 const t = getTrainingStatus(v);
                 const d = getDocumentsStatus(v);
@@ -635,6 +715,18 @@ export function VendorsContent() {
                         >
                           <i className="bi bi-pencil" aria-hidden="true" />
                         </button>
+                        <button
+                          type="button"
+                          className="vx-icon-btn"
+                          aria-label={status === 'Active' ? `Deactivate ${name}` : `Reactivate ${name}`}
+                          title={status === 'Active' ? 'Deactivate' : 'Reactivate'}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleVendorActive(v);
+                          }}
+                        >
+                          <i className={`bi ${status === 'Active' ? 'bi-slash-circle' : 'bi-arrow-counterclockwise'}`} aria-hidden="true" />
+                        </button>
                         {isLocal && (
                           <button
                             type="button"
@@ -675,6 +767,7 @@ export function VendorsContent() {
                   onClick={() => {
                     setSearch('');
                     setStatusFilter('all');
+                    setVendorTypeFilter('all');
                   }}
                 >
                   Clear filters
@@ -692,11 +785,72 @@ export function VendorsContent() {
         {filtered.length > 0 && (
           <div className="vx-footer">
             <span className="vx-footer-count">
-              Showing <strong>{filtered.length}</strong> of <strong>{searched.length}</strong>
+              Showing <strong>{(currentPage - 1) * perPage + 1}</strong>–
+              <strong>{Math.min(currentPage * perPage, filtered.length)}</strong> of <strong>{filtered.length}</strong>
             </span>
             <span>
               Sorted by <strong>{SORT_LABEL[sortKey]}</strong>, {sortDir === 1 ? 'ascending' : 'descending'}
             </span>
+          </div>
+        )}
+
+        {/* ============ Paginação — ported from the Next.js source's
+            components/Pagination.tsx ============ */}
+        {filtered.length > perPage && (
+          <div className="vx-pagination">
+            <div className="vx-pagination-per-page">
+              <label htmlFor="vendorItemsPerPage">Per page</label>
+              <select
+                id="vendorItemsPerPage"
+                value={perPage}
+                onChange={(e) => {
+                  setPerPage(Number(e.target.value));
+                  setPage(1);
+                }}
+              >
+                {[10, 25, 50, 100].map((n) => (
+                  <option key={n} value={n}>{n}</option>
+                ))}
+              </select>
+            </div>
+            <nav className="vx-pagination-nav" aria-label="Vendor list pagination">
+              <button
+                type="button"
+                className="vx-pagination-btn"
+                disabled={currentPage <= 1}
+                onClick={() => setPage(currentPage - 1)}
+                aria-label="Previous page"
+              >
+                <i className="bi bi-chevron-left" aria-hidden="true" />
+              </button>
+              {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+                let pageNum: number;
+                if (totalPages <= 7) pageNum = i + 1;
+                else if (currentPage <= 4) pageNum = i + 1;
+                else if (currentPage >= totalPages - 3) pageNum = totalPages - 6 + i;
+                else pageNum = currentPage - 3 + i;
+                return (
+                  <button
+                    key={pageNum}
+                    type="button"
+                    className={`vx-pagination-btn${currentPage === pageNum ? ' is-on' : ''}`}
+                    aria-current={currentPage === pageNum ? 'page' : undefined}
+                    onClick={() => setPage(pageNum)}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+              <button
+                type="button"
+                className="vx-pagination-btn"
+                disabled={currentPage >= totalPages}
+                onClick={() => setPage(currentPage + 1)}
+                aria-label="Next page"
+              >
+                <i className="bi bi-chevron-right" aria-hidden="true" />
+              </button>
+            </nav>
           </div>
         )}
       </div>
@@ -735,6 +889,11 @@ export function VendorsContent() {
                     </button>
                   </div>
                   <div className="modal-body vx-modal-body">
+                    {formError && (
+                      <div className="alert alert-danger vx-form-error" role="alert">
+                        <i className="bi bi-exclamation-circle" aria-hidden="true" /> {formError}
+                      </div>
+                    )}
                     {/* Os quatro passos são uma sequência real, por isso vão numerados. */}
                     <div className="vx-stepper" id="vendorModalStepper">
                       {STEPS.map((step, i) => (
@@ -775,7 +934,7 @@ export function VendorsContent() {
                           </div>
                           <div className="col-md-6">
                             <label htmlFor="vPhone" className="form-label">Phone</label>
-                            <input type="text" id="vPhone" className="form-control" value={form.phone} onChange={(e) => updateForm('phone', e.target.value)} />
+                            <input type="tel" id="vPhone" className="form-control" value={form.phone} onChange={(e) => updateForm('phone', formatPhone(e.target.value))} />
                           </div>
                           <div className="col-md-6">
                             <label htmlFor="vDob" className="form-label">Date of birth</label>

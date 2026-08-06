@@ -9,6 +9,7 @@ import TypesConfigModal from './components/TypesConfigModal';
 import AddAdhocServiceModal from './components/AddAdhocServiceModal';
 import FlexRouteModal from './components/FlexRouteModal';
 import AddManagementSupportModal from './components/AddManagementSupportModal';
+import ExportScheduleModal, { type ExportScheduleOptions } from './components/ExportScheduleModal';
 import '../../styles/legacy/week-planner.css';
 
 /* =====================================================
@@ -110,6 +111,36 @@ function formatWeekRangeLabel(weekStart: Date, includeWeekends: boolean): string
   const last = dates[dates.length - 1];
   const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
   return `${fmt(first)} – ${fmt(last)} ${last.getFullYear()}`;
+}
+
+/* ---------- XLSX export (ported from Next.js ExportDayScheduleModal / ExportWeekScheduleModal) ----------
+ * The source modals generate a PDF per selected depot via a backend PDF service; this app has no
+ * such backend and a single mock depot, so the export target is an .xlsx workbook instead — built
+ * with the sheetjs/xlsx UMD bundle loaded from CDN at click-time, the same pattern already used by
+ * AdhocInvoiceManagement.tsx (xlsx isn't an installed npm dependency in this project). */
+let xlsxLoadPromise: Promise<void> | null = null;
+function loadXlsx(): Promise<void> {
+  if (typeof window !== 'undefined' && (window as unknown as { XLSX?: unknown }).XLSX) {
+    return Promise.resolve();
+  }
+  if (!xlsxLoadPromise) {
+    xlsxLoadPromise = new Promise((resolve, reject) => {
+      const existing = document.querySelector('script[data-wp-xlsx]');
+      if (existing) {
+        existing.addEventListener('load', () => resolve());
+        existing.addEventListener('error', () => reject(new Error('xlsx load failed')));
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js';
+      script.async = true;
+      script.dataset.wpXlsx = 'true';
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error('xlsx load failed'));
+      document.head.appendChild(script);
+    });
+  }
+  return xlsxLoadPromise;
 }
 
 /* ==================== mock reference data ==================== */
@@ -424,6 +455,7 @@ export function WeekPlanner() {
   const [managementFunctionCatalog, setManagementFunctionCatalog] = useState<ManagementFunctionCatalogItem[]>(DEFAULT_MANAGEMENT_FUNCTIONS);
   const [managementCollapsed, setManagementCollapsed] = useState(false);
   const [dayOffEntries, setDayOffEntries] = useState<DayOffEntry[]>([]);
+  const [showExportModal, setShowExportModal] = useState(false);
 
   const weekCache = useRef(new Map<string, WPRecord[]>());
   const dragPayload = useRef<DragPayload | null>(null);
@@ -990,6 +1022,52 @@ export function WeekPlanner() {
     rerender();
   }
 
+  async function exportSchedule({ scope, includeWeekends }: ExportScheduleOptions) {
+    try {
+      await loadXlsx();
+    } catch {
+      showToast('XLSX export library failed to load.', 'error');
+      return;
+    }
+    const XLSX = (window as unknown as { XLSX?: any }).XLSX; // eslint-disable-line @typescript-eslint/no-explicit-any
+    if (!XLSX) {
+      showToast('XLSX export library failed to load.', 'error');
+      return;
+    }
+
+    const targetDates = scope === 'day' ? [currentDay] : getWeekDatesFiltered(currentWeekStart, includeWeekends);
+    const targetISOs = new Set(targetDates.map(formatDateISO));
+    const rowsForExport = records
+      .filter((r) => targetISOs.has(r.date))
+      .sort((a, b) => a.date.localeCompare(b.date) || a.route.localeCompare(b.route))
+      .map((r) => ({
+        Date: r.date,
+        Day: getDayNameShort(new Date(`${r.date}T00:00:00`)),
+        Depot: DEPOTS.find((d) => d.id === r.depotId)?.name || '',
+        Type: r.isSupervisor ? 'Team Leader' : r.isAdhoc ? 'Ad-Hoc' : r.isManagementSupport ? 'Mgmt & Support' : 'Route',
+        'Route / Function': r.route,
+        'Vendor / Staff': r.name,
+        Vehicle: r.vehicle || '',
+        'Reg. Plate': r.registrationPlate || '',
+        'Route Sort': r.routeSort === 'yes' ? 'Yes' : 'No',
+        Status: r.status,
+        Notes: r.notes || '',
+      }));
+
+    if (rowsForExport.length === 0) {
+      showToast('Nothing to export for the selected scope.', 'error');
+      return;
+    }
+
+    const worksheet = XLSX.utils.json_to_sheet(rowsForExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, scope === 'day' ? 'Day Schedule' : 'Week Schedule');
+    const filenameDate = scope === 'day' ? formatDateISO(currentDay) : formatDateISO(currentWeekStart);
+    XLSX.writeFile(workbook, `week-planner-${scope}-schedule-${filenameDate}.xlsx`);
+    showToast(`Exported ${rowsForExport.length} row(s) to XLSX.`, 'success');
+    setShowExportModal(false);
+  }
+
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (e.key !== 'Escape') return;
@@ -1131,6 +1209,14 @@ export function WeekPlanner() {
             title="Register a day off for a vendor"
           >
             <i className="bi bi-person-x" /> Day Off
+          </button>
+          <button
+            type="button"
+            className="styled-button styled-button--outline"
+            onClick={() => setShowExportModal(true)}
+            title="Export the current day or week schedule to Excel"
+          >
+            <i className="bi bi-file-earmark-spreadsheet" /> Export
           </button>
           <button
             type="button"
@@ -1691,6 +1777,19 @@ export function WeekPlanner() {
             )}
           </div>
 
+          {/* ============ Export Schedule modal ============ */}
+          <div className={`wp-modal-backdrop${showExportModal ? ' sp-modal-backdrop-anim' : ''}`} id="exportScheduleModalBackdrop" hidden={!showExportModal}>
+            {showExportModal && (
+              <ExportScheduleModal
+                onClose={() => setShowExportModal(false)}
+                onExport={exportSchedule}
+                dayLabel={dailyLabel}
+                weekLabel={formatWeekRangeLabel(currentWeekStart, showWeekends)}
+                defaultIncludeWeekends={showWeekends}
+              />
+            )}
+          </div>
+
           {/* ============ Supervisor inline popover ============ */}
           <div
             className="wp-popover"
@@ -1854,7 +1953,13 @@ function AssignmentModal({
           <button type="button" className="styled-button styled-button--warning" id="btnUnassign" onClick={onUnassign}>
             <i className="bi bi-calendar-x" /> Remove Day
           </button>
-          <button type="button" className="styled-button styled-button--danger" onClick={onRemoveWeek}>
+          <button
+            type="button"
+            className="styled-button styled-button--danger"
+            onClick={() => {
+              if (window.confirm(`Remove ${record.name} from ${record.route} for the entire week? This cannot be undone.`)) onRemoveWeek();
+            }}
+          >
             <i className="bi bi-calendar2-x" /> Remove Week
           </button>
           <button type="button" className="styled-button styled-button--outline" id="btnCancelAssignment" onClick={onClose}>

@@ -11,6 +11,8 @@ import {
   getSnapshot as getTraceQueryLiqDeductionsSnapshot,
   type TraceQueryLiquidationDeductionEntry,
 } from '../../services/traceQueryCaseService';
+import { FileUploadZone } from './components/FileUploadZone';
+import { generateDeductionsPDF } from './utils/pdfExport';
 import styles from './DeductionsDisbursementsRecharges.module.css';
 
 /**
@@ -30,12 +32,26 @@ import styles from './DeductionsDisbursementsRecharges.module.css';
  *    single row for the full amount; the installments table in step 2 of
  *    the wizard is preview-only and doesn't create separate rows (the
  *    original relies on a backend job to do that).
- *  - Export is CSV-only (no PDF/XLSX — this project has no jsPDF/xlsx
- *    dependency), matching the pattern already used by Invoices's own
- *    "Deductions & Recharges" tab.
+ *  - Export is CSV + PDF (PDF via the CDN-script jsPDF pattern used by
+ *    src/pages/Vehicles/utils/pdfExport.ts) — no XLSX, since this project
+ *    has no xlsx dependency and the Next.js original's XLSX export was
+ *    backend/lazy-import-driven.
  *  - Desktop/mobile is one responsive layout (CSS media queries) rather
  *    than the original's separate DesktopView/MobileView components —
  *    consistent with how every other page in this project handles it.
+ *  - "Upload Documents" (step 2 of the wizard) is ported as a local-only
+ *    staging area: files are kept as in-memory File objects for the life
+ *    of the modal and discarded on close/save — there is no backend to
+ *    upload them to.
+ *  - The original also declares (but never wires up — no click handler
+ *    anywhere sets `selectedVendor`/`showPerformanceModal`) a vendor
+ *    Performance modal launched from this page; since it's dead code in
+ *    the source itself, it isn't ported here.
+ *  - Service Partner filtering/badges (selectedServicePartnerId, the SP
+ *    dropdown, ServicePartnerBadge) depend on a servicePartners master
+ *    list and a vendor→SP mapping that don't exist anywhere in this
+ *    project's mock data yet; introducing that whole data model was out
+ *    of scope for this port, so it's skipped here.
  */
 
 /* ==================== Types ==================== */
@@ -750,17 +766,23 @@ interface DeductionModalProps {
   isEditing: boolean;
   isViewMode: boolean;
   validationAttempted: boolean;
+  uploadedFiles: File[];
+  isDragOver: boolean;
   onClose: () => void;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
   onNextStep: () => void;
   onPrevStep: () => void;
   onGoToStep: (step: number) => void;
   onSubmit: () => void;
+  onFilesAdded: (files: File[]) => void;
+  onRemoveFile: (index: number) => void;
+  onDragStateChange: (isOver: boolean) => void;
 }
 
 function DeductionModal({
   show, entryType, vendors, vehicles, routes, formData, currentStep, isEditing, isViewMode, validationAttempted,
-  onClose, onInputChange, onNextStep, onPrevStep, onGoToStep, onSubmit,
+  uploadedFiles, isDragOver,
+  onClose, onInputChange, onNextStep, onPrevStep, onGoToStep, onSubmit, onFilesAdded, onRemoveFile, onDragStateChange,
 }: DeductionModalProps) {
   if (!show || !entryType) return null;
 
@@ -979,6 +1001,15 @@ function DeductionModal({
           </div>
         </div>
       )}
+
+      <FileUploadZone
+        files={uploadedFiles}
+        isDragOver={isDragOver}
+        disabled={isViewMode}
+        onFilesAdded={onFilesAdded}
+        onRemoveFile={onRemoveFile}
+        onDragStateChange={onDragStateChange}
+      />
     </>
   );
 
@@ -1097,6 +1128,9 @@ export function DeductionsDisbursementsRecharges() {
   const [itemToDelete, setItemToDelete] = useState<DisplayDeduction | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [isDragOver, setIsDragOver] = useState(false);
+
   const nextIdRef = useRef(1000);
 
   const vendors = useMemo(() => MOCK_DRIVERS.map((d) => d.fullName).sort(), []);
@@ -1138,6 +1172,8 @@ export function DeductionsDisbursementsRecharges() {
     setFormData({ ...getInitialFormState(), type: category });
     setCurrentStep(1);
     setValidationAttempted(false);
+    setUploadedFiles([]);
+    setIsDragOver(false);
     setShowModal(true);
   }, []);
 
@@ -1148,6 +1184,8 @@ export function DeductionsDisbursementsRecharges() {
     setFormData({ ...getInitialFormState(), ...item.fields, type: item.type });
     setCurrentStep(1);
     setValidationAttempted(false);
+    setUploadedFiles([]);
+    setIsDragOver(false);
     setShowModal(true);
   }, []);
 
@@ -1158,6 +1196,17 @@ export function DeductionsDisbursementsRecharges() {
     setFormData(getInitialFormState());
     setCurrentStep(1);
     setValidationAttempted(false);
+    setUploadedFiles([]);
+    setIsDragOver(false);
+  }, []);
+
+  const handleFilesAdded = useCallback((files: File[]) => {
+    if (files.length === 0) return;
+    setUploadedFiles((prev) => [...prev, ...files]);
+  }, []);
+
+  const handleRemoveFile = useCallback((index: number) => {
+    setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
   }, []);
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -1281,6 +1330,17 @@ export function DeductionsDisbursementsRecharges() {
     URL.revokeObjectURL(a.href);
   }, [filteredData, monthKey]);
 
+  const handleExportPdf = useCallback(() => {
+    void generateDeductionsPDF({
+      rows: filteredData.map((d) => ({
+        id: d.id, dateOfIncident: d.dateOfIncident, courierName: d.courierName, type: d.type, amount: d.amount, status: d.status,
+      })),
+      currentMonth,
+      activeFilter,
+      searchQuery,
+    });
+  }, [filteredData, currentMonth, activeFilter, searchQuery]);
+
   return (
     <PortalLayout mainClassName="ddr-container container-fluid px-3 px-lg-4 py-4" title="Deductions & Recharges" hideAnnouncements>
       <div className={styles.page}>
@@ -1319,6 +1379,9 @@ export function DeductionsDisbursementsRecharges() {
           <button type="button" className={styles.btnExport} onClick={handleExportCsv}>
             <i className="bi bi-download" /> Export CSV
           </button>
+          <button type="button" className={styles.btnExport} onClick={handleExportPdf}>
+            <i className="bi bi-file-earmark-pdf" /> Export PDF
+          </button>
         </div>
 
         <div className={styles.tableCard}>
@@ -1343,12 +1406,17 @@ export function DeductionsDisbursementsRecharges() {
         isEditing={Boolean(editingItem)}
         isViewMode={isViewMode}
         validationAttempted={validationAttempted}
+        uploadedFiles={uploadedFiles}
+        isDragOver={isDragOver}
         onClose={closeModal}
         onInputChange={handleInputChange}
         onNextStep={handleNextStep}
         onPrevStep={handlePrevStep}
         onGoToStep={handleGoToStep}
         onSubmit={handleSave}
+        onFilesAdded={handleFilesAdded}
+        onRemoveFile={handleRemoveFile}
+        onDragStateChange={setIsDragOver}
       />
 
       <DeleteConfirmModal

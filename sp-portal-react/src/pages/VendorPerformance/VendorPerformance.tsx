@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PortalLayout } from '../../layout/PortalLayout';
+import { VendorsOverviewTable } from './components/VendorsOverviewTable';
+import { VendorPerformanceModal } from './components/VendorPerformanceModal';
+import { DayDetailModal } from './components/DayDetailModal';
 import '../../styles/legacy/vendor-performance.css';
 
 /* =====================================================
@@ -129,7 +132,7 @@ export function calculateAFD(operation: OperationLike): number {
 }
 
 /** TW color band, ported from daily-operations-reports's utils.ts getTWColorClass. */
-function getTimeWindowClass(percentage: number): 'success' | 'warning' | 'orange' | 'danger' | 'neutral' {
+export function getTimeWindowClass(percentage: number): 'success' | 'warning' | 'orange' | 'danger' | 'neutral' {
   if (percentage >= 90 && percentage <= 100) return 'success';
   if (percentage >= 80 && percentage < 90) return 'warning';
   if (percentage >= 70 && percentage < 80) return 'orange';
@@ -145,10 +148,10 @@ const MONTH_NAMES_SHORT = [
   'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
 ];
-function formatMonthYear(year: number, month: number): string {
+export function formatMonthYear(year: number, month: number): string {
   return `${MONTH_NAMES_LONG[month] || 'Unknown'} ${year}`;
 }
-function formatMonthYearShort(year: number, month: number): string {
+export function formatMonthYearShort(year: number, month: number): string {
   return `${MONTH_NAMES_SHORT[month] || '???'}/${year}`;
 }
 
@@ -346,7 +349,7 @@ const SERVICE_PARTNERS: ServicePartner[] = [
 
 const VENDOR_COUNT = 12;
 
-interface Vendor {
+export interface Vendor {
   id: number;
   firstName: string;
   lastName: string;
@@ -354,7 +357,7 @@ interface Vendor {
   servicePartnerId: number;
 }
 
-interface MonthKey { year: number; month: number; }
+export interface MonthKey { year: number; month: number; }
 
 interface MasterData {
   vendors: Vendor[];
@@ -487,7 +490,7 @@ function getFilteredVendors(vendors: Vendor[], servicePartnerId: string): Vendor
 
 interface Toast { id: number; message: string; type: 'success' | 'error' | 'info'; hiding: boolean; }
 
-const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+export const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export function VendorPerformance() {
   // `today` fixed once at mount, mirroring the static app's constructor-time `new Date()`.
@@ -518,6 +521,16 @@ export function VendorPerformance() {
   const [comboOpen, setComboOpen] = useState(false);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [inputFocused, setInputFocused] = useState(false);
+
+  // Vendor performance modal (ported from Next.js source's PerformanceModal.tsx):
+  // lets the user drill into a vendor's full month breakdown from the general
+  // (all-vendors) view without losing the current filter/selection state.
+  const [performanceModalVendor, setPerformanceModalVendor] = useState<Vendor | null>(null);
+
+  // Day detail modal (ported from Next.js source's OverviewModal.tsx, adapted to this
+  // app's mock model of one aggregated "operation" per weekday): expands a single
+  // daily-breakdown table row into a full detail card.
+  const [dayDetailTarget, setDayDetailTarget] = useState<{ vendorLabel: string; monthLabel: string; day: DayRecord } | null>(null);
 
   const comboRef = useRef<HTMLDivElement>(null);
   const carouselRef = useRef<HTMLDivElement>(null);
@@ -689,7 +702,7 @@ export function VendorPerformance() {
     );
   }
 
-  function renderTableRow(d: DayRecord, idx: number) {
+  function renderTableRow(d: DayRecord, idx: number, onRowClick?: (day: DayRecord) => void) {
     const dayName = WEEKDAYS[d.dayOfWeek];
     const isSaturday = d.dayOfWeek === 6;
     const routeClass = d.route === 'N/A' ? 'vp-cell-muted' : '';
@@ -723,8 +736,15 @@ export function VendorPerformance() {
       }
     }
 
+    const clickable = !!onRowClick && d.route !== 'N/A';
+
     return (
-      <tr key={`${d.day}-${idx}`}>
+      <tr
+        key={`${d.day}-${idx}`}
+        className={clickable ? 'vp-row-clickable' : undefined}
+        onClick={clickable ? () => onRowClick!(d) : undefined}
+        title={clickable ? 'View day details' : undefined}
+      >
         <td>
           <strong className="vp-day-num">{String(d.day).padStart(2, '0')}</strong>
           <span className={`vp-day-pill${isSaturday ? ' is-sat' : ''}`}>{dayName}</span>
@@ -748,7 +768,7 @@ export function VendorPerformance() {
     );
   }
 
-  function renderDailyTable(monthData: DayRecord[]) {
+  function renderDailyTable(monthData: DayRecord[], onRowClick?: (day: DayRecord) => void) {
     const daysWithData = monthData.filter(
       (d) => !(d.route === 'N/A' && d.spr === 'N/A' && d.sporH === 'N/A' && d.tw === 'N/A'),
     );
@@ -787,7 +807,7 @@ export function VendorPerformance() {
             <th>AFD</th>
           </tr>
         </thead>
-        <tbody>{rows.map((d, idx) => renderTableRow(d, idx))}</tbody>
+        <tbody>{rows.map((d, idx) => renderTableRow(d, idx, onRowClick))}</tbody>
       </table>
     );
   }
@@ -805,15 +825,26 @@ export function VendorPerformance() {
     const filteredVendorsForStats = getFilteredVendors(vendors, selectedServicePartnerId);
     let vendorsWithData = 0;
     const perVendorAverages: Averages[] = [];
-    filteredVendorsForStats.forEach((v) => {
-      const months = vendorMonths.get(v.id) || [];
-      const has = months.some((m) => m.year === periodYear && m.month === periodMonth);
-      if (has) {
-        vendorsWithData++;
-        const data = getVendorMonthData(v.id, periodYear, periodMonth);
-        perVendorAverages.push(calculateAverages(data));
-      }
-    });
+    // Ported from the Next.js source's VendorsTable.tsx / MobileVendorCard.tsx: a
+    // per-vendor breakdown row for the currently-viewed period, with a "View" action
+    // that opens the full month performance in a modal (see PerformanceModal.tsx).
+    const vendorRows: { vendor: Vendor; averages: Averages; hasData: boolean }[] = [];
+    filteredVendorsForStats
+      .slice()
+      .sort((a, b) => `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`, undefined, { sensitivity: 'base' }))
+      .forEach((v) => {
+        const months = vendorMonths.get(v.id) || [];
+        const has = months.some((m) => m.year === periodYear && m.month === periodMonth);
+        if (has) {
+          vendorsWithData++;
+          const data = getVendorMonthData(v.id, periodYear, periodMonth);
+          const averages = calculateAverages(data);
+          perVendorAverages.push(averages);
+          vendorRows.push({ vendor: v, averages, hasData: true });
+        } else {
+          vendorRows.push({ vendor: v, averages: { avgTw: '--:--', avgSpr: '--:--', avgSporH: '--:--', avgAfd: '--:--' }, hasData: false });
+        }
+      });
     const stats: Averages & { totalVendors: number } = { totalVendors: vendorsWithData, ...aggregateAverages(perVendorAverages) };
     const monthLabel = formatMonthYear(periodYear, periodMonth);
 
@@ -833,10 +864,11 @@ export function VendorPerformance() {
           {kpiView === 'summary' ? renderKpiSummary(stats, false) : renderKpiCharts(stats, false)}
         </div>
         <div className="vp-card vp-table-card">
-          <div className="vp-card-header vp-card-header--bar"><h2 className="vp-card-title">Daily Breakdown</h2></div>
-          <div className="vp-empty-inline">
-            <p>Select a vendor above to see daily breakdown by day.</p>
+          <div className="vp-card-header vp-card-header--bar">
+            <h2 className="vp-card-title">Vendors &ndash; {monthLabel}</h2>
+            <p className="vp-card-sub">Click &ldquo;View&rdquo; to open a vendor&rsquo;s full month performance.</p>
           </div>
+          <VendorsOverviewTable rows={vendorRows} onViewPerformance={(v) => setPerformanceModalVendor(v)} />
         </div>
       </div>
     );
@@ -881,7 +913,9 @@ export function VendorPerformance() {
         <div className="vp-card vp-table-card">
           <div className="vp-card-header vp-card-header--bar"><h2 className="vp-card-title">Daily Breakdown</h2></div>
           <div className="vp-table-scroll">
-            {renderDailyTable(monthData)}
+            {renderDailyTable(monthData, (day) =>
+              setDayDetailTarget({ vendorLabel: `${vendor.firstName} ${vendor.lastName}`, monthLabel, day }),
+            )}
           </div>
         </div>
       </div>
@@ -1017,6 +1051,18 @@ export function VendorPerformance() {
           );
         })}
       </div>
+
+      {/* Vendor performance modal — ported from PerformanceModal.tsx */}
+      <VendorPerformanceModal
+        vendor={performanceModalVendor}
+        months={performanceModalVendor ? vendorMonths.get(performanceModalVendor.id) || [] : []}
+        getMonthData={getVendorMonthData}
+        onClose={() => setPerformanceModalVendor(null)}
+        onDayClick={(vendorLabel, monthLabel, day) => setDayDetailTarget({ vendorLabel, monthLabel, day })}
+      />
+
+      {/* Day detail modal — ported from OverviewModal.tsx */}
+      <DayDetailModal target={dayDetailTarget} onClose={() => setDayDetailTarget(null)} />
     </PortalLayout>
   );
 }

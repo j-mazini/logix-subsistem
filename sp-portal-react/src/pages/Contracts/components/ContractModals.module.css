@@ -1,0 +1,276 @@
+/*
+ * Shared styling for the Contracts page's portal modals (RouteViewModal,
+ * DeleteConfirmModal). Reuses the "Cargo Manifest" tokens defined on
+ * Contracts.module.css's .contracts root, redeclared here since these
+ * modals render into document.body via a portal (outside that scope).
+ */
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(24, 34, 54, 0.5);
+  backdrop-filter: blur(2px);
+  z-index: 1060;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1065;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  pointer-events: none;
+}
+
+.modal {
+  pointer-events: auto;
+  width: 100%;
+  max-width: 30rem;
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  background: #ffffff;
+  border-radius: 1rem;
+  box-shadow: 0 25px 60px -15px rgba(24, 34, 54, 0.35);
+  color: #182236;
+}
+
+.confirmModal {
+  max-width: 26rem;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1.25rem 1.25rem 1rem;
+  border-bottom: 1px solid #e3e7ee;
+}
+
+.modalTitle {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #182236;
+}
+
+.modalSubtitle {
+  margin: 0.25rem 0 0;
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, Consolas, monospace;
+  font-size: 0.8125rem;
+  color: #8a94a8;
+}
+
+.closeButton {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: #55627a;
+  cursor: pointer;
+  transition: background-color 200ms ease;
+}
+
+.closeButton:hover {
+  background: #f4f6f9;
+}
+
+.modalBody {
+  padding: 1.25rem;
+  display: grid;
+  gap: 1.25rem;
+}
+
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.625rem;
+}
+
+.statCard {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.75rem;
+  background: #f4f6f9;
+  border: 1px solid #e3e7ee;
+  border-radius: 0.625rem;
+  min-width: 0;
+}
+
+.statCardIcon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  background: #eef0fd;
+  color: #4c50d8;
+}
+
+.statCardBody {
+  min-width: 0;
+}
+
+.statCardLabel {
+  margin: 0;
+  font-size: 0.625rem;
+  font-weight: 650;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #8a94a8;
+}
+
+.statCardValue {
+  margin: 0.125rem 0 0;
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, Consolas, monospace;
+  font-size: 0.875rem;
+  font-weight: 650;
+  color: #182236;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.detailSection {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.detailSectionTitle {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.6875rem;
+  font-weight: 650;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #55627a;
+}
+
+.badgeList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.badge {
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, Consolas, monospace;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5625rem;
+  border-radius: 0.375rem;
+  letter-spacing: 0.02em;
+}
+
+.badgeExtracted {
+  background: #f4f6f9;
+  color: #55627a;
+  border: 1px solid #e3e7ee;
+}
+
+.badgeCustom {
+  background: #fdf6e2;
+  color: #9a6a06;
+  border: 1px dashed #dfc06a;
+}
+
+.postcodeList {
+  margin: 0;
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, Consolas, monospace;
+  font-size: 0.8125rem;
+  color: #55627a;
+  line-height: 1.5;
+}
+
+.emptyHint {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: #8a94a8;
+}
+
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid #e3e7ee;
+}
+
+.secondaryButton {
+  padding: 0.5rem 1rem;
+  background: #ffffff;
+  color: #55627a;
+  border: 1px solid #c7cfdc;
+  border-radius: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 650;
+  cursor: pointer;
+  transition: color 200ms ease, border-color 200ms ease;
+}
+
+.secondaryButton:hover {
+  color: #182236;
+  border-color: #8a94a8;
+}
+
+.dangerButton {
+  padding: 0.5rem 1rem;
+  background: #b42334;
+  color: #ffffff;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 650;
+  cursor: pointer;
+  transition: filter 200ms ease;
+}
+
+.dangerButton:hover {
+  filter: brightness(1.1);
+}
+
+/* ========== Delete confirm layout ========== */
+.confirmBody {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+  padding: 1.25rem;
+}
+
+.confirmIcon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 999px;
+  background: #fdf6e2;
+  color: #9a6a06;
+}
+
+.confirmMessage {
+  margin: 0.375rem 0 0;
+  font-size: 0.875rem;
+  color: #55627a;
+  line-height: 1.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal,
+  .backdrop {
+    transition: none !important;
+  }
+}

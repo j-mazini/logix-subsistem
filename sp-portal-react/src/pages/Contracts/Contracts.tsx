@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Eye } from 'lucide-react';
 import { PortalLayout } from '../../layout/PortalLayout';
 import { useCurrentSp } from '../../hooks/useCurrentSp';
 import {
@@ -12,9 +13,53 @@ import {
   type ContractDepotView,
   type ContractLoopView,
   type ContractRouteView,
+  type ContractProviderView,
   type DigressiveBand,
 } from '../../data/contractsData';
+import { RouteViewModal, type RouteViewTarget } from './components/RouteViewModal';
+import { DeleteConfirmModal, type DeleteConfirmTarget } from './components/DeleteConfirmModal';
 import styles from './Contracts.module.css';
+
+/** Case-insensitive substring match used by the search box below. */
+function matches(term: string, ...values: string[]): boolean {
+  if (!term) return true;
+  const t = term.toLowerCase();
+  return values.some(v => v.toLowerCase().includes(t));
+}
+
+/**
+ * Filters the depot → loop → route tree down to entries matching `search`
+ * by depot, loop, route, driver or subpostcode name — keeping a parent
+ * whenever any of its descendants match. Ported from the intent of the
+ * Next.js source's FiltersPanel/SearchInput/RouteFilters (which filter a
+ * flat routes table); adapted here to the nested depot/loop/route shape
+ * this page actually renders.
+ */
+function filterProviders(providers: ContractProviderView[], search: string): ContractProviderView[] {
+  const term = search.trim();
+  if (!term) return providers;
+
+  return providers
+    .map(prov => {
+      const depots = prov.depots
+        .map(depot => {
+          const loops = depot.loops
+            .map(loop => {
+              const routes = loop.routes.filter(route =>
+                matches(term, route.name, route.driver, route.type, ...route.subpostcodes),
+              );
+              const loopMatches = matches(term, loop.name);
+              return loopMatches || routes.length ? { ...loop, routes: loopMatches ? loop.routes : routes } : null;
+            })
+            .filter((l): l is ContractLoopView => l !== null);
+          const depotMatches = matches(term, depot.name);
+          return depotMatches || loops.length ? { ...depot, loops: depotMatches ? depot.loops : loops } : null;
+        })
+        .filter((d): d is ContractDepotView => d !== null);
+      return { ...prov, depots };
+    })
+    .filter(p => p.depots.length > 0);
+}
 
 function Chevron({ open }: { open: boolean }) {
   return (
@@ -26,7 +71,16 @@ function Chevron({ open }: { open: boolean }) {
   );
 }
 
-function RouteCard({ sp, depotName, route }: { sp: string; depotName: string; route: ContractRouteView }) {
+interface RouteCardProps {
+  sp: string;
+  depotName: string;
+  loopName: string;
+  route: ContractRouteView;
+  onView: (target: RouteViewTarget) => void;
+  onRequestRemoveSubpostcode: (depotName: string, routeName: string, subpostcode: string) => void;
+}
+
+function RouteCard({ sp, depotName, loopName, route, onView, onRequestRemoveSubpostcode }: RouteCardProps) {
   const [open, setOpen] = useState(false);
   const [rawValue, setRawValue] = useState(String(route.target));
   const [newSubpostcode, setNewSubpostcode] = useState('');
@@ -61,7 +115,7 @@ function RouteCard({ sp, depotName, route }: { sp: string; depotName: string; ro
   };
 
   const handleRemoveSubpostcode = (subpostcode: string) => {
-    removeStoredSubpostcode(sp, depotName, route.name, subpostcode);
+    onRequestRemoveSubpostcode(depotName, route.name, subpostcode);
   };
 
   return (
@@ -73,6 +127,18 @@ function RouteCard({ sp, depotName, route }: { sp: string; depotName: string; ro
         <Chevron open={open} />
         <h4 className={styles.routeName}>{route.name}</h4>
         <span className={styles.routeBadge}>{route.type}</span>
+        <button
+          type="button"
+          className={styles.viewButton}
+          onClick={e => {
+            e.stopPropagation();
+            onView({ depotName, loopName, route });
+          }}
+          aria-label={`View ${route.name} details`}
+          title="View route details"
+        >
+          <Eye size={14} />
+        </button>
       </div>
 
       {open && (
@@ -170,7 +236,15 @@ interface BandDraft {
   price: string;
 }
 
-function LoopPanel({ sp, depotName, loop }: { sp: string; depotName: string; loop: ContractLoopView }) {
+interface LoopPanelProps {
+  sp: string;
+  depotName: string;
+  loop: ContractLoopView;
+  onView: (target: RouteViewTarget) => void;
+  onRequestRemoveSubpostcode: (depotName: string, routeName: string, subpostcode: string) => void;
+}
+
+function LoopPanel({ sp, depotName, loop, onView, onRequestRemoveSubpostcode }: LoopPanelProps) {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [rate, setRate] = useState<number>(() =>
@@ -388,14 +462,29 @@ function LoopPanel({ sp, depotName, loop }: { sp: string; depotName: string; loo
 
       <div className={`${styles.loopRoutes} ${!open ? styles.collapsed : ''}`}>
         {loop.routes.map(route => (
-          <RouteCard key={route.name} sp={sp} depotName={depotName} route={route} />
+          <RouteCard
+            key={route.name}
+            sp={sp}
+            depotName={depotName}
+            loopName={loop.name}
+            route={route}
+            onView={onView}
+            onRequestRemoveSubpostcode={onRequestRemoveSubpostcode}
+          />
         ))}
       </div>
     </div>
   );
 }
 
-function DepotCard({ sp, depot }: { sp: string; depot: ContractDepotView }) {
+interface DepotCardProps {
+  sp: string;
+  depot: ContractDepotView;
+  onView: (target: RouteViewTarget) => void;
+  onRequestRemoveSubpostcode: (depotName: string, routeName: string, subpostcode: string) => void;
+}
+
+function DepotCard({ sp, depot, onView, onRequestRemoveSubpostcode }: DepotCardProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -408,7 +497,14 @@ function DepotCard({ sp, depot }: { sp: string; depot: ContractDepotView }) {
 
       <div className={`${styles.depotContent} ${!open ? styles.collapsed : ''}`}>
         {depot.loops.map(loop => (
-          <LoopPanel key={loop.name} sp={sp} depotName={depot.name} loop={loop} />
+          <LoopPanel
+            key={loop.name}
+            sp={sp}
+            depotName={depot.name}
+            loop={loop}
+            onView={onView}
+            onRequestRemoveSubpostcode={onRequestRemoveSubpostcode}
+          />
         ))}
       </div>
     </div>
@@ -418,7 +514,33 @@ function DepotCard({ sp, depot }: { sp: string; depot: ContractDepotView }) {
 export function Contracts() {
   const sp = useCurrentSp();
   const [search, setSearch] = useState('');
+  const [viewTarget, setViewTarget] = useState<RouteViewTarget | null>(null);
+  const [confirmRemoval, setConfirmRemoval] = useState<{
+    target: DeleteConfirmTarget;
+    depotName: string;
+    routeName: string;
+    subpostcode: string;
+  } | null>(null);
   const filtered = useMemo(() => getFilteredContracts(sp), [sp]);
+  const searched = useMemo(() => filterProviders(filtered, search), [filtered, search]);
+
+  const handleRequestRemoveSubpostcode = (depotName: string, routeName: string, subpostcode: string) => {
+    setConfirmRemoval({
+      depotName,
+      routeName,
+      subpostcode,
+      target: {
+        title: 'Remove sub postcode',
+        message: `Remove "${subpostcode}" from route "${routeName}" in ${depotName}? This only affects your custom addition — postcodes extracted from the contract itself are unaffected.`,
+      },
+    });
+  };
+
+  const handleConfirmRemoval = () => {
+    if (!confirmRemoval || !sp) return;
+    removeStoredSubpostcode(sp, confirmRemoval.depotName, confirmRemoval.routeName, confirmRemoval.subpostcode);
+    setConfirmRemoval(null);
+  };
 
   if (!sp) {
     return (
@@ -437,6 +559,7 @@ export function Contracts() {
     0,
   );
   const isEmpty = filtered.length === 0;
+  const noSearchResults = !isEmpty && searched.length === 0;
   const padCount = (n: number) => String(n).padStart(2, '0');
 
   const headerActions = (
@@ -475,21 +598,39 @@ export function Contracts() {
           <h2 className={styles.sectionTitle}>Active Contracts</h2>
         </div>
 
-        {!isEmpty ? (
+        {!isEmpty && !noSearchResults ? (
           <div className={styles.depotList}>
-            {filtered.flatMap(prov =>
+            {searched.flatMap(prov =>
               prov.depots.map(depot => (
-                <DepotCard key={`${prov.serviceProvider}-${depot.name}`} sp={sp} depot={depot} />
+                <DepotCard
+                  key={`${prov.serviceProvider}-${depot.name}`}
+                  sp={sp}
+                  depot={depot}
+                  onView={setViewTarget}
+                  onRequestRemoveSubpostcode={handleRequestRemoveSubpostcode}
+                />
               )),
             )}
           </div>
-        ) : (
+        ) : isEmpty ? (
           <div className={styles.emptyState}>
             <h3 className={styles.emptyTitle}>No Contracts on File</h3>
             <p className={styles.emptyDescription}>There are currently no contracts available for your service provider.</p>
           </div>
+        ) : (
+          <div className={styles.emptyState}>
+            <h3 className={styles.emptyTitle}>No Matches</h3>
+            <p className={styles.emptyDescription}>No depots, loops or routes match &quot;{search}&quot;.</p>
+          </div>
         )}
       </div>
+
+      <RouteViewModal target={viewTarget} onClose={() => setViewTarget(null)} />
+      <DeleteConfirmModal
+        target={confirmRemoval?.target ?? null}
+        onClose={() => setConfirmRemoval(null)}
+        onConfirm={handleConfirmRemoval}
+      />
     </PortalLayout>
   );
 }

@@ -228,13 +228,23 @@ export function statusBadgeClass(v: Vendor): string {
 
 export type StatusFilter = 'all' | 'active' | 'inactive' | 'expiring' | 'pending';
 export type SortKey = 'name' | 'vendorType' | 'route' | 'status' | 'startDate';
+/** Igual ao `vendorType` do Vendor: '1' = Driver, '2' = Subcontractor. */
+export type VendorTypeFilter = 'all' | string;
 
-export function filterAndSortVendors(all: Vendor[], query: string, statusFilter: StatusFilter, sortKey: SortKey, sortDir: 1 | -1): Vendor[] {
+export function filterAndSortVendors(
+  all: Vendor[],
+  query: string,
+  statusFilter: StatusFilter,
+  sortKey: SortKey,
+  sortDir: 1 | -1,
+  vendorTypeFilter: VendorTypeFilter = 'all',
+): Vendor[] {
   const q = query.trim().toLowerCase();
   const list = all.filter((v) => {
     const name = `${v.firstName || ''} ${v.lastName || ''}`.toLowerCase();
     const email = (v.email || '').toLowerCase();
     if (q && name.indexOf(q) === -1 && email.indexOf(q) === -1) return false;
+    if (vendorTypeFilter !== 'all' && (v.vendorType || '1') !== vendorTypeFilter) return false;
     if (statusFilter === 'active') {
       if (v.status) {
         if (v.status !== 'Active') return false;
@@ -278,4 +288,52 @@ export function filterAndSortVendors(all: Vendor[], query: string, statusFilter:
     }
   });
   return list;
+}
+
+/**
+ * Máscara de telefone flexível (aceita qualquer número internacional).
+ * Ported from the Next.js source's utils/vendor-utils.ts `formatPhone`.
+ */
+export function formatPhone(value: string): string {
+  if (!value) return '';
+  const cleaned = value.replace(/[^\d+]/g, '');
+  if (!cleaned) return '';
+
+  const groupRemaining = (prefix: string, remaining: string): string => {
+    let formatted = prefix;
+    let rest = remaining;
+    while (rest.length > 0) {
+      const chunkSize = rest.length > 4 ? 4 : rest.length;
+      formatted += ` ${rest.slice(0, chunkSize)}`;
+      rest = rest.slice(chunkSize);
+    }
+    return formatted;
+  };
+
+  if (cleaned.startsWith('+')) {
+    const numbers = cleaned.slice(1).replace(/\D/g, '');
+    if (!numbers) return '+';
+    if (numbers.length <= 3) return `+${numbers}`;
+    if (numbers.length <= 6) return `+${numbers.slice(0, 3)} ${numbers.slice(3)}`;
+    if (numbers.length <= 10) return `+${numbers.slice(0, 3)} ${numbers.slice(3, 6)} ${numbers.slice(6)}`;
+    return groupRemaining(`+${numbers.slice(0, 3)}`, numbers.slice(3));
+  }
+
+  const numbers = cleaned.replace(/\D/g, '');
+  if (!numbers) return '';
+  if (numbers.length <= 3) return numbers;
+  if (numbers.length <= 6) return `${numbers.slice(0, 3)} ${numbers.slice(3)}`;
+  if (numbers.length <= 10) return `${numbers.slice(0, 3)} ${numbers.slice(3, 6)} ${numbers.slice(6)}`;
+  return groupRemaining(numbers.slice(0, 3), numbers.slice(3));
+}
+
+/**
+ * Já existe outro vendor com este email? Ported from the Next.js source's
+ * inline duplicate-email guard in `page.tsx`'s `handleSave`. Comparação
+ * case-insensitive; `excludeId` deixa de fora o próprio registo ao editar.
+ */
+export function isDuplicateVendorEmail(all: Vendor[], email: string, excludeId?: number | null): boolean {
+  const target = email.trim().toLowerCase();
+  if (!target) return false;
+  return all.some((v) => v.id !== excludeId && (v.email || '').trim().toLowerCase() === target);
 }
