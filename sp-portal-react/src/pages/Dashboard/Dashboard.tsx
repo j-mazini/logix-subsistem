@@ -95,7 +95,7 @@ const NAV_GROUPS: NavGroup[] = [
   ] },
   { title: 'Compliance', icon: 'bi-shield-check', items: [
     { label: 'Service Provider Profile', desc: 'Company details and documents', icon: 'bi-building', route: '/profile' },
-    { label: 'Compliance', desc: 'Training status and renewals', icon: 'bi-patch-check', route: null },
+    { label: 'Compliance', desc: 'Training status and renewals', icon: 'bi-patch-check', route: '/workforce?tab=compliance' },
     { label: 'Vetting', desc: 'Driver vetting and checks', icon: 'bi-person-check', route: '/workforce?tab=vetting' },
   ] },
   { title: 'Billing', icon: 'bi-receipt', items: [
@@ -112,7 +112,7 @@ const NAV_GROUPS: NavGroup[] = [
     { label: 'Vendor Requests', desc: 'Open requests and approvals', icon: 'bi-envelope-paper', route: '/requests-admin' },
   ] },
   { title: 'Trace & Queries', icon: 'bi-search', items: [
-    { label: 'Trace & Queries', desc: 'Track shipments and raise queries', icon: 'bi-binoculars', route: null },
+    { label: 'Trace & Queries', desc: 'Track shipments and raise queries', icon: 'bi-binoculars', route: '/trace-queries' },
   ] },
 ];
 
