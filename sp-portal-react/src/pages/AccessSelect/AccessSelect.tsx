@@ -20,23 +20,16 @@ export function AccessSelect() {
           <div className={`${styles.icon} ${styles.iconDhl}`}>
             <i className="bi bi-building"></i>
           </div>
-          <div className={styles.cardHeader}>
-            <h2>DHL Administration</h2>
-            <span className={`${styles.badge} ${styles.badgeDhl}`}>ADMIN</span>
+          <div className={styles.cardBody}>
+            <div className={styles.cardHeader}>
+              <h2>DHL Administration</h2>
+              <span className={`${styles.badge} ${styles.badgeDhl}`}>ADMIN</span>
+            </div>
+            <p className={styles.description}>System management, reporting &amp; compliance tracking.</p>
           </div>
-          <p className={styles.description}>
-            Access the DHL administration portal for system management, reporting, and compliance tracking.
-          </p>
-          <ul className={styles.features}>
-            <li>Global reporting & analytics</li>
-            <li>Vendor management</li>
-            <li>Performance metrics</li>
-            <li>Compliance tracking</li>
-          </ul>
-          <button className={`${styles.cta} ${styles.ctaDhl}`}>
+          <div className={`${styles.arrow} ${styles.arrowDhl}`}>
             <i className="bi bi-arrow-right"></i>
-            Access Admin
-          </button>
+          </div>
         </div>
 
         {/* Service Provider Portal Card */}
@@ -44,23 +37,33 @@ export function AccessSelect() {
           <div className={`${styles.icon} ${styles.iconSp}`}>
             <i className="bi bi-truck"></i>
           </div>
-          <div className={styles.cardHeader}>
-            <h2>Service Provider Portal</h2>
-            <span className={`${styles.badge} ${styles.badgeSp}`}>PORTAL</span>
+          <div className={styles.cardBody}>
+            <div className={styles.cardHeader}>
+              <h2>Service Provider Portal</h2>
+              <span className={`${styles.badge} ${styles.badgeSp}`}>PORTAL</span>
+            </div>
+            <p className={styles.description}>Manage operations, drivers, vehicles &amp; routes.</p>
           </div>
-          <p className={styles.description}>
-            Access your service provider portal to manage operations, drivers, vehicles, and routes.
-          </p>
-          <ul className={styles.features}>
-            <li>Dashboard & KPIs</li>
-            <li>Driver management</li>
-            <li>Fleet management</li>
-            <li>Financial insights</li>
-          </ul>
-          <button className={`${styles.cta} ${styles.ctaSp}`}>
+          <div className={`${styles.arrow} ${styles.arrowSp}`}>
             <i className="bi bi-arrow-right"></i>
-            Access Portal
-          </button>
+          </div>
+        </div>
+
+        {/* Driver view Card */}
+        <div className={styles.card} onClick={() => navigate('/driver-login')}>
+          <div className={`${styles.icon} ${styles.iconDriver}`}>
+            <i className="bi bi-person-badge"></i>
+          </div>
+          <div className={styles.cardBody}>
+            <div className={styles.cardHeader}>
+              <h2>Driver view</h2>
+              <span className={`${styles.badge} ${styles.badgeDriver}`}>DRIVER</span>
+            </div>
+            <p className={styles.description}>Earnings, deductions, invoices &amp; requests.</p>
+          </div>
+          <div className={`${styles.arrow} ${styles.arrowDriver}`}>
+            <i className="bi bi-arrow-right"></i>
+          </div>
         </div>
 
         {/* Driver Portal Card */}

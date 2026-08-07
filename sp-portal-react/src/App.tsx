@@ -30,6 +30,17 @@ import {
   VettingChecklistPage,
   VettingInterviewPage,
 } from './pages/Vetting';
+import { DriverLogin } from './pages/DriverLogin/DriverLogin';
+import {
+  DriverLayout,
+  DriverInsights,
+  DriverProfile,
+  DriverDeductions,
+  DriverMonth,
+  DriverPerformance,
+  DriverInvoice,
+  DriverRequests,
+} from './pages/Driver';
 import { WeekPlanner } from './pages/WeekPlanner/WeekPlanner';
 import { Workforce } from './pages/Workforce/Workforce';
 import { LiveService } from './pages/LiveService/LiveService';
@@ -108,6 +119,18 @@ function App() {
           <Route element={<VettingAdminLayout />}>
             <Route path="/vetting-checklist" element={<VettingChecklistPage />} />
             <Route path="/vetting-interview" element={<VettingInterviewPage />} />
+          </Route>
+          {/* Driver Portal — mobile self-service flow, separate bottom-nav shell. */}
+          <Route path="/driver-login" element={<DriverLogin />} />
+          <Route element={<DriverLayout />}>
+            <Route path="/driver" element={<Navigate to="/driver/insights" replace />} />
+            <Route path="/driver/insights" element={<DriverInsights />} />
+            <Route path="/driver/profile" element={<DriverProfile />} />
+            <Route path="/driver/deductions" element={<DriverDeductions />} />
+            <Route path="/driver/month" element={<DriverMonth />} />
+            <Route path="/driver/performance" element={<DriverPerformance />} />
+            <Route path="/driver/invoice" element={<DriverInvoice />} />
+            <Route path="/driver/requests" element={<DriverRequests />} />
           </Route>
           <Route path="/week-planner" element={<WeekPlanner />} />
           <Route path="/workforce" element={<Workforce />} />

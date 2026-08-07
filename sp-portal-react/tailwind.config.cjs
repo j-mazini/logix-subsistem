@@ -11,6 +11,8 @@ module.exports = {
   content: [
     './src/pages/DailyOperationsReports/**/*.{ts,tsx}',
     './src/pages/DailyGamePlan/**/*.{ts,tsx}',
+    './src/pages/Driver/**/*.{ts,tsx}',
+    './src/pages/DriverLogin/**/*.{ts,tsx}',
     './src/components/**/*.{ts,tsx}',
     './src/lib/**/*.{ts,tsx}',
     './src/app/(private)/**/*.{ts,tsx}',

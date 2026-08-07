@@ -10,6 +10,9 @@ import {
   setStoredTarget,
   addStoredSubpostcode,
   removeStoredSubpostcode,
+  addStoredRoute,
+  getDepotNames,
+  getLoopNames,
   type ContractDepotView,
   type ContractLoopView,
   type ContractRouteView,
@@ -18,7 +21,19 @@ import {
 } from '../../data/contractsData';
 import { RouteViewModal, type RouteViewTarget } from './components/RouteViewModal';
 import { DeleteConfirmModal, type DeleteConfirmTarget } from './components/DeleteConfirmModal';
+import { AddRouteModal, type AddRouteFormState } from './components/AddRouteModal';
 import styles from './Contracts.module.css';
+
+const EMPTY_ROUTE_FORM: AddRouteFormState = {
+  depotName: '',
+  isNewDepot: false,
+  loopName: '',
+  isNewLoop: true,
+  routeName: '',
+  type: 'Child',
+  driver: '',
+  target: '',
+};
 
 /** Case-insensitive substring match used by the search box below. */
 function matches(term: string, ...values: string[]): boolean {
@@ -514,6 +529,7 @@ function DepotCard({ sp, depot, onView, onRequestRemoveSubpostcode }: DepotCardP
 export function Contracts() {
   const sp = useCurrentSp();
   const [search, setSearch] = useState('');
+  const [version, setVersion] = useState(0);
   const [viewTarget, setViewTarget] = useState<RouteViewTarget | null>(null);
   const [confirmRemoval, setConfirmRemoval] = useState<{
     target: DeleteConfirmTarget;
@@ -521,8 +537,16 @@ export function Contracts() {
     routeName: string;
     subpostcode: string;
   } | null>(null);
-  const filtered = useMemo(() => getFilteredContracts(sp), [sp]);
+  const [showAddRoute, setShowAddRoute] = useState(false);
+  const [routeForm, setRouteForm] = useState<AddRouteFormState>(EMPTY_ROUTE_FORM);
+  const [routeError, setRouteError] = useState('');
+  const filtered = useMemo(() => getFilteredContracts(sp), [sp, version]);
   const searched = useMemo(() => filterProviders(filtered, search), [filtered, search]);
+  const depotNames = useMemo(() => getDepotNames(sp), [sp, version]);
+  const loopNames = useMemo(
+    () => (routeForm.isNewDepot ? [] : getLoopNames(sp, routeForm.depotName)),
+    [sp, routeForm.depotName, routeForm.isNewDepot, version],
+  );
 
   const handleRequestRemoveSubpostcode = (depotName: string, routeName: string, subpostcode: string) => {
     setConfirmRemoval({
@@ -540,6 +564,39 @@ export function Contracts() {
     if (!confirmRemoval || !sp) return;
     removeStoredSubpostcode(sp, confirmRemoval.depotName, confirmRemoval.routeName, confirmRemoval.subpostcode);
     setConfirmRemoval(null);
+  };
+
+  const openAddRoute = () => {
+    setRouteForm(EMPTY_ROUTE_FORM);
+    setRouteError('');
+    setShowAddRoute(true);
+  };
+
+  const handleAddRouteSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const depotName = routeForm.depotName.trim();
+    const loopName = routeForm.loopName.trim();
+    const routeName = routeForm.routeName.trim();
+    if (!depotName || !loopName || !routeName) {
+      setRouteError('Depot, loop and route name are required');
+      return;
+    }
+    const targetTrimmed = routeForm.target.trim();
+    const target = targetTrimmed === '' ? null : parseInt(targetTrimmed, 10);
+    if (target !== null && Number.isNaN(target)) {
+      setRouteError('Target must be a number');
+      return;
+    }
+    addStoredRoute(sp, {
+      depotName,
+      loopName,
+      routeName,
+      type: routeForm.type,
+      driver: routeForm.driver.trim(),
+      target,
+    });
+    setShowAddRoute(false);
+    setVersion((v) => v + 1);
   };
 
   if (!sp) {
@@ -573,6 +630,9 @@ export function Contracts() {
         value={search}
         onChange={e => setSearch(e.target.value)}
       />
+      <button type="button" className="vp-modal-btn vp-modal-btn-save" onClick={openAddRoute}>
+        + Add Route
+      </button>
     </div>
   );
 
@@ -630,6 +690,16 @@ export function Contracts() {
         target={confirmRemoval?.target ?? null}
         onClose={() => setConfirmRemoval(null)}
         onConfirm={handleConfirmRemoval}
+      />
+      <AddRouteModal
+        open={showAddRoute}
+        formData={routeForm}
+        onChange={updater => setRouteForm(updater)}
+        depots={depotNames}
+        loops={loopNames}
+        onClose={() => setShowAddRoute(false)}
+        onSubmit={handleAddRouteSubmit}
+        error={routeError}
       />
     </PortalLayout>
   );

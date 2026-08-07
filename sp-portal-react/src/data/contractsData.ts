@@ -226,6 +226,83 @@ export function getEffectiveBandsFor(spName: string, depotName: string, loopName
   return getStoredLoopBands(spName, depotName, loopName) ?? getDigressiveBandsFor(loopName);
 }
 
+const CUSTOM_ROUTES_STORAGE_KEY = 'dhl_contract_custom_routes';
+
+export interface NewRouteInput {
+  depotName: string;
+  loopName: string;
+  routeName: string;
+  type: string;
+  driver?: string;
+  target?: number | null;
+}
+
+function getStoredCustomDepots(spName: string): RawContractDepot[] {
+  try {
+    const raw = localStorage.getItem(CUSTOM_ROUTES_STORAGE_KEY);
+    if (!raw) return [];
+    const data = JSON.parse(raw);
+    return Array.isArray(data[spName]) ? data[spName] : [];
+  } catch {
+    return [];
+  }
+}
+
+function setStoredCustomDepots(spName: string, depots: RawContractDepot[]): void {
+  try {
+    const raw = localStorage.getItem(CUSTOM_ROUTES_STORAGE_KEY);
+    const data = raw ? JSON.parse(raw) : {};
+    data[spName] = depots;
+    localStorage.setItem(CUSTOM_ROUTES_STORAGE_KEY, JSON.stringify(data));
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Adds a new route to a depot/loop for the given service provider, creating the depot/loop if new. Stored in localStorage and merged into getFilteredContracts(). */
+export function addStoredRoute(spName: string, input: NewRouteInput): void {
+  const depots = getStoredCustomDepots(spName);
+  let depot = depots.find(d => d.name === input.depotName);
+  if (!depot) {
+    depot = { name: input.depotName, loops: [] };
+    depots.push(depot);
+  }
+  if (!depot.loops) depot.loops = [];
+  let loop = depot.loops.find(l => l.name === input.loopName);
+  if (!loop) {
+    loop = { name: input.loopName, routes: [] };
+    depot.loops.push(loop);
+  }
+  if (!loop.routes) loop.routes = [];
+  loop.routes.push({
+    name: input.routeName,
+    type: input.type,
+    driver: input.driver || undefined,
+    targetDel: input.target != null && !Number.isNaN(input.target) ? input.target : undefined,
+  });
+  setStoredCustomDepots(spName, depots);
+}
+
+/** Names of all depots (existing + custom) currently on file for a service provider. */
+export function getDepotNames(spName: string): string[] {
+  const providers = getRawContractProviders();
+  const prov = providers.find(p => p.serviceProvider === spName);
+  const existing = (prov?.depots || []).map(d => d.name);
+  const custom = getStoredCustomDepots(spName).map(d => d.name);
+  return Array.from(new Set([...existing, ...custom])).sort();
+}
+
+/** Names of loops within a depot (existing + custom) for a service provider. */
+export function getLoopNames(spName: string, depotName: string): string[] {
+  const providers = getRawContractProviders();
+  const prov = providers.find(p => p.serviceProvider === spName);
+  const existingDepot = (prov?.depots || []).find(d => d.name === depotName);
+  const existing = (existingDepot?.loops || []).map(l => l.name);
+  const customDepot = getStoredCustomDepots(spName).find(d => d.name === depotName);
+  const custom = (customDepot?.loops || []).map(l => l.name);
+  return Array.from(new Set([...existing, ...custom])).sort();
+}
+
 export interface ContractRouteView {
   name: string;
   type: string;
@@ -263,15 +340,29 @@ export function getFilteredContracts(spName: string): ContractProviderView[] {
   if (!spName) return [];
   const providers = getRawContractProviders();
   const prov = providers.find((p) => p.serviceProvider === spName);
-  if (!prov) return [];
+  const customDepots = getStoredCustomDepots(spName);
+  if (!prov && customDepots.length === 0) return [];
 
-  const depots: ContractDepotView[] = (prov.depots || []).map((dep) => {
+  const mergedDepots: RawContractDepot[] = (prov?.depots || []).map((dep) => {
+    const customDepot = customDepots.find((d) => d.name === dep.name);
+    if (!customDepot) return dep;
+    const loops = (dep.loops || []).map((loop) => {
+      const customLoop = customDepot.loops?.find((l) => l.name === loop.name);
+      if (!customLoop) return loop;
+      return { ...loop, routes: [...(loop.routes || []), ...(customLoop.routes || [])] };
+    });
+    const extraLoops = (customDepot.loops || []).filter((l) => !loops.some((loop) => loop.name === l.name));
+    return { ...dep, loops: [...loops, ...extraLoops] };
+  });
+  const extraDepots = customDepots.filter((d) => !mergedDepots.some((dep) => dep.name === d.name));
+
+  const depots: ContractDepotView[] = [...mergedDepots, ...extraDepots].map((dep) => {
     const loops: ContractLoopView[] = (dep.loops || []).map((loop) => {
       const routes: ContractRouteView[] = (loop.routes || []).map((r) => {
-        const stored = getStoredTarget(prov.serviceProvider, dep.name, r.name);
+        const stored = getStoredTarget(spName, dep.name, r.name);
         const target = stored != null && !Number.isNaN(stored) ? stored : r.targetDel != null ? r.targetDel : 0;
         const extracted = postcodesToSubpostcodes(r.postcodes || []);
-        const custom = getStoredSubpostcodes(prov.serviceProvider, dep.name, r.name);
+        const custom = getStoredSubpostcodes(spName, dep.name, r.name);
         const allSubpostcodes = Array.from(new Set([...extracted, ...custom])).sort();
         return {
           name: r.name,
@@ -283,7 +374,7 @@ export function getFilteredContracts(spName: string): ContractProviderView[] {
           customSubpostcodes: custom,
         };
       });
-      const storedRate = getStoredLoopRate(prov.serviceProvider, dep.name, loop.name);
+      const storedRate = getStoredLoopRate(spName, dep.name, loop.name);
       const rate =
         storedRate != null && !Number.isNaN(storedRate)
           ? storedRate
@@ -295,5 +386,5 @@ export function getFilteredContracts(spName: string): ContractProviderView[] {
     return { name: dep.name, loops };
   });
 
-  return [{ serviceProvider: prov.serviceProvider, depots }];
+  return [{ serviceProvider: spName, depots }];
 }
