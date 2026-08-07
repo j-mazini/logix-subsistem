@@ -14,6 +14,7 @@
  */
 
 import { MOCK_DRIVERS, type MockDriver } from '../data/mockDrivers';
+import { ROUTE_CODES } from '../data/mockRouteCodes';
 import { MOCK_DRIVER_USER } from '../app/(private)/mockAuth';
 import type {
   TraceQueryCase,
@@ -66,7 +67,11 @@ let seeded = false;
 let nextBackendId = 1;
 
 const STORAGE_KEY = 'dhl_trace_query_cases';
-const STORAGE_SCHEMA = 1;
+// Bumped: ROUTE_NAMES changed from LON-01/MAN-01/BIR-01 style codes to the
+// MD7A-MD7F codes shared with the Dashboard's Live Service block. Old
+// persisted overrides/deductions baked in the previous route names, so they
+// must be discarded rather than layered over freshly-seeded cases.
+const STORAGE_SCHEMA = 2;
 
 interface PersistedCases {
   schema: number;
@@ -110,8 +115,11 @@ const STREETS = [
   '14 Baker Street', '22 Oxford Road', '7 Kings Avenue', '101 Mill Lane', '56 Church Street',
   '8 Victoria Road', '19 Park Lane', '33 Station Road', '5 High Street', '48 Elm Grove',
 ];
-/** Same convention as DeductionsDisbursementsRecharges's ROUTE_NAMES — an independent mock pool, not shared state. */
-const ROUTE_NAMES = ['LON-01', 'LON-02', 'LON-03', 'MAN-01', 'MAN-02', 'BIR-01'];
+// Same route codes as DeductionsDisbursementsRecharges's ROUTE_NAMES and the
+// Dashboard's Live Service block (the canonical source — see
+// data/mockRouteCodes.ts) — kept in sync so a case's route matches the same
+// route shown across every surface.
+const ROUTE_NAMES = ROUTE_CODES;
 const POSTCODES = ['SW1A 1AA', 'E1 6AN', 'NW1 2DB', 'SE1 9SG', 'W1D 3QU', 'EC1A 1BB', 'N1 9GU', 'SW3 5BS'];
 const CUSTOMERS = [
   'Amelia Clarke', 'Oliver Bennett', 'Isla Robertson', 'Noah Campbell', 'Freya Mitchell',

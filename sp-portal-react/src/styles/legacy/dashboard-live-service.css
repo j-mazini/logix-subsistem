@@ -340,6 +340,27 @@
 }
 
 .sp-live-carousel-position { font-variant-numeric: tabular-nums; }
+
+.sp-live-carousel-topline-info {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.sp-live-carousel-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 600;
+  font-size: 0.75rem;
+  color: #16a34a;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.sp-live-carousel-link:hover { color: #15803d; }
 .sp-live-carousel-viewport { overflow: hidden; }
 .sp-live-carousel-track {
   display: flex;
