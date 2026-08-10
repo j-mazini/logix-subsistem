@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion, type Variants } from 'framer-motion';
-import { X, Eye, Plus } from 'lucide-react';
+import { X, Eye, Plus, Trash2 } from 'lucide-react';
 import { useBodyScrollLock } from '../../../hooks/useBodyScrollLock';
 import {
   getEffectiveBandsFor,
   setStoredLoopBands,
   setStoredLoopRate,
+  setStoredLoopTarget,
   setStoredTarget,
   addStoredSubpostcode,
+  isCustomLoop,
+  isCustomRoute,
   type ContractDepotView,
   type ContractLoopView,
   type ContractRouteView,
@@ -43,10 +46,11 @@ interface RouteRowProps {
   route: ContractRouteView;
   onView: (target: RouteViewTarget) => void;
   onRequestRemoveSubpostcode: (depotName: string, routeName: string, subpostcode: string) => void;
+  onRequestDeleteRoute: (depotName: string, loopName: string, routeName: string) => void;
   loopName: string;
 }
 
-function RouteRow({ sp, depotName, loopName, route, onView, onRequestRemoveSubpostcode }: RouteRowProps) {
+function RouteRow({ sp, depotName, loopName, route, onView, onRequestRemoveSubpostcode, onRequestDeleteRoute }: RouteRowProps) {
   const [open, setOpen] = useState(false);
   const [rawValue, setRawValue] = useState(String(route.target));
   const [newSubpostcode, setNewSubpostcode] = useState('');
@@ -98,6 +102,20 @@ function RouteRow({ sp, depotName, loopName, route, onView, onRequestRemoveSubpo
         >
           <Eye size={14} />
         </button>
+        {isCustomRoute(sp, depotName, loopName, route.name) && (
+          <button
+            type="button"
+            className={contractStyles.tileDeleteButton}
+            onClick={e => {
+              e.stopPropagation();
+              onRequestDeleteRoute(depotName, loopName, route.name);
+            }}
+            aria-label={`Delete ${route.name}`}
+            title="Delete route"
+          >
+            <Trash2 size={14} />
+          </button>
+        )}
       </div>
 
       {open && (
@@ -198,18 +216,31 @@ interface BandDraft {
   price: string;
 }
 
-function LoopRateTile({ sp, depotName, loop }: { sp: string; depotName: string; loop: ContractLoopView }) {
+function LoopRateTile({
+  sp,
+  depotName,
+  loop,
+  onRequestDeleteLoop,
+}: {
+  sp: string;
+  depotName: string;
+  loop: ContractLoopView;
+  onRequestDeleteLoop: (depotName: string, loopName: string) => void;
+}) {
   const [editing, setEditing] = useState(false);
   const [rate, setRate] = useState<number>(() =>
     typeof loop.deliveryRate === 'number' && !Number.isNaN(loop.deliveryRate) ? loop.deliveryRate : 0,
   );
   const [bands, setBands] = useState<DigressiveBand[] | undefined>(() => getEffectiveBandsFor(sp, depotName, loop.name));
+  const [target, setTarget] = useState(loop.target);
+  const [hasTargetOverride, setHasTargetOverride] = useState(loop.hasTargetOverride);
   const [draftRate, setDraftRate] = useState('');
   const [draftBands, setDraftBands] = useState<BandDraft[]>([]);
+  const [draftTarget, setDraftTarget] = useState('');
   const [editError, setEditError] = useState('');
 
   const rateStr = rate > 0 ? `£${rate.toFixed(2)}` : '—';
-  const totalTarget = loop.routes.reduce((sum, r) => sum + (r.target != null ? r.target : 0), 0);
+  const routesSum = loop.routes.reduce((sum, r) => sum + (r.target != null ? r.target : 0), 0);
   const bandsText =
     bands && bands.length
       ? bands
@@ -224,6 +255,7 @@ function LoopRateTile({ sp, depotName, loop }: { sp: string; depotName: string; 
         ? bands.map(b => ({ min: String(b.min), max: b.max != null ? String(b.max) : '', price: String(b.price) }))
         : [{ min: '1', max: '', price: rate > 0 ? String(rate) : '' }],
     );
+    setDraftTarget(hasTargetOverride ? String(target) : '');
     setEditError('');
     setEditing(true);
   };
@@ -275,10 +307,23 @@ function LoopRateTile({ sp, depotName, loop }: { sp: string; depotName: string; 
       newBands.push({ min, max, price });
     }
 
+    const targetTrimmed = draftTarget.trim();
+    let newTarget: number | null = null;
+    if (targetTrimmed !== '') {
+      newTarget = parseInt(targetTrimmed, 10);
+      if (Number.isNaN(newTarget) || newTarget < 0) {
+        setEditError('Target must be a number of 0 or more');
+        return;
+      }
+    }
+
     setStoredLoopRate(sp, depotName, loop.name, newRate > 0 ? newRate : null);
     setStoredLoopBands(sp, depotName, loop.name, newBands.length ? newBands : null);
+    setStoredLoopTarget(sp, depotName, loop.name, newTarget);
     setRate(newRate);
     setBands(newBands.length ? newBands : getEffectiveBandsFor(sp, depotName, loop.name));
+    setTarget(newTarget ?? routesSum);
+    setHasTargetOverride(newTarget !== null);
     setEditing(false);
   };
 
@@ -292,6 +337,17 @@ function LoopRateTile({ sp, depotName, loop }: { sp: string; depotName: string; 
       <div className={styles.tileHeader}>
         <h4 className={styles.tileHeaderTitle}>{loop.name}</h4>
         <span className={contractStyles.levelTag}>Rate &amp; bands</span>
+        {isCustomLoop(sp, depotName, loop.name) && (
+          <button
+            type="button"
+            className={contractStyles.tileDeleteButton}
+            onClick={() => onRequestDeleteLoop(depotName, loop.name)}
+            aria-label={`Delete loop ${loop.name}`}
+            title="Delete loop"
+          >
+            <Trash2 size={14} />
+          </button>
+        )}
       </div>
 
       {!editing ? (
@@ -308,7 +364,10 @@ function LoopRateTile({ sp, depotName, loop }: { sp: string; depotName: string; 
           </div>
           <div className={contractStyles.loopMetaItem}>
             <span className={contractStyles.loopMetaLabel}>Total Target</span>
-            <span className={contractStyles.loopMetaValue}>{totalTarget}</span>
+            <span className={contractStyles.loopMetaValue}>
+              {target}
+              {!hasTargetOverride && ' (from routes)'}
+            </span>
           </div>
           <button type="button" className={contractStyles.loopEditButton} onClick={startEdit}>
             Edit
@@ -333,6 +392,28 @@ function LoopRateTile({ sp, depotName, loop }: { sp: string; depotName: string; 
                 setEditError('');
               }}
               placeholder="0.00"
+            />
+          </div>
+
+          <div className={contractStyles.editField}>
+            <label className={contractStyles.targetLabel} htmlFor={`target-${depotName}-${loop.name}`}>
+              Total Target
+            </label>
+            <span className={contractStyles.targetHint}>
+              Leave empty to use the sum of route targets ({routesSum})
+            </span>
+            <input
+              id={`target-${depotName}-${loop.name}`}
+              type="number"
+              min={0}
+              step={1}
+              className={contractStyles.bandInput}
+              value={draftTarget}
+              onChange={e => {
+                setDraftTarget(e.target.value);
+                setEditError('');
+              }}
+              placeholder={String(routesSum)}
             />
           </div>
 
@@ -419,6 +500,7 @@ function RoutesTile({
   loop,
   onView,
   onRequestRemoveSubpostcode,
+  onRequestDeleteRoute,
   onAddRoute,
 }: {
   sp: string;
@@ -426,6 +508,7 @@ function RoutesTile({
   loop: ContractLoopView;
   onView: (target: RouteViewTarget) => void;
   onRequestRemoveSubpostcode: (depotName: string, routeName: string, subpostcode: string) => void;
+  onRequestDeleteRoute: (depotName: string, loopName: string, routeName: string) => void;
   onAddRoute: () => void;
 }) {
   return (
@@ -448,6 +531,7 @@ function RoutesTile({
               route={route}
               onView={onView}
               onRequestRemoveSubpostcode={onRequestRemoveSubpostcode}
+              onRequestDeleteRoute={onRequestDeleteRoute}
             />
           ))}
         </div>
@@ -464,7 +548,10 @@ interface DepotEditModalProps {
   onClose: () => void;
   onView: (target: RouteViewTarget) => void;
   onRequestRemoveSubpostcode: (depotName: string, routeName: string, subpostcode: string) => void;
+  onRequestDeleteLoop: (depotName: string, loopName: string) => void;
+  onRequestDeleteRoute: (depotName: string, loopName: string, routeName: string) => void;
   onAddRoute: (depotName: string, loopName?: string) => void;
+  onAddLoop: (depotName: string) => void;
 }
 
 const backdropVariants: Variants = {
@@ -479,7 +566,17 @@ const modalVariants: Variants = {
   exit: { opacity: 0, scale: 0.95, y: 20, transition: { duration: 0.15 } },
 };
 
-export function DepotEditModal({ sp, depot, onClose, onView, onRequestRemoveSubpostcode, onAddRoute }: DepotEditModalProps) {
+export function DepotEditModal({
+  sp,
+  depot,
+  onClose,
+  onView,
+  onRequestRemoveSubpostcode,
+  onRequestDeleteLoop,
+  onRequestDeleteRoute,
+  onAddRoute,
+  onAddLoop,
+}: DepotEditModalProps) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
@@ -497,7 +594,7 @@ export function DepotEditModal({ sp, depot, onClose, onView, onRequestRemoveSubp
 
   const loopCount = depot?.loops.length ?? 0;
   const routeCount = depot?.loops.reduce((s, l) => s + l.routes.length, 0) ?? 0;
-  const totalTarget = depot?.loops.reduce((s, l) => s + l.routes.reduce((ss, r) => ss + (r.target || 0), 0), 0) ?? 0;
+  const totalTarget = depot?.loops.reduce((s, l) => s + l.target, 0) ?? 0;
 
   const modalContent = (
     <AnimatePresence>
@@ -548,31 +645,39 @@ export function DepotEditModal({ sp, depot, onClose, onView, onRequestRemoveSubp
                       <span className={styles.overviewLabel}>Total Target</span>
                       <span className={styles.overviewValue}>{totalTarget}</span>
                     </div>
-                    <button
-                      type="button"
-                      className={contractStyles.addButton}
-                      style={{ marginLeft: 'auto' }}
-                      onClick={() => onAddRoute(depot.name)}
-                    >
-                      <Plus size={13} style={{ verticalAlign: -2, marginRight: 4 }} />
-                      Add Route
-                    </button>
+                    <div style={{ marginLeft: 'auto', display: 'flex', gap: '0.5rem' }}>
+                      <button type="button" className={contractStyles.cancelButton} onClick={() => onAddLoop(depot.name)}>
+                        <Plus size={13} style={{ verticalAlign: -2, marginRight: 4 }} />
+                        Add Loop
+                      </button>
+                      <button type="button" className={contractStyles.addButton} onClick={() => onAddRoute(depot.name)}>
+                        <Plus size={13} style={{ verticalAlign: -2, marginRight: 4 }} />
+                        Add Route
+                      </button>
+                    </div>
                   </div>
                 </div>
 
                 {loopCount === 0 ? (
-                  <div className={styles.emptyLoops}>No loops on file for this depot yet.</div>
+                  <div className={styles.emptyLoops}>
+                    <p>No loops on file for this depot yet.</p>
+                    <button type="button" className={contractStyles.addButton} onClick={() => onAddLoop(depot.name)}>
+                      <Plus size={13} style={{ verticalAlign: -2, marginRight: 4 }} />
+                      Add Loop
+                    </button>
+                  </div>
                 ) : (
                   depot.loops.map(loop => (
                     <div key={loop.name} className={styles.loopBlock}>
                       <div className={styles.bentoGrid}>
-                        <LoopRateTile sp={sp} depotName={depot.name} loop={loop} />
+                        <LoopRateTile sp={sp} depotName={depot.name} loop={loop} onRequestDeleteLoop={onRequestDeleteLoop} />
                         <RoutesTile
                           sp={sp}
                           depotName={depot.name}
                           loop={loop}
                           onView={onView}
                           onRequestRemoveSubpostcode={onRequestRemoveSubpostcode}
+                          onRequestDeleteRoute={onRequestDeleteRoute}
                           onAddRoute={() => onAddRoute(depot.name, loop.name)}
                         />
                       </div>

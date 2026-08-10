@@ -41,10 +41,18 @@
 }
 
 .emptyLoops {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.875rem;
   text-align: center;
   padding: 2rem 1rem;
   color: var(--ink-faint);
   font-size: 0.875rem;
+}
+
+.emptyLoops p {
+  margin: 0;
 }
 
 .loopBlock {
