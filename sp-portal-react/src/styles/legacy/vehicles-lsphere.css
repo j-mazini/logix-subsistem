@@ -760,35 +760,42 @@ body.vehicles-page {
   transform: scale(0.97);
 }
 
+/*
+ * vp-modal-btn-* is used by modals on pages other than Vehicles too (e.g.
+ * Contracts' Add Depot/Loop/Route). The --v-* colors above only exist on
+ * body.vehicles-page, so every var() here falls back to the same underlying
+ * global token directly — same computed color either way, but no longer
+ * invisible (transparent-on-transparent) when that body class isn't set.
+ */
 .vp-modal-btn-cancel {
   background: var(--color-neutral-white);
-  border: 1px solid var(--v-border);
-  color: var(--v-text-muted);
+  border: 1px solid var(--v-border, var(--color-neutral-border));
+  color: var(--v-text-muted, var(--color-text-muted));
 }
 
 .vp-modal-btn-cancel:hover {
-  background: var(--v-surface-alt);
-  color: var(--v-text);
+  background: var(--v-surface-alt, var(--color-neutral-background));
+  color: var(--v-text, var(--color-text-dark));
 }
 
 .vp-modal-btn-save {
-  background: var(--v-primary);
-  border: 1px solid var(--v-primary);
+  background: var(--v-primary, var(--color-primary-blue));
+  border: 1px solid var(--v-primary, var(--color-primary-blue));
   color: var(--color-neutral-white);
 }
 
 .vp-modal-btn-save:hover {
-  background: var(--v-primary-dark);
+  background: var(--v-primary-dark, #0b5ed7);
 }
 
 .vp-modal-btn-delete {
-  background: var(--v-danger);
-  border: 1px solid var(--v-danger);
+  background: var(--v-danger, var(--color-error));
+  border: 1px solid var(--v-danger, var(--color-error));
   color: var(--color-neutral-white);
 }
 
 .vp-modal-btn-delete:hover {
-  background: var(--v-danger-dark);
+  background: var(--v-danger-dark, #b02a37);
 }
 
 /* ============ DELETE (danger) MODAL ============ */

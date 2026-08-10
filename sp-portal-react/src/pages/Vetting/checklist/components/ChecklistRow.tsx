@@ -472,7 +472,7 @@ Best regards,`;
 
         {records.length === 0 ? (
           <div className={styles.emptyInheritedBlock}>
-            No records yet — the driver submits work history in the candidate portal.
+            No records yet — the driver submits work history in the Driver app.
           </div>
         ) : (
           <>
@@ -580,7 +580,7 @@ Best regards,`;
       <div className={`${styles.docFieldPanel} ${styles.workReferencesPanel}`}>
         {records.length === 0 ? (
           <div className={styles.emptyInheritedBlock}>
-            No employment records yet — the driver submits work history in the candidate portal.
+            No employment records yet — the driver submits work history in the Driver app.
           </div>
         ) : (
           <>
@@ -811,7 +811,7 @@ Best regards,`;
               rel="noopener noreferrer"
               className={styles.itemLink}
             >
-              ↗ {link.label}
+              {link.label}
             </a>
           ))}
         </div>
@@ -862,10 +862,10 @@ Best regards,`;
               onBlur={(value) => onDocFieldBlur(item.docKey!, '__fileName', value)}
             />
             <DocInput
-              label="Google Drive file / folder URL"
+              label="Document file / folder link"
               type="url"
               value={getDocFieldValue(item.docKey!, '__driveUrl')}
-              placeholder="https://drive.google.com/..."
+              placeholder="Link to the stored file or folder"
               readOnly={readOnly || isDocumentNotApplicable}
               readOnlyReason={isDocumentNotApplicable ? 'Not required for this case' : undefined}
               onChange={(value) => onDocFieldChange(item.docKey!, '__driveUrl', value)}
