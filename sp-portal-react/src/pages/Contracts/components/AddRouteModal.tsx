@@ -1,9 +1,9 @@
 import { createPortal } from 'react-dom';
+import { X } from 'lucide-react';
 import { useModalBehavior } from '../../../hooks/useModalBehavior';
+import styles from './ContractModals.module.css';
 
 export interface AddRouteFormState {
-  depotName: string;
-  isNewDepot: boolean;
   loopName: string;
   isNewLoop: boolean;
   routeName: string;
@@ -14,90 +14,50 @@ export interface AddRouteFormState {
 
 interface AddRouteModalProps {
   open: boolean;
+  depotName: string;
   formData: AddRouteFormState;
   onChange: (updater: (f: AddRouteFormState) => AddRouteFormState) => void;
-  depots: string[];
   loops: string[];
   onClose: () => void;
   onSubmit: (e: React.FormEvent) => void;
   error?: string;
 }
 
-export function AddRouteModal({ open, formData, onChange, depots, loops, onClose, onSubmit, error }: AddRouteModalProps) {
+/**
+ * Bottom of the hierarchy: create a route inside a known depot. The depot is
+ * always fixed by the modal that opened this one (a depot card or its loop
+ * tile) — only the loop and route details are ever chosen here, mirroring
+ * AddLoopModal's "one level at a time" shape.
+ */
+export function AddRouteModal({ open, depotName, formData, onChange, loops, onClose, onSubmit, error }: AddRouteModalProps) {
   useModalBehavior(onClose, open);
 
   if (!open) return null;
 
   return createPortal(
-    <div className="vp-modal-backdrop" onClick={onClose}>
-      <div className="vp-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="addRouteTitle">
-        <div className="vp-modal-header">
-          <h2 id="addRouteTitle">Add New Route</h2>
-          <button type="button" className="vp-modal-close" aria-label="Close" onClick={onClose}>
-            <i className="bi bi-x-lg" />
-          </button>
-        </div>
-        <form onSubmit={onSubmit}>
-          <div className="vp-modal-body">
-            <div className="vp-form-section">
-              <h3 className="vp-form-section-title">Depot</h3>
-              <div className="vp-form-grid-2">
-                <div>
-                  <label className="vp-form-label" htmlFor="depotSelect">
-                    Depot <span className="vp-form-required">*</span>
-                  </label>
-                  <select
-                    id="depotSelect"
-                    className="vp-form-select"
-                    value={formData.isNewDepot ? '__new__' : formData.depotName}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      if (value === '__new__') {
-                        onChange((f) => ({ ...f, isNewDepot: true, depotName: '', loopName: '', isNewLoop: true }));
-                      } else {
-                        onChange((f) => ({ ...f, isNewDepot: false, depotName: value, loopName: '', isNewLoop: true }));
-                      }
-                    }}
-                  >
-                    <option value="">Select Depot</option>
-                    {depots.map((d) => (
-                      <option key={d} value={d}>
-                        {d}
-                      </option>
-                    ))}
-                    <option value="__new__">+ New Depot…</option>
-                  </select>
-                </div>
-                {formData.isNewDepot && (
-                  <div>
-                    <label className="vp-form-label" htmlFor="newDepotName">
-                      New Depot Name <span className="vp-form-required">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      id="newDepotName"
-                      className="vp-form-input"
-                      placeholder="e.g., North Depot"
-                      required
-                      value={formData.depotName}
-                      onChange={(e) => onChange((f) => ({ ...f, depotName: e.target.value }))}
-                    />
-                  </div>
-                )}
-              </div>
+    <>
+      <div className={styles.backdrop} onClick={onClose} />
+      <div className={styles.overlay}>
+        <div className={styles.modal} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="addRouteTitle">
+          <div className={styles.modalHeader}>
+            <div>
+              <h2 id="addRouteTitle" className={styles.modalTitle}>Add New Route</h2>
+              <p className={styles.modalSubtitle}>{depotName}</p>
             </div>
-
-            <div className="vp-form-section">
-              <h3 className="vp-form-section-title">Loop</h3>
-              <div className="vp-form-grid-2">
+            <button type="button" onClick={onClose} className={styles.closeButton} aria-label="Close">
+              <X size={18} />
+            </button>
+          </div>
+          <form className={styles.form} onSubmit={onSubmit}>
+            <div className={styles.modalBody}>
+              <div className={styles.formGrid2}>
                 <div>
-                  <label className="vp-form-label" htmlFor="loopSelect">
-                    Loop <span className="vp-form-required">*</span>
+                  <label className={styles.formLabel} htmlFor="loopSelect">
+                    Loop <span className={styles.formRequired}>*</span>
                   </label>
                   <select
                     id="loopSelect"
-                    className="vp-form-select"
-                    disabled={formData.isNewDepot}
+                    className={styles.formSelect}
                     value={formData.isNewLoop ? '__new__' : formData.loopName}
                     onChange={(e) => {
                       const value = e.target.value;
@@ -119,13 +79,13 @@ export function AddRouteModal({ open, formData, onChange, depots, loops, onClose
                 </div>
                 {formData.isNewLoop && (
                   <div>
-                    <label className="vp-form-label" htmlFor="newLoopName">
-                      New Loop Name <span className="vp-form-required">*</span>
+                    <label className={styles.formLabel} htmlFor="newLoopName">
+                      New Loop Name <span className={styles.formRequired}>*</span>
                     </label>
                     <input
                       type="text"
                       id="newLoopName"
-                      className="vp-form-input"
+                      className={styles.formInput}
                       placeholder="e.g., Loop 3"
                       required
                       value={formData.loopName}
@@ -133,20 +93,14 @@ export function AddRouteModal({ open, formData, onChange, depots, loops, onClose
                     />
                   </div>
                 )}
-              </div>
-            </div>
-
-            <div className="vp-form-section">
-              <h3 className="vp-form-section-title">Route Details</h3>
-              <div className="vp-form-grid-2">
                 <div>
-                  <label className="vp-form-label" htmlFor="routeName">
-                    Route Name <span className="vp-form-required">*</span>
+                  <label className={styles.formLabel} htmlFor="routeName">
+                    Route Name <span className={styles.formRequired}>*</span>
                   </label>
                   <input
                     type="text"
                     id="routeName"
-                    className="vp-form-input"
+                    className={styles.formInput}
                     placeholder="e.g., Route 12"
                     required
                     value={formData.routeName}
@@ -154,12 +108,12 @@ export function AddRouteModal({ open, formData, onChange, depots, loops, onClose
                   />
                 </div>
                 <div>
-                  <label className="vp-form-label" htmlFor="routeType">
+                  <label className={styles.formLabel} htmlFor="routeType">
                     Type
                   </label>
                   <select
                     id="routeType"
-                    className="vp-form-select"
+                    className={styles.formSelect}
                     value={formData.type}
                     onChange={(e) => onChange((f) => ({ ...f, type: e.target.value }))}
                   >
@@ -169,26 +123,26 @@ export function AddRouteModal({ open, formData, onChange, depots, loops, onClose
                   </select>
                 </div>
                 <div>
-                  <label className="vp-form-label" htmlFor="routeDriver">
+                  <label className={styles.formLabel} htmlFor="routeDriver">
                     Driver
                   </label>
                   <input
                     type="text"
                     id="routeDriver"
-                    className="vp-form-input"
+                    className={styles.formInput}
                     placeholder="Optional"
                     value={formData.driver}
                     onChange={(e) => onChange((f) => ({ ...f, driver: e.target.value }))}
                   />
                 </div>
                 <div>
-                  <label className="vp-form-label" htmlFor="routeTarget">
+                  <label className={styles.formLabel} htmlFor="routeTarget">
                     Target
                   </label>
                   <input
                     type="number"
                     id="routeTarget"
-                    className="vp-form-input"
+                    className={styles.formInput}
                     min={0}
                     step={1}
                     placeholder="0"
@@ -197,22 +151,22 @@ export function AddRouteModal({ open, formData, onChange, depots, loops, onClose
                   />
                 </div>
               </div>
+
+              {error && <div className={styles.formError}>{error}</div>}
             </div>
 
-            {error && <div className="vp-form-label" style={{ color: '#dc2626' }}>{error}</div>}
-          </div>
-
-          <div className="vp-modal-footer">
-            <button type="button" className="vp-modal-btn vp-modal-btn-cancel" onClick={onClose}>
-              Cancel
-            </button>
-            <button type="submit" className="vp-modal-btn vp-modal-btn-save">
-              Add Route
-            </button>
-          </div>
-        </form>
+            <div className={styles.modalFooter}>
+              <button type="button" className={styles.secondaryButton} onClick={onClose}>
+                Cancel
+              </button>
+              <button type="submit" className={styles.primaryButton}>
+                Add Route
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>,
+    </>,
     document.body,
   );
 }

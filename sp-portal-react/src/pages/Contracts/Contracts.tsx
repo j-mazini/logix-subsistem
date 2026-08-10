@@ -1,11 +1,17 @@
 import { useMemo, useState } from 'react';
-import { Building2, ArrowRight } from 'lucide-react';
+import { Building2, ArrowRight, Trash2 } from 'lucide-react';
 import { PortalLayout } from '../../layout/PortalLayout';
 import { useCurrentSp } from '../../hooks/useCurrentSp';
 import {
   getFilteredContracts,
   removeStoredSubpostcode,
   addStoredRoute,
+  addStoredDepot,
+  addStoredLoop,
+  removeStoredDepot,
+  removeStoredLoop,
+  removeStoredRoute,
+  isCustomDepot,
   getDepotNames,
   getLoopNames,
   type ContractDepotView,
@@ -14,12 +20,13 @@ import {
 import { RouteViewModal, type RouteViewTarget } from './components/RouteViewModal';
 import { DeleteConfirmModal, type DeleteConfirmTarget } from './components/DeleteConfirmModal';
 import { AddRouteModal, type AddRouteFormState } from './components/AddRouteModal';
+import { AddDepotModal } from './components/AddDepotModal';
+import { AddLoopModal, type AddLoopFormState } from './components/AddLoopModal';
 import { DepotEditModal } from './components/DepotEditModal';
+import '../../styles/legacy/shared-pages.css';
 import styles from './Contracts.module.css';
 
 const EMPTY_ROUTE_FORM: AddRouteFormState = {
-  depotName: '',
-  isNewDepot: false,
   loopName: '',
   isNewLoop: true,
   routeName: '',
@@ -27,6 +34,40 @@ const EMPTY_ROUTE_FORM: AddRouteFormState = {
   driver: '',
   target: '',
 };
+
+const EMPTY_LOOP_FORM: AddLoopFormState = { loopName: '' };
+
+/** The one thing a given confirm-dialog invocation is about to delete. */
+type PendingDeletion =
+  | { kind: 'subpostcode'; depotName: string; routeName: string; subpostcode: string }
+  | { kind: 'route'; depotName: string; loopName: string; routeName: string }
+  | { kind: 'loop'; depotName: string; loopName: string }
+  | { kind: 'depot'; depotName: string };
+
+function deletionTarget(pending: PendingDeletion): DeleteConfirmTarget {
+  switch (pending.kind) {
+    case 'subpostcode':
+      return {
+        title: 'Remove sub postcode',
+        message: `Remove "${pending.subpostcode}" from route "${pending.routeName}" in ${pending.depotName}? This only affects your custom addition — postcodes extracted from the contract itself are unaffected.`,
+      };
+    case 'route':
+      return {
+        title: 'Delete route',
+        message: `Delete route "${pending.routeName}" from loop "${pending.loopName}" in ${pending.depotName}? This cannot be undone.`,
+      };
+    case 'loop':
+      return {
+        title: 'Delete loop',
+        message: `Delete loop "${pending.loopName}" and all of its routes from ${pending.depotName}? This cannot be undone.`,
+      };
+    case 'depot':
+      return {
+        title: 'Delete depot',
+        message: `Delete depot "${pending.depotName}" and everything under it (loops and routes)? This cannot be undone.`,
+      };
+  }
+}
 
 /** Case-insensitive substring match used by the search box below. */
 function matches(term: string, ...values: string[]): boolean {
@@ -68,13 +109,15 @@ function filterProviders(providers: ContractProviderView[], search: string): Con
 
 interface DepotSummaryCardProps {
   depot: ContractDepotView;
+  deletable: boolean;
   onManage: () => void;
+  onRequestDelete: () => void;
 }
 
-function DepotSummaryCard({ depot, onManage }: DepotSummaryCardProps) {
+function DepotSummaryCard({ depot, deletable, onManage, onRequestDelete }: DepotSummaryCardProps) {
   const loopCount = depot.loops.length;
   const routeCount = depot.loops.reduce((s, l) => s + l.routes.length, 0);
-  const totalTarget = depot.loops.reduce((s, l) => s + l.routes.reduce((ss, r) => ss + (r.target || 0), 0), 0);
+  const totalTarget = depot.loops.reduce((s, l) => s + l.target, 0);
 
   return (
     <div
@@ -97,6 +140,17 @@ function DepotSummaryCard({ depot, onManage }: DepotSummaryCardProps) {
           <h3 className={styles.depotSummaryName}>{depot.name}</h3>
           <span className={styles.levelTag}>Depot</span>
         </div>
+        {deletable && (
+          <button
+            type="button"
+            className={styles.cardDeleteButton}
+            onClick={e => { e.stopPropagation(); onRequestDelete(); }}
+            aria-label={`Delete depot ${depot.name}`}
+            title="Delete depot"
+          >
+            <Trash2 size={14} />
+          </button>
+        )}
       </div>
 
       <div className={styles.depotSummaryStats}>
@@ -136,63 +190,84 @@ export function Contracts() {
   const [version, setVersion] = useState(0);
   const [activeDepotName, setActiveDepotName] = useState<string | null>(null);
   const [viewTarget, setViewTarget] = useState<RouteViewTarget | null>(null);
-  const [confirmRemoval, setConfirmRemoval] = useState<{
-    target: DeleteConfirmTarget;
-    depotName: string;
-    routeName: string;
-    subpostcode: string;
-  } | null>(null);
+  const [pendingDeletion, setPendingDeletion] = useState<PendingDeletion | null>(null);
+
   const [showAddRoute, setShowAddRoute] = useState(false);
+  const [routeTargetDepot, setRouteTargetDepot] = useState('');
   const [routeForm, setRouteForm] = useState<AddRouteFormState>(EMPTY_ROUTE_FORM);
   const [routeError, setRouteError] = useState('');
+
+  const [showAddDepot, setShowAddDepot] = useState(false);
+  const [depotDraft, setDepotDraft] = useState('');
+  const [depotError, setDepotError] = useState('');
+
+  const [showAddLoop, setShowAddLoop] = useState(false);
+  const [loopTargetDepot, setLoopTargetDepot] = useState('');
+  const [loopForm, setLoopForm] = useState<AddLoopFormState>(EMPTY_LOOP_FORM);
+  const [loopError, setLoopError] = useState('');
+
   const filtered = useMemo(() => getFilteredContracts(sp), [sp, version]);
   const searched = useMemo(() => filterProviders(filtered, search), [filtered, search]);
   const depotNames = useMemo(() => getDepotNames(sp), [sp, version]);
-  const loopNames = useMemo(
-    () => (routeForm.isNewDepot ? [] : getLoopNames(sp, routeForm.depotName)),
-    [sp, routeForm.depotName, routeForm.isNewDepot, version],
-  );
+  const loopNames = useMemo(() => getLoopNames(sp, routeTargetDepot), [sp, routeTargetDepot, version]);
   const activeDepot = useMemo(
     () => filtered.flatMap(p => p.depots).find(d => d.name === activeDepotName) ?? null,
     [filtered, activeDepotName],
   );
 
   const handleRequestRemoveSubpostcode = (depotName: string, routeName: string, subpostcode: string) => {
-    setConfirmRemoval({
-      depotName,
-      routeName,
-      subpostcode,
-      target: {
-        title: 'Remove sub postcode',
-        message: `Remove "${subpostcode}" from route "${routeName}" in ${depotName}? This only affects your custom addition — postcodes extracted from the contract itself are unaffected.`,
-      },
-    });
+    setPendingDeletion({ kind: 'subpostcode', depotName, routeName, subpostcode });
   };
 
-  const handleConfirmRemoval = () => {
-    if (!confirmRemoval || !sp) return;
-    removeStoredSubpostcode(sp, confirmRemoval.depotName, confirmRemoval.routeName, confirmRemoval.subpostcode);
-    setConfirmRemoval(null);
+  const handleRequestDeleteRoute = (depotName: string, loopName: string, routeName: string) => {
+    setPendingDeletion({ kind: 'route', depotName, loopName, routeName });
   };
 
-  const openAddRoute = (depotName?: string, loopName?: string) => {
+  const handleRequestDeleteLoop = (depotName: string, loopName: string) => {
+    setPendingDeletion({ kind: 'loop', depotName, loopName });
+  };
+
+  const handleRequestDeleteDepot = (depotName: string) => {
+    setPendingDeletion({ kind: 'depot', depotName });
+  };
+
+  const handleConfirmDeletion = () => {
+    if (!pendingDeletion || !sp) return;
+    switch (pendingDeletion.kind) {
+      case 'subpostcode':
+        removeStoredSubpostcode(sp, pendingDeletion.depotName, pendingDeletion.routeName, pendingDeletion.subpostcode);
+        break;
+      case 'route':
+        removeStoredRoute(sp, pendingDeletion.depotName, pendingDeletion.loopName, pendingDeletion.routeName);
+        setVersion(v => v + 1);
+        break;
+      case 'loop':
+        removeStoredLoop(sp, pendingDeletion.depotName, pendingDeletion.loopName);
+        setVersion(v => v + 1);
+        break;
+      case 'depot':
+        removeStoredDepot(sp, pendingDeletion.depotName);
+        setVersion(v => v + 1);
+        if (activeDepotName === pendingDeletion.depotName) setActiveDepotName(null);
+        break;
+    }
+    setPendingDeletion(null);
+  };
+
+  const openAddRoute = (depotName: string, loopName?: string) => {
     setActiveDepotName(null);
-    setRouteForm(
-      depotName
-        ? { ...EMPTY_ROUTE_FORM, depotName, isNewDepot: false, loopName: loopName ?? '', isNewLoop: !loopName }
-        : EMPTY_ROUTE_FORM,
-    );
+    setRouteTargetDepot(depotName);
+    setRouteForm({ ...EMPTY_ROUTE_FORM, loopName: loopName ?? '', isNewLoop: !loopName });
     setRouteError('');
     setShowAddRoute(true);
   };
 
   const handleAddRouteSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const depotName = routeForm.depotName.trim();
     const loopName = routeForm.loopName.trim();
     const routeName = routeForm.routeName.trim();
-    if (!depotName || !loopName || !routeName) {
-      setRouteError('Depot, loop and route name are required');
+    if (!loopName || !routeName) {
+      setRouteError('Loop and route name are required');
       return;
     }
     const targetTrimmed = routeForm.target.trim();
@@ -202,7 +277,7 @@ export function Contracts() {
       return;
     }
     addStoredRoute(sp, {
-      depotName,
+      depotName: routeTargetDepot,
       loopName,
       routeName,
       type: routeForm.type,
@@ -211,6 +286,53 @@ export function Contracts() {
     });
     setShowAddRoute(false);
     setVersion((v) => v + 1);
+  };
+
+  const openAddDepot = () => {
+    setDepotDraft('');
+    setDepotError('');
+    setShowAddDepot(true);
+  };
+
+  const handleAddDepotSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const name = depotDraft.trim();
+    if (!name) {
+      setDepotError('Depot name is required');
+      return;
+    }
+    if (depotNames.some(d => d.toLowerCase() === name.toLowerCase())) {
+      setDepotError('A depot with this name already exists');
+      return;
+    }
+    addStoredDepot(sp, name);
+    setShowAddDepot(false);
+    setVersion(v => v + 1);
+  };
+
+  const openAddLoop = (depotName: string) => {
+    setActiveDepotName(null);
+    setLoopTargetDepot(depotName);
+    setLoopForm(EMPTY_LOOP_FORM);
+    setLoopError('');
+    setShowAddLoop(true);
+  };
+
+  const handleAddLoopSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const name = loopForm.loopName.trim();
+    if (!name) {
+      setLoopError('Loop name is required');
+      return;
+    }
+    if (getLoopNames(sp, loopTargetDepot).some(l => l.toLowerCase() === name.toLowerCase())) {
+      setLoopError('A loop with this name already exists in this depot');
+      return;
+    }
+    addStoredLoop(sp, loopTargetDepot, name);
+    setShowAddLoop(false);
+    setVersion(v => v + 1);
+    setActiveDepotName(loopTargetDepot);
   };
 
   if (!sp) {
@@ -231,7 +353,6 @@ export function Contracts() {
   );
   const isEmpty = filtered.length === 0;
   const noSearchResults = !isEmpty && searched.length === 0;
-  const padCount = (n: number) => String(n).padStart(2, '0');
 
   const headerActions = (
     <div className={styles.searchBox}>
@@ -244,8 +365,8 @@ export function Contracts() {
         value={search}
         onChange={e => setSearch(e.target.value)}
       />
-      <button type="button" className="vp-modal-btn vp-modal-btn-save" onClick={() => openAddRoute()}>
-        + Add Route
+      <button type="button" className="vp-modal-btn vp-modal-btn-save" onClick={openAddDepot}>
+        + Add Depot
       </button>
     </div>
   );
@@ -253,18 +374,27 @@ export function Contracts() {
   return (
     <PortalLayout mainClassName={styles.contracts} title="Contracts" hideAnnouncements actions={headerActions}>
       <div className={styles.contractsContent}>
-        <div className={styles.metricsRow}>
-          <div className={styles.metricCard}>
-            <span className={styles.metricLabel}>Depots</span>
-            <span className={styles.metricValue}>{padCount(totalDepots)}</span>
-          </div>
-          <div className={styles.metricCard}>
-            <span className={styles.metricLabel}>Loops</span>
-            <span className={styles.metricValue}>{padCount(totalLoops)}</span>
-          </div>
-          <div className={styles.metricCard}>
-            <span className={styles.metricLabel}>Routes</span>
-            <span className={styles.metricValue}>{padCount(totalRoutes)}</span>
+        <div className="contracts-page-header">
+          <div className="contracts-page-header-inner">
+            <div className="contracts-page-header-row">
+              <div>
+                <p className="contracts-page-subtitle">Depot, loop and route contracts for your service provider</p>
+                <div className="contracts-page-metrics">
+                  <div className="contracts-page-metric">
+                    <span className="contracts-page-metric-label">Depots</span>
+                    <span className="contracts-page-metric-value">{totalDepots}</span>
+                  </div>
+                  <div className="contracts-page-metric">
+                    <span className="contracts-page-metric-label">Loops</span>
+                    <span className="contracts-page-metric-value">{totalLoops}</span>
+                  </div>
+                  <div className="contracts-page-metric">
+                    <span className="contracts-page-metric-label">Routes</span>
+                    <span className="contracts-page-metric-value">{totalRoutes}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -279,7 +409,9 @@ export function Contracts() {
                 <DepotSummaryCard
                   key={`${prov.serviceProvider}-${depot.name}`}
                   depot={depot}
+                  deletable={isCustomDepot(sp, depot.name)}
                   onManage={() => setActiveDepotName(depot.name)}
+                  onRequestDelete={() => handleRequestDeleteDepot(depot.name)}
                 />
               )),
             )}
@@ -303,19 +435,39 @@ export function Contracts() {
         onClose={() => setActiveDepotName(null)}
         onView={setViewTarget}
         onRequestRemoveSubpostcode={handleRequestRemoveSubpostcode}
+        onRequestDeleteLoop={handleRequestDeleteLoop}
+        onRequestDeleteRoute={handleRequestDeleteRoute}
         onAddRoute={openAddRoute}
+        onAddLoop={openAddLoop}
       />
       <RouteViewModal target={viewTarget} onClose={() => setViewTarget(null)} />
       <DeleteConfirmModal
-        target={confirmRemoval?.target ?? null}
-        onClose={() => setConfirmRemoval(null)}
-        onConfirm={handleConfirmRemoval}
+        target={pendingDeletion ? deletionTarget(pendingDeletion) : null}
+        onClose={() => setPendingDeletion(null)}
+        onConfirm={handleConfirmDeletion}
+      />
+      <AddDepotModal
+        open={showAddDepot}
+        value={depotDraft}
+        onChange={setDepotDraft}
+        onClose={() => setShowAddDepot(false)}
+        onSubmit={handleAddDepotSubmit}
+        error={depotError}
+      />
+      <AddLoopModal
+        open={showAddLoop}
+        depotName={loopTargetDepot}
+        formData={loopForm}
+        onChange={updater => setLoopForm(updater)}
+        onClose={() => setShowAddLoop(false)}
+        onSubmit={handleAddLoopSubmit}
+        error={loopError}
       />
       <AddRouteModal
         open={showAddRoute}
+        depotName={routeTargetDepot}
         formData={routeForm}
         onChange={updater => setRouteForm(updater)}
-        depots={depotNames}
         loops={loopNames}
         onClose={() => setShowAddRoute(false)}
         onSubmit={handleAddRouteSubmit}
