@@ -40,8 +40,9 @@ const AddAdhocServiceModal: React.FC<AddAdhocServiceModalProps> = ({ onClose, on
 
   useModalBehavior(onClose);
 
-  const allDayValues = weekDates.map(formatISO);
-  const allSelected = allDayValues.length > 0 && allDayValues.every((d) => selectedDays.has(d));
+  // "Select all" only ever targets weekdays — weekends (when shown) are opt-in per day.
+  const weekdayValues = weekDates.filter((d) => !isWeekendDate(d)).map(formatISO);
+  const allSelected = weekdayValues.length > 0 && weekdayValues.every((d) => selectedDays.has(d));
 
   function toggleDay(dateISO: string) {
     setSelectedDays((prev) => {
@@ -53,7 +54,12 @@ const AddAdhocServiceModal: React.FC<AddAdhocServiceModalProps> = ({ onClose, on
   }
 
   function toggleAll() {
-    setSelectedDays(allSelected ? new Set() : new Set(allDayValues));
+    setSelectedDays((prev) => {
+      const next = new Set(prev);
+      if (allSelected) weekdayValues.forEach((d) => next.delete(d));
+      else weekdayValues.forEach((d) => next.add(d));
+      return next;
+    });
   }
 
   function handleSave() {
