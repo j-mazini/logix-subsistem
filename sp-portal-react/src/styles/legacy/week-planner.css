@@ -282,7 +282,27 @@ body.wp-page {
   text-transform: uppercase;
   letter-spacing: 0.02em;
 }
-.wp-week-picker-field select { width: 100%; }
+/* Deliberately not .form-select — that class is targeted by other pages'
+   ".filters-bar .form-select { width: auto; min-width: 160px }" overrides
+   (this row lives inside .filters-bar too), which blew the select past the
+   260px popover. Self-contained styling avoids that collision entirely. */
+.wp-week-picker-field select {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  border-radius: 8px;
+  font-size: 0.87rem;
+  font-family: inherit;
+  padding: 0.5rem 0.75rem;
+}
+.wp-week-picker-field select:focus {
+  outline: none;
+  border-color: var(--wp-primary-blue);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+}
 
 .wp-toggle-wrap { display: flex; align-items: center; gap: 0.5rem; }
 .wp-toggle-label { margin: 0; }
@@ -327,8 +347,9 @@ body.wp-page {
 
 /* Depots + Ad-Hoc Services render as one merged card (single border/shadow,
    sections divided by a hairline) instead of separate floating cards.
-   Management & Support stays a separate block below it. */
+   Management & Support is a separate block above it. */
 .wp-depot-group {
+  margin-top: 1.1rem;
   background: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: var(--radius);
@@ -670,15 +691,21 @@ body.wp-page {
 .dom-form-field { display: flex; flex-direction: column; gap: 0.35rem; min-width: 0; }
 .dom-form-field.span-2 { grid-column: 1 / -1; }
 .dom-form-label { font-size: 0.78rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.03em; }
-.dom-form-field input, .dom-form-field select, .dom-form-field textarea,
-#assignmentForm select, #assignmentForm input, #assignmentForm textarea {
+.dom-form-field input:not([type="checkbox"]):not([type="radio"]), .dom-form-field select, .dom-form-field textarea,
+#assignmentForm select, #assignmentForm input:not([type="checkbox"]):not([type="radio"]), #assignmentForm textarea {
   border: 1px solid var(--border-color); border-radius: 8px; padding: 0.5rem 0.7rem;
   font-size: 0.87rem; font-family: inherit; color: var(--text-primary); background: var(--card-bg); width: 100%;
+}
+.dom-form-field input[type="checkbox"], .dom-form-field input[type="radio"] {
+  width: auto; flex-shrink: 0;
 }
 #assignmentForm input:focus, #assignmentForm select:focus, #assignmentForm textarea:focus {
   outline: none; border-color: var(--wp-primary-blue); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
 }
-.dom-form-actions { display: flex; gap: 0.75rem; margin-top: 1.5rem; padding-top: 1.1rem; border-top: 1px solid var(--border-color); }
+/* Sibling of .wp-modal-body (not nested in it), so it needs its own horizontal
+   inset to match — otherwise its buttons sit flush against the modal's edges
+   and visually spill past the rounded corners. */
+.dom-form-actions { display: flex; gap: 0.75rem; padding: 1.1rem 1.4rem 1.4rem; border-top: 1px solid var(--border-color); }
 
 .wp-modal-actions-wrap {
   display: flex;
@@ -748,7 +775,7 @@ body.wp-page {
   position: fixed;
   bottom: 6.5rem;
   right: 1.5rem;
-  z-index: 9997;
+  z-index: 1010;
   width: 280px;
   background: var(--card-bg);
   border: 1px solid var(--border-color);
@@ -762,22 +789,38 @@ body.wp-page {
 .wp-week-notes-header { display: flex; align-items: center; gap: 0.4rem; }
 .wp-week-notes-title {
   font-size: 0.8rem; font-weight: 700; color: var(--text-primary);
-  display: flex; align-items: center; gap: 0.35rem; white-space: nowrap;
+  display: flex; align-items: center; gap: 0.35rem; white-space: nowrap; flex: 1;
 }
-.wp-week-notes-range { font-size: 0.72rem; color: var(--text-secondary); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .wp-week-notes-close {
   border: none; background: transparent; color: var(--text-secondary); cursor: pointer;
   width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center;
   border-radius: 6px; flex-shrink: 0;
 }
 .wp-week-notes-close:hover { background: rgba(99, 102, 241, 0.1); color: var(--text-primary); }
+.wp-week-notes-week-select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid var(--border-color);
+  border-radius: 7px;
+  background: var(--card-bg);
+  color: var(--text-primary);
+  font-size: 0.74rem;
+  font-weight: 600;
+  font-family: inherit;
+}
+.wp-week-notes-week-select:focus {
+  outline: none;
+  border-color: var(--wp-primary-blue);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
 .wp-week-notes-textarea {
   width: 100%; resize: vertical; min-height: 70px;
   border: 1px solid var(--border-color); border-radius: 8px; padding: 0.5rem;
   font-size: 0.82rem; font-family: inherit; color: var(--text-primary); background: var(--bg-body);
 }
 .wp-week-notes-reopen {
-  position: fixed; bottom: 6.5rem; right: 1.5rem; z-index: 9997;
+  position: fixed; bottom: 6.5rem; right: 1.5rem; z-index: 1010;
   width: 42px; height: 42px; border-radius: 50%;
   border: 1px solid var(--border-color); background: var(--card-bg); color: var(--wp-primary-blue);
   display: flex; align-items: center; justify-content: center; cursor: pointer;
@@ -890,7 +933,9 @@ body.wp-page {
   }
 }
 
-/* Drawer Overlay - Non-blocking, only clickable area is below drawer */
+/* Drawer Overlay - kept non-blocking: the schedule grid stays fully
+   interactive (drag-and-drop included) while the drawer is open, so this
+   never dims or intercepts clicks over the page. */
 .wp-drivers-overlay {
   position: fixed;
   top: 0;
@@ -900,32 +945,51 @@ body.wp-page {
   z-index: 1020;
   background: rgba(0, 0, 0, 0);
   pointer-events: none;
-  transition: background-color var(--transition-base);
 }
 
-/* Drawer Panel - Fixed at top, slides down */
+/* Drawer Panel - a right-hand side panel (not a full-width banner), so most
+   of the schedule stays visible and reachable behind it. */
 .wp-drivers-drawer {
   position: fixed;
   top: 0;
-  left: 0;
   right: 0;
+  bottom: 0;
+  left: auto;
+  width: min(360px, 92vw);
   z-index: 1025;
   background: linear-gradient(to bottom, rgba(255, 255, 255, 0.98), rgba(239, 244, 255, 0.96));
-  border-bottom: 1px solid transparent;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  border-left: 1px solid transparent;
+  box-shadow: -12px 0 32px rgba(0, 0, 0, 0.14), 0 0 0 1px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
-  max-height: 0;
   overflow: hidden;
-  transition: max-height var(--transition-base), border-color var(--transition-base);
+  transform: translateX(100%);
+  transition: transform var(--transition-base), border-color var(--transition-base);
   backdrop-filter: blur(12px);
   pointer-events: none;
 }
 
 .wp-drivers-drawer.wp-open {
-  max-height: 35vh;
-  border-bottom-color: var(--border-color);
+  transform: translateX(0);
+  border-left-color: var(--border-color);
   pointer-events: auto;
+}
+
+/* Reflow the page's own content instead of hiding it behind the drawer —
+   drag targets (route/day cells) must stay reachable while the drawer is open.
+   With only weekday columns there's enough room for the grid to just shrink
+   to fit (the original behaviour). With weekends shown too, 7 columns don't
+   have room to shrink into legibly, so that variant keeps everything at its
+   natural width and scrolls sideways instead — see .wp-drivers-push-scroll. */
+.wp-drivers-push {
+  padding-right: calc(min(360px, 92vw) + 1rem) !important;
+  transition: padding-right var(--transition-base);
+}
+.wp-drivers-push-scroll {
+  overflow-x: auto;
+}
+.wp-drivers-push-scroll > * {
+  min-width: 1100px;
 }
 
 /* Drawer Header */
@@ -937,13 +1001,6 @@ body.wp-page {
   border-bottom: 1px solid var(--border-color);
   background: rgba(255, 255, 255, 0.5);
   flex-shrink: 0;
-  opacity: 0;
-  transition: opacity var(--transition-fast);
-}
-
-.wp-drivers-drawer.wp-open .wp-drawer-header {
-  opacity: 1;
-  transition-delay: 100ms;
 }
 
 .wp-drawer-title-section {
@@ -969,13 +1026,12 @@ body.wp-page {
 }
 
 .wp-drawer-subtitle {
-  font-size: 0.625rem;
+  font-size: 0.76rem;
   color: var(--text-light);
-  margin: 0.25rem 0 0;
+  margin: 0.2rem 0 0;
   font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
 }
+.wp-drawer-subtitle b { color: #15803d; font-weight: 800; font-variant-numeric: tabular-nums; }
 
 .wp-drawer-close-btn {
   flex-shrink: 0;
@@ -1010,13 +1066,6 @@ body.wp-page {
   border-bottom: 1px solid var(--border-color);
   background: rgba(255, 255, 255, 0.3);
   flex-shrink: 0;
-  opacity: 0;
-  transition: opacity var(--transition-fast);
-}
-
-.wp-drivers-drawer.wp-open .wp-drawer-search {
-  opacity: 1;
-  transition-delay: 100ms;
 }
 
 .wp-search-wrapper {
@@ -1074,18 +1123,83 @@ body.wp-page {
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
+/* Day filter */
+.wp-roster-day-row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.65rem 1rem 0.75rem;
+  flex-shrink: 0;
+}
+.wp-roster-day-label {
+  font-size: 0.72rem;
+  font-weight: 650;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  flex-shrink: 0;
+}
+.wp-roster-day-select {
+  flex: 1;
+  min-width: 0;
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border-color);
+  background: var(--card-bg);
+  color: var(--text-dark);
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-family: inherit;
+}
+.wp-roster-day-select:focus {
+  outline: none;
+  border-color: var(--wp-primary-blue);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* Roster filter chips */
+.wp-roster-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding: 0 1rem 0.75rem;
+  flex-shrink: 0;
+}
+.wp-roster-filter {
+  flex: 1 1 calc(50% - 0.2rem);
+  padding: 0.4rem 0.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border-color);
+  background: var(--card-bg);
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  font-weight: 650;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+}
+.wp-roster-filter-n { font-variant-numeric: tabular-nums; opacity: 0.75; margin-left: 0.15rem; }
+.wp-roster-filter:hover { background: rgba(99, 102, 241, 0.08); }
+.wp-roster-filter.is-active { background: var(--wp-primary-blue); border-color: var(--wp-primary-blue); color: #fff; }
+
 /* Drawer Content - Aligned with week planner grid */
 .wp-drawer-content {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
   padding: 0.75rem;
-  display: grid;
-  gap: 0.625rem;
-  grid-template-columns: 120px repeat(5, minmax(0, 1fr));
   max-width: 100%;
 }
 
+/* Single flat list of drivers available this week (replaces the old per-day column grid) */
+.wp-drivers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 420px;
+  margin: 0 auto;
+}
 .wp-drawer-content::-webkit-scrollbar {
   width: 6px;
 }
@@ -1131,10 +1245,6 @@ body.wp-page {
 }
 
 @media (max-width: 640px) {
-  .wp-drivers-drawer.wp-open {
-    max-height: 30vh;
-  }
-
   .wp-drawer-content {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.5rem;
@@ -1266,51 +1376,46 @@ body.wp-page {
   font-style: italic;
 }
 
-/* Driver Card */
-.wp-driver-card {
+/* Driver Row (flat roster) */
+.wp-driver-row {
   display: flex;
-  align-items: flex-start;
-  gap: 0.625rem;
-  padding: 0.625rem;
-  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-  border: 1.5px solid rgba(99, 102, 241, 0.2);
-  border-radius: 0.625rem;
-  cursor: move;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.55rem 0.6rem;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 0.6rem;
+  cursor: grab;
   user-select: none;
-  transition: all var(--transition-fast);
+  transition: border-color var(--transition-fast), background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
-.wp-driver-card:hover {
-  background: linear-gradient(135deg, #ffffff 0%, #eff6ff 100%);
-  border-color: rgba(99, 102, 241, 0.5);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(99, 102, 241, 0.15);
+.wp-driver-row:hover {
+  border-color: var(--wp-primary-blue);
+  background: rgba(99, 102, 241, 0.06);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(99, 102, 241, 0.12);
 }
 
-.wp-driver-card:active {
-  opacity: 0.6;
-}
+.wp-driver-row:active { cursor: grabbing; }
 
-.wp-driver-card.dragging {
+.wp-driver-row.dragging {
   opacity: 0.6;
   transform: scale(0.98);
 }
 
-.wp-driver-icon {
+.wp-driver-avatar {
   flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.55rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  background: rgba(99, 102, 241, 0.12);
-  border-radius: 0.5rem;
-  color: var(--wp-primary-blue);
-}
-
-.wp-driver-icon svg {
-  width: 1rem;
-  height: 1rem;
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 750;
+  letter-spacing: 0.01em;
 }
 
 .wp-driver-info {
@@ -1318,11 +1423,11 @@ body.wp-page {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.1rem;
 }
 
 .wp-driver-name {
-  font-size: 0.8125rem;
+  font-size: 0.82rem;
   font-weight: 700;
   color: var(--text-dark);
   overflow: hidden;
@@ -1331,60 +1436,60 @@ body.wp-page {
   line-height: 1.2;
 }
 
-.wp-driver-vehicle {
-  font-size: 0.6875rem;
-  color: var(--text-light);
-  font-family: 'Courier New', monospace;
-  font-weight: 500;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  letter-spacing: -0.3px;
-}
-
-/* Spare Driver Card */
-.wp-driver-card.wp-spare {
-  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
-  border-color: rgba(217, 119, 6, 0.4);
-}
-
-.wp-driver-card.wp-spare:hover {
-  background: linear-gradient(135deg, #fef3c7 0%, #fcd34d 100%);
-  border-color: rgba(217, 119, 6, 0.6);
-  box-shadow: 0 4px 8px rgba(217, 119, 6, 0.2);
-}
-
-.wp-driver-card.wp-spare .wp-driver-icon {
-  background: rgba(217, 119, 6, 0.15);
-  color: rgba(217, 119, 6, 0.9);
-}
-
-.wp-driver-card.wp-spare .wp-driver-name {
-  color: rgba(180, 83, 9, 0.95);
-}
-
-.wp-driver-card.wp-spare .wp-driver-vehicle {
-  color: rgba(217, 119, 6, 0.75);
-}
-
-/* Spare Section */
-.wp-spare-section {
-  margin-top: 0.5rem;
-  padding-top: 0.5rem;
-  border-top: 1px solid var(--border-color);
+.wp-driver-meta {
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.7rem;
+  color: var(--text-light);
+  overflow: hidden;
+}
+.wp-driver-meta > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.wp-driver-plate {
+  flex-shrink: 0;
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  background: rgba(15, 23, 42, 0.05);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 0.02rem 0.32rem;
+  font-size: 0.66rem;
 }
 
-.wp-spare-label {
-  font-size: 0.625rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--wp-primary-blue);
-  margin-bottom: 0.25rem;
+.wp-roster-badge {
+  flex-shrink: 0;
+  font-size: 0.63rem;
+  font-weight: 700;
+  padding: 0.16rem 0.45rem;
+  border-radius: 999px;
+  white-space: nowrap;
 }
+.wp-roster-badge--spare { background: rgba(217, 119, 6, 0.12); color: rgba(180, 83, 9, 0.95); }
+.wp-roster-badge--off { background: rgba(0, 0, 0, 0.06); color: var(--text-secondary); }
+
+.wp-driver-handle {
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+  color: var(--text-light);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+.wp-driver-row:hover .wp-driver-handle { opacity: 1; }
+
+.wp-drawer-foot {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1rem;
+  border-top: 1px solid var(--border-color);
+  font-size: 0.68rem;
+  color: var(--text-light);
+}
+.wp-drawer-foot svg { width: 12px; height: 12px; flex-shrink: 0; }
 
 /* =====================================================
    DASHBOARD STATS
