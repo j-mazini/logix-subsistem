@@ -275,6 +275,13 @@ body.route-balance-page {
 
 .styled-button:focus-visible { outline: none; box-shadow: var(--focus-ring); }
 
+.styled-button:disabled {
+  cursor: not-allowed;
+  pointer-events: none;
+  opacity: 0.45;
+  box-shadow: none;
+}
+
 .styled-button--primary { background: var(--accent); color: #fff; }
 .styled-button--primary:hover { background: var(--accent-ink); }
 
@@ -632,7 +639,8 @@ body.route-balance-page {
 
 button.osb-card { cursor: pointer; }
 
-button.osb-card:hover {
+button.osb-card:hover,
+.osb-stops:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-hover);
   border-color: color-mix(in srgb, var(--tone) 45%, var(--hairline-strong));
@@ -684,7 +692,17 @@ button.osb-card:focus-visible {
   flex-direction: column;
   min-width: 0;
   flex: 1;
+  text-align: left;
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  position: relative;
 }
+.osb-stops-main:hover .osb-stops-val { color: var(--accent-ink); }
 
 .osb-stops-val {
   font-family: var(--font-mono);
@@ -767,14 +785,20 @@ button.osb-card:focus-visible {
 }
 
 .osb-bar {
+  position: relative;
   flex: 1;
   min-width: 4px;
+  border: none;
+  padding: 0;
+  margin: 0;
   border-radius: 3px 3px 0 0;
   transform-origin: bottom;
   background: color-mix(in srgb, var(--accent) 22%, var(--surface-2));
+  cursor: pointer;
   /* delay comes per-bar from the markup, so the strip fills left to right */
   transition: height 0.6s cubic-bezier(0.34, 1.32, 0.64, 1), background var(--t-fast), box-shadow var(--t-fast);
 }
+.osb-bar:hover { background: var(--accent); }
 
 /* routes more than 20% off the mean — what breaks the balance */
 .osb-bar--off { background: color-mix(in srgb, var(--bar) 70%, var(--surface)); }
@@ -792,9 +816,8 @@ button.osb-card:focus-visible {
   100% { transform: scaleY(1); }
 }
 
-button.osb-card:hover .osb-bar { background: color-mix(in srgb, var(--accent) 34%, var(--surface-2)); }
-button.osb-card:hover .osb-bar--off { background: var(--bar); }
-button.osb-card:hover .osb-bar--focus { background: var(--accent); }
+.osb-bar--off:hover { background: var(--bar); }
+.osb-bar--focus:hover { background: var(--accent); }
 
 .osb-gauge-cap {
   display: flex;
@@ -1197,7 +1220,9 @@ button.osb-card:hover .osb-stat-ico { transform: translateY(-2px) scale(1.14); o
 .dashboard-filter-clear-btn:hover { border-color: var(--accent); color: var(--accent-ink); }
 
 .osb-card[data-tooltip]:hover::after,
-.osb-mix-row[data-tooltip]:hover::after {
+.osb-mix-row[data-tooltip]:hover::after,
+.osb-stops-main[data-tooltip]:hover::after,
+.osb-bar[data-tooltip]:hover::after {
   content: attr(data-tooltip);
   position: absolute;
   left: 50%;
@@ -1330,6 +1355,14 @@ button.osb-card:hover .osb-stat-ico { transform: translateY(-2px) scale(1.14); o
   background: #f8faff;
 }
 
+.route-block.comparing {
+  box-shadow: 0 0 0 3px var(--accent-ink), var(--shadow-hover);
+  background: var(--accent-soft);
+  position: relative;
+  z-index: 1;
+  scroll-margin: 1.5rem;
+}
+
 .route-block-header {
   display: flex;
   align-items: center;
@@ -1396,6 +1429,15 @@ button.osb-card:hover .osb-stat-ico { transform: translateY(-2px) scale(1.14); o
 .route-icon-btn--danger:hover {
   color: var(--danger);
   background: var(--danger-soft);
+}
+
+.route-icon-btn:disabled,
+.route-icon-btn--danger:disabled {
+  cursor: not-allowed;
+  pointer-events: none;
+  opacity: 0.4;
+  color: var(--ink-soft);
+  background: var(--surface-2);
 }
 
 /* Approve check: stays lit once the route is armed for the batch send, so a
@@ -2093,7 +2135,29 @@ body.rebalance-mode-active .operation-summary { display: none; }
   font-weight: 700;
   color: var(--accent-ink);
   white-space: nowrap;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
 }
+.compare-bar-label:hover { text-decoration: underline; }
+
+.compare-bar-nav {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--accent-ink);
+  background: rgba(255, 255, 255, 0.7);
+  font-size: 0.7rem;
+  flex-shrink: 0;
+  transition: background var(--t-fast);
+}
+.compare-bar-nav:hover { background: #fff; }
 
 .compare-bar-btn {
   display: inline-flex;
@@ -2122,6 +2186,136 @@ body.rebalance-mode-active .operation-summary { display: none; }
 }
 
 .compare-bar-btn--cancel:hover { color: var(--danger); background: var(--danger-soft); }
+
+/* ---- Compare Routes modal ---- */
+
+.compare-modal-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+@media (max-width: 720px) {
+  .compare-modal-grid { grid-template-columns: 1fr; }
+}
+
+.compare-modal-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  margin: 0 0 1rem;
+}
+
+.compare-modal-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+  background: var(--surface-2);
+  border: 1px dashed var(--hairline);
+  border-radius: var(--radius);
+  padding: 1rem;
+  transition: border-color var(--t-fast), background var(--t-fast);
+}
+
+.compare-modal-col--drop-target {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.compare-modal-col-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.compare-modal-col-ident {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.compare-modal-driver {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.compare-modal-nav {
+  display: flex;
+  gap: 0.3rem;
+  flex-shrink: 0;
+}
+.compare-modal-nav .compare-bar-nav {
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+}
+
+.compare-modal-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.9rem;
+  font-size: 0.82rem;
+  font-family: var(--font-mono);
+  color: var(--ink-soft);
+  padding-bottom: 0.6rem;
+  border-bottom: 1px dashed var(--hairline);
+}
+
+.compare-modal-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 22rem;
+  overflow-y: auto;
+}
+
+.compare-modal-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.6rem;
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: 0.5rem;
+  cursor: grab;
+}
+.compare-modal-group:active { cursor: grabbing; }
+
+.compare-modal-group-count {
+  flex: 1;
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+}
+
+.compare-modal-empty {
+  font-size: 0.85rem;
+  color: var(--ink-faint, var(--ink-soft));
+  padding: 0.5rem 0;
+  margin: 0;
+}
+
+/* ---- "Close Route" modal — same group row as Compare, plus a destination select ---- */
+.collapse-move-group { cursor: default; }
+.collapse-move-select {
+  flex-shrink: 0;
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--surface-2);
+  border: 1px solid var(--hairline-strong);
+  border-radius: 999px;
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+}
+.collapse-move-select:focus { outline: none; box-shadow: var(--focus-ring); }
 
 /* ---- Route-level postcode count, always visible in Rebalance mode ---- */
 
@@ -2362,11 +2556,10 @@ body.rebalance-mode-active .operation-summary { display: none; }
   box-shadow: var(--shadow-card);
 }
 
+/* Position (top/left) comes inline from the trigger button's rect — rendered
+   through a portal so the postcode list's overflow can't clip it. */
 .move-to-picker {
-  position: absolute;
-  top: calc(100% + 0.4rem);
-  right: 0;
-  z-index: 30;
+  z-index: 1050;
   width: 200px;
   max-height: 220px;
   overflow-y: auto;
@@ -2808,35 +3001,37 @@ body.rebalance-mode-active .operation-summary { display: none; }
   text-align: right;
 }
 
-/* ============ ENHANCED SHIPMENT DETAILS ============ */
+/* ============ ENHANCED SHIPMENT DETAILS (bento grid) ============ */
 
-.shipment-summary-card {
-  background: var(--surface-2);
-  border-radius: var(--radius);
-  padding: 1rem;
-  margin-bottom: 1.5rem;
-  border: 1px solid var(--hairline);
-}
-
-.summary-row {
+.shipment-bento {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.5rem;
-  padding: 0.75rem 0;
-  border-bottom: 1px dashed var(--hairline);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.85rem;
+  margin-bottom: 1.5rem;
 }
 
-.summary-row:last-child {
-  border-bottom: none;
-}
-
-.summary-cell {
+.bento-tile {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.35rem;
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  padding: 0.85rem 1rem;
+  min-width: 0;
+  transition: border-color 0.15s ease, transform 0.15s ease;
 }
 
-.summary-cell .label {
+.bento-tile:hover {
+  border-color: var(--hairline-strong, var(--hairline));
+  transform: translateY(-1px);
+}
+
+.bento-tile--wide {
+  grid-column: 1 / -1;
+}
+
+.bento-tile .label {
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--ink-soft);
@@ -2845,11 +3040,19 @@ body.rebalance-mode-active .operation-summary { display: none; }
   font-family: var(--font-ui);
 }
 
-.summary-cell .value {
+.bento-tile .value {
   font-size: 0.95rem;
   font-weight: 600;
   color: var(--ink);
   font-family: var(--font-mono);
+  overflow-wrap: break-word;
+}
+
+@media (max-width: 860px) {
+  .shipment-bento { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 480px) {
+  .shipment-bento { grid-template-columns: 1fr; }
 }
 
 .shipment-stops-list {
