@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react';
-import { PortalLayout } from '../../layout/PortalLayout';
 import { useModalBehavior } from '../../hooks/useModalBehavior';
 import '../../styles/legacy/logistics.css';
 
@@ -200,7 +199,7 @@ const RATES_BY_LOOP: Record<string, { childRates: string; flexRates: string }> =
   },
 };
 
-export function Logistics() {
+export function LoopsRoutesPanel() {
   const [loops, setLoops] = useState<LoopsRecord>(INITIAL_LOOPS);
   const [modalMode, setModalMode] = useState<ModalMode>('add');
   const [currentLoop, setCurrentLoop] = useState('ll3');
@@ -355,7 +354,7 @@ export function Logistics() {
   }
 
   return (
-    <PortalLayout pageClassName="logistics-page" mainClassName="container-fluid px-3 px-lg-4 py-4" hideAnnouncements>
+    <div className="logistics-page">
       <header className="lg-page-header">
         <h1 className="lg-page-title">Loops &amp; Routes</h1>
         <div className="lg-search-wrapper">
@@ -573,6 +572,6 @@ export function Logistics() {
           </div>
         </div>
       )}
-    </PortalLayout>
+    </div>
   );
 }

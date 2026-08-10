@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Building2, ArrowRight, Trash2 } from 'lucide-react';
 import { PortalLayout } from '../../layout/PortalLayout';
+import { LoopsRoutesPanel } from '../Logistics/LoopsRoutesPanel';
 import { useCurrentSp } from '../../hooks/useCurrentSp';
 import {
   getFilteredContracts,
@@ -186,6 +188,8 @@ function DepotSummaryCard({ depot, deletable, onManage, onRequestDelete }: Depot
 
 export function Contracts() {
   const sp = useCurrentSp();
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState<'depots' | 'loops'>(searchParams.get('tab') === 'loops' ? 'loops' : 'depots');
   const [search, setSearch] = useState('');
   const [version, setVersion] = useState(0);
   const [activeDepotName, setActiveDepotName] = useState<string | null>(null);
@@ -398,34 +402,57 @@ export function Contracts() {
           </div>
         </div>
 
-        <div className={styles.sectionHeader}>
-          <h2 className={styles.sectionTitle}>Active Contracts</h2>
+        <div className={styles.pageTabs}>
+          <button
+            type="button"
+            className={`${styles.pageTab} ${activeTab === 'depots' ? styles.pageTabActive : ''}`}
+            onClick={() => setActiveTab('depots')}
+          >
+            Depots
+          </button>
+          <button
+            type="button"
+            className={`${styles.pageTab} ${activeTab === 'loops' ? styles.pageTabActive : ''}`}
+            onClick={() => setActiveTab('loops')}
+          >
+            Loops &amp; Routes
+          </button>
         </div>
 
-        {!isEmpty && !noSearchResults ? (
-          <div className={styles.depotGrid}>
-            {searched.flatMap(prov =>
-              prov.depots.map(depot => (
-                <DepotSummaryCard
-                  key={`${prov.serviceProvider}-${depot.name}`}
-                  depot={depot}
-                  deletable={isCustomDepot(sp, depot.name)}
-                  onManage={() => setActiveDepotName(depot.name)}
-                  onRequestDelete={() => handleRequestDeleteDepot(depot.name)}
-                />
-              )),
+        {activeTab === 'depots' ? (
+          <>
+            <div className={styles.sectionHeader}>
+              <h2 className={styles.sectionTitle}>Active Contracts</h2>
+            </div>
+
+            {!isEmpty && !noSearchResults ? (
+              <div className={styles.depotGrid}>
+                {searched.flatMap(prov =>
+                  prov.depots.map(depot => (
+                    <DepotSummaryCard
+                      key={`${prov.serviceProvider}-${depot.name}`}
+                      depot={depot}
+                      deletable={isCustomDepot(sp, depot.name)}
+                      onManage={() => setActiveDepotName(depot.name)}
+                      onRequestDelete={() => handleRequestDeleteDepot(depot.name)}
+                    />
+                  )),
+                )}
+              </div>
+            ) : isEmpty ? (
+              <div className={styles.emptyState}>
+                <h3 className={styles.emptyTitle}>No Contracts on File</h3>
+                <p className={styles.emptyDescription}>There are currently no contracts available for your service provider.</p>
+              </div>
+            ) : (
+              <div className={styles.emptyState}>
+                <h3 className={styles.emptyTitle}>No Matches</h3>
+                <p className={styles.emptyDescription}>No depots, loops or routes match &quot;{search}&quot;.</p>
+              </div>
             )}
-          </div>
-        ) : isEmpty ? (
-          <div className={styles.emptyState}>
-            <h3 className={styles.emptyTitle}>No Contracts on File</h3>
-            <p className={styles.emptyDescription}>There are currently no contracts available for your service provider.</p>
-          </div>
+          </>
         ) : (
-          <div className={styles.emptyState}>
-            <h3 className={styles.emptyTitle}>No Matches</h3>
-            <p className={styles.emptyDescription}>No depots, loops or routes match &quot;{search}&quot;.</p>
-          </div>
+          <LoopsRoutesPanel />
         )}
       </div>
 

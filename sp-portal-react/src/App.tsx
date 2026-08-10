@@ -6,7 +6,6 @@ import { Login } from './pages/Login/Login';
 import { Select } from './pages/Select/Select';
 import { Announcements } from './pages/Announcements/Announcements';
 import { Assets } from './pages/Assets/Assets';
-import { Logistics } from './pages/Logistics/Logistics';
 import { Contracts } from './pages/Contracts/Contracts';
 import { Invoices } from './pages/Invoices/Invoices';
 import { RequestsAdmin } from './pages/RequestsAdmin/RequestsAdmin';
@@ -88,7 +87,7 @@ function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/announcements" element={<Announcements />} />
           <Route path="/assets" element={<Assets />} />
-          <Route path="/logistics" element={<Logistics />} />
+          <Route path="/logistics" element={<Navigate to="/contracts?tab=loops" replace />} />
           <Route path="/contracts" element={<Contracts />} />
           <Route path="/invoices" element={<Invoices />} />
           <Route path="/requests-admin" element={<RequestsAdmin />} />
