@@ -773,8 +773,8 @@ body.wp-page {
    ===================================================== */
 .wp-week-notes-panel {
   position: fixed;
-  bottom: 6.5rem;
-  right: 1.5rem;
+  top: 1.5rem;
+  left: 5.5rem;
   z-index: 1010;
   width: 280px;
   background: var(--card-bg);
@@ -820,7 +820,7 @@ body.wp-page {
   font-size: 0.82rem; font-family: inherit; color: var(--text-primary); background: var(--bg-body);
 }
 .wp-week-notes-reopen {
-  position: fixed; bottom: 6.5rem; right: 1.5rem; z-index: 1010;
+  position: fixed; top: 1.5rem; left: 5.5rem; z-index: 1010;
   width: 42px; height: 42px; border-radius: 50%;
   border: 1px solid var(--border-color); background: var(--card-bg); color: var(--wp-primary-blue);
   display: flex; align-items: center; justify-content: center; cursor: pointer;
