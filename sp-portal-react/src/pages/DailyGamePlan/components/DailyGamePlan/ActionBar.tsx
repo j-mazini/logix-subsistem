@@ -1,6 +1,6 @@
 import React, { memo, useMemo } from 'react';
 import { FadeIn } from '../shared/FadeIn';
-import { ModernPageHeader } from '../shared/ModernPageHeader';
+import { GlassPageHeader } from '../shared/GlassPageHeader';
 import { getDayNameEn, formatDate, getISOWeekNumber } from '../../utils/dateUtils';
 import { Search } from 'lucide-react';
 
@@ -30,7 +30,7 @@ const ActionBar = memo(({ viewDate, searchTerm, onSearchChange }: ActionBarProps
         <FadeIn delay={0.1}>
             <div className="mb-8 daily-game-plan-header-wrapper">
                 <div className="flex flex-col gap-4">
-                    <ModernPageHeader title={headerTitleContent} gradientFrom="slate-900" gradientTo="blue-600" />
+                    <GlassPageHeader title={headerTitleContent} gradientFrom="slate-900" gradientTo="blue-600" />
 
                     <div className="relative group/search w-full md:max-w-sm">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 transition-colors duration-200 group-focus-within/search:text-blue-500" />

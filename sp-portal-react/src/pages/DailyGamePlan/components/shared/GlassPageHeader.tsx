@@ -1,6 +1,6 @@
 import React from 'react';
 
-type ModernPageHeaderProps = {
+type GlassPageHeaderProps = {
     title: string;
     gradientFrom?: string;
     gradientTo?: string;
@@ -9,11 +9,13 @@ type ModernPageHeaderProps = {
 /**
  * Trimmed port of the Next.js app's `ModernPageHeader` — only the title/gradient
  * props Daily Game Plan actually passes were kept (no metrics/dashboard/actions).
+ * Renamed to `GlassPageHeader` to avoid colliding with the unrelated
+ * `src/components/modern-page-header.tsx` (different visual language/API).
  * `showUserCard` was dropped entirely: `PortalLayout` (this subsystem's shared page
  * chrome) already renders the admin user pill in its header row, so reusing
  * `UserCard` here would show it twice.
  */
-export const ModernPageHeader: React.FC<ModernPageHeaderProps> = ({
+export const GlassPageHeader: React.FC<GlassPageHeaderProps> = ({
     title,
     gradientFrom = 'slate-900',
     gradientTo = 'indigo-600',
@@ -37,4 +39,4 @@ export const ModernPageHeader: React.FC<ModernPageHeaderProps> = ({
     );
 };
 
-export default ModernPageHeader;
+export default GlassPageHeader;
