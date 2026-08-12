@@ -178,7 +178,7 @@ export const CHECKLIST_STEPS: ChecklistStep[] = [
         title: 'Online test released and score reviewed',
         required: true,
         docKey: 'practical_tests',
-        detail: 'Redirect to the online test module. Once the candidate completes the released test, the score appears in this checklist.',
+        detail: 'Release the online test from the interview section. Once the candidate completes it, the score appears in this checklist.',
         links: [
           { label: 'Open / release online test', url: '/vetting-interview' },
         ],
@@ -196,7 +196,7 @@ export const CHECKLIST_STEPS: ChecklistStep[] = [
       {
         title: 'Work References recorded',
         required: true,
-        detail: 'Employment history is submitted by the driver in the candidate portal (Work history form). References can be collected orally or by letter/e-mail; gaps of 28 days or more are flagged in the 5-year history review.',
+        detail: 'Employment history is submitted by the driver in the Driver app (Work history form). References can be collected orally or by letter/e-mail; gaps of 28 days or more are flagged in the 5-year history review.',
       },
       {
         title: '5 years history reviewed',

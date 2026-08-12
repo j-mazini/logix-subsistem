@@ -261,8 +261,8 @@ interface RouteBlockCardProps {
   comparePickerOpen: boolean;
   onToggleCompare: () => void;
   onPickCompareTarget: (targetId: number) => void;
-  onSwapCompare: () => void;
   onCancelCompare: () => void;
+  onOpenCompareModal: () => void;
   onToggleApproval: () => void;
   onRevert: () => void;
   onCollapse: () => void;
@@ -287,7 +287,7 @@ interface RouteBlockCardProps {
 function RouteBlockCard(props: RouteBlockCardProps) {
   const {
     route, otherRoutes, rebalanceMode, filterPM, dashboardFilter, shiftKey, selected,
-    compareWithRoute, comparePickerOpen, onToggleCompare, onPickCompareTarget, onSwapCompare, onCancelCompare,
+    compareWithRoute, comparePickerOpen, onToggleCompare, onPickCompareTarget, onCancelCompare, onOpenCompareModal,
     onToggleApproval, onRevert, onCollapse, onAddPostcode, onExportCsv, onSeeAllStops, isAllStopsOpen,
     onEditStop, onShipmentDetails, onNotesBlur, onTransferStops, onClickCard,
     isDropSource, isDropTarget, onStartDrag, onEndDrag, onCardDragEnter, onCardDragLeave, onCardDrop,
@@ -297,8 +297,11 @@ function RouteBlockCard(props: RouteBlockCardProps) {
   const [specialCat, setSpecialCat] = useState<SpecialCat>('all');
   const [expandedSubs, setExpandedSubs] = useState<Set<string>>(new Set());
   const [expandedRebalancePcs, setExpandedRebalancePcs] = useState<Set<string>>(new Set());
-  const [moveGroupOpen, setMoveGroupOpen] = useState<string | null>(null);
-  const [moveStopOpen, setMoveStopOpen] = useState<number | null>(null);
+  // Position is captured at click time (from the trigger button's rect) and the picker itself
+  // renders through a portal — the postcode list scrolls with overflow, which clipped an
+  // absolutely-positioned dropdown nested inside it.
+  const [moveGroupOpen, setMoveGroupOpen] = useState<{ code: string; left: number; top: number } | null>(null);
+  const [moveStopOpen, setMoveStopOpen] = useState<{ id: number; left: number; top: number } | null>(null);
 
   const frontRef = useRef<HTMLDivElement>(null);
   const backRef = useRef<HTMLDivElement>(null);
@@ -368,7 +371,7 @@ function RouteBlockCard(props: RouteBlockCardProps) {
 
   return (
     <section
-      className={`route-block ${rebalanceMode ? 'rebalance-mode' : ''} ${flipped ? 'flipped' : ''} ${selected ? 'selected' : ''} ${isDropSource ? 'drop-source' : ''} ${isDropTarget ? 'drop-target' : ''}`}
+      className={`route-block ${rebalanceMode ? 'rebalance-mode' : ''} ${flipped ? 'flipped' : ''} ${selected ? 'selected' : ''} ${isDropSource ? 'drop-source' : ''} ${isDropTarget ? 'drop-target' : ''} ${compareWithRoute ? 'comparing' : ''}`}
       data-route-id={route.id}
       onClick={(e) => {
         if (rebalanceMode) return;
@@ -401,9 +404,8 @@ function RouteBlockCard(props: RouteBlockCardProps) {
                   </span>
                   {compareWithRoute ? (
                     <div className="compare-bar">
-                      <span className="compare-bar-label"><i className="bi bi-arrow-left-right" /> vs {compareWithRoute.name}</span>
-                      <button type="button" className="compare-bar-btn compare-bar-btn--swap" title="Swap all postcodes between these two routes" onClick={onSwapCompare}>
-                        <i className="bi bi-arrow-repeat" /> Swap
+                      <button type="button" className="compare-bar-label" title="Open comparison" onClick={onOpenCompareModal}>
+                        <i className="bi bi-arrow-left-right" /> vs {compareWithRoute.name}
                       </button>
                       <button type="button" className="compare-bar-btn compare-bar-btn--cancel" title="Cancel comparison" aria-label="Cancel comparison" onClick={onCancelCompare}>
                         <i className="bi bi-x-lg" />
@@ -446,7 +448,16 @@ function RouteBlockCard(props: RouteBlockCardProps) {
                       <i className="bi bi-arrow-counterclockwise" />
                     </button>
                   )}
-                  <button type="button" className="route-icon-btn route-icon-btn--danger" title="Close this route and redistribute its postcodes" aria-label="Close route" onClick={onCollapse}>
+                  <button type="button" className="route-icon-btn" title="Add a postcode to this route" aria-label="Add postcode" onClick={onAddPostcode}>
+                    <i className="bi bi-geo-alt-fill" />
+                  </button>
+                  <button
+                    type="button"
+                    className="route-icon-btn route-icon-btn--danger"
+                    title="Redistribute this route's postcodes, then close it"
+                    aria-label="Close route"
+                    onClick={onCollapse}
+                  >
                     <i className="bi bi-box-arrow-in-down" />
                   </button>
                 </>
@@ -483,9 +494,6 @@ function RouteBlockCard(props: RouteBlockCardProps) {
                   <button type="button" className="route-icon-btn" title="Export this route's manifest (Demi8 format)" aria-label="Export manifest" onClick={onExportCsv}>
                     <i className="bi bi-filetype-csv" />
                   </button>
-                  <button type="button" className="route-icon-btn route-icon-btn--danger" title="Close this route and redistribute its postcodes" aria-label="Close route" onClick={onCollapse}>
-                    <i className="bi bi-box-arrow-in-down" />
-                  </button>
                 </>
               )}
             </div>
@@ -520,12 +528,17 @@ function RouteBlockCard(props: RouteBlockCardProps) {
                       <span className="postcode-count-badge">{g.postcodes.length} postcode{g.postcodes.length === 1 ? '' : 's'}</span>
                       {g.pre12 && <span className="status-badge status-badge-pre12">Pre 12</span>}
                       <div className="move-to-wrap move-to-wrap--group">
-                        <button type="button" className={`move-to-btn ${moveGroupOpen === g.code ? 'active' : ''}`} title={`Move all of ${g.code} to another route`}
-                          onClick={(e) => { e.stopPropagation(); setMoveGroupOpen(moveGroupOpen === g.code ? null : g.code); }}>
+                        <button type="button" className={`move-to-btn ${moveGroupOpen?.code === g.code ? 'active' : ''}`} title={`Move all of ${g.code} to another route`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (moveGroupOpen?.code === g.code) { setMoveGroupOpen(null); return; }
+                            const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                            setMoveGroupOpen({ code: g.code, left: rect.right, top: rect.bottom + 4 });
+                          }}>
                           <i className="bi bi-send-plus" /> Move all…
                         </button>
-                        {moveGroupOpen === g.code && (
-                          <div className="move-to-picker">
+                        {moveGroupOpen?.code === g.code && createPortal(
+                          <div className="move-to-picker" style={{ position: 'fixed', top: moveGroupOpen.top, left: moveGroupOpen.left, transform: 'translateX(-100%)' }}>
                             <div className="move-to-picker-title">Move all of {g.code} to…</div>
                             {otherRoutes.map((r) => (
                               <button type="button" key={r.id} className="move-to-picker-item" onClick={(e) => {
@@ -538,7 +551,8 @@ function RouteBlockCard(props: RouteBlockCardProps) {
                                 <span className="compare-picker-driver">{r.driver}</span>
                               </button>
                             ))}
-                          </div>
+                          </div>,
+                          document.body,
                         )}
                       </div>
                     </div>
@@ -595,12 +609,17 @@ function RouteBlockCard(props: RouteBlockCardProps) {
                                     {s.dsr && <span className="status-badge special-tag-dsr">DSR</span>}
                                   </span>
                                   <div className="move-to-wrap move-to-wrap--stop">
-                                    <button type="button" className={`move-to-btn ${moveStopOpen === s.id ? 'active' : ''}`} title="Move only this delivery to another route"
-                                      onClick={(e) => { e.stopPropagation(); setMoveStopOpen(moveStopOpen === s.id ? null : s.id); }}>
+                                    <button type="button" className={`move-to-btn ${moveStopOpen?.id === s.id ? 'active' : ''}`} title="Move only this delivery to another route"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (moveStopOpen?.id === s.id) { setMoveStopOpen(null); return; }
+                                        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                                        setMoveStopOpen({ id: s.id, left: rect.right, top: rect.bottom + 4 });
+                                      }}>
                                       <i className="bi bi-send-plus" /> Move…
                                     </button>
-                                    {moveStopOpen === s.id && (
-                                      <div className="move-to-picker">
+                                    {moveStopOpen?.id === s.id && createPortal(
+                                      <div className="move-to-picker" style={{ position: 'fixed', top: moveStopOpen.top, left: moveStopOpen.left, transform: 'translateX(-100%)' }}>
                                         <div className="move-to-picker-title">Move this {s.type === 'PU' ? 'pickup' : 'delivery'} to…</div>
                                         {otherRoutes.map((r) => (
                                           <button type="button" key={r.id} className="move-to-picker-item" onClick={(e) => {
@@ -612,7 +631,8 @@ function RouteBlockCard(props: RouteBlockCardProps) {
                                             <span className="compare-picker-driver">{r.driver}</span>
                                           </button>
                                         ))}
-                                      </div>
+                                      </div>,
+                                      document.body,
                                     )}
                                   </div>
                                 </div>
@@ -842,6 +862,42 @@ export function RouteBalance() {
 
   const [compareTarget, setCompareTarget] = useState<Record<number, number>>({});
   const [comparePickerOpen, setComparePickerOpen] = useState<number | null>(null);
+  const [compareModalRouteId, setCompareModalRouteId] = useState<number | null>(null);
+  const [collapseModalRouteId, setCollapseModalRouteId] = useState<number | null>(null);
+  const [compareDragPayload, setCompareDragPayload] = useState<{ sourceRouteId: number; stopIds: number[]; label: string } | null>(null);
+  const [compareDropTargetId, setCompareDropTargetId] = useState<number | null>(null);
+
+  function pickCompareTarget(baseId: number, targetId: number) {
+    setCompareTarget((prev) => ({ ...prev, [baseId]: targetId, [targetId]: baseId }));
+    setComparePickerOpen(null);
+    setCompareModalRouteId(baseId);
+  }
+  function navigateCompareTarget(baseId: number, direction: 'prev' | 'next') {
+    const currentTargetId = compareTarget[baseId];
+    if (currentTargetId == null) return;
+    const candidates = routes.filter((r) => r.id !== baseId);
+    const idx = candidates.findIndex((r) => r.id === currentTargetId);
+    if (idx === -1 || candidates.length < 2) return;
+    const nextIdx = direction === 'next' ? (idx + 1) % candidates.length : (idx - 1 + candidates.length) % candidates.length;
+    const nextTarget = candidates[nextIdx];
+    setCompareTarget((prev) => {
+      const next = { ...prev };
+      delete next[currentTargetId];
+      next[baseId] = nextTarget.id;
+      next[nextTarget.id] = baseId;
+      return next;
+    });
+  }
+  function cancelCompare(baseId: number) {
+    const otherId = compareTarget[baseId];
+    setCompareTarget((prev) => {
+      const next = { ...prev };
+      delete next[baseId];
+      if (otherId != null) delete next[otherId];
+      return next;
+    });
+    setCompareModalRouteId((prev) => (prev === baseId || prev === otherId ? null : prev));
+  }
 
   // Rebalance-mode drag-and-drop: dragPayload lives at this level (not per-card)
   // since the source card sets it and the target card under the cursor reads it.
@@ -986,6 +1042,8 @@ export function RouteBalance() {
   const routeBars = routes.map((r, i) => ({
     id: r.id,
     name: r.name,
+    driver: r.driver,
+    completion: r.completion,
     stops: routeLoads[i],
     height: maxLoad ? Math.max(8, Math.round((routeLoads[i] / maxLoad) * 100)) : 8,
     off: meanLoad ? Math.abs(routeLoads[i] - meanLoad) / meanLoad > 0.2 : false,
@@ -1059,38 +1117,16 @@ export function RouteBalance() {
     });
   }
 
-  function swapRouteStops(aId: number, bId: number) {
-    setRoutes((prev) => {
-      const a = prev.find((r) => r.id === aId);
-      const b = prev.find((r) => r.id === bId);
-      if (!a || !b) return prev;
-      const aStops = a.stops.map((s, i) => ({ ...s, routeName: b.name, stopNumber: i + 1 }));
-      const bStops = b.stops.map((s, i) => ({ ...s, routeName: a.name, stopNumber: i + 1 }));
-      return prev.map((r) => {
-        if (r.id === aId) return recomputeRoute({ ...r, stops: bStops });
-        if (r.id === bId) return recomputeRoute({ ...r, stops: aStops });
-        return r;
-      });
-    });
-    showToast(`✓ Swapped Route ${routes.find((r) => r.id === aId)?.name} ↔ Route ${routes.find((r) => r.id === bId)?.name}`, 'success');
-  }
-
-  function collapseRoute(routeId: number) {
+  /** Only actually removes the route — the modal that calls this only enables the button once route.stops is empty. */
+  function closeEmptyRoute(routeId: number) {
     if (routes.length <= 1) { showToast('At least two routes are required to collapse', 'error'); return; }
     const removed = routes.find((r) => r.id === routeId);
     if (!removed) return;
-    if (!confirm(`Close route ${removed.name}? Its ${removed.totalStops} postcodes will be redistributed across the other routes.`)) return;
+    if (removed.stops.length > 0) { showToast('Redistribute every postcode off this route before closing it', 'error'); return; }
 
-    setRoutes((prev) => {
-      const remaining = prev.filter((r) => r.id !== routeId);
-      const dest = remaining.map((r) => ({ ...r, stops: [...r.stops] }));
-      removed.stops.forEach((stop, i) => {
-        const d = dest[i % dest.length];
-        d.stops.push({ ...stop, routeName: d.name, stopNumber: d.stops.length + 1 });
-      });
-      return dest.map(recomputeRoute);
-    });
-    showToast(`Route ${removed.name} closed — postcodes redistributed`, 'success');
+    setRoutes((prev) => prev.filter((r) => r.id !== routeId));
+    setCollapseModalRouteId(null);
+    showToast(`Route ${removed.name} closed`, 'success');
   }
 
   /** The check on the route card: arms the route for the next batch send, or withdraws it. Sending itself stays with "Send to Driver". */
@@ -1274,6 +1310,11 @@ export function RouteBalance() {
   const shipmentRoute = shipmentModalRouteId != null ? routes.find((r) => r.id === shipmentModalRouteId) : null;
   const allStopsRoute = allStopsRouteId != null ? routes.find((r) => r.id === allStopsRouteId) : null;
   const previewRoute = selectedRouteId != null ? routes.find((r) => r.id === selectedRouteId) : null;
+  const compareBaseRoute = compareModalRouteId != null ? routes.find((r) => r.id === compareModalRouteId) : null;
+  const compareTargetRoute = compareBaseRoute && compareTarget[compareBaseRoute.id] != null
+    ? routes.find((r) => r.id === compareTarget[compareBaseRoute.id]) || null
+    : null;
+  const collapseModalRoute = collapseModalRouteId != null ? routes.find((r) => r.id === collapseModalRouteId) : null;
   const previewList = routes.filter((r) => visibleStops(r).length > 0);
   const previewIndex = previewRoute ? previewList.findIndex((r) => r.id === previewRoute.id) : -1;
 
@@ -1284,6 +1325,8 @@ export function RouteBalance() {
   useModalBehavior(() => setAddRouteModalOpen(false), addRouteModalOpen);
   useModalBehavior(() => setShipmentModalRouteId(null), !!shipmentRoute);
   useModalBehavior(() => setEditStopId(null), !!editingStop);
+  useModalBehavior(() => compareBaseRoute && cancelCompare(compareBaseRoute.id), !!compareModalRouteId);
+  useModalBehavior(() => setCollapseModalRouteId(null), !!collapseModalRouteId);
   useModalBehavior(() => setPmListingModalOpen(false), pmListingModalOpen);
   useModalBehavior(() => setSelectedRouteId(null), !!previewRoute && !rebalanceMode);
 
@@ -1457,10 +1500,10 @@ export function RouteBalance() {
 
             <div className={`osb-grid${gaugesReady ? ' osb-grid--in' : ''}`} id="summaryCards">
               {/* --- Hero: total stops + balance arc --- */}
-              <button type="button" className={`osb-card osb-stops${dashboardFilter || focusRoute ? ' osb-stops--clearable' : ''}`}
-                data-tooltip="Total stops across all routes · click to clear any filter"
-                onClick={() => { setFocusRouteId(null); toggleDashboardFilter('all'); }}>
-                <span className="osb-stops-main">
+              <div className={`osb-card osb-stops${dashboardFilter || focusRoute ? ' osb-stops--clearable' : ''}`}>
+                <button type="button" className="osb-stops-main"
+                  data-tooltip="Total stops across all routes · click to clear any filter"
+                  onClick={() => { setFocusRouteId(null); toggleDashboardFilter('all'); }}>
                   <span className="osb-label"><i className="bi bi-stack" /> {focusRoute ? `Route ${focusRoute.name} stops` : 'Total stops'}</span>
                   <span className="osb-stops-val" id="totalStopsCard">{totalStopsAnim}</span>
                   <span className="osb-stops-meta">
@@ -1471,20 +1514,28 @@ export function RouteBalance() {
                     )}
                     <span className="osb-chip"><i className="bi bi-speedometer2" />SPR <em id="sprCard">{sprAnim}</em></span>
                   </span>
-                </span>
+                </button>
                 <span className={`osb-stops-gauge osb-stops-gauge--${balanceTone}`}>
                   <span className="osb-bars" style={{ ['--osb-mean' as string]: `${meanBarPct}%` }}
                     role="img" aria-label={`Stops per route — balance index ${balancePct}%`}>
                     {routeBars.map((bar, i) => (
-                      <span key={bar.id}
+                      <button
+                        type="button"
+                        key={bar.id}
                         className={`osb-bar${bar.off ? ' osb-bar--off' : ''}${bar.id === focusRouteId ? ' osb-bar--focus' : ''}`}
                         style={{ height: `${gaugesReady ? bar.height : 0}%`, transitionDelay: `${i * 45}ms` }}
-                        title={`Route ${bar.name} · ${bar.stops} stops`} />
+                        data-tooltip={`Route ${bar.name} · ${bar.driver} · ${bar.stops} stops · ${bar.completion}% complete`}
+                        aria-label={`Route ${bar.name}: ${bar.stops} stops, ${bar.completion}% complete — click to focus the summary on this route`}
+                        onClick={() => {
+                          const route = routes.find((r) => r.id === bar.id);
+                          if (route) toggleFocusRoute(route);
+                        }}
+                      />
                     ))}
                   </span>
                   <span className="osb-gauge-cap">Route balance <em>{balanceAnim}%</em> <span>· avg {meanLoad.toFixed(1)}/route</span></span>
                 </span>
-              </button>
+              </div>
 
               {/* --- Target loop speedometer --- */}
               <div className={`osb-card osb-loop${loopOk ? ' osb-loop--ok' : ''}`} data-tooltip={`Average target loop across routes · goal ${OSB_LOOP_TARGET}%+`}>
@@ -1592,35 +1643,12 @@ export function RouteBalance() {
                 compareWithRoute={compareTarget[route.id] != null ? routes.find((r) => r.id === compareTarget[route.id]) || null : null}
                 comparePickerOpen={comparePickerOpen === route.id}
                 onToggleCompare={() => setComparePickerOpen((prev) => (prev === route.id ? null : route.id))}
-                onPickCompareTarget={(targetId) => {
-                  setCompareTarget((prev) => ({ ...prev, [route.id]: targetId, [targetId]: route.id }));
-                  setComparePickerOpen(null);
-                  const target = routes.find((r) => r.id === targetId);
-                  showToast(`Comparing Route ${route.name} with Route ${target?.name}`, 'info');
-                }}
-                onSwapCompare={() => {
-                  const otherId = compareTarget[route.id];
-                  if (otherId == null) return;
-                  swapRouteStops(route.id, otherId);
-                  setCompareTarget((prev) => {
-                    const next = { ...prev };
-                    delete next[route.id];
-                    delete next[otherId];
-                    return next;
-                  });
-                }}
-                onCancelCompare={() => {
-                  const otherId = compareTarget[route.id];
-                  setCompareTarget((prev) => {
-                    const next = { ...prev };
-                    delete next[route.id];
-                    if (otherId != null) delete next[otherId];
-                    return next;
-                  });
-                }}
+                onPickCompareTarget={(targetId) => pickCompareTarget(route.id, targetId)}
+                onOpenCompareModal={() => setCompareModalRouteId(route.id)}
+                onCancelCompare={() => cancelCompare(route.id)}
                 onToggleApproval={() => toggleRouteApproval(route.id)}
                 onRevert={() => revertLastAction(route.id)}
-                onCollapse={() => collapseRoute(route.id)}
+                onCollapse={() => setCollapseModalRouteId(route.id)}
                 onAddPostcode={() => { setAddPostcodeRouteId(String(route.id)); setPostcodeInputVal(''); setPostcodeType('postcode'); setAddPostcodeModalOpen(true); }}
                 onExportCsv={() => exportRouteCsv(route)}
                 onSeeAllStops={() => openStopsDrawer(route.id)}
@@ -1757,56 +1785,48 @@ export function RouteBalance() {
                 </div>
                 <div className="modal-body">
                   {/* SUMMARY SECTION */}
-                  <div className="shipment-summary-card">
-                    <div className="summary-row">
-                      <div className="summary-cell">
-                        <span className="label">Route ID</span>
-                        <span className="value mono fw-bold">ROUTE-{shipmentRoute.name}</span>
-                      </div>
-                      <div className="summary-cell">
-                        <span className="label">Driver</span>
-                        <span className="value">{shipmentRoute.driver}</span>
-                      </div>
-                      <div className="summary-cell">
-                        <span className="label">Vehicle</span>
-                        <span className="value">{shipmentRoute.vehicle}</span>
-                      </div>
+                  <div className="shipment-bento">
+                    <div className="bento-tile">
+                      <span className="label">Route ID</span>
+                      <span className="value mono fw-bold">ROUTE-{shipmentRoute.name}</span>
                     </div>
-                    <div className="summary-row">
-                      <div className="summary-cell">
-                        <span className="label">Total Stops</span>
-                        <span className="value fw-bold">{visibleStops(shipmentRoute).length}</span>
-                      </div>
-                      <div className="summary-cell">
-                        <span className="label">Deliveries / Pickups</span>
-                        <span className="value">{visibleStops(shipmentRoute).filter((s) => s.type === 'DEL').length} / {visibleStops(shipmentRoute).filter((s) => s.type === 'PU').length}</span>
-                      </div>
-                      <div className="summary-cell">
-                        <span className="label">Completion</span>
-                        <span className="value fw-bold text-success">{shipmentRoute.completion}%</span>
-                      </div>
+                    <div className="bento-tile">
+                      <span className="label">Driver</span>
+                      <span className="value">{shipmentRoute.driver}</span>
                     </div>
-                    <div className="summary-row">
-                      <div className="summary-cell">
-                        <span className="label">Total Pieces</span>
-                        <span className="value fw-bold">{shipmentRoute.totalPieces}</span>
-                      </div>
-                      <div className="summary-cell">
-                        <span className="label">Soma Phys (kg)</span>
-                        <span className="value fw-bold">{shipmentRoute.totalPhysicalWeight}</span>
-                      </div>
-                      <div className="summary-cell">
-                        <span className="label">Total Shipments</span>
-                        <span className="value fw-bold">{shipmentRoute.stops.length}</span>
-                      </div>
+                    <div className="bento-tile">
+                      <span className="label">Vehicle</span>
+                      <span className="value">{shipmentRoute.vehicle}</span>
                     </div>
-                    <div className="summary-row">
-                      <div className="summary-cell" style={{ gridColumn: '1 / -1' }}>
-                        <span className="label">Special Indicators</span>
-                        <span className="value">
-                          Pre-12: {shipmentRoute.pre12} | ASR: {shipmentRoute.asr} | DSR: {shipmentRoute.dsr}
-                        </span>
-                      </div>
+                    <div className="bento-tile">
+                      <span className="label">Completion</span>
+                      <span className="value fw-bold text-success">{shipmentRoute.completion}%</span>
+                    </div>
+                    <div className="bento-tile">
+                      <span className="label">Total Stops</span>
+                      <span className="value fw-bold">{visibleStops(shipmentRoute).length}</span>
+                    </div>
+                    <div className="bento-tile">
+                      <span className="label">Deliveries / Pickups</span>
+                      <span className="value">{visibleStops(shipmentRoute).filter((s) => s.type === 'DEL').length} / {visibleStops(shipmentRoute).filter((s) => s.type === 'PU').length}</span>
+                    </div>
+                    <div className="bento-tile">
+                      <span className="label">Total Pieces</span>
+                      <span className="value fw-bold">{shipmentRoute.totalPieces}</span>
+                    </div>
+                    <div className="bento-tile">
+                      <span className="label">Soma Phys (kg)</span>
+                      <span className="value fw-bold">{shipmentRoute.totalPhysicalWeight}</span>
+                    </div>
+                    <div className="bento-tile">
+                      <span className="label">Total Shipments</span>
+                      <span className="value fw-bold">{shipmentRoute.stops.length}</span>
+                    </div>
+                    <div className="bento-tile bento-tile--wide">
+                      <span className="label">Special Indicators</span>
+                      <span className="value">
+                        Pre-12: {shipmentRoute.pre12} | ASR: {shipmentRoute.asr} | DSR: {shipmentRoute.dsr}
+                      </span>
                     </div>
                   </div>
 
@@ -1852,65 +1872,6 @@ export function RouteBalance() {
                     </div>
                   </div>
 
-                  {/* STOPS GROUPED BY POSTCODE AREA */}
-                  <div className="shipment-stops-list">
-                    <h6 className="stops-header">Deliveries by Postcode Area</h6>
-                    {groupBySubpostcode(visibleStops(shipmentRoute), false).map((subgroup) => (
-                      <div key={subgroup.code} className="postcode-group">
-                        <button
-                          className="postcode-group-header"
-                          onClick={() => {
-                            const elem = document.getElementById(`stops-${subgroup.code}`);
-                            if (elem) elem.classList.toggle('collapsed');
-                          }}
-                          type="button"
-                        >
-                          <i className="bi bi-chevron-down" />
-                          <span className="postcode-badge">{subgroup.code}</span>
-                          <span className="stop-count">{subgroup.total} stops</span>
-                          {subgroup.pre12 && <span className="status-badge status-badge-pre12">Pre 12</span>}
-                          <span className="completion-badge">{subgroup.completion}%</span>
-                        </button>
-                        <div id={`stops-${subgroup.code}`} className="stops-container">
-                          {subgroup.postcodes.map((pcGroup) => (
-                            <div key={pcGroup.postcode} className="postcode-section">
-                              <div className="postcode-detail">
-                                <span className="postcode-label">{pcGroup.postcode}</span>
-                                <span className="postcode-counts">{pcGroup.del} DEL, {pcGroup.pu} PU</span>
-                              </div>
-                              <div className="stops-table">
-                                {pcGroup.stops.map((stop, idx) => (
-                                  <div key={stop.id} className="stop-row">
-                                    <div className="stop-number">{idx + 1}.</div>
-                                    <div className="stop-type">
-                                      <span className={`type-badge type-${stop.type.toLowerCase()}`}>
-                                        {stop.type === 'DEL' ? '📦' : '📍'} {stop.type}
-                                      </span>
-                                    </div>
-                                    <div className="stop-info">
-                                      <div className="stop-address">{stop.address}</div>
-                                      <div className="stop-customer">{stop.customer}</div>
-                                    </div>
-                                    <div className="stop-status">
-                                      <span className={`status-indicator ${stop.status}`}>
-                                        {stop.status === 'completed' ? '✓' : '○'}
-                                      </span>
-                                    </div>
-                                    <div className="stop-indicators">
-                                      {stop.pre12 && <span className="status-badge status-badge-pre12">Pre 12</span>}
-                                      {stop.asr && <span className="status-badge status-badge-asr">ASR</span>}
-                                      {stop.dsr && <span className="status-badge status-badge-dsr">DSR</span>}
-                                      {stop.pm && <span className="status-badge status-badge-pm">PM</span>}
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
                 </div>
                 <div className="modal-footer">
                   <button type="button" className="styled-button styled-button--outline" onClick={() => setShipmentModalRouteId(null)}>
@@ -1921,6 +1882,188 @@ export function RouteBalance() {
             </div>
           </div>
           <div className="modal-backdrop fade show sp-modal-backdrop-anim" onClick={() => setShipmentModalRouteId(null)} />
+        </>,
+        document.body,
+      )}
+
+      {/* ============ MODAL: Compare Routes ============ */}
+      {compareBaseRoute && compareTargetRoute && createPortal(
+        <>
+          <div className="modal fade show sp-modal-anim" style={{ display: 'block' }} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="compareModalTitle">
+            <div className="modal-dialog modal-xl modal-dialog-scrollable">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title" id="compareModalTitle">
+                    <i className="bi bi-arrow-left-right me-2" />
+                    Compare Route {compareBaseRoute.name} vs Route {compareTargetRoute.name}
+                  </h5>
+                  <button type="button" className="btn-close" aria-label="Close" onClick={() => cancelCompare(compareBaseRoute.id)} />
+                </div>
+                <div className="modal-body">
+                  <p className="compare-modal-hint">
+                    <i className="bi bi-info-circle" /> Drag a postcode group onto the other route to move it — this is a planning view, so completed deliveries are left out.
+                  </p>
+                  <div className="compare-modal-grid">
+                    {[compareBaseRoute, compareTargetRoute].map((r, colIdx) => {
+                      // Planning view — only pending (not-yet-completed) stops are shown or moved here.
+                      const rStops = r.stops.filter((s) => (filterPM ? s.pm : !s.pm) && s.status !== 'completed');
+                      const rGroups = groupBySubpostcode(rStops, filterPM);
+                      const rPostcodeCount = rGroups.reduce((n, g) => n + g.postcodes.length, 0);
+                      const otherRoute = colIdx === 0 ? compareTargetRoute : compareBaseRoute;
+                      return (
+                        <div
+                          className={`compare-modal-col${compareDropTargetId === r.id ? ' compare-modal-col--drop-target' : ''}`}
+                          key={r.id}
+                          onDragOver={(e) => {
+                            if (!compareDragPayload || compareDragPayload.sourceRouteId === r.id) return;
+                            e.preventDefault();
+                            setCompareDropTargetId(r.id);
+                          }}
+                          onDragLeave={(e) => {
+                            if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+                            setCompareDropTargetId(null);
+                          }}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            setCompareDropTargetId(null);
+                            if (!compareDragPayload || compareDragPayload.sourceRouteId === r.id) return;
+                            transferStops(compareDragPayload.sourceRouteId, r.id, compareDragPayload.stopIds, `${compareDragPayload.label} → Route ${r.name}`);
+                            setCompareDragPayload(null);
+                          }}
+                        >
+                          <div className="compare-modal-col-header">
+                            <div className="compare-modal-col-ident">
+                              <span className="route-eyebrow">Route {r.name}</span>
+                              <h4 className="compare-modal-driver">{r.driver}</h4>
+                            </div>
+                            {colIdx === 1 && (
+                              <div className="compare-modal-nav">
+                                <button type="button" className="compare-bar-nav" title="Compare with previous route" aria-label="Compare with previous route" onClick={() => navigateCompareTarget(compareBaseRoute.id, 'prev')}>
+                                  <i className="bi bi-chevron-left" />
+                                </button>
+                                <button type="button" className="compare-bar-nav" title="Compare with next route" aria-label="Compare with next route" onClick={() => navigateCompareTarget(compareBaseRoute.id, 'next')}>
+                                  <i className="bi bi-chevron-right" />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                          <div className="compare-modal-stats">
+                            <span><i className="bi bi-geo-alt" /> {rPostcodeCount} postcodes</span>
+                            <span><i className="bi bi-box2" /> {rStops.length} pending stops</span>
+                            <span className="fw-bold">{r.completion}% complete</span>
+                          </div>
+                          <div className="compare-modal-groups">
+                            {rGroups.length === 0 && <p className="compare-modal-empty">No pending stops on this route.</p>}
+                            {rGroups.map((g) => (
+                              <div
+                                className="compare-modal-group"
+                                key={g.code}
+                                draggable
+                                title={`Drag to move ${g.code} to Route ${otherRoute.name}`}
+                                onDragStart={(e) => {
+                                  e.dataTransfer.effectAllowed = 'move';
+                                  const stopIds = rStops.filter((s) => subpostcodeOf(s.postcode) === g.code).map((s) => s.id);
+                                  setCompareDragPayload({ sourceRouteId: r.id, stopIds, label: g.code });
+                                }}
+                                onDragEnd={() => { setCompareDragPayload(null); setCompareDropTargetId(null); }}
+                              >
+                                <i className="bi bi-grip-vertical drag-handle" />
+                                <span className="postcode-badge">{g.code}</span>
+                                <span className="compare-modal-group-count">
+                                  {g.postcodes.length} postcode{g.postcodes.length === 1 ? '' : 's'} · {g.total} stops
+                                </span>
+                                {g.pre12 && <span className="status-badge status-badge-pre12">Pre 12</span>}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="styled-button styled-button--outline" title="Close and clear this comparison" onClick={() => cancelCompare(compareBaseRoute.id)}>
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="modal-backdrop fade show sp-modal-backdrop-anim" onClick={() => cancelCompare(compareBaseRoute.id)} />
+        </>,
+        document.body,
+      )}
+
+      {/* ============ MODAL: Redistribute & Close Route ============ */}
+      {collapseModalRoute && createPortal(
+        <>
+          <div className="modal fade show sp-modal-anim" style={{ display: 'block' }} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="collapseModalTitle">
+            <div className="modal-dialog modal-lg modal-dialog-scrollable">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title" id="collapseModalTitle">
+                    <i className="bi bi-box-arrow-in-down me-2" />
+                    Close Route {collapseModalRoute.name}
+                  </h5>
+                  <button type="button" className="btn-close" aria-label="Close" onClick={() => setCollapseModalRouteId(null)} />
+                </div>
+                <div className="modal-body">
+                  {collapseModalRoute.stops.length === 0 ? (
+                    <p className="compare-modal-empty">Every postcode has been redistributed — this route is ready to close.</p>
+                  ) : (
+                    <>
+                      <p className="compare-modal-hint">
+                        <i className="bi bi-info-circle" /> Move every postcode below onto another route before this one can be closed.
+                      </p>
+                      <div className="compare-modal-groups">
+                        {groupBySubpostcode(collapseModalRoute.stops, false).map((g) => (
+                          <div className="compare-modal-group collapse-move-group" key={g.code}>
+                            <span className="postcode-badge">{g.code}</span>
+                            <span className="compare-modal-group-count">
+                              {g.postcodes.length} postcode{g.postcodes.length === 1 ? '' : 's'} · {g.total} stops
+                            </span>
+                            {g.pre12 && <span className="status-badge status-badge-pre12">Pre 12</span>}
+                            <select
+                              className="collapse-move-select"
+                              value=""
+                              aria-label={`Move ${g.code} to another route`}
+                              onChange={(e) => {
+                                const targetId = Number(e.target.value);
+                                if (!targetId) return;
+                                const stopIds = collapseModalRoute.stops.filter((s) => subpostcodeOf(s.postcode) === g.code).map((s) => s.id);
+                                const targetName = routes.find((r) => r.id === targetId)?.name;
+                                transferStops(collapseModalRoute.id, targetId, stopIds, `${g.code} → Route ${targetName}`);
+                              }}
+                            >
+                              <option value="">Move to…</option>
+                              {routes.filter((r) => r.id !== collapseModalRoute.id).map((r) => (
+                                <option key={r.id} value={r.id}>{r.name} — {r.driver}</option>
+                              ))}
+                            </select>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="styled-button styled-button--outline" onClick={() => setCollapseModalRouteId(null)}>
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="styled-button styled-button--danger"
+                    disabled={collapseModalRoute.stops.length > 0}
+                    title={collapseModalRoute.stops.length > 0 ? 'Redistribute every postcode first' : 'Close this route'}
+                    onClick={() => closeEmptyRoute(collapseModalRoute.id)}
+                  >
+                    <i className="bi bi-box-arrow-in-down" /> Close Route
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="modal-backdrop fade show sp-modal-backdrop-anim" onClick={() => setCollapseModalRouteId(null)} />
         </>,
         document.body,
       )}
@@ -2100,52 +2243,59 @@ export function RouteBalance() {
         document.body,
       )}
 
-      {/* ============ DRAWER: See All Stops ============ */}
-      {createPortal(
-        <div className={`stops-drawer${allStopsRoute ? ' is-open' : ''}`} id="allStopsDrawer">
-          <div className="stops-drawer-header">
-            <h5 id="allStopsModalTitle"><i className="bi bi-geo-alt" />All Stops{allStopsRoute ? ` — Route ${allStopsRoute.name}` : ''}</h5>
-            <button type="button" className="stops-drawer-close" aria-label="Close" onClick={closeStopsDrawer}>
-              <i className="bi bi-x-lg" />
-            </button>
-          </div>
-          <div className="stops-drawer-body">
-            {allStopsRoute && (
-              <>
-                <div className="modal-metrics" id="allStopsMetrics">
-                  <span className="status-badge metric-badge--pre12" style={{ background: '#e0f2fe', color: '#075985' }}>Pre 12: {allStopsRoute.pre12}</span>
-                  <span className="status-badge" style={{ background: '#d1fae5', color: '#065f46' }}>ASR: {allStopsRoute.asr}</span>
-                  <span className="status-badge" style={{ background: '#ede9fe', color: '#5b21b6' }}>DSR: {allStopsRoute.dsr}</span>
-                  <span className="status-badge" style={
-                    allStopsRoute.sortAttendance === 'yes' ? { background: '#d1fae5', color: '#065f46' }
-                    : allStopsRoute.sortAttendance === 'late' ? { background: '#fef3c7', color: '#92400e' }
-                    : { background: '#fee2e2', color: '#991b1b' }
-                  }>Sort: {SORT_ATTENDANCE_LABELS[allStopsRoute.sortAttendance]}</span>
+      {/* ============ MODAL: See All Stops ============ */}
+      {allStopsRoute && createPortal(
+        <>
+          <div className="modal fade show sp-modal-anim" style={{ display: 'block' }} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="allStopsModalTitle">
+            <div className="modal-dialog modal-xl modal-dialog-scrollable">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title" id="allStopsModalTitle">
+                    <i className="bi bi-geo-alt me-2" />
+                    All Stops — Route {allStopsRoute.name}
+                  </h5>
+                  <button type="button" className="btn-close" aria-label="Close" onClick={closeStopsDrawer} />
                 </div>
-                <div className="table-responsive">
-                  <table className="table table-hover table-sm">
-                    <thead><tr><th>Stop</th><th>Address</th><th>Postcode</th><th>Customer</th><th>Flag</th><th>Route</th></tr></thead>
-                    <tbody id="allStopsTableBody">
-                      {[...visibleStops(allStopsRoute)].sort((a, b) => a.routeName.localeCompare(b.routeName) || a.stopNumber - b.stopNumber).map((s) => (
-                        <tr key={s.id}>
-                          <td>{s.stopNumber}</td>
-                          <td>{s.address}</td>
-                          <td>{s.postcode}</td>
-                          <td>{s.customer}</td>
-                          <td>
-                            <span className={`status-badge status-badge-${s.pm ? 'pm' : 'am'}`}>{s.pm ? 'PM' : 'AM'}</span>
-                            {s.pre12 && <span className="status-badge status-badge-pre12">Pre 12</span>}
-                          </td>
-                          <td>{s.routeName}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className="modal-body">
+                  <div className="modal-metrics" id="allStopsMetrics">
+                    <span className="status-badge metric-badge--pre12" style={{ background: '#e0f2fe', color: '#075985' }}>Pre 12: {allStopsRoute.pre12}</span>
+                    <span className="status-badge" style={{ background: '#d1fae5', color: '#065f46' }}>ASR: {allStopsRoute.asr}</span>
+                    <span className="status-badge" style={{ background: '#ede9fe', color: '#5b21b6' }}>DSR: {allStopsRoute.dsr}</span>
+                    <span className="status-badge" style={
+                      allStopsRoute.sortAttendance === 'yes' ? { background: '#d1fae5', color: '#065f46' }
+                      : allStopsRoute.sortAttendance === 'late' ? { background: '#fef3c7', color: '#92400e' }
+                      : { background: '#fee2e2', color: '#991b1b' }
+                    }>Sort: {SORT_ATTENDANCE_LABELS[allStopsRoute.sortAttendance]}</span>
+                  </div>
+                  <div className="table-responsive">
+                    <table className="table table-hover table-sm">
+                      <thead><tr><th>Stop</th><th>Address</th><th>Postcode</th><th>Flag</th></tr></thead>
+                      <tbody id="allStopsTableBody">
+                        {[...visibleStops(allStopsRoute)].sort((a, b) => a.routeName.localeCompare(b.routeName) || a.stopNumber - b.stopNumber).map((s) => (
+                          <tr key={s.id}>
+                            <td>{s.stopNumber}</td>
+                            <td>{s.address}</td>
+                            <td>{s.postcode}</td>
+                            <td>
+                              <span className={`status-badge status-badge-${s.pm ? 'pm' : 'am'}`}>{s.pm ? 'PM' : 'AM'}</span>
+                              {s.pre12 && <span className="status-badge status-badge-pre12">Pre 12</span>}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-              </>
-            )}
+                <div className="modal-footer">
+                  <button type="button" className="styled-button styled-button--outline" onClick={closeStopsDrawer}>
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>,
+          <div className="modal-backdrop fade show sp-modal-backdrop-anim" onClick={closeStopsDrawer} />
+        </>,
         document.body,
       )}
 

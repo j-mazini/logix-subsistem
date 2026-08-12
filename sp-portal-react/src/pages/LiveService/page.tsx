@@ -79,11 +79,11 @@ export default function Page() {
 
         <LiveKPICards cards={kpiCards} />
 
+        <TeamRoster team={team} onSelect={setPerformanceId} />
+
         <div className={styles.mapSection}>
           <OperationalMap deliverers={deliverers} selectedId={selectedId} onSelect={setSelectedId} />
         </div>
-
-        <TeamRoster team={team} onSelect={setPerformanceId} />
 
         {performanceMember && (
           <DriverPerformanceModal member={performanceMember} onClose={() => setPerformanceId(null)} />

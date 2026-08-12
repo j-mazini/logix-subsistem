@@ -31,7 +31,6 @@ const NAV_GROUPS: NavGroup[] = [
       { icon: 'bi-truck', label: 'Vehicles', route: '/vehicles' },
       { icon: 'bi-phone', label: 'Assets', route: '/assets' },
       { icon: 'bi-file-earmark-text', label: 'Contract Management', route: '/contracts' },
-      { icon: 'bi-signpost-split', label: 'Loops & Routes', route: '/logistics' },
     ],
   },
   {
@@ -71,7 +70,6 @@ const NAV_GROUPS: NavGroup[] = [
     label: 'Vendor Requests',
     items: [
       { icon: 'bi-inbox', label: 'Vendor Requests', route: '/requests-admin' },
-      { icon: 'bi-inbox-fill', label: 'Requests Inbox', route: '/requests-inbox' },
     ],
   },
   {

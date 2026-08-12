@@ -226,6 +226,186 @@ export function getEffectiveBandsFor(spName: string, depotName: string, loopName
   return getStoredLoopBands(spName, depotName, loopName) ?? getDigressiveBandsFor(loopName);
 }
 
+const LOOP_TARGETS_STORAGE_KEY = 'dhl_contract_loop_targets';
+
+/**
+ * Get the stored target override for a loop, or null when not overridden —
+ * in which case the loop's target is just the sum of its routes' targets
+ * (see ContractLoopView.target in getFilteredContracts()).
+ */
+export function getStoredLoopTarget(spName: string, depotName: string, loopName: string): number | null {
+  try {
+    const raw = localStorage.getItem(LOOP_TARGETS_STORAGE_KEY);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    const sp = data[spName];
+    if (!sp) return null;
+    const val = sp[targetKey(depotName, loopName)];
+    return val != null ? Number(val) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Store a target override for a loop. Pass null/undefined/NaN to clear it (falls back to the sum of route targets). */
+export function setStoredLoopTarget(spName: string, depotName: string, loopName: string, value: number | null | undefined): void {
+  try {
+    const raw = localStorage.getItem(LOOP_TARGETS_STORAGE_KEY);
+    const data = raw ? JSON.parse(raw) : {};
+    if (!data[spName]) data[spName] = {};
+    const key = targetKey(depotName, loopName);
+    if (value === null || value === undefined || Number.isNaN(value)) delete data[spName][key];
+    else data[spName][key] = Number(value);
+    localStorage.setItem(LOOP_TARGETS_STORAGE_KEY, JSON.stringify(data));
+  } catch {
+    /* ignore */
+  }
+}
+
+const CUSTOM_ROUTES_STORAGE_KEY = 'dhl_contract_custom_routes';
+
+export interface NewRouteInput {
+  depotName: string;
+  loopName: string;
+  routeName: string;
+  type: string;
+  driver?: string;
+  target?: number | null;
+}
+
+function getStoredCustomDepots(spName: string): RawContractDepot[] {
+  try {
+    const raw = localStorage.getItem(CUSTOM_ROUTES_STORAGE_KEY);
+    if (!raw) return [];
+    const data = JSON.parse(raw);
+    return Array.isArray(data[spName]) ? data[spName] : [];
+  } catch {
+    return [];
+  }
+}
+
+function setStoredCustomDepots(spName: string, depots: RawContractDepot[]): void {
+  try {
+    const raw = localStorage.getItem(CUSTOM_ROUTES_STORAGE_KEY);
+    const data = raw ? JSON.parse(raw) : {};
+    data[spName] = depots;
+    localStorage.setItem(CUSTOM_ROUTES_STORAGE_KEY, JSON.stringify(data));
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Adds a new route to a depot/loop for the given service provider, creating the depot/loop if new. Stored in localStorage and merged into getFilteredContracts(). */
+export function addStoredRoute(spName: string, input: NewRouteInput): void {
+  const depots = getStoredCustomDepots(spName);
+  let depot = depots.find(d => d.name === input.depotName);
+  if (!depot) {
+    depot = { name: input.depotName, loops: [] };
+    depots.push(depot);
+  }
+  if (!depot.loops) depot.loops = [];
+  let loop = depot.loops.find(l => l.name === input.loopName);
+  if (!loop) {
+    loop = { name: input.loopName, routes: [] };
+    depot.loops.push(loop);
+  }
+  if (!loop.routes) loop.routes = [];
+  loop.routes.push({
+    name: input.routeName,
+    type: input.type,
+    driver: input.driver || undefined,
+    targetDel: input.target != null && !Number.isNaN(input.target) ? input.target : undefined,
+  });
+  setStoredCustomDepots(spName, depots);
+}
+
+/** Adds a new, empty depot for the given service provider. No-op if it already exists. */
+export function addStoredDepot(spName: string, depotName: string): void {
+  const depots = getStoredCustomDepots(spName);
+  if (depots.some(d => d.name === depotName)) return;
+  depots.push({ name: depotName, loops: [] });
+  setStoredCustomDepots(spName, depots);
+}
+
+/** Adds a new, empty loop to a depot (creating the depot if new). No-op if the loop already exists. */
+export function addStoredLoop(spName: string, depotName: string, loopName: string, deliveryRate?: number | null): void {
+  const depots = getStoredCustomDepots(spName);
+  let depot = depots.find(d => d.name === depotName);
+  if (!depot) {
+    depot = { name: depotName, loops: [] };
+    depots.push(depot);
+  }
+  if (!depot.loops) depot.loops = [];
+  if (depot.loops.some(l => l.name === loopName)) return;
+  depot.loops.push({
+    name: loopName,
+    deliveryRate: deliveryRate != null && !Number.isNaN(deliveryRate) ? deliveryRate : undefined,
+    routes: [],
+  });
+  setStoredCustomDepots(spName, depots);
+}
+
+/** Whether a depot was added by the SP (as opposed to coming from the raw contract data) — only these can be removed. */
+export function isCustomDepot(spName: string, depotName: string): boolean {
+  return getStoredCustomDepots(spName).some(d => d.name === depotName);
+}
+
+/** Whether a loop was added by the SP — only these can be removed. */
+export function isCustomLoop(spName: string, depotName: string, loopName: string): boolean {
+  const depot = getStoredCustomDepots(spName).find(d => d.name === depotName);
+  return !!depot?.loops?.some(l => l.name === loopName);
+}
+
+/** Whether a route was added by the SP — only these can be removed. */
+export function isCustomRoute(spName: string, depotName: string, loopName: string, routeName: string): boolean {
+  const depot = getStoredCustomDepots(spName).find(d => d.name === depotName);
+  const loop = depot?.loops?.find(l => l.name === loopName);
+  return !!loop?.routes?.some(r => r.name === routeName);
+}
+
+/** Removes a custom depot (and everything under it). No-op for depots that came from the raw contract data. */
+export function removeStoredDepot(spName: string, depotName: string): void {
+  const depots = getStoredCustomDepots(spName).filter(d => d.name !== depotName);
+  setStoredCustomDepots(spName, depots);
+}
+
+/** Removes a custom loop (and its routes) from a depot. No-op for loops that came from the raw contract data. */
+export function removeStoredLoop(spName: string, depotName: string, loopName: string): void {
+  const depots = getStoredCustomDepots(spName);
+  const depot = depots.find(d => d.name === depotName);
+  if (depot?.loops) depot.loops = depot.loops.filter(l => l.name !== loopName);
+  setStoredCustomDepots(spName, depots);
+}
+
+/** Removes a custom route from a loop. No-op for routes that came from the raw contract data. */
+export function removeStoredRoute(spName: string, depotName: string, loopName: string, routeName: string): void {
+  const depots = getStoredCustomDepots(spName);
+  const depot = depots.find(d => d.name === depotName);
+  const loop = depot?.loops?.find(l => l.name === loopName);
+  if (loop?.routes) loop.routes = loop.routes.filter(r => r.name !== routeName);
+  setStoredCustomDepots(spName, depots);
+}
+
+/** Names of all depots (existing + custom) currently on file for a service provider. */
+export function getDepotNames(spName: string): string[] {
+  const providers = getRawContractProviders();
+  const prov = providers.find(p => p.serviceProvider === spName);
+  const existing = (prov?.depots || []).map(d => d.name);
+  const custom = getStoredCustomDepots(spName).map(d => d.name);
+  return Array.from(new Set([...existing, ...custom])).sort();
+}
+
+/** Names of loops within a depot (existing + custom) for a service provider. */
+export function getLoopNames(spName: string, depotName: string): string[] {
+  const providers = getRawContractProviders();
+  const prov = providers.find(p => p.serviceProvider === spName);
+  const existingDepot = (prov?.depots || []).find(d => d.name === depotName);
+  const existing = (existingDepot?.loops || []).map(l => l.name);
+  const customDepot = getStoredCustomDepots(spName).find(d => d.name === depotName);
+  const custom = (customDepot?.loops || []).map(l => l.name);
+  return Array.from(new Set([...existing, ...custom])).sort();
+}
+
 export interface ContractRouteView {
   name: string;
   type: string;
@@ -239,6 +419,10 @@ export interface ContractRouteView {
 export interface ContractLoopView {
   name: string;
   deliveryRate: number;
+  /** Editable loop-level target. Defaults to the sum of the loop's routes' targets until overridden. */
+  target: number;
+  /** Whether `target` above comes from an explicit override rather than being the sum of route targets. */
+  hasTargetOverride: boolean;
   routes: ContractRouteView[];
 }
 
@@ -263,15 +447,29 @@ export function getFilteredContracts(spName: string): ContractProviderView[] {
   if (!spName) return [];
   const providers = getRawContractProviders();
   const prov = providers.find((p) => p.serviceProvider === spName);
-  if (!prov) return [];
+  const customDepots = getStoredCustomDepots(spName);
+  if (!prov && customDepots.length === 0) return [];
 
-  const depots: ContractDepotView[] = (prov.depots || []).map((dep) => {
+  const mergedDepots: RawContractDepot[] = (prov?.depots || []).map((dep) => {
+    const customDepot = customDepots.find((d) => d.name === dep.name);
+    if (!customDepot) return dep;
+    const loops = (dep.loops || []).map((loop) => {
+      const customLoop = customDepot.loops?.find((l) => l.name === loop.name);
+      if (!customLoop) return loop;
+      return { ...loop, routes: [...(loop.routes || []), ...(customLoop.routes || [])] };
+    });
+    const extraLoops = (customDepot.loops || []).filter((l) => !loops.some((loop) => loop.name === l.name));
+    return { ...dep, loops: [...loops, ...extraLoops] };
+  });
+  const extraDepots = customDepots.filter((d) => !mergedDepots.some((dep) => dep.name === d.name));
+
+  const depots: ContractDepotView[] = [...mergedDepots, ...extraDepots].map((dep) => {
     const loops: ContractLoopView[] = (dep.loops || []).map((loop) => {
       const routes: ContractRouteView[] = (loop.routes || []).map((r) => {
-        const stored = getStoredTarget(prov.serviceProvider, dep.name, r.name);
+        const stored = getStoredTarget(spName, dep.name, r.name);
         const target = stored != null && !Number.isNaN(stored) ? stored : r.targetDel != null ? r.targetDel : 0;
         const extracted = postcodesToSubpostcodes(r.postcodes || []);
-        const custom = getStoredSubpostcodes(prov.serviceProvider, dep.name, r.name);
+        const custom = getStoredSubpostcodes(spName, dep.name, r.name);
         const allSubpostcodes = Array.from(new Set([...extracted, ...custom])).sort();
         return {
           name: r.name,
@@ -283,17 +481,20 @@ export function getFilteredContracts(spName: string): ContractProviderView[] {
           customSubpostcodes: custom,
         };
       });
-      const storedRate = getStoredLoopRate(prov.serviceProvider, dep.name, loop.name);
+      const storedRate = getStoredLoopRate(spName, dep.name, loop.name);
       const rate =
         storedRate != null && !Number.isNaN(storedRate)
           ? storedRate
           : typeof loop.deliveryRate === 'number'
             ? loop.deliveryRate
             : 0;
-      return { name: loop.name, deliveryRate: rate, routes };
+      const storedTarget = getStoredLoopTarget(spName, dep.name, loop.name);
+      const hasTargetOverride = storedTarget != null && !Number.isNaN(storedTarget);
+      const target = hasTargetOverride ? storedTarget : routes.reduce((s, r) => s + (r.target || 0), 0);
+      return { name: loop.name, deliveryRate: rate, target, hasTargetOverride, routes };
     });
     return { name: dep.name, loops };
   });
 
-  return [{ serviceProvider: prov.serviceProvider, depots }];
+  return [{ serviceProvider: spName, depots }];
 }

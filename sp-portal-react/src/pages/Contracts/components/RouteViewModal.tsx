@@ -133,12 +133,6 @@ export function RouteViewModal({ target, onClose }: RouteViewModalProps) {
                   )}
                 </div>
 
-                {r.postcodes.length > 0 && (
-                  <div className={styles.detailSection}>
-                    <p className={styles.detailSectionTitle}>Full postcodes ({r.postcodes.length})</p>
-                    <p className={styles.postcodeList}>{r.postcodes.join(', ')}</p>
-                  </div>
-                )}
               </div>
 
               <div className={styles.modalFooter}>

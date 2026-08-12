@@ -14,7 +14,6 @@ import { useRouter } from '../shims/navigation';
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AdminNavbar } from '../components/admin/AdminNavbar';
 import { useAdminCandidate } from '../components/admin/AdminCandidateContext';
-import { auth } from '../shims/firebase';
 import { CaseRegistrationPanel, type CaseRegistrationField } from './components/CaseRegistrationPanel';
 import { ExportActions } from './components/ExportActions';
 import { ChecklistRow, type AdminWorkHistoryEntry } from './components/ChecklistRow';
@@ -384,7 +383,7 @@ export default function AdminChecklistPage() {
   const [copiedMessageSlot, setCopiedMessageSlot] = useState<string | null>(null);
   const [openStepBlocks, setOpenStepBlocks] = useState<Record<number, boolean>>({});
 
-  // Step whose approval grants candidate portal access.
+  // Step whose approval grants Driver app access.
   const APPLICATION_GATE_STEP = 0;
 
   // local doc-field draft state — keyed by `${candidateId}::${docKey}::${fieldKey}`
@@ -393,15 +392,6 @@ export default function AdminChecklistPage() {
   const [notesDrafts, setNotesDrafts] = useState<Record<string, string>>({});
   // internal rejection notes draft — keyed by candidateId
   const [rejectionNotesDrafts, setRejectionNotesDrafts] = useState<Record<string, string>>({});
-  const [generatePasswordLoading, setGeneratePasswordLoading] = useState(false);
-  const [generatedPasswordResult, setGeneratedPasswordResult] = useState<{
-    email: string;
-    temporaryPassword?: string;
-    expiresAt?: string;
-    message?: string;
-  } | null>(null);
-  const [passwordError, setPasswordError] = useState<string | null>(null);
-
   useEffect(() => {
     const candidateId = new URLSearchParams(window.location.search || (window.location.hash.split('?')[1] ?? '')).get('candidate');
     if (candidateId) setSelectedId(candidateId);
@@ -1439,54 +1429,6 @@ export default function AdminChecklistPage() {
     }
   }, [selected, auditActor]);
 
-  const handleGeneratePassword = useCallback(async () => {
-    if (!selected?.email) {
-      setPasswordError('No email available');
-      return;
-    }
-
-    setGeneratePasswordLoading(true);
-    setPasswordError(null);
-    setGeneratedPasswordResult(null);
-
-    try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) {
-        throw new Error('Not authenticated');
-      }
-
-      const idToken = await currentUser.getIdToken();
-
-      // Call API to send invitation email
-      const response = await fetch('/api/admin/send-invitation-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${idToken}`,
-        },
-        body: JSON.stringify({
-          email: selected.email,
-          candidateName: selected.name,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to send invitation');
-      }
-
-      setGeneratedPasswordResult({
-        email: selected.email,
-        message: `Invitation sent to ${selected.email}`,
-      });
-    } catch (err) {
-      setPasswordError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setGeneratePasswordLoading(false);
-    }
-  }, [selected]);
-
   const progress = completion(selected);
   const applicationLocked = selected?.applicationRejected === true;
 
@@ -1588,30 +1530,8 @@ export default function AdminChecklistPage() {
                     <p className={styles.panelSub}>
                       {selected.email || 'No email'} · status {selected.status}
                     </p>
-                    {generatedPasswordResult && (
-                      <div className={styles.passwordResult}>
-                        <small style={{ color: '#15803d', fontWeight: 600 }}>✓ {generatedPasswordResult.message}</small>
-                        <small style={{ color: '#6b7280', display: 'block', marginTop: '4px' }}>
-                          Check your email for the setup link
-                        </small>
-                      </div>
-                    )}
-                    {passwordError && (
-                      <div style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px' }}>
-                        Error: {passwordError}
-                      </div>
-                    )}
                   </div>
                   <div className={styles.panelActions}>
-                    <button
-                      type="button"
-                      className={styles.generatePasswordBtn}
-                      onClick={handleGeneratePassword}
-                      disabled={generatePasswordLoading}
-                      title="Generate temporary password for driver"
-                    >
-                      {generatePasswordLoading ? '...' : '🔑'}
-                    </button>
                     <div className={styles.progressBadge}>
                       <span>{progress.percent}%</span>
                       <small>
@@ -1922,7 +1842,7 @@ export default function AdminChecklistPage() {
                                         </div>
                                       </div>
                                       <button type="button" className={styles.approveBtn} disabled={applicationLocked || savingApproval === idx} onClick={() => handleApproveStep(idx)}>
-                                        {savingApproval === idx ? 'Saving…' : idx === APPLICATION_GATE_STEP ? `Approve Step ${idx + 1} — grant candidate portal access` : `Approve Step ${idx + 1} — unlock next step`}
+                                        {savingApproval === idx ? 'Saving…' : idx === APPLICATION_GATE_STEP ? `Approve Step ${idx + 1} — grant Driver app access` : `Approve Step ${idx + 1} — unlock next step`}
                                       </button>
                                     </div>
                                   ) : (
@@ -1931,7 +1851,7 @@ export default function AdminChecklistPage() {
                                         {savingApproval === idx ? 'Saving…' : `Reprove Step ${idx + 1}`}
                                       </button>
                                       <button type="button" className={styles.approveBtn} disabled={applicationLocked || savingApproval === idx} onClick={() => handleApproveStep(idx)}>
-                                        {savingApproval === idx ? 'Saving…' : idx === APPLICATION_GATE_STEP ? `Approve Step ${idx + 1} — grant candidate portal access` : `Approve Step ${idx + 1} — unlock next step`}
+                                        {savingApproval === idx ? 'Saving…' : idx === APPLICATION_GATE_STEP ? `Approve Step ${idx + 1} — grant Driver app access` : `Approve Step ${idx + 1} — unlock next step`}
                                       </button>
                                     </div>
                                   )}

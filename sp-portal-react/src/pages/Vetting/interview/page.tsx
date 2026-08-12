@@ -19,7 +19,7 @@ import { AssessmentPanel } from './AssessmentPanel';
 import { AssessmentResult } from './AssessmentResult';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// External assessment panel.
+// Standalone assessment release panel.
 //
 // The full interview workflow (record, scoring, red flags, decision, documents)
 // now lives in the checklist's interview section. This standalone page is scoped

@@ -1,24 +1,75 @@
 import { useMemo, useState } from 'react';
-import { Eye } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { Building2, ArrowRight, Trash2 } from 'lucide-react';
 import { PortalLayout } from '../../layout/PortalLayout';
+import { LoopsRoutesPanel } from '../Logistics/LoopsRoutesPanel';
 import { useCurrentSp } from '../../hooks/useCurrentSp';
 import {
   getFilteredContracts,
-  getEffectiveBandsFor,
-  setStoredLoopBands,
-  setStoredLoopRate,
-  setStoredTarget,
-  addStoredSubpostcode,
   removeStoredSubpostcode,
+  addStoredRoute,
+  addStoredDepot,
+  addStoredLoop,
+  removeStoredDepot,
+  removeStoredLoop,
+  removeStoredRoute,
+  isCustomDepot,
+  getDepotNames,
+  getLoopNames,
   type ContractDepotView,
-  type ContractLoopView,
-  type ContractRouteView,
   type ContractProviderView,
-  type DigressiveBand,
 } from '../../data/contractsData';
 import { RouteViewModal, type RouteViewTarget } from './components/RouteViewModal';
 import { DeleteConfirmModal, type DeleteConfirmTarget } from './components/DeleteConfirmModal';
+import { AddRouteModal, type AddRouteFormState } from './components/AddRouteModal';
+import { AddDepotModal } from './components/AddDepotModal';
+import { AddLoopModal, type AddLoopFormState } from './components/AddLoopModal';
+import { DepotEditModal } from './components/DepotEditModal';
+import '../../styles/legacy/shared-pages.css';
 import styles from './Contracts.module.css';
+
+const EMPTY_ROUTE_FORM: AddRouteFormState = {
+  loopName: '',
+  isNewLoop: true,
+  routeName: '',
+  type: 'Child',
+  driver: '',
+  target: '',
+};
+
+const EMPTY_LOOP_FORM: AddLoopFormState = { loopName: '' };
+
+/** The one thing a given confirm-dialog invocation is about to delete. */
+type PendingDeletion =
+  | { kind: 'subpostcode'; depotName: string; routeName: string; subpostcode: string }
+  | { kind: 'route'; depotName: string; loopName: string; routeName: string }
+  | { kind: 'loop'; depotName: string; loopName: string }
+  | { kind: 'depot'; depotName: string };
+
+function deletionTarget(pending: PendingDeletion): DeleteConfirmTarget {
+  switch (pending.kind) {
+    case 'subpostcode':
+      return {
+        title: 'Remove sub postcode',
+        message: `Remove "${pending.subpostcode}" from route "${pending.routeName}" in ${pending.depotName}? This only affects your custom addition — postcodes extracted from the contract itself are unaffected.`,
+      };
+    case 'route':
+      return {
+        title: 'Delete route',
+        message: `Delete route "${pending.routeName}" from loop "${pending.loopName}" in ${pending.depotName}? This cannot be undone.`,
+      };
+    case 'loop':
+      return {
+        title: 'Delete loop',
+        message: `Delete loop "${pending.loopName}" and all of its routes from ${pending.depotName}? This cannot be undone.`,
+      };
+    case 'depot':
+      return {
+        title: 'Delete depot',
+        message: `Delete depot "${pending.depotName}" and everything under it (loops and routes)? This cannot be undone.`,
+      };
+  }
+}
 
 /** Case-insensitive substring match used by the search box below. */
 function matches(term: string, ...values: string[]): boolean {
@@ -30,10 +81,7 @@ function matches(term: string, ...values: string[]): boolean {
 /**
  * Filters the depot → loop → route tree down to entries matching `search`
  * by depot, loop, route, driver or subpostcode name — keeping a parent
- * whenever any of its descendants match. Ported from the intent of the
- * Next.js source's FiltersPanel/SearchInput/RouteFilters (which filter a
- * flat routes table); adapted here to the nested depot/loop/route shape
- * this page actually renders.
+ * whenever any of its descendants match.
  */
 function filterProviders(providers: ContractProviderView[], search: string): ContractProviderView[] {
   const term = search.trim();
@@ -51,7 +99,7 @@ function filterProviders(providers: ContractProviderView[], search: string): Con
               const loopMatches = matches(term, loop.name);
               return loopMatches || routes.length ? { ...loop, routes: loopMatches ? loop.routes : routes } : null;
             })
-            .filter((l): l is ContractLoopView => l !== null);
+            .filter((l): l is ContractDepotView['loops'][number] => l !== null);
           const depotMatches = matches(term, depot.name);
           return depotMatches || loops.length ? { ...depot, loops: depotMatches ? depot.loops : loops } : null;
         })
@@ -61,485 +109,234 @@ function filterProviders(providers: ContractProviderView[], search: string): Con
     .filter(p => p.depots.length > 0);
 }
 
-function Chevron({ open }: { open: boolean }) {
-  return (
-    <span className={`${styles.expandIcon} ${!open ? styles.collapsed : ''}`} aria-hidden="true">
-      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-        <path d="M2.5 4.5 6 8l3.5-3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    </span>
-  );
-}
-
-interface RouteCardProps {
-  sp: string;
-  depotName: string;
-  loopName: string;
-  route: ContractRouteView;
-  onView: (target: RouteViewTarget) => void;
-  onRequestRemoveSubpostcode: (depotName: string, routeName: string, subpostcode: string) => void;
-}
-
-function RouteCard({ sp, depotName, loopName, route, onView, onRequestRemoveSubpostcode }: RouteCardProps) {
-  const [open, setOpen] = useState(false);
-  const [rawValue, setRawValue] = useState(String(route.target));
-  const [newSubpostcode, setNewSubpostcode] = useState('');
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
-  const trimmed = rawValue.trim();
-  const parsed = trimmed === '' ? NaN : parseInt(trimmed, 10);
-  const displayTarget = Number.isNaN(parsed) ? 0 : parsed;
-
-  const handleTargetChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    setRawValue(val);
-    const t = val.trim();
-    const num = t === '' ? null : parseInt(t, 10);
-    setStoredTarget(sp, depotName, route.name, num !== null && Number.isNaN(num) ? null : num);
-    setErrors(prev => ({ ...prev, target: '' }));
-  };
-
-  const handleAddSubpostcode = () => {
-    const normalized = newSubpostcode.trim().toUpperCase();
-    if (!normalized) {
-      setErrors(prev => ({ ...prev, subpostcode: 'Subpostcode cannot be empty' }));
-      return;
-    }
-    if (route.subpostcodes.includes(normalized)) {
-      setErrors(prev => ({ ...prev, subpostcode: 'Subpostcode already exists' }));
-      return;
-    }
-    addStoredSubpostcode(sp, depotName, route.name, normalized);
-    setNewSubpostcode('');
-    setErrors(prev => ({ ...prev, subpostcode: '' }));
-  };
-
-  const handleRemoveSubpostcode = (subpostcode: string) => {
-    onRequestRemoveSubpostcode(depotName, route.name, subpostcode);
-  };
-
-  return (
-    <div className={styles.routeCard}>
-      <div
-        className={styles.routeHeader}
-        onClick={() => setOpen(o => !o)}
-      >
-        <Chevron open={open} />
-        <h4 className={styles.routeName}>{route.name}</h4>
-        <span className={styles.routeBadge}>{route.type}</span>
-        <button
-          type="button"
-          className={styles.viewButton}
-          onClick={e => {
-            e.stopPropagation();
-            onView({ depotName, loopName, route });
-          }}
-          aria-label={`View ${route.name} details`}
-          title="View route details"
-        >
-          <Eye size={14} />
-        </button>
-      </div>
-
-      {open && (
-        <div className={styles.routeBody}>
-          <div className={styles.routeInfo}>
-            <div className={styles.infoItem}>
-              <span className={styles.infoLabel}>Type</span>
-              <span className={styles.infoValue}>{route.type}</span>
-            </div>
-            {route.driver && (
-              <div className={styles.infoItem}>
-                <span className={styles.infoLabel}>Driver</span>
-                <span className={styles.infoValue}>{route.driver}</span>
-              </div>
-            )}
-            <div className={styles.infoItem}>
-              <span className={styles.infoLabel}>Current Target</span>
-              <span className={styles.infoValue}>{displayTarget}</span>
-            </div>
-          </div>
-
-          <div className={styles.targetSection}>
-            <label className={styles.targetLabel}>Set Target</label>
-            <span className={styles.targetHint}>Used for comparison and utilisation rate</span>
-            <input
-              type="number"
-              min={0}
-              step={1}
-              className={styles.targetInput}
-              value={rawValue}
-              onChange={handleTargetChange}
-              placeholder="Enter target"
-              aria-label="Route target"
-            />
-            {errors.target && <span className={styles.fieldError}>{errors.target}</span>}
-          </div>
-
-          <div className={styles.subpostcodesSection}>
-            <label className={styles.subpostcodesLabel}>Sub Postcodes ({route.subpostcodes.length})</label>
-
-            <div className={styles.subpostcodesList}>
-              {route.subpostcodes.map(subpostcode => {
-                const isCustom = route.customSubpostcodes.includes(subpostcode);
-                return (
-                  <div key={subpostcode} className={`${styles.subpostcodeBadge} ${isCustom ? styles.custom : styles.extracted}`}>
-                    <span>{subpostcode}</span>
-                    {isCustom && (
-                      <button
-                        className={styles.subpostcodeRemove}
-                        onClick={() => handleRemoveSubpostcode(subpostcode)}
-                        aria-label={`Remove ${subpostcode}`}
-                        type="button"
-                      >
-                        ✕
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            <form
-              className={styles.addSubpostcodeForm}
-              onSubmit={e => {
-                e.preventDefault();
-                handleAddSubpostcode();
-              }}
-            >
-              <input
-                type="text"
-                className={styles.subpostcodeInput}
-                value={newSubpostcode}
-                onChange={e => {
-                  setNewSubpostcode(e.target.value);
-                  setErrors(prev => ({ ...prev, subpostcode: '' }));
-                }}
-                placeholder="e.g. SW1A"
-                aria-label="Add subpostcode"
-              />
-              <button type="submit" className={styles.addButton}>
-                + Add
-              </button>
-            </form>
-            {errors.subpostcode && <span className={styles.fieldError}>{errors.subpostcode}</span>}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-interface BandDraft {
-  min: string;
-  max: string;
-  price: string;
-}
-
-interface LoopPanelProps {
-  sp: string;
-  depotName: string;
-  loop: ContractLoopView;
-  onView: (target: RouteViewTarget) => void;
-  onRequestRemoveSubpostcode: (depotName: string, routeName: string, subpostcode: string) => void;
-}
-
-function LoopPanel({ sp, depotName, loop, onView, onRequestRemoveSubpostcode }: LoopPanelProps) {
-  const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState(false);
-  const [rate, setRate] = useState<number>(() =>
-    typeof loop.deliveryRate === 'number' && !Number.isNaN(loop.deliveryRate) ? loop.deliveryRate : 0,
-  );
-  const [bands, setBands] = useState<DigressiveBand[] | undefined>(() => getEffectiveBandsFor(sp, depotName, loop.name));
-  const [draftRate, setDraftRate] = useState('');
-  const [draftBands, setDraftBands] = useState<BandDraft[]>([]);
-  const [editError, setEditError] = useState('');
-
-  const rateStr = rate > 0 ? `£${rate.toFixed(2)}` : '—';
-  const totalTarget = loop.routes.reduce((sum, r) => sum + (r.target != null ? r.target : 0), 0);
-  const bandsText =
-    bands && bands.length
-      ? bands
-          .map((b, i) => `Band ${i + 1}: ${b.max != null ? `${b.min}–${b.max}` : `${b.min}+`} (£${b.price ? b.price.toFixed(2) : '—'})`)
-          .join(' · ')
-      : `Band 1–4 (rate: ${rateStr})`;
-
-  const startEdit = () => {
-    setDraftRate(rate > 0 ? String(rate) : '');
-    setDraftBands(
-      bands && bands.length
-        ? bands.map(b => ({ min: String(b.min), max: b.max != null ? String(b.max) : '', price: String(b.price) }))
-        : [{ min: '1', max: '', price: rate > 0 ? String(rate) : '' }],
-    );
-    setEditError('');
-    setEditing(true);
-  };
-
-  const updateDraftBand = (index: number, field: keyof BandDraft, value: string) => {
-    setDraftBands(prev => prev.map((b, i) => (i === index ? { ...b, [field]: value } : b)));
-    setEditError('');
-  };
-
-  const addDraftBand = () => {
-    setDraftBands(prev => {
-      const last = prev[prev.length - 1];
-      const nextMin = last && last.max.trim() !== '' ? String(parseInt(last.max, 10) + 1 || '') : '';
-      return [...prev, { min: nextMin, max: '', price: '' }];
-    });
-  };
-
-  const removeDraftBand = (index: number) => {
-    setDraftBands(prev => prev.filter((_, i) => i !== index));
-    setEditError('');
-  };
-
-  const handleSave = () => {
-    const rateTrimmed = draftRate.trim();
-    const newRate = rateTrimmed === '' ? 0 : Number(rateTrimmed);
-    if (Number.isNaN(newRate) || newRate < 0) {
-      setEditError('Rate must be a number of 0 or more');
-      return;
-    }
-
-    const newBands: DigressiveBand[] = [];
-    for (let i = 0; i < draftBands.length; i++) {
-      const d = draftBands[i];
-      const min = parseInt(d.min.trim(), 10);
-      const max = d.max.trim() === '' ? null : parseInt(d.max.trim(), 10);
-      const price = Number(d.price.trim());
-      if (Number.isNaN(min) || min < 0) {
-        setEditError(`Band ${i + 1}: "from" must be a number of 0 or more`);
-        return;
-      }
-      if (max !== null && (Number.isNaN(max) || max < min)) {
-        setEditError(`Band ${i + 1}: "to" must be empty or a number of ${min} or more`);
-        return;
-      }
-      if (d.price.trim() === '' || Number.isNaN(price) || price < 0) {
-        setEditError(`Band ${i + 1}: price must be a number of 0 or more`);
-        return;
-      }
-      newBands.push({ min, max, price });
-    }
-
-    setStoredLoopRate(sp, depotName, loop.name, newRate > 0 ? newRate : null);
-    setStoredLoopBands(sp, depotName, loop.name, newBands.length ? newBands : null);
-    setRate(newRate);
-    setBands(newBands.length ? newBands : getEffectiveBandsFor(sp, depotName, loop.name));
-    setEditing(false);
-  };
-
-  const handleCancel = () => {
-    setEditing(false);
-    setEditError('');
-  };
-
-  return (
-    <div className={styles.loopPanel}>
-      <div className={styles.loopHeader} onClick={() => setOpen(o => !o)}>
-        <Chevron open={open} />
-        <h4 className={styles.loopTitle}>{loop.name}</h4>
-        <span className={styles.levelTag}>Loop</span>
-      </div>
-
-      {open && !editing && (
-        <div className={styles.loopMeta}>
-          <div className={styles.loopMetaItem}>
-            <span className={styles.loopMetaLabel}>Bands (per loop)</span>
-            <span className={styles.loopMetaValue} title={bandsText}>
-              {bandsText}
-            </span>
-          </div>
-          <div className={styles.loopMetaItem}>
-            <span className={styles.loopMetaLabel}>Rate (Band 1)</span>
-            <span className={styles.loopMetaValue}>{rateStr}</span>
-          </div>
-          <div className={styles.loopMetaItem}>
-            <span className={styles.loopMetaLabel}>Total Target</span>
-            <span className={styles.loopMetaValue}>{totalTarget}</span>
-          </div>
-          <button type="button" className={styles.loopEditButton} onClick={startEdit}>
-            Edit
-          </button>
-        </div>
-      )}
-
-      {open && editing && (
-        <div className={styles.loopEditForm}>
-          <div className={styles.editField}>
-            <label className={styles.targetLabel} htmlFor={`rate-${depotName}-${loop.name}`}>
-              Rate (Band 1)
-            </label>
-            <span className={styles.targetHint}>Delivery rate in £ per drop</span>
-            <input
-              id={`rate-${depotName}-${loop.name}`}
-              type="number"
-              min={0}
-              step={0.01}
-              className={styles.bandInput}
-              value={draftRate}
-              onChange={e => {
-                setDraftRate(e.target.value);
-                setEditError('');
-              }}
-              placeholder="0.00"
-            />
-          </div>
-
-          <div className={styles.editField}>
-            <span className={styles.targetLabel}>Bands (per loop)</span>
-            <span className={styles.targetHint}>Volume range and price per band — leave "to" empty for no cap</span>
-
-            <div className={styles.bandsEditor}>
-              <div className={`${styles.bandRow} ${styles.bandHeaderRow}`}>
-                <span className={styles.bandIndex} />
-                <span className={styles.bandColLabel}>From</span>
-                <span className={styles.bandColLabel}>To</span>
-                <span className={styles.bandColLabel}>Price (£)</span>
-                <span className={styles.bandRemoveSpacer} />
-              </div>
-              {draftBands.map((band, i) => (
-                <div key={i} className={styles.bandRow}>
-                  <span className={styles.bandIndex}>Band {i + 1}</span>
-                  <input
-                    type="number"
-                    min={0}
-                    step={1}
-                    className={styles.bandInput}
-                    value={band.min}
-                    onChange={e => updateDraftBand(i, 'min', e.target.value)}
-                    aria-label={`Band ${i + 1} from`}
-                  />
-                  <input
-                    type="number"
-                    min={0}
-                    step={1}
-                    className={styles.bandInput}
-                    value={band.max}
-                    onChange={e => updateDraftBand(i, 'max', e.target.value)}
-                    placeholder="∞"
-                    aria-label={`Band ${i + 1} to`}
-                  />
-                  <input
-                    type="number"
-                    min={0}
-                    step={0.01}
-                    className={styles.bandInput}
-                    value={band.price}
-                    onChange={e => updateDraftBand(i, 'price', e.target.value)}
-                    placeholder="0.00"
-                    aria-label={`Band ${i + 1} price`}
-                  />
-                  <button
-                    type="button"
-                    className={styles.bandRemove}
-                    onClick={() => removeDraftBand(i)}
-                    aria-label={`Remove band ${i + 1}`}
-                  >
-                    ✕
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            <button type="button" className={styles.addBandButton} onClick={addDraftBand}>
-              + Add band
-            </button>
-          </div>
-
-          {editError && <span className={styles.fieldError}>{editError}</span>}
-
-          <div className={styles.editActions}>
-            <button type="button" className={styles.cancelButton} onClick={handleCancel}>
-              Cancel
-            </button>
-            <button type="button" className={styles.addButton} onClick={handleSave}>
-              Save changes
-            </button>
-          </div>
-        </div>
-      )}
-
-      <div className={`${styles.loopRoutes} ${!open ? styles.collapsed : ''}`}>
-        {loop.routes.map(route => (
-          <RouteCard
-            key={route.name}
-            sp={sp}
-            depotName={depotName}
-            loopName={loop.name}
-            route={route}
-            onView={onView}
-            onRequestRemoveSubpostcode={onRequestRemoveSubpostcode}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-interface DepotCardProps {
-  sp: string;
+interface DepotSummaryCardProps {
   depot: ContractDepotView;
-  onView: (target: RouteViewTarget) => void;
-  onRequestRemoveSubpostcode: (depotName: string, routeName: string, subpostcode: string) => void;
+  deletable: boolean;
+  onManage: () => void;
+  onRequestDelete: () => void;
 }
 
-function DepotCard({ sp, depot, onView, onRequestRemoveSubpostcode }: DepotCardProps) {
-  const [open, setOpen] = useState(false);
+function DepotSummaryCard({ depot, deletable, onManage, onRequestDelete }: DepotSummaryCardProps) {
+  const loopCount = depot.loops.length;
+  const routeCount = depot.loops.reduce((s, l) => s + l.routes.length, 0);
+  const totalTarget = depot.loops.reduce((s, l) => s + l.target, 0);
 
   return (
-    <div className={styles.depotCard}>
-      <div className={styles.depotHeader} onClick={() => setOpen(o => !o)}>
-        <Chevron open={open} />
-        <h3 className={styles.depotName}>{depot.name}</h3>
-        <span className={styles.levelTag}>Depot</span>
+    <div
+      className={styles.depotSummaryCard}
+      onClick={onManage}
+      role="button"
+      tabIndex={0}
+      onKeyDown={e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onManage();
+        }
+      }}
+    >
+      <div className={styles.depotSummaryHeader}>
+        <div className={styles.depotSummaryIcon}>
+          <Building2 size={18} />
+        </div>
+        <div className={styles.depotSummaryHeaderText}>
+          <h3 className={styles.depotSummaryName}>{depot.name}</h3>
+          <span className={styles.levelTag}>Depot</span>
+        </div>
+        {deletable && (
+          <button
+            type="button"
+            className={styles.cardDeleteButton}
+            onClick={e => { e.stopPropagation(); onRequestDelete(); }}
+            aria-label={`Delete depot ${depot.name}`}
+            title="Delete depot"
+          >
+            <Trash2 size={14} />
+          </button>
+        )}
       </div>
 
-      <div className={`${styles.depotContent} ${!open ? styles.collapsed : ''}`}>
-        {depot.loops.map(loop => (
-          <LoopPanel
-            key={loop.name}
-            sp={sp}
-            depotName={depot.name}
-            loop={loop}
-            onView={onView}
-            onRequestRemoveSubpostcode={onRequestRemoveSubpostcode}
-          />
-        ))}
+      <div className={styles.depotSummaryStats}>
+        <div className={styles.depotSummaryStat}>
+          <span className={styles.metricValue}>{loopCount}</span>
+          <span className={styles.metricLabel}>Loops</span>
+        </div>
+        <div className={styles.depotSummaryStat}>
+          <span className={styles.metricValue}>{routeCount}</span>
+          <span className={styles.metricLabel}>Routes</span>
+        </div>
+        <div className={styles.depotSummaryStat}>
+          <span className={styles.metricValue}>{totalTarget}</span>
+          <span className={styles.metricLabel}>Target</span>
+        </div>
       </div>
+
+      <div className={styles.loopChipsRow}>
+        {depot.loops.slice(0, 4).map(loop => (
+          <span key={loop.name} className={styles.loopChip}>
+            {loop.name}
+          </span>
+        ))}
+        {depot.loops.length > 4 && <span className={styles.loopChip}>+{depot.loops.length - 4}</span>}
+      </div>
+
+      <button type="button" className={styles.manageButton} onClick={e => { e.stopPropagation(); onManage(); }}>
+        Manage <ArrowRight size={14} />
+      </button>
     </div>
   );
 }
 
 export function Contracts() {
   const sp = useCurrentSp();
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState<'depots' | 'loops'>(searchParams.get('tab') === 'loops' ? 'loops' : 'depots');
   const [search, setSearch] = useState('');
+  const [version, setVersion] = useState(0);
+  const [activeDepotName, setActiveDepotName] = useState<string | null>(null);
   const [viewTarget, setViewTarget] = useState<RouteViewTarget | null>(null);
-  const [confirmRemoval, setConfirmRemoval] = useState<{
-    target: DeleteConfirmTarget;
-    depotName: string;
-    routeName: string;
-    subpostcode: string;
-  } | null>(null);
-  const filtered = useMemo(() => getFilteredContracts(sp), [sp]);
+  const [pendingDeletion, setPendingDeletion] = useState<PendingDeletion | null>(null);
+
+  const [showAddRoute, setShowAddRoute] = useState(false);
+  const [routeTargetDepot, setRouteTargetDepot] = useState('');
+  const [routeForm, setRouteForm] = useState<AddRouteFormState>(EMPTY_ROUTE_FORM);
+  const [routeError, setRouteError] = useState('');
+
+  const [showAddDepot, setShowAddDepot] = useState(false);
+  const [depotDraft, setDepotDraft] = useState('');
+  const [depotError, setDepotError] = useState('');
+
+  const [showAddLoop, setShowAddLoop] = useState(false);
+  const [loopTargetDepot, setLoopTargetDepot] = useState('');
+  const [loopForm, setLoopForm] = useState<AddLoopFormState>(EMPTY_LOOP_FORM);
+  const [loopError, setLoopError] = useState('');
+
+  const filtered = useMemo(() => getFilteredContracts(sp), [sp, version]);
   const searched = useMemo(() => filterProviders(filtered, search), [filtered, search]);
+  const depotNames = useMemo(() => getDepotNames(sp), [sp, version]);
+  const loopNames = useMemo(() => getLoopNames(sp, routeTargetDepot), [sp, routeTargetDepot, version]);
+  const activeDepot = useMemo(
+    () => filtered.flatMap(p => p.depots).find(d => d.name === activeDepotName) ?? null,
+    [filtered, activeDepotName],
+  );
 
   const handleRequestRemoveSubpostcode = (depotName: string, routeName: string, subpostcode: string) => {
-    setConfirmRemoval({
-      depotName,
-      routeName,
-      subpostcode,
-      target: {
-        title: 'Remove sub postcode',
-        message: `Remove "${subpostcode}" from route "${routeName}" in ${depotName}? This only affects your custom addition — postcodes extracted from the contract itself are unaffected.`,
-      },
-    });
+    setPendingDeletion({ kind: 'subpostcode', depotName, routeName, subpostcode });
   };
 
-  const handleConfirmRemoval = () => {
-    if (!confirmRemoval || !sp) return;
-    removeStoredSubpostcode(sp, confirmRemoval.depotName, confirmRemoval.routeName, confirmRemoval.subpostcode);
-    setConfirmRemoval(null);
+  const handleRequestDeleteRoute = (depotName: string, loopName: string, routeName: string) => {
+    setPendingDeletion({ kind: 'route', depotName, loopName, routeName });
+  };
+
+  const handleRequestDeleteLoop = (depotName: string, loopName: string) => {
+    setPendingDeletion({ kind: 'loop', depotName, loopName });
+  };
+
+  const handleRequestDeleteDepot = (depotName: string) => {
+    setPendingDeletion({ kind: 'depot', depotName });
+  };
+
+  const handleConfirmDeletion = () => {
+    if (!pendingDeletion || !sp) return;
+    switch (pendingDeletion.kind) {
+      case 'subpostcode':
+        removeStoredSubpostcode(sp, pendingDeletion.depotName, pendingDeletion.routeName, pendingDeletion.subpostcode);
+        break;
+      case 'route':
+        removeStoredRoute(sp, pendingDeletion.depotName, pendingDeletion.loopName, pendingDeletion.routeName);
+        setVersion(v => v + 1);
+        break;
+      case 'loop':
+        removeStoredLoop(sp, pendingDeletion.depotName, pendingDeletion.loopName);
+        setVersion(v => v + 1);
+        break;
+      case 'depot':
+        removeStoredDepot(sp, pendingDeletion.depotName);
+        setVersion(v => v + 1);
+        if (activeDepotName === pendingDeletion.depotName) setActiveDepotName(null);
+        break;
+    }
+    setPendingDeletion(null);
+  };
+
+  const openAddRoute = (depotName: string, loopName?: string) => {
+    setActiveDepotName(null);
+    setRouteTargetDepot(depotName);
+    setRouteForm({ ...EMPTY_ROUTE_FORM, loopName: loopName ?? '', isNewLoop: !loopName });
+    setRouteError('');
+    setShowAddRoute(true);
+  };
+
+  const handleAddRouteSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const loopName = routeForm.loopName.trim();
+    const routeName = routeForm.routeName.trim();
+    if (!loopName || !routeName) {
+      setRouteError('Loop and route name are required');
+      return;
+    }
+    const targetTrimmed = routeForm.target.trim();
+    const target = targetTrimmed === '' ? null : parseInt(targetTrimmed, 10);
+    if (target !== null && Number.isNaN(target)) {
+      setRouteError('Target must be a number');
+      return;
+    }
+    addStoredRoute(sp, {
+      depotName: routeTargetDepot,
+      loopName,
+      routeName,
+      type: routeForm.type,
+      driver: routeForm.driver.trim(),
+      target,
+    });
+    setShowAddRoute(false);
+    setVersion((v) => v + 1);
+  };
+
+  const openAddDepot = () => {
+    setDepotDraft('');
+    setDepotError('');
+    setShowAddDepot(true);
+  };
+
+  const handleAddDepotSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const name = depotDraft.trim();
+    if (!name) {
+      setDepotError('Depot name is required');
+      return;
+    }
+    if (depotNames.some(d => d.toLowerCase() === name.toLowerCase())) {
+      setDepotError('A depot with this name already exists');
+      return;
+    }
+    addStoredDepot(sp, name);
+    setShowAddDepot(false);
+    setVersion(v => v + 1);
+  };
+
+  const openAddLoop = (depotName: string) => {
+    setActiveDepotName(null);
+    setLoopTargetDepot(depotName);
+    setLoopForm(EMPTY_LOOP_FORM);
+    setLoopError('');
+    setShowAddLoop(true);
+  };
+
+  const handleAddLoopSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const name = loopForm.loopName.trim();
+    if (!name) {
+      setLoopError('Loop name is required');
+      return;
+    }
+    if (getLoopNames(sp, loopTargetDepot).some(l => l.toLowerCase() === name.toLowerCase())) {
+      setLoopError('A loop with this name already exists in this depot');
+      return;
+    }
+    addStoredLoop(sp, loopTargetDepot, name);
+    setShowAddLoop(false);
+    setVersion(v => v + 1);
+    setActiveDepotName(loopTargetDepot);
   };
 
   if (!sp) {
@@ -560,7 +357,6 @@ export function Contracts() {
   );
   const isEmpty = filtered.length === 0;
   const noSearchResults = !isEmpty && searched.length === 0;
-  const padCount = (n: number) => String(n).padStart(2, '0');
 
   const headerActions = (
     <div className={styles.searchBox}>
@@ -573,63 +369,136 @@ export function Contracts() {
         value={search}
         onChange={e => setSearch(e.target.value)}
       />
+      <button type="button" className="vp-modal-btn vp-modal-btn-save" onClick={openAddDepot}>
+        + Add Depot
+      </button>
     </div>
   );
 
   return (
     <PortalLayout mainClassName={styles.contracts} title="Contracts" hideAnnouncements actions={headerActions}>
       <div className={styles.contractsContent}>
-        <div className={styles.metricsRow}>
-          <div className={styles.metricCard}>
-            <span className={styles.metricLabel}>Depots</span>
-            <span className={styles.metricValue}>{padCount(totalDepots)}</span>
-          </div>
-          <div className={styles.metricCard}>
-            <span className={styles.metricLabel}>Loops</span>
-            <span className={styles.metricValue}>{padCount(totalLoops)}</span>
-          </div>
-          <div className={styles.metricCard}>
-            <span className={styles.metricLabel}>Routes</span>
-            <span className={styles.metricValue}>{padCount(totalRoutes)}</span>
+        <div className="contracts-page-header">
+          <div className="contracts-page-header-inner">
+            <div className="contracts-page-header-row">
+              <div>
+                <p className="contracts-page-subtitle">Depot, loop and route contracts for your service provider</p>
+                <div className="contracts-page-metrics">
+                  <div className="contracts-page-metric">
+                    <span className="contracts-page-metric-label">Depots</span>
+                    <span className="contracts-page-metric-value">{totalDepots}</span>
+                  </div>
+                  <div className="contracts-page-metric">
+                    <span className="contracts-page-metric-label">Loops</span>
+                    <span className="contracts-page-metric-value">{totalLoops}</span>
+                  </div>
+                  <div className="contracts-page-metric">
+                    <span className="contracts-page-metric-label">Routes</span>
+                    <span className="contracts-page-metric-value">{totalRoutes}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className={styles.sectionHeader}>
-          <h2 className={styles.sectionTitle}>Active Contracts</h2>
+        <div className={styles.pageTabs}>
+          <button
+            type="button"
+            className={`${styles.pageTab} ${activeTab === 'depots' ? styles.pageTabActive : ''}`}
+            onClick={() => setActiveTab('depots')}
+          >
+            Depots
+          </button>
+          <button
+            type="button"
+            className={`${styles.pageTab} ${activeTab === 'loops' ? styles.pageTabActive : ''}`}
+            onClick={() => setActiveTab('loops')}
+          >
+            Loops &amp; Routes
+          </button>
         </div>
 
-        {!isEmpty && !noSearchResults ? (
-          <div className={styles.depotList}>
-            {searched.flatMap(prov =>
-              prov.depots.map(depot => (
-                <DepotCard
-                  key={`${prov.serviceProvider}-${depot.name}`}
-                  sp={sp}
-                  depot={depot}
-                  onView={setViewTarget}
-                  onRequestRemoveSubpostcode={handleRequestRemoveSubpostcode}
-                />
-              )),
+        {activeTab === 'depots' ? (
+          <>
+            <div className={styles.sectionHeader}>
+              <h2 className={styles.sectionTitle}>Active Contracts</h2>
+            </div>
+
+            {!isEmpty && !noSearchResults ? (
+              <div className={styles.depotGrid}>
+                {searched.flatMap(prov =>
+                  prov.depots.map(depot => (
+                    <DepotSummaryCard
+                      key={`${prov.serviceProvider}-${depot.name}`}
+                      depot={depot}
+                      deletable={isCustomDepot(sp, depot.name)}
+                      onManage={() => setActiveDepotName(depot.name)}
+                      onRequestDelete={() => handleRequestDeleteDepot(depot.name)}
+                    />
+                  )),
+                )}
+              </div>
+            ) : isEmpty ? (
+              <div className={styles.emptyState}>
+                <h3 className={styles.emptyTitle}>No Contracts on File</h3>
+                <p className={styles.emptyDescription}>There are currently no contracts available for your service provider.</p>
+              </div>
+            ) : (
+              <div className={styles.emptyState}>
+                <h3 className={styles.emptyTitle}>No Matches</h3>
+                <p className={styles.emptyDescription}>No depots, loops or routes match &quot;{search}&quot;.</p>
+              </div>
             )}
-          </div>
-        ) : isEmpty ? (
-          <div className={styles.emptyState}>
-            <h3 className={styles.emptyTitle}>No Contracts on File</h3>
-            <p className={styles.emptyDescription}>There are currently no contracts available for your service provider.</p>
-          </div>
+          </>
         ) : (
-          <div className={styles.emptyState}>
-            <h3 className={styles.emptyTitle}>No Matches</h3>
-            <p className={styles.emptyDescription}>No depots, loops or routes match &quot;{search}&quot;.</p>
-          </div>
+          <LoopsRoutesPanel />
         )}
       </div>
 
+      <DepotEditModal
+        sp={sp}
+        depot={activeDepot}
+        onClose={() => setActiveDepotName(null)}
+        onView={setViewTarget}
+        onRequestRemoveSubpostcode={handleRequestRemoveSubpostcode}
+        onRequestDeleteLoop={handleRequestDeleteLoop}
+        onRequestDeleteRoute={handleRequestDeleteRoute}
+        onAddRoute={openAddRoute}
+        onAddLoop={openAddLoop}
+      />
       <RouteViewModal target={viewTarget} onClose={() => setViewTarget(null)} />
       <DeleteConfirmModal
-        target={confirmRemoval?.target ?? null}
-        onClose={() => setConfirmRemoval(null)}
-        onConfirm={handleConfirmRemoval}
+        target={pendingDeletion ? deletionTarget(pendingDeletion) : null}
+        onClose={() => setPendingDeletion(null)}
+        onConfirm={handleConfirmDeletion}
+      />
+      <AddDepotModal
+        open={showAddDepot}
+        value={depotDraft}
+        onChange={setDepotDraft}
+        onClose={() => setShowAddDepot(false)}
+        onSubmit={handleAddDepotSubmit}
+        error={depotError}
+      />
+      <AddLoopModal
+        open={showAddLoop}
+        depotName={loopTargetDepot}
+        formData={loopForm}
+        onChange={updater => setLoopForm(updater)}
+        onClose={() => setShowAddLoop(false)}
+        onSubmit={handleAddLoopSubmit}
+        error={loopError}
+      />
+      <AddRouteModal
+        open={showAddRoute}
+        depotName={routeTargetDepot}
+        formData={routeForm}
+        onChange={updater => setRouteForm(updater)}
+        loops={loopNames}
+        onClose={() => setShowAddRoute(false)}
+        onSubmit={handleAddRouteSubmit}
+        error={routeError}
       />
     </PortalLayout>
   );

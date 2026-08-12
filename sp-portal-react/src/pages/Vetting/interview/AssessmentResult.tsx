@@ -10,7 +10,7 @@ import { answeredCount, type AssessmentDoc } from './assessment-types';
 /**
  * Admin-only, read-only view of a candidate's online knowledge-test result.
  *
- * Extracted from AssessmentPanel so the external test panel keeps only "send +
+ * Extracted from AssessmentPanel so the release panel keeps only "send +
  * confirm", while the graded score and answer review live in the checklist's
  * interview section. Grades live (answer key never leaves the admin bundle).
  */
@@ -41,7 +41,7 @@ export function AssessmentResult({ token }: { token?: string }) {
   if (!token) {
     return (
       <p className={styles.secSub}>
-        No online test released yet. Release it from the external test panel — the score appears here once the candidate finishes.
+        No online test released yet. Release it from the interview section — the score appears here once the candidate finishes.
       </p>
     );
   }

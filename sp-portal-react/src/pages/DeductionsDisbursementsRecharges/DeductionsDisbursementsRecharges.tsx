@@ -11,6 +11,7 @@ import {
   getSnapshot as getTraceQueryLiqDeductionsSnapshot,
   type TraceQueryLiquidationDeductionEntry,
 } from '../../services/traceQueryCaseService';
+import { ROUTE_CODES } from '../../data/mockRouteCodes';
 import { FileUploadZone } from './components/FileUploadZone';
 import { generateDeductionsPDF } from './utils/pdfExport';
 import styles from './DeductionsDisbursementsRecharges.module.css';
@@ -62,15 +63,16 @@ type DeductionCategory =
   | 'Pre-Payments'
   | 'Liquidation Damages'
   | 'Other'
-  | 'Duplicate Stop';
+  | 'Duplicate Stop'
+  | 'Trace & Queries';
 
-type BackendType = 'fix-damage' | 'traffic-penalty' | 'pre-payment' | 'liquidation-damage' | 'other' | 'duplicate-stop';
+type BackendType = 'fix-damage' | 'traffic-penalty' | 'pre-payment' | 'liquidation-damage' | 'other' | 'duplicate-stop' | 'trace-query';
 
 interface FormDataState {
   [key: string]: string | boolean | undefined;
 }
 
-interface DisplayDeduction {
+export interface DisplayDeduction {
   id: string;
   dateOfIncident: string;
   courierName: string;
@@ -125,6 +127,11 @@ const KPI_CARDS: KPICardDef[] = [
   // generated from the Trace & Queries review flow (confirmDuplicateStop()),
   // never created manually from this page.
   { key: 'duplicate', title: 'Duplicate Stop', icon: 'bi-shield-exclamation', bg: '#fee2e2', color: '#991b1b', filterType: 'Duplicate Stop', hasAdd: false },
+  // hasAdd: false — these are DHL cases closed "not resolved" in Trace &
+  // Queries, still awaiting confirmation as an actual deduction. Kept out of
+  // "Liquidation Damages" (which is only what's already confirmed/entered
+  // into the system) so the two don't get mixed together.
+  { key: 'trace-queries', title: 'Trace & Queries', icon: 'bi-binoculars', bg: '#eef2ff', color: '#4338ca', filterType: 'Trace & Queries', hasAdd: false },
 ];
 
 // The 5 categories a user can create by hand via the "+" KPI cards above.
@@ -140,6 +147,7 @@ const REQUIRED_FIELDS_BY_CATEGORY: Record<DeductionCategory, string[]> = {
   'Liquidation Damages': ['liq_refNumber', 'liq_vendor', 'liq_lqDate', 'liq_amount'],
   Other: ['oth_refNumber', 'oth_vendor', 'oth_incidentDate', 'oth_amount'],
   'Duplicate Stop': ['oth_refNumber', 'oth_vendor', 'oth_incidentDate', 'oth_amount'],
+  'Trace & Queries': ['liq_refNumber', 'liq_vendor', 'liq_lqDate', 'liq_amount'],
 };
 
 const AMOUNT_FIELD_BY_CATEGORY: Record<DeductionCategory, string> = {
@@ -149,6 +157,7 @@ const AMOUNT_FIELD_BY_CATEGORY: Record<DeductionCategory, string> = {
   'Liquidation Damages': 'liq_amount',
   Other: 'oth_amount',
   'Duplicate Stop': 'oth_amount',
+  'Trace & Queries': 'liq_amount',
 };
 
 const DATE_FIELD_BY_CATEGORY: Record<DeductionCategory, string> = {
@@ -158,6 +167,7 @@ const DATE_FIELD_BY_CATEGORY: Record<DeductionCategory, string> = {
   'Liquidation Damages': 'liq_lqDate',
   Other: 'oth_incidentDate',
   'Duplicate Stop': 'oth_incidentDate',
+  'Trace & Queries': 'liq_lqDate',
 };
 
 const VENDOR_FIELD_BY_CATEGORY: Record<DeductionCategory, string> = {
@@ -167,6 +177,7 @@ const VENDOR_FIELD_BY_CATEGORY: Record<DeductionCategory, string> = {
   'Liquidation Damages': 'liq_vendor',
   Other: 'oth_vendor',
   'Duplicate Stop': 'oth_vendor',
+  'Trace & Queries': 'liq_vendor',
 };
 
 const REF_FIELD_BY_CATEGORY: Record<DeductionCategory, string> = {
@@ -176,6 +187,7 @@ const REF_FIELD_BY_CATEGORY: Record<DeductionCategory, string> = {
   'Liquidation Damages': 'liq_refNumber',
   Other: 'oth_refNumber',
   'Duplicate Stop': 'oth_refNumber',
+  'Trace & Queries': 'liq_refNumber',
 };
 
 const BACKEND_TYPE_BY_CATEGORY: Record<DeductionCategory, BackendType> = {
@@ -185,6 +197,7 @@ const BACKEND_TYPE_BY_CATEGORY: Record<DeductionCategory, BackendType> = {
   'Liquidation Damages': 'liquidation-damage',
   Other: 'other',
   'Duplicate Stop': 'duplicate-stop',
+  'Trace & Queries': 'trace-query',
 };
 
 const REF_PREFIX_BY_CATEGORY: Record<DeductionCategory, string> = {
@@ -194,6 +207,7 @@ const REF_PREFIX_BY_CATEGORY: Record<DeductionCategory, string> = {
   'Liquidation Damages': 'LQD',
   Other: 'OTH',
   'Duplicate Stop': 'DUP',
+  'Trace & Queries': 'TRQ',
 };
 
 /* ==================== Deterministic PRNG (same scheme as RouteBalance/DailyOperationsManagement) ==================== */
@@ -407,10 +421,13 @@ function calculateInstallments(
 /* ==================== Mock master data ==================== */
 
 const VEHICLE_PLATES = ['AB12 CDE', 'EF34 FGH', 'JK56 LMN', 'OP78 PQR', 'ST90 UVW', 'XY12 ZAB', 'CD34 EFG', 'GH56 IJK'];
-const ROUTE_NAMES = ['LON-01', 'LON-02', 'LON-03', 'MAN-01', 'MAN-02', 'BIR-01'];
+// Same route codes as the Dashboard's Live Service block (the canonical
+// source — see data/mockRouteCodes.ts) — kept in sync so a route shown as
+// MD7C there is the same MD7C referenced by a deduction here.
+const ROUTE_NAMES = ROUTE_CODES;
 
 const MOCK_VEHICLES: MockVehicle[] = VEHICLE_PLATES.map((registrationPlates, i) => ({ vehicleId: i + 1, registrationPlates }));
-const MOCK_ROUTES: MockRoute[] = ROUTE_NAMES.map((routeName, i) => ({ routeId: i + 1, routeName }));
+export const MOCK_ROUTES: MockRoute[] = ROUTE_NAMES.map((routeName, i) => ({ routeId: i + 1, routeName }));
 
 /** Maps a Trace & Queries confirmed-duplicate entry into this page's row shape. */
 function duplicateStopEntryToDisplayDeduction(entry: DuplicateStopDeductionEntry): DisplayDeduction {
@@ -435,20 +452,25 @@ function duplicateStopEntryToDisplayDeduction(entry: DuplicateStopDeductionEntry
   };
 }
 
-/** Maps a Trace & Queries DHL case closed-unresolved entry into this page's row shape. */
+/**
+ * Maps a Trace & Queries DHL case closed-unresolved entry into this page's
+ * row shape. Category is 'Trace & Queries', not 'Liquidation Damages' — this
+ * is still awaiting confirmation as an actual deduction, so it's kept out of
+ * the "already in the system" Liquidation Damages tab.
+ */
 function traceQueryLiquidationEntryToDisplayDeduction(entry: TraceQueryLiquidationDeductionEntry): DisplayDeduction {
   return {
     id: entry.refNumber,
     dateOfIncident: entry.incidentDate,
     courierName: entry.driverName,
-    type: 'Liquidation Damages',
+    type: 'Trace & Queries',
     amount: entry.amount,
     status: 'Pending',
     backendId: entry.backendId,
-    backendType: 'liquidation-damage',
+    backendType: 'trace-query',
     userId: entry.driverUserId,
     fields: {
-      type: 'Liquidation Damages',
+      type: 'Trace & Queries',
       liq_refNumber: entry.refNumber,
       liq_vendor: entry.driverName,
       liq_amount: String(entry.amount),
@@ -458,7 +480,7 @@ function traceQueryLiquidationEntryToDisplayDeduction(entry: TraceQueryLiquidati
   };
 }
 
-function buildInitialDeductions(): DisplayDeduction[] {
+export function buildInitialDeductions(): DisplayDeduction[] {
   const rng = rngForSeed('deductions-disbursements-recharges');
   const records: DisplayDeduction[] = [];
   const today = new Date();
@@ -959,6 +981,20 @@ function DeductionModal({
             {renderDescriptionField('oth_description', 'Duplicate Stop Details')}
           </>
         );
+      case 'Trace & Queries':
+        // Always view-only in practice: this category has no Add button (see
+        // KPI_CARDS), so the only way this case renders is openModalForView()
+        // on a record injected by Trace & Queries (a DHL case closed without
+        // resolution, still pending confirmation as a real deduction).
+        return (
+          <>
+            {renderTextField('liq_refNumber', 'Reference Number', { readOnly: true, placeholder: 'Auto-generated' })}
+            {renderVendorField('liq_vendor', 'Driver')}
+            {renderAmountField('liq_amount', 'Amount')}
+            {renderTextField('liq_lqDate', 'Incident Date', { type: 'date', readOnly: true })}
+            {renderDescriptionField('liq_description', 'Case Details')}
+          </>
+        );
       default:
         return null;
     }
@@ -1143,7 +1179,7 @@ export function DeductionsDisbursementsRecharges() {
   );
 
   const kpiTotals = useMemo(() => {
-    const totals: Record<string, number> = { Total: 0, 'Duplicate Stop': 0 };
+    const totals: Record<string, number> = { Total: 0, 'Duplicate Stop': 0, 'Trace & Queries': 0 };
     for (const c of CATEGORIES) totals[c] = 0;
     for (const item of monthRecords) {
       if (item.amount > 0) {

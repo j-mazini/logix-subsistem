@@ -1,4 +1,5 @@
 import React, { useState, useMemo, memo, useCallback, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 interface Driver {
   id: number;
@@ -19,6 +20,8 @@ interface AvailableDriversProps {
   onToggle?: (isOpen: boolean) => void;
 }
 
+type RosterFilter = 'all' | 'regular' | 'spare' | 'off';
+
 const formatDate = (date: Date, format: string): string => {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -29,10 +32,25 @@ const formatDate = (date: Date, format: string): string => {
   return `${d}/${m}`;
 };
 
-const isWeekend = (date: Date): boolean => {
-  const day = date.getDay();
-  return day === 0 || day === 6;
-};
+const dayShortName = (date: Date): string => date.toLocaleDateString('en-GB', { weekday: 'short' });
+
+const isSpareDriver = (driver: Driver) => Number(driver.vendorTypeId ?? 0) === 7;
+
+/** Deterministic accent color per driver, purely for the avatar chip. */
+const AVATAR_PALETTE = ['#4338ca', '#0f766e', '#b45309', '#be185d', '#1d4ed8', '#7c2d12', '#15803d', '#6d28d9'];
+function avatarColor(name: string): string {
+  const sum = [...name].reduce((s, c) => s + c.charCodeAt(0), 0);
+  return AVATAR_PALETTE[sum % AVATAR_PALETTE.length];
+}
+function initials(name: string): string {
+  return name
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0])
+    .join('')
+    .toUpperCase();
+}
 
 const AvailableDrivers: React.FC<AvailableDriversProps> = ({
   drivers = [],
@@ -43,6 +61,8 @@ const AvailableDrivers: React.FC<AvailableDriversProps> = ({
   onToggle,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [filter, setFilter] = useState<RosterFilter>('all');
+  const [selectedDay, setSelectedDay] = useState(''); // '' = whole week
 
   const handleToggle = useCallback(() => {
     onToggle?.(!isOpen);
@@ -61,51 +81,79 @@ const AvailableDrivers: React.FC<AvailableDriversProps> = ({
     }
   }, [isOpen, handleToggle]);
 
-  // Filter vendors by search term, remove duplicates, sort alphabetically
-  const filteredVendors = useMemo(() => {
+  // Dedupe by vendor, sort alphabetically
+  const allVendors = useMemo(() => {
     const seenUserIds = new Set<number>();
-    const q = searchTerm.toLowerCase().trim();
-
-    const filtered = drivers.filter((vendor) => {
+    const deduped = drivers.filter((vendor) => {
       if (seenUserIds.has(vendor.userId)) return false;
-
-      const nameMatch = (vendor.fullName || '').toLowerCase().includes(q);
-      const idMatch = String(vendor.userId).includes(q);
-
-      if (q && !nameMatch && !idMatch) return false;
-
       seenUserIds.add(vendor.userId);
       return true;
     });
+    return deduped.sort((a, b) => (a.fullName || '').toLowerCase().localeCompare((b.fullName || '').toLowerCase()));
+  }, [drivers]);
 
-    return filtered.sort((a, b) => {
-      const nameA = (a.fullName || '').toLowerCase();
-      const nameB = (b.fullName || '').toLowerCase();
-      return nameA.localeCompare(nameB);
-    });
-  }, [drivers, searchTerm]);
-
-  // Organize vendors by day, filtering out day-off entries
-  const vendorsByDay = useMemo(() => {
-    const result: Record<string, Driver[]> = {};
+  // Days within the current week this vendor is registered as off, for a compact inline badge.
+  const offDaysByVendor = useMemo(() => {
+    const result: Record<number, string[]> = {};
+    if (weekDates.length === 0 || dayOffEntries.length === 0) return result;
 
     weekDates.forEach((date) => {
       const dateStr = formatDate(date, 'yyyy-mm-dd');
-      const dayVendors = filteredVendors.filter((vendor) => {
-        const hasDateOff = dayOffEntries.some(
-          (entry) => entry.userId === vendor.userId && entry.date === dateStr
-        );
-        return !hasDateOff;
+      dayOffEntries.forEach((entry) => {
+        if (entry.date !== dateStr) return;
+        (result[entry.userId] ||= []).push(dayShortName(date));
       });
-      result[dateStr] = dayVendors;
     });
-
     return result;
-  }, [filteredVendors, weekDates, dayOffEntries]);
+  }, [weekDates, dayOffEntries]);
 
-  const handleVendorDragStart = (e: React.DragEvent, driver: Driver, dateStr?: string) => {
+  // Same off-days, keyed by ISO date instead of label — powers the day filter below.
+  const offDatesByVendor = useMemo(() => {
+    const result: Record<number, Set<string>> = {};
+    dayOffEntries.forEach((entry) => {
+      (result[entry.userId] ||= new Set()).add(entry.date);
+    });
+    return result;
+  }, [dayOffEntries]);
+
+  const dayOptions = useMemo(
+    () =>
+      weekDates.map((date) => ({
+        value: formatDate(date, 'yyyy-mm-dd'),
+        label: `${dayShortName(date)} ${formatDate(date, 'dd/mm')}`,
+      })),
+    [weekDates],
+  );
+
+  const counts = useMemo(
+    () => ({
+      all: allVendors.length,
+      regular: allVendors.filter((d) => !isSpareDriver(d)).length,
+      spare: allVendors.filter(isSpareDriver).length,
+      off: allVendors.filter((d) => (offDaysByVendor[d.userId]?.length ?? 0) > 0).length,
+    }),
+    [allVendors, offDaysByVendor],
+  );
+
+  const visibleVendors = useMemo(() => {
+    const q = searchTerm.toLowerCase().trim();
+    return allVendors.filter((vendor) => {
+      if (selectedDay && offDatesByVendor[vendor.userId]?.has(selectedDay)) return false;
+      if (q) {
+        const nameMatch = (vendor.fullName || '').toLowerCase().includes(q);
+        const idMatch = String(vendor.userId).includes(q);
+        if (!nameMatch && !idMatch) return false;
+      }
+      if (filter === 'regular') return !isSpareDriver(vendor);
+      if (filter === 'spare') return isSpareDriver(vendor);
+      if (filter === 'off') return (offDaysByVendor[vendor.userId]?.length ?? 0) > 0;
+      return true;
+    });
+  }, [allVendors, searchTerm, filter, offDaysByVendor, selectedDay, offDatesByVendor]);
+
+  const handleVendorDragStart = (e: React.DragEvent, driver: Driver) => {
     e.dataTransfer.effectAllowed = 'copy';
-    e.dataTransfer.setData('vendor', JSON.stringify({ userId: driver.userId, date: dateStr }));
+    e.dataTransfer.setData('vendor', JSON.stringify({ userId: driver.userId }));
     (e.currentTarget as HTMLElement).classList.add('dragging');
     onVendorDragStart?.(driver.userId);
   };
@@ -118,7 +166,16 @@ const AvailableDrivers: React.FC<AvailableDriversProps> = ({
     return null;
   }
 
-  return (
+  const selectedDayLabel = dayOptions.find((d) => d.value === selectedDay)?.label ?? '';
+
+  const filters: { key: RosterFilter; label: string }[] = [
+    { key: 'all', label: 'All' },
+    { key: 'regular', label: 'Regular' },
+    { key: 'spare', label: 'Spare' },
+    { key: 'off', label: 'Off this week' },
+  ];
+
+  return createPortal(
     <>
       {/* Toggle Button - Fixed top right */}
       <button
@@ -145,22 +202,13 @@ const AvailableDrivers: React.FC<AvailableDriversProps> = ({
       <div className={`wp-drivers-drawer${isOpen ? ' wp-open' : ''}`}>
         {/* Drawer Header */}
         <div className="wp-drawer-header">
-          <div className="wp-drawer-title-section">
-            <svg className="wp-icon" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM9 10a9 9 0 1118 0 9 9 0 01-18 0z" />
-            </svg>
-            <div>
-              <h3 className="wp-drawer-title">Available Drivers</h3>
-              <p className="wp-drawer-subtitle">
-                {filteredVendors.length} {filteredVendors.length === 1 ? 'driver' : 'drivers'} available
-              </p>
-            </div>
+          <div>
+            <h3 className="wp-drawer-title">Available Drivers</h3>
+            <p className="wp-drawer-subtitle">
+              <b>{visibleVendors.length}</b> free to assign {selectedDayLabel ? `on ${selectedDayLabel}` : 'this week'}
+            </p>
           </div>
-          <button
-            onClick={handleToggle}
-            className="wp-drawer-close-btn"
-            aria-label="Close"
-          >
+          <button onClick={handleToggle} className="wp-drawer-close-btn" aria-label="Close">
             <svg className="wp-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -191,111 +239,98 @@ const AvailableDrivers: React.FC<AvailableDriversProps> = ({
           </div>
         </div>
 
-        {/* Drawer Content Grid */}
+        {/* Day filter */}
+        <div className="wp-roster-day-row">
+          <label htmlFor="wpDriversDaySelect" className="wp-roster-day-label">
+            Day
+          </label>
+          <select
+            id="wpDriversDaySelect"
+            className="wp-roster-day-select"
+            value={selectedDay}
+            onChange={(e) => setSelectedDay(e.target.value)}
+          >
+            <option value="">Whole week</option>
+            {dayOptions.map((d) => (
+              <option key={d.value} value={d.value}>
+                {d.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Filter chips */}
+        <div className="wp-roster-filters">
+          {filters.map((f) => (
+            <button
+              key={f.key}
+              type="button"
+              className={`wp-roster-filter${filter === f.key ? ' is-active' : ''}`}
+              onClick={() => setFilter(f.key)}
+            >
+              {f.label} <span className="wp-roster-filter-n">{counts[f.key]}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Drawer Content — single flat, filterable roster */}
         <div className="wp-drawer-content">
-          {/* Spacer column for alignment with week planner */}
-          <div className="wp-drawer-spacer" aria-hidden />
-
-          {/* Day columns */}
-          {weekDates.map((dayDate) => {
-              const dateStr = formatDate(dayDate, 'yyyy-mm-dd');
-              const dayName = dayDate.toLocaleDateString('en-GB', { weekday: 'short' }).toUpperCase();
-              const dateNum = formatDate(dayDate, 'dd/mm');
-              const isWeekendDay = isWeekend(dayDate);
-              const dayVendors = vendorsByDay[dateStr] || [];
-
-              // Separate regular and spare drivers
-              const isSpareDriver = (driver: Driver) => Number(driver.vendorTypeId ?? 0) === 7;
-              const spareVendors = dayVendors.filter(isSpareDriver);
-              const regularVendors = dayVendors.filter((d) => !isSpareDriver(d));
-
-              return (
-                <div
-                  key={dateStr}
-                  className={`wp-day-column${isWeekendDay ? ' wp-weekend' : ''}`}
-                >
-                  {/* Day header */}
-                  <div className="wp-day-header">
-                    <div className="wp-day-info">
-                      <div className={`wp-day-name${isWeekendDay ? ' wp-weekend' : ''}`}>
-                        {dayName}
-                      </div>
-                      <div className={`wp-day-date${isWeekendDay ? ' wp-weekend' : ''}`}>
-                        {dateNum}
+          {visibleVendors.length === 0 ? (
+            <div className="wp-day-empty">No drivers match your search.</div>
+          ) : (
+            <div className="wp-drivers-list">
+              {visibleVendors.map((driver) => {
+                const offDays = offDaysByVendor[driver.userId];
+                const spare = isSpareDriver(driver);
+                return (
+                  <div
+                    key={driver.userId}
+                    draggable
+                    onDragStart={(e) => handleVendorDragStart(e, driver)}
+                    onDragEnd={handleDragEnd}
+                    className="wp-driver-row"
+                    title={`${driver.fullName} • ${driver.vehicle || driver.plate || 'N/A'}`}
+                  >
+                    <div className="wp-driver-avatar" style={{ background: avatarColor(driver.fullName) }}>
+                      {initials(driver.fullName)}
+                    </div>
+                    <div className="wp-driver-info">
+                      <div className="wp-driver-name">{driver.fullName}</div>
+                      <div className="wp-driver-meta">
+                        {driver.vehicle && <span>{driver.vehicle}</span>}
+                        {driver.plate && <span className="wp-driver-plate">{driver.plate}</span>}
                       </div>
                     </div>
-                    <div className={`wp-day-count${isWeekendDay ? ' wp-weekend' : ''}`}>
-                      {dayVendors.length}
-                    </div>
-                  </div>
-
-                  {/* Day vendors list */}
-                  <div className="wp-day-vendors">
-                    {regularVendors.length === 0 && spareVendors.length === 0 ? (
-                      <div className="wp-day-empty">No drivers</div>
-                    ) : (
-                      <>
-                        {/* Regular drivers */}
-                        {regularVendors.map((driver) => (
-                          <div
-                            key={`${dateStr}-${driver.userId}`}
-                            draggable
-                            onDragStart={(e) => handleVendorDragStart(e, driver, dateStr)}
-                            onDragEnd={handleDragEnd}
-                            className="wp-driver-card"
-                            title={`${driver.fullName} • ${driver.vehicle || driver.plate || 'N/A'}`}
-                          >
-                            <div className="wp-driver-icon">
-                              <svg viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M18 18.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM9 18.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM20 8H4c-1.1 0-2 .9-2 2v8h2v3c0 .6.4 1 1 1h1c.6 0 1-.4 1-1v-3h12v3c0 .6.4 1 1 1h1c.6 0 1-.4 1-1v-3h2v-8c0-1.1-.9-2-2-2z"/>
-                              </svg>
-                            </div>
-                            <div className="wp-driver-info">
-                              <div className="wp-driver-name">{driver.fullName}</div>
-                              <div className="wp-driver-vehicle">
-                                {driver.vehicle || driver.plate || 'N/A'}
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-
-                        {/* Spare drivers section */}
-                        {spareVendors.length > 0 && (
-                          <div className="wp-spare-section">
-                            <div className="wp-spare-label">Spare Drivers</div>
-                            {spareVendors.map((driver) => (
-                              <div
-                                key={`spare-${dateStr}-${driver.userId}`}
-                                draggable
-                                onDragStart={(e) => handleVendorDragStart(e, driver, dateStr)}
-                                onDragEnd={handleDragEnd}
-                                className="wp-driver-card wp-spare"
-                                title={`${driver.fullName} • ${driver.vehicle || driver.plate || 'N/A'} (Spare)`}
-                              >
-                                <div className="wp-driver-icon">
-                                  <svg viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                                  </svg>
-                                </div>
-                                <div className="wp-driver-info">
-                                  <div className="wp-driver-name">{driver.fullName}</div>
-                                  <div className="wp-driver-vehicle">
-                                    {driver.vehicle || driver.plate || 'N/A'}
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </>
+                    {spare && <span className="wp-roster-badge wp-roster-badge--spare">Spare</span>}
+                    {offDays && offDays.length > 0 && (
+                      <span className="wp-roster-badge wp-roster-badge--off" title={`Off this week: ${offDays.join(', ')}`}>
+                        Off {offDays.join(', ')}
+                      </span>
                     )}
+                    <svg className="wp-driver-handle" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <circle cx="7" cy="5" r="1.4" />
+                      <circle cx="13" cy="5" r="1.4" />
+                      <circle cx="7" cy="10" r="1.4" />
+                      <circle cx="13" cy="10" r="1.4" />
+                      <circle cx="7" cy="15" r="1.4" />
+                      <circle cx="13" cy="15" r="1.4" />
+                    </svg>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        <div className="wp-drawer-foot">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9h8M8 13h5m-9 8V5a2 2 0 012-2h8l6 6v12a2 2 0 01-2 2H6a2 2 0 01-2-2z" />
+          </svg>
+          Drag a driver onto any route or Ad-Hoc cell to assign
         </div>
       </div>
-    </>
+    </>,
+    document.body,
   );
 };
 

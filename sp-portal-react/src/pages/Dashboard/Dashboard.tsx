@@ -1,6 +1,11 @@
-import { useState } from 'react';
+import { useMemo, useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
+import {
+  subscribe as subscribeTraceQueryLiqDeductions,
+  getSnapshot as getTraceQueryLiqDeductionsSnapshot,
+} from '../../services/traceQueryCaseService';
+import { buildInitialDeductions, MOCK_ROUTES } from '../DeductionsDisbursementsRecharges/DeductionsDisbursementsRecharges';
 import '../../styles/legacy/dashboard.css';
 import '../../styles/legacy/dashboard-base.css';
 import '../../styles/legacy/dashboard-header.css';
@@ -14,28 +19,30 @@ import '../../styles/legacy/dashboard-live-service.css';
 import { PortalLayout } from '../../layout/PortalLayout';
 import { useViewportAttribute } from '../../hooks/useViewportAttribute';
 import { useModalBehavior } from '../../hooks/useModalBehavior';
+import { useCurrentSp, withSp } from '../../hooks/useCurrentSp';
+import { ROUTE_CODES } from '../../data/mockRouteCodes';
 
 /* ============================ Live Service data (ported from live-service.js) ============================ */
-const LIVE_ROUTES = [
-  { key: 'md7a', label: 'MD7A', service: 'Pre-12', icon: 'bi-sunrise', tone: 'pre12', stops: [
-    { pc: 'RM 9 9AE', addr: '52 Market Street' }, { pc: 'RM 4 3QR', addr: '167 Park Lane' },
-  ] },
-  { key: 'md7b', label: 'MD7B', service: 'Pre-12', icon: 'bi-sunrise', tone: 'pre12', stops: [
-    { pc: 'RM 6 8GD', addr: '143 New Road' }, { pc: 'RM 8 0WP', addr: '19a Bridge Street' },
-  ] },
-  { key: 'md7c', label: 'MD7C', service: 'Pre-12', icon: 'bi-sunrise', tone: 'pre12', stops: [
-    { pc: 'RM 8 7HZ', addr: 'Flat 168 George Street' }, { pc: 'RM 9 4XK', addr: 'Flat 134 High Street' },
-  ] },
-  { key: 'md7d', label: 'MD7D', service: 'Pre-12', icon: 'bi-sunrise', tone: 'pre12', stops: [
-    { pc: 'RM 6 5GY', addr: 'Unit 136 Bridge Street' }, { pc: 'RM 6 8UL', addr: '76b High Street' },
-  ] },
-  { key: 'md7e', label: 'MD7E', service: 'Pre-12', icon: 'bi-sunrise', tone: 'pre12', stops: [
-    { pc: 'RM 7 1TD', addr: '184 Manor Road' }, { pc: 'RM 4 4KL', addr: 'Flat 111 Green Lane' },
-  ] },
-  { key: 'md7f', label: 'MD7F', service: 'Pre-12', icon: 'bi-sunrise', tone: 'pre12', stops: [
-    { pc: 'RM 3 4RY', addr: 'Unit 187 Queen Street' }, { pc: 'RM 3 8ES', addr: 'Unit 20 New Road' },
-  ] },
+const LIVE_ROUTE_STOPS = [
+  [{ pc: 'RM 9 9AE', addr: '52 Market Street' }, { pc: 'RM 4 3QR', addr: '167 Park Lane' }],
+  [{ pc: 'RM 6 8GD', addr: '143 New Road' }, { pc: 'RM 8 0WP', addr: '19a Bridge Street' }],
+  [{ pc: 'RM 8 7HZ', addr: 'Flat 168 George Street' }, { pc: 'RM 9 4XK', addr: 'Flat 134 High Street' }],
+  [{ pc: 'RM 6 5GY', addr: 'Unit 136 Bridge Street' }, { pc: 'RM 6 8UL', addr: '76b High Street' }],
+  [{ pc: 'RM 7 1TD', addr: '184 Manor Road' }, { pc: 'RM 4 4KL', addr: 'Flat 111 Green Lane' }],
+  [{ pc: 'RM 3 4RY', addr: 'Unit 187 Queen Street' }, { pc: 'RM 3 8ES', addr: 'Unit 20 New Road' }],
 ];
+
+// Routes here are the same ROUTE_CODES used by Deductions/Trace & Queries —
+// this block is the canonical place a route code is "live", so every other
+// mock surface that mentions a route (MD7C, etc.) refers to one of these.
+const LIVE_ROUTES = ROUTE_CODES.map((code, i) => ({
+  key: code.toLowerCase(),
+  label: code,
+  service: 'Pre-12',
+  icon: 'bi-sunrise',
+  tone: 'pre12',
+  stops: LIVE_ROUTE_STOPS[i],
+}));
 
 const STATUS_META: Record<string, { label: string; icon: string }> = {
   completed: { label: 'Completed', icon: 'bi-check-circle-fill' },
@@ -95,7 +102,7 @@ const NAV_GROUPS: NavGroup[] = [
   ] },
   { title: 'Compliance', icon: 'bi-shield-check', items: [
     { label: 'Service Provider Profile', desc: 'Company details and documents', icon: 'bi-building', route: '/profile' },
-    { label: 'Compliance', desc: 'Training status and renewals', icon: 'bi-patch-check', route: null },
+    { label: 'Compliance', desc: 'Training status and renewals', icon: 'bi-patch-check', route: '/workforce?tab=compliance' },
     { label: 'Vetting', desc: 'Driver vetting and checks', icon: 'bi-person-check', route: '/workforce?tab=vetting' },
   ] },
   { title: 'Billing', icon: 'bi-receipt', items: [
@@ -112,7 +119,7 @@ const NAV_GROUPS: NavGroup[] = [
     { label: 'Vendor Requests', desc: 'Open requests and approvals', icon: 'bi-envelope-paper', route: '/requests-admin' },
   ] },
   { title: 'Trace & Queries', icon: 'bi-search', items: [
-    { label: 'Trace & Queries', desc: 'Track shipments and raise queries', icon: 'bi-binoculars', route: null },
+    { label: 'Trace & Queries', desc: 'Track shipments and raise queries', icon: 'bi-binoculars', route: '/trace-queries' },
   ] },
 ];
 
@@ -124,12 +131,6 @@ const LAST_DAY_ROWS = [
   { route: 'MD7D', spr: 101, tw: '100%', del: 88, pu: 8, hn: 5, afd: '1%' },
   { route: 'MD7E', spr: 116, tw: '97%', del: 98, pu: 11, hn: 7, afd: '2%' },
   { route: 'MD7F', spr: 73, tw: '92%', del: 61, pu: 7, hn: 5, afd: '4%' },
-];
-
-const LD_ROWS = [
-  { awb: '4821 5566 210', route: 'MD7C', date: '2026-07-18', desc: 'Late delivery — Pre-12 breach', amount: '-£24.50', status: 'Open' },
-  { awb: '4821 5566 344', route: 'MD7F', date: '2026-07-19', desc: 'Missing POD', amount: '-£12.00', status: 'Under review' },
-  { awb: '4821 5566 501', route: 'MD7E', date: '2026-07-20', desc: 'Damaged parcel', amount: '-£38.75', status: 'Resolved' },
 ];
 
 const SPMS = { income: '£18,420', incomePct: 104, afdPct: 3.2, delOk: 486, delPu: 62, delHn: 31, avgIncome: '£3,070', avgRoute: '£614', totalOpenRoutes: 6 };
@@ -165,12 +166,52 @@ function gaugeColor(pct: number, okAt: number, warnAt: number) {
 
 export function Dashboard() {
   useViewportAttribute();
+  const sp = useCurrentSp();
   const [showModal, setShowModal] = useState(false);
   const [modalSlide, setModalSlide] = useState(0);
-  const [activeFolder, setActiveFolder] = useState<'lastday' | 'spms' | 'ld'>('lastday');
+  const [activeFolder, setActiveFolder] = useState<'lastday' | 'spms' | 'deductions' | 'tracequeries'>('lastday');
   const [activeRouteIndex, setActiveRouteIndex] = useState(0);
 
   useModalBehavior(() => setShowModal(false), showModal);
+
+  /**
+   * Same store as Trace & Queries / Deductions: a case closed "not resolved"
+   * generates a liquidation-damage deduction there, and this tab just
+   * reflects it — no separate mock data to keep in sync.
+   */
+  const traceQuerySnapshot = useSyncExternalStore(subscribeTraceQueryLiqDeductions, getTraceQueryLiqDeductionsSnapshot);
+  const traceQueryRows = useMemo(() => {
+    const caseById = new Map(traceQuerySnapshot.cases.map((c) => [c.id, c]));
+    return traceQuerySnapshot.deductions.map((d) => ({
+      key: d.refNumber,
+      awb: d.packageId,
+      route: caseById.get(d.caseId)?.routeName ?? '—',
+      date: d.incidentDate,
+      desc: d.note,
+      amount: `-£${d.amount.toFixed(2)}`,
+      status: 'Pending confirmation',
+    }));
+  }, [traceQuerySnapshot]);
+
+  /**
+   * Liquidation Damages already entered into the system (Deductions page) —
+   * kept separate from traceQueryRows above, which are DHL cases still
+   * awaiting confirmation as a real deduction.
+   */
+  const routeNameById = useMemo(() => new Map(MOCK_ROUTES.map((r) => [String(r.routeId), r.routeName])), []);
+  const deductionsRows = useMemo(() => {
+    return buildInitialDeductions()
+      .filter((d) => d.type === 'Liquidation Damages')
+      .map((d) => ({
+        key: d.id,
+        awb: (d.fields.liq_awbNumber as string) ?? '—',
+        route: routeNameById.get(d.fields.liq_routeId as string) ?? '—',
+        date: d.dateOfIncident,
+        desc: (d.fields.liq_description as string) ?? '—',
+        amount: `-£${d.amount.toFixed(2)}`,
+        status: d.status,
+      }));
+  }, [routeNameById]);
 
   const route = LIVE_ROUTES[activeRouteIndex];
   const done = route.stops.length > 1 ? 1 : 0;
@@ -231,8 +272,13 @@ export function Dashboard() {
 
             <div className="sp-live-carousel" role="region" aria-roledescription="carousel" aria-label="Live routes">
               <div className="sp-live-carousel-topline">
-                <span className="sp-live-carousel-label">Route dispatch</span>
-                <span className="sp-live-carousel-position" aria-live="polite">Route {activeRouteIndex + 1} of {LIVE_ROUTES.length}</span>
+                <div className="sp-live-carousel-topline-info">
+                  <span className="sp-live-carousel-label">Route dispatch</span>
+                  <span className="sp-live-carousel-position" aria-live="polite">Route {activeRouteIndex + 1} of {LIVE_ROUTES.length}</span>
+                </div>
+                <Link to={withSp('/live-service', sp)} className="sp-live-carousel-link">
+                  View full Live Service <i className="bi bi-arrow-right" aria-hidden="true" />
+                </Link>
               </div>
               <div className="sp-live-carousel-viewport">
                 <div className="sp-live-carousel-track">
@@ -312,8 +358,13 @@ export function Dashboard() {
                 </button>
               </li>
               <li className="nav-item" role="presentation">
-                <button type="button" className={`nav-link${activeFolder === 'ld' ? ' active' : ''}`} role="tab" aria-selected={activeFolder === 'ld'} onClick={() => setActiveFolder('ld')}>
-                  <i className="bi bi-exclamation-triangle me-1" /> Liquidation Damages
+                <button type="button" className={`nav-link${activeFolder === 'deductions' ? ' active' : ''}`} role="tab" aria-selected={activeFolder === 'deductions'} onClick={() => setActiveFolder('deductions')}>
+                  <i className="bi bi-exclamation-triangle me-1" /> Deductions
+                </button>
+              </li>
+              <li className="nav-item" role="presentation">
+                <button type="button" className={`nav-link${activeFolder === 'tracequeries' ? ' active' : ''}`} role="tab" aria-selected={activeFolder === 'tracequeries'} onClick={() => setActiveFolder('tracequeries')}>
+                  <i className="bi bi-binoculars me-1" /> Trace & Queries
                 </button>
               </li>
             </ul>
@@ -428,7 +479,7 @@ export function Dashboard() {
                 </div>
               )}
 
-              {activeFolder === 'ld' && (
+              {activeFolder === 'deductions' && (
                 <div className="tab-pane fade show active sp-folder-panel opms-panel" role="tabpanel">
                   <div className="opms-content-full">
                     <div className="ld-header-kpi d-flex align-items-center mb-3">
@@ -441,8 +492,39 @@ export function Dashboard() {
                             <tr><th>AWB</th><th>Route</th><th>Issue Date</th><th>Issue Description</th><th className="text-end">Amount</th><th>Status</th></tr>
                           </thead>
                           <tbody>
-                            {LD_ROWS.map((row) => (
-                              <tr key={row.awb}>
+                            {deductionsRows.map((row) => (
+                              <tr key={row.key}>
+                                <td>{row.awb}</td>
+                                <td>{row.route}</td>
+                                <td>{row.date}</td>
+                                <td>{row.desc}</td>
+                                <td className="text-end">{row.amount}</td>
+                                <td>{row.status}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </div>
+              )}
+
+              {activeFolder === 'tracequeries' && (
+                <div className="tab-pane fade show active sp-folder-panel opms-panel" role="tabpanel">
+                  <div className="opms-content-full">
+                    <div className="ld-header-kpi d-flex align-items-center mb-3">
+                      <span className="ld-viewing-month-badge" aria-live="polite">July 2026</span>
+                    </div>
+                    <section className="opms-performance-block" id="traceQueriesTableSection" aria-label="Trace & Queries table">
+                      <div className="table-responsive opms-deliveries-table-wrap">
+                        <table className="table table-hover table-sm align-middle mb-0 opms-table-disco-style" aria-label="Trace & Queries">
+                          <thead>
+                            <tr><th>AWB</th><th>Route</th><th>Issue Date</th><th>Issue Description</th><th className="text-end">Amount</th><th>Status</th></tr>
+                          </thead>
+                          <tbody>
+                            {traceQueryRows.map((row) => (
+                              <tr key={row.key}>
                                 <td>{row.awb}</td>
                                 <td>{row.route}</td>
                                 <td>{row.date}</td>

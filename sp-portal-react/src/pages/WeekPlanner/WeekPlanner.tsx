@@ -4,7 +4,6 @@ import { PortalLayout } from '../../layout/PortalLayout';
 import { useModalBehavior } from '../../hooks/useModalBehavior';
 import AvailableDrivers from './components/AvailableDrivers';
 import DayOffModal, { type DayOffEntry } from './components/DayOffModal';
-import DashboardStats from './components/DashboardStats';
 import TypesConfigModal from './components/TypesConfigModal';
 import AddAdhocServiceModal from './components/AddAdhocServiceModal';
 import FlexRouteModal from './components/FlexRouteModal';
@@ -77,6 +76,30 @@ function formatDateDMY(date: Date): string {
 function getDayNameShort(date: Date): string {
   return date.toLocaleDateString('en-GB', { weekday: 'short' }).toUpperCase();
 }
+
+/* ---------- week notes (Week Planner + export only, persisted locally per week-start date) ---------- */
+const WEEK_NOTES_STORAGE_KEY = 'wp_week_notes';
+function getWeekNote(weekStartISO: string): string {
+  try {
+    const raw = localStorage.getItem(WEEK_NOTES_STORAGE_KEY);
+    if (!raw) return '';
+    const data = JSON.parse(raw);
+    return typeof data[weekStartISO] === 'string' ? data[weekStartISO] : '';
+  } catch {
+    return '';
+  }
+}
+function setWeekNote(weekStartISO: string, note: string): void {
+  try {
+    const raw = localStorage.getItem(WEEK_NOTES_STORAGE_KEY);
+    const data = raw ? JSON.parse(raw) : {};
+    if (note.trim() === '') delete data[weekStartISO];
+    else data[weekStartISO] = note;
+    localStorage.setItem(WEEK_NOTES_STORAGE_KEY, JSON.stringify(data));
+  } catch {
+    /* ignore */
+  }
+}
 function isWeekend(date: Date): boolean {
   const day = date.getDay();
   return day === 0 || day === 6;
@@ -104,6 +127,33 @@ function getWeekDates(weekStart: Date): Date[] {
 function getWeekDatesFiltered(weekStart: Date, includeWeekends: boolean): Date[] {
   const all = getWeekDates(weekStart);
   return includeWeekends ? all : all.filter((_, i) => i < 5);
+}
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+];
+const PICKER_YEARS = (() => {
+  const current = new Date().getFullYear();
+  return Array.from({ length: 5 }, (_, i) => current - 2 + i);
+})();
+/** Every Monday-start week that touches the given month, earliest first. */
+function getWeeksOfMonth(year: number, month: number): { weekStart: Date; label: string }[] {
+  const lastOfMonth = new Date(year, month + 1, 0);
+  const weeks: { weekStart: Date; label: string }[] = [];
+  let cursor = getWeekStart(new Date(year, month, 1));
+  let index = 1;
+  while (cursor <= lastOfMonth) {
+    const weekEnd = new Date(cursor);
+    weekEnd.setDate(cursor.getDate() + 6);
+    weeks.push({
+      weekStart: new Date(cursor),
+      label: `Week ${index} (${cursor.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })} – ${weekEnd.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })})`,
+    });
+    cursor = new Date(cursor);
+    cursor.setDate(cursor.getDate() + 7);
+    index++;
+  }
+  return weeks;
 }
 function formatWeekRangeLabel(weekStart: Date, includeWeekends: boolean): string {
   const dates = getWeekDatesFiltered(weekStart, includeWeekends);
@@ -207,11 +257,34 @@ function buildVendorPool(): PoolVendor[] {
     const letters = 'ABCDEFGHJKLMNPRSTUVWXYZ';
     const l2 = () => letters[Math.floor(rng() * letters.length)];
     const plate = `L${Math.floor(rng() * 9)}${Math.floor(rng() * 9)} ${l2()}${l2()}${l2()}`;
-    pool.push({ id: idx, name: `${first} ${last}`, vehicle, plate });
+    // Every 6th vendor is a spare (vendorTypeId 7 — matches AvailableDrivers' isSpareDriver check).
+    const vendorTypeId = idx % 6 === 0 ? 7 : undefined;
+    pool.push({ id: idx, name: `${first} ${last}`, vehicle, plate, vendorTypeId });
   }
   return pool;
 }
 const VENDOR_POOL = buildVendorPool();
+
+/** A few pre-existing day-off entries for the current week, so "Off this week" has something to show on load. */
+function buildInitialDayOffEntries(): DayOffEntry[] {
+  const rng = rngForSeed('week-planner-dayoff-seed');
+  const weekStart = getWeekStart(new Date());
+  const picks = [0, 3, 6, 9, 12, 15, 18, 21, 24, 27];
+  return picks
+    .map((poolIndex) => VENDOR_POOL[poolIndex])
+    .filter((vendor): vendor is PoolVendor => !!vendor)
+    .map((vendor, i) => {
+      const date = new Date(weekStart);
+      date.setDate(date.getDate() + Math.floor(rng() * 5));
+      return {
+        id: `seed-dayoff-${vendor.id}-${i}`,
+        userId: vendor.id,
+        date: formatDateISO(date),
+        reason: 'Annual Leave',
+        notes: '',
+      };
+    });
+}
 
 interface FleetVehicle {
   id: number;
@@ -430,12 +503,54 @@ interface SupervisorPopoverState {
   top: number;
 }
 
-type ViewMode = 'weekly' | 'daily' | 'dashboard';
+type ViewMode = 'weekly' | 'daily';
 
 export function WeekPlanner() {
   const [loading, setLoading] = useState(true);
   const [currentDay, setCurrentDay] = useState(() => new Date());
   const currentWeekStart = useMemo(() => getWeekStart(currentDay), [currentDay]);
+  const [showWeekMonthPicker, setShowWeekMonthPicker] = useState(false);
+  const [pickerYear, setPickerYear] = useState(() => new Date().getFullYear());
+  const [pickerMonth, setPickerMonth] = useState(() => new Date().getMonth());
+  const weekMonthPickerRef = useRef<HTMLDivElement>(null);
+  const pickerWeeks = useMemo(() => getWeeksOfMonth(pickerYear, pickerMonth), [pickerYear, pickerMonth]);
+  const [weekNote, setWeekNoteState] = useState('');
+  const [showWeekNotePanel, setShowWeekNotePanel] = useState(false);
+  // Which week the notes panel is editing — defaults to the viewed week, but the panel's own
+  // selector can point it at a later week so a note can be written ahead of navigating there.
+  const [noteWeekStart, setNoteWeekStart] = useState(() => formatDateISO(currentWeekStart));
+
+  /* Week notes are per week-start date — reload the note, re-point the panel at the viewed
+     week, and pop the corner panel open whenever the viewed week changes. */
+  useEffect(() => {
+    const key = formatDateISO(currentWeekStart);
+    setNoteWeekStart(key);
+    setWeekNoteState(getWeekNote(key));
+    setShowWeekNotePanel(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentWeekStart]);
+
+  function handleWeekNoteChange(value: string) {
+    setWeekNoteState(value);
+    setWeekNote(noteWeekStart, value);
+  }
+
+  function handleNoteWeekChange(dateISO: string) {
+    setNoteWeekStart(dateISO);
+    setWeekNoteState(getWeekNote(dateISO));
+  }
+
+  /** A handful of weeks around the viewed one — lets the notes panel target a future week without navigating the whole planner there. */
+  const noteWeekOptions = useMemo(() => {
+    const options: { value: string; label: string }[] = [];
+    for (let i = -4; i <= 12; i++) {
+      const weekStart = new Date(currentWeekStart);
+      weekStart.setDate(weekStart.getDate() + i * 7);
+      options.push({ value: formatDateISO(weekStart), label: formatWeekRangeLabel(weekStart, true) });
+    }
+    return options;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentWeekStart]);
   const [viewMode, setViewMode] = useState<ViewMode>('weekly');
   const [showWeekends, setShowWeekends] = useState(false);
   const [collapsedDepots, setCollapsedDepots] = useState<Set<number>>(new Set());
@@ -454,7 +569,7 @@ export function WeekPlanner() {
   const [showAddManagementModal, setShowAddManagementModal] = useState(false);
   const [managementFunctionCatalog, setManagementFunctionCatalog] = useState<ManagementFunctionCatalogItem[]>(DEFAULT_MANAGEMENT_FUNCTIONS);
   const [managementCollapsed, setManagementCollapsed] = useState(false);
-  const [dayOffEntries, setDayOffEntries] = useState<DayOffEntry[]>([]);
+  const [dayOffEntries, setDayOffEntries] = useState<DayOffEntry[]>(() => buildInitialDayOffEntries());
   const [showExportModal, setShowExportModal] = useState(false);
 
   const weekCache = useRef(new Map<string, WPRecord[]>());
@@ -520,6 +635,35 @@ export function WeekPlanner() {
       return next;
     });
   }
+
+  function openWeekMonthPicker() {
+    setPickerYear(currentDay.getFullYear());
+    setPickerMonth(currentDay.getMonth());
+    setShowWeekMonthPicker(true);
+  }
+
+  function pickWeek(weekStart: Date) {
+    setCurrentDay(new Date(weekStart));
+    setShowWeekMonthPicker(false);
+  }
+
+  useEffect(() => {
+    if (!showWeekMonthPicker) return;
+    function handlePointerDown(e: MouseEvent) {
+      if (weekMonthPickerRef.current && !weekMonthPickerRef.current.contains(e.target as Node)) {
+        setShowWeekMonthPicker(false);
+      }
+    }
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') setShowWeekMonthPicker(false);
+    }
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [showWeekMonthPicker]);
 
   function findRecordById(id: number): WPRecord | null {
     return records.find((r) => r.weekPlannerId === id) || null;
@@ -859,7 +1003,7 @@ export function WeekPlanner() {
   }
 
   /** Assign this vendor+vehicle to the same route for every day of the week, overwriting whoever else is there. */
-  function assignWeekFromModal(vendorId: number, vehicleId: number, routeSort: 'yes' | 'no') {
+  function assignWeekFromModal(vendorId: number, vehicleId: number, routeSort: 'yes' | 'no', notes: string) {
     const rec = editingRecord;
     if (!rec) return;
     const person = personPoolFor(rec).find((v) => v.id === vendorId);
@@ -892,6 +1036,7 @@ export function WeekPlanner() {
         }
         existing.status = 'Working';
         existing.isDayOff = 'false';
+        existing.notes = notes.trim();
       } else {
         created++;
         records.push({
@@ -904,7 +1049,7 @@ export function WeekPlanner() {
           vendorId: person.id,
           route: rec.route,
           routeSort,
-          notes: '',
+          notes: notes.trim(),
           vehicle: !rec.isManagementSupport && fleetVehicle ? fleetVehicle.model : '',
           registrationPlate: !rec.isManagementSupport && fleetVehicle ? fleetVehicle.plate : '',
           status: 'Working',
@@ -1062,6 +1207,15 @@ export function WeekPlanner() {
     const worksheet = XLSX.utils.json_to_sheet(rowsForExport);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, scope === 'day' ? 'Day Schedule' : 'Week Schedule');
+
+    const exportedWeekNote = getWeekNote(formatDateISO(currentWeekStart));
+    if (exportedWeekNote.trim() !== '') {
+      const notesSheet = XLSX.utils.json_to_sheet([
+        { Week: formatWeekRangeLabel(currentWeekStart, true), Notes: exportedWeekNote },
+      ]);
+      XLSX.utils.book_append_sheet(workbook, notesSheet, 'Week Notes');
+    }
+
     const filenameDate = scope === 'day' ? formatDateISO(currentDay) : formatDateISO(currentWeekStart);
     XLSX.writeFile(workbook, `week-planner-${scope}-schedule-${filenameDate}.xlsx`);
     showToast(`Exported ${rowsForExport.length} row(s) to XLSX.`, 'success');
@@ -1084,7 +1238,13 @@ export function WeekPlanner() {
   const fullWeekDates = getWeekDatesFiltered(currentWeekStart, showWeekends);
 
   return (
-    <PortalLayout mainClassName="wp-container container-fluid px-3 px-lg-4 py-4" title="Week Planner" hideAnnouncements>
+    <PortalLayout
+      mainClassName={`wp-container container-fluid px-3 px-lg-4 py-4${
+        isAvailableDriversOpen ? ` wp-drivers-push${viewMode === 'weekly' && showWeekends ? ' wp-drivers-push-scroll' : ''}` : ''
+      }`}
+      title="Week Planner"
+      hideAnnouncements
+    >
       {/* ============ PAGE INFO (kept from the original header; not part of the standardized pattern) ============ */}
       <div className="page-header-section">
         <div className="page-header-welcome-text">
@@ -1128,6 +1288,72 @@ export function WeekPlanner() {
             <button type="button" className="date-nav-btn week-nav-today" id="btnThisWeek" onClick={() => setCurrentDay(new Date())}>
               {viewMode === 'daily' ? 'Today' : 'This week'}
             </button>
+            <div className="wp-week-picker-anchor" ref={weekMonthPickerRef}>
+              <button
+                type="button"
+                className={`date-nav-btn wp-week-picker-toggle${showWeekMonthPicker ? ' is-active' : ''}`}
+                id="btnWeekMonthPicker"
+                aria-label="Pick a specific week and month"
+                aria-expanded={showWeekMonthPicker}
+                onClick={() => (showWeekMonthPicker ? setShowWeekMonthPicker(false) : openWeekMonthPicker())}
+              >
+                <i className="bi bi-calendar-event" />
+              </button>
+              {showWeekMonthPicker && (
+                <div className="wp-week-picker-panel" role="dialog" aria-label="Select week and month">
+                  <div className="wp-week-picker-row">
+                    <div className="wp-week-picker-field">
+                      <label htmlFor="wpPickerMonth">Month</label>
+                      <select
+                        id="wpPickerMonth"
+                        value={pickerMonth}
+                        onChange={(e) => setPickerMonth(Number(e.target.value))}
+                      >
+                        {MONTH_NAMES.map((name, i) => (
+                          <option key={name} value={i}>
+                            {name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="wp-week-picker-field">
+                      <label htmlFor="wpPickerYear">Year</label>
+                      <select
+                        id="wpPickerYear"
+                        value={pickerYear}
+                        onChange={(e) => setPickerYear(Number(e.target.value))}
+                      >
+                        {PICKER_YEARS.map((y) => (
+                          <option key={y} value={y}>
+                            {y}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="wp-week-picker-field">
+                    <label htmlFor="wpPickerWeek">Week</label>
+                    <select
+                      id="wpPickerWeek"
+                      value={formatDateISO(currentWeekStart)}
+                      onChange={(e) => {
+                        const match = pickerWeeks.find((w) => formatDateISO(w.weekStart) === e.target.value);
+                        if (match) pickWeek(match.weekStart);
+                      }}
+                    >
+                      <option value="" disabled hidden>
+                        Select a week…
+                      </option>
+                      {pickerWeeks.map((w) => (
+                        <option key={formatDateISO(w.weekStart)} value={formatDateISO(w.weekStart)}>
+                          {w.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              )}
+            </div>
             <button
               type="button"
               className="date-nav-btn"
@@ -1157,13 +1383,6 @@ export function WeekPlanner() {
             onClick={() => setViewMode('daily')}
           >
             <i className="bi bi-calendar-day" /> Daily
-          </button>
-          <button
-            type="button"
-            className={`date-nav-btn${viewMode === 'dashboard' ? ' is-active' : ''}`}
-            onClick={() => setViewMode('dashboard')}
-          >
-            <i className="bi bi-bar-chart-fill" /> Dashboard
           </button>
         </div>
 
@@ -1242,32 +1461,8 @@ export function WeekPlanner() {
         </span>
       </div>
 
-      {/* ============ DASHBOARD STATS ============ */}
-      {viewMode === 'dashboard' && (
-        <DashboardStats
-          weekDates={getWeekDates(currentWeekStart)}
-          records={records
-            .filter((r) => !r.isManagementSupport)
-            .map((r) => ({
-              date: r.date,
-              vendorId: r.vendorId,
-              name: r.name,
-              route: r.route,
-              routeId: r.routeId,
-              isSupervisor: r.isSupervisor,
-            }))}
-          routes={DEPOTS.flatMap((depot) => [
-            ...(ROUTES_BY_DEPOT.get(depot.id) || []),
-            ...(FLEX_ROUTES_BY_DEPOT.get(depot.id) || []).filter((r) => visibleFlexRouteIds.has(r.id)),
-          ].map((r) => ({ id: r.id, name: r.name })))}
-          vendors={VENDOR_POOL.map((v) => ({ id: v.id, name: v.name }))}
-        />
-      )}
-
-      {viewMode !== 'dashboard' && (
-        <>
-          {/* ============ AVAILABLE DRIVERS DRAWER ============ */}
-          <AvailableDrivers
+      {/* ============ AVAILABLE DRIVERS DRAWER ============ */}
+      <AvailableDrivers
             drivers={availableVendors.map((v) => ({
               id: v.id,
               userId: v.id,
@@ -1286,7 +1481,114 @@ export function WeekPlanner() {
             onToggle={setIsAvailableDriversOpen}
           />
 
+          {/* ============ MANAGEMENT & SUPPORT SECTION ============ */}
+          {managementFunctionCatalog.length > 0 && (
+            <section className={`wp-depot-section wp-management-section${managementCollapsed ? ' collapsed' : ''}`}>
+              <div className="wp-depot-header" onClick={() => setManagementCollapsed((prev) => !prev)}>
+                <div className="wp-depot-header-left">
+                  <button type="button" className="wp-depot-collapse-btn" aria-label="Collapse management & support">
+                    <i className="bi bi-chevron-down" />
+                  </button>
+                  <div>
+                    <h2 className="wp-depot-title">
+                      <i className="bi bi-person-badge me-2" />
+                      Management &amp; Support
+                    </h2>
+                    <p className="wp-depot-subtitle">
+                      {managementFunctionCatalog.length} function{managementFunctionCatalog.length === 1 ? '' : 's'} configured
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="wp-depot-body">
+                <div className="wp-grid-scroll">
+                  <div className="wp-grid wp-grid-nosupervisor" style={{ gridTemplateColumns: `160px repeat(${weekDates.length}, minmax(120px, 1fr))` }}>
+                    <div className="wp-cell-head wp-head-corner">
+                      <span className="wp-day-name">Function</span>
+                    </div>
+                    {weekDates.map((date) => (
+                      <div key={`mgmt-head-${formatDateISO(date)}`} className={`wp-cell-head${isWeekend(date) ? ' is-weekend' : ''}`}>
+                        <span className="wp-day-name">{getDayNameShort(date)}</span>
+                        <span className="wp-day-date">{formatDateDMY(date)}</span>
+                      </div>
+                    ))}
+
+                    {managementFunctionCatalog.map((fn) => (
+                      <>
+                        <div className="wp-cell-label" title={fn.title} key={`mgmt-label-${fn.id}`}>
+                          {fn.title}
+                        </div>
+                        {weekDates.map((date) => {
+                          const dateISO = formatDateISO(date);
+                          const cellRecords = records.filter((r) => r.isManagementSupport && r.managementFunctionId === fn.id && r.date === dateISO);
+                          return (
+                            <div
+                              key={`mgmt-cell-${fn.id}-${dateISO}`}
+                              className={`wp-cell-day${isWeekend(date) ? ' is-weekend' : ''}`}
+                              onDragOver={(e) => {
+                                e.preventDefault();
+                                e.dataTransfer.dropEffect = dragPayload.current?.type === 'vendor' ? 'copy' : 'move';
+                                (e.currentTarget as HTMLElement).classList.add('wp-drop-hover');
+                              }}
+                              onDragLeave={(e) => (e.currentTarget as HTMLElement).classList.remove('wp-drop-hover')}
+                              onDrop={(e) => {
+                                e.preventDefault();
+                                (e.currentTarget as HTMLElement).classList.remove('wp-drop-hover');
+                                handleDropOnManagementCell(fn.id, dateISO);
+                              }}
+                            >
+                              {cellRecords.length === 0 ? (
+                                <span className="wp-cell-empty">–</span>
+                              ) : (
+                                cellRecords.map((rec) => (
+                                  <div
+                                    key={rec.weekPlannerId}
+                                    className={`wp-card${rec.status === 'Day Off' || rec.status === 'OFF' ? ' wp-card--day-off' : ''}`}
+                                    draggable
+                                    title={rec.notes ? `${rec.name} — Note: ${rec.notes}` : `${rec.name} — click to edit`}
+                                    onDragStart={(e) => {
+                                      dragPayload.current = { type: 'assignment', id: rec.weekPlannerId };
+                                      e.dataTransfer.effectAllowed = 'move';
+                                      (e.currentTarget as HTMLElement).classList.add('dragging');
+                                    }}
+                                    onDragEnd={(e) => (e.currentTarget as HTMLElement).classList.remove('dragging')}
+                                    onClick={() => {
+                                      const found = findRecordById(rec.weekPlannerId);
+                                      if (found) setEditingRecord(found);
+                                    }}
+                                  >
+                                    <div className="wp-card-top">
+                                      <span className="wp-card-name">{rec.name}</span>
+                                    </div>
+                                    {rec.notes && (
+                                      <div className="wp-card-bottom">
+                                        <span className="wp-card-notes-wrap">
+                                          <span className="wp-card-notes-flag" aria-label={`Note: ${rec.notes}`} tabIndex={0}>
+                                            !
+                                          </span>
+                                          <span className="wp-note-dialog" role="tooltip">
+                                            {rec.notes}
+                                          </span>
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          );
+                        })}
+                      </>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+
           {/* ============ DEPOT SECTIONS ============ */}
+          <div className="wp-depot-group">
           <div id="depotSections" className="wp-depot-list">
             {DEPOTS.map((depot) => {
           const routes = ROUTES_BY_DEPOT.get(depot.id) || [];
@@ -1442,7 +1744,7 @@ export function WeekPlanner() {
                                     }`}
                                     draggable
                                     data-assignment-id={rec.weekPlannerId}
-                                    title={`${rec.name} — click to edit`}
+                                    title={rec.notes ? `${rec.name} — Note: ${rec.notes}` : `${rec.name} — click to edit`}
                                     onDragStart={(e) => {
                                       dragPayload.current = { type: 'assignment', id: rec.weekPlannerId };
                                       e.dataTransfer.effectAllowed = 'move';
@@ -1456,13 +1758,23 @@ export function WeekPlanner() {
                                   >
                                     <div className="wp-card-top">
                                       <span className="wp-card-name">{rec.name}</span>
-                                      {rec.routeSort === 'yes' && <span className="wp-sort-dot" title="Route Sort" />}
+                                      <span
+                                        className={`wp-sort-flag${rec.routeSort === 'yes' ? ' wp-sort-flag--yes' : ' wp-sort-flag--no'}`}
+                                        title={rec.routeSort === 'yes' ? 'Route Sort' : 'No Sort'}
+                                      >
+                                        {rec.routeSort === 'yes' ? 'Sort' : 'No Sort'}
+                                      </span>
                                     </div>
                                     <div className="wp-card-bottom">
                                       <span className="wp-plate">{rec.registrationPlate || '—'}</span>
                                       {rec.notes && (
-                                        <span className="wp-card-notes-flag" title={rec.notes}>
-                                          !
+                                        <span className="wp-card-notes-wrap">
+                                          <span className="wp-card-notes-flag" aria-label={`Note: ${rec.notes}`} tabIndex={0}>
+                                            !
+                                          </span>
+                                          <span className="wp-note-dialog" role="tooltip">
+                                            {rec.notes}
+                                          </span>
                                         </span>
                                       )}
                                     </div>
@@ -1476,13 +1788,22 @@ export function WeekPlanner() {
                     ))}
                   </div>
                 </div>
+                <div className="wp-depot-footer">
+                  <button
+                    type="button"
+                    className="styled-button styled-button--outline"
+                    onClick={() => setShowAddAdhocModal(true)}
+                    title="Add an ad-hoc service assignment for a vendor"
+                  >
+                    <i className="bi bi-puzzle" /> New Ad-Hoc Service
+                  </button>
+                </div>
               </div>
             </section>
           );
         })}
-          </div>
 
-          {/* ============ AD-HOC SERVICES SECTION ============ */}
+          {/* ============ AD-HOC SERVICES SECTION (part of the depot list) ============ */}
           {adhocServiceCatalog.length > 0 && (
             <section className={`wp-depot-section wp-adhoc-section${adhocCollapsed ? ' collapsed' : ''}`}>
               <div className="wp-depot-header" onClick={() => setAdhocCollapsed((prev) => !prev)}>
@@ -1547,7 +1868,7 @@ export function WeekPlanner() {
                                     key={rec.weekPlannerId}
                                     className={`wp-card${rec.status === 'Day Off' || rec.status === 'OFF' ? ' wp-card--day-off' : ''}`}
                                     draggable
-                                    title={`${rec.name} — click to edit`}
+                                    title={rec.notes ? `${rec.name} — Note: ${rec.notes}` : `${rec.name} — click to edit`}
                                     onDragStart={(e) => {
                                       dragPayload.current = { type: 'assignment', id: rec.weekPlannerId };
                                       e.dataTransfer.effectAllowed = 'move';
@@ -1565,8 +1886,13 @@ export function WeekPlanner() {
                                     <div className="wp-card-bottom">
                                       <span className="wp-plate">{rec.registrationPlate || '—'}</span>
                                       {rec.notes && (
-                                        <span className="wp-card-notes-flag" title={rec.notes}>
-                                          !
+                                        <span className="wp-card-notes-wrap">
+                                          <span className="wp-card-notes-flag" aria-label={`Note: ${rec.notes}`} tabIndex={0}>
+                                            !
+                                          </span>
+                                          <span className="wp-note-dialog" role="tooltip">
+                                            {rec.notes}
+                                          </span>
                                         </span>
                                       )}
                                     </div>
@@ -1583,109 +1909,8 @@ export function WeekPlanner() {
               </div>
             </section>
           )}
-
-          {/* ============ MANAGEMENT & SUPPORT SECTION ============ */}
-          {managementFunctionCatalog.length > 0 && (
-            <section className={`wp-depot-section wp-adhoc-section${managementCollapsed ? ' collapsed' : ''}`}>
-              <div className="wp-depot-header" onClick={() => setManagementCollapsed((prev) => !prev)}>
-                <div className="wp-depot-header-left">
-                  <button type="button" className="wp-depot-collapse-btn" aria-label="Collapse management & support">
-                    <i className="bi bi-chevron-down" />
-                  </button>
-                  <div>
-                    <h2 className="wp-depot-title">
-                      <i className="bi bi-person-badge me-2" />
-                      Management &amp; Support
-                    </h2>
-                    <p className="wp-depot-subtitle">
-                      {managementFunctionCatalog.length} function{managementFunctionCatalog.length === 1 ? '' : 's'} configured
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="wp-depot-body">
-                <div className="wp-grid-scroll">
-                  <div className="wp-grid wp-grid-nosupervisor" style={{ gridTemplateColumns: `160px repeat(${weekDates.length}, minmax(120px, 1fr))` }}>
-                    <div className="wp-cell-head wp-head-corner">
-                      <span className="wp-day-name">Function</span>
-                    </div>
-                    {weekDates.map((date) => (
-                      <div key={`mgmt-head-${formatDateISO(date)}`} className={`wp-cell-head${isWeekend(date) ? ' is-weekend' : ''}`}>
-                        <span className="wp-day-name">{getDayNameShort(date)}</span>
-                        <span className="wp-day-date">{formatDateDMY(date)}</span>
-                      </div>
-                    ))}
-
-                    {managementFunctionCatalog.map((fn) => (
-                      <>
-                        <div className="wp-cell-label" title={fn.title} key={`mgmt-label-${fn.id}`}>
-                          {fn.title}
-                        </div>
-                        {weekDates.map((date) => {
-                          const dateISO = formatDateISO(date);
-                          const cellRecords = records.filter((r) => r.isManagementSupport && r.managementFunctionId === fn.id && r.date === dateISO);
-                          return (
-                            <div
-                              key={`mgmt-cell-${fn.id}-${dateISO}`}
-                              className={`wp-cell-day${isWeekend(date) ? ' is-weekend' : ''}`}
-                              onDragOver={(e) => {
-                                e.preventDefault();
-                                e.dataTransfer.dropEffect = dragPayload.current?.type === 'vendor' ? 'copy' : 'move';
-                                (e.currentTarget as HTMLElement).classList.add('wp-drop-hover');
-                              }}
-                              onDragLeave={(e) => (e.currentTarget as HTMLElement).classList.remove('wp-drop-hover')}
-                              onDrop={(e) => {
-                                e.preventDefault();
-                                (e.currentTarget as HTMLElement).classList.remove('wp-drop-hover');
-                                handleDropOnManagementCell(fn.id, dateISO);
-                              }}
-                            >
-                              {cellRecords.length === 0 ? (
-                                <span className="wp-cell-empty">–</span>
-                              ) : (
-                                cellRecords.map((rec) => (
-                                  <div
-                                    key={rec.weekPlannerId}
-                                    className={`wp-card${rec.status === 'Day Off' || rec.status === 'OFF' ? ' wp-card--day-off' : ''}`}
-                                    draggable
-                                    title={`${rec.name} — click to edit`}
-                                    onDragStart={(e) => {
-                                      dragPayload.current = { type: 'assignment', id: rec.weekPlannerId };
-                                      e.dataTransfer.effectAllowed = 'move';
-                                      (e.currentTarget as HTMLElement).classList.add('dragging');
-                                    }}
-                                    onDragEnd={(e) => (e.currentTarget as HTMLElement).classList.remove('dragging')}
-                                    onClick={() => {
-                                      const found = findRecordById(rec.weekPlannerId);
-                                      if (found) setEditingRecord(found);
-                                    }}
-                                  >
-                                    <div className="wp-card-top">
-                                      <span className="wp-card-name">{rec.name}</span>
-                                    </div>
-                                    {rec.notes && (
-                                      <div className="wp-card-bottom">
-                                        <span className="wp-card-notes-flag" title={rec.notes}>
-                                          !
-                                        </span>
-                                      </div>
-                                    )}
-                                  </div>
-                                ))
-                              )}
-                            </div>
-                          );
-                        })}
-                      </>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </section>
-          )}
-        </>
-      )}
+          </div>
+          </div>
 
       {createPortal(
         <>
@@ -1809,6 +2034,55 @@ export function WeekPlanner() {
             )}
           </div>
 
+          {/* ============ Week notes (Week Planner + export only, floats in a screen corner) ============ */}
+          {showWeekNotePanel ? (
+            <div className="wp-week-notes-panel" role="complementary" aria-label="Week notes">
+              <div className="wp-week-notes-header">
+                <span className="wp-week-notes-title">
+                  <i className="bi bi-sticky" /> Week notes
+                </span>
+                <button
+                  type="button"
+                  className="wp-week-notes-close"
+                  aria-label="Minimize week notes"
+                  onClick={() => setShowWeekNotePanel(false)}
+                >
+                  <i className="bi bi-dash-lg" />
+                </button>
+              </div>
+              <select
+                className="wp-week-notes-week-select"
+                aria-label="Week this note applies to"
+                value={noteWeekStart}
+                onChange={(e) => handleNoteWeekChange(e.target.value)}
+              >
+                {noteWeekOptions.map((w) => (
+                  <option key={w.value} value={w.value}>
+                    {w.value === formatDateISO(currentWeekStart) ? `${w.label} (viewing)` : w.label}
+                  </option>
+                ))}
+              </select>
+              <textarea
+                className="wp-week-notes-textarea"
+                placeholder="General notes for this week (visible only in Week Planner, included in exports)…"
+                value={weekNote}
+                onChange={(e) => handleWeekNoteChange(e.target.value)}
+                rows={4}
+              />
+            </div>
+          ) : (
+            <button
+              type="button"
+              className="wp-week-notes-reopen"
+              aria-label="Open week notes"
+              title="Week notes"
+              onClick={() => setShowWeekNotePanel(true)}
+            >
+              <i className="bi bi-sticky" />
+              {weekNote.trim() !== '' && <span className="wp-week-notes-dot" />}
+            </button>
+          )}
+
           {/* ============ Toasts ============ */}
           <div className="toast-container" id="toastContainer">
             {toasts.map((t) => {
@@ -1851,7 +2125,7 @@ function AssignmentModal({
   onClose: () => void;
   onSave: (vendorId: number, vehicleId: number, routeSort: 'yes' | 'no', status: string, notes: string) => void;
   onUnassign: () => void;
-  onAssignWeek: (vendorId: number, vehicleId: number, routeSort: 'yes' | 'no') => void;
+  onAssignWeek: (vendorId: number, vehicleId: number, routeSort: 'yes' | 'no', notes: string) => void;
   onRemoveWeek: () => void;
 }) {
   const [vendorId, setVendorId] = useState(record.vendorId);
@@ -1946,7 +2220,7 @@ function AssignmentModal({
             type="button"
             className="styled-button styled-button--primary"
             title="Assign this vendor and vehicle to this route for every day of the week"
-            onClick={() => onAssignWeek(vendorId, vehicleId, routeSort)}
+            onClick={() => onAssignWeek(vendorId, vehicleId, routeSort, notes)}
           >
             <i className="bi bi-calendar-range" /> Assign Week{!showWeekends ? ' (Mon–Fri)' : ''}
           </button>

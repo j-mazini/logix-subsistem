@@ -950,7 +950,7 @@ export function Invoices() {
         </div>
 
         <div className="workflow-stages" id="workflowStages">
-          {WORKFLOW_STATUSES.map((stage) => {
+          {WORKFLOW_STATUSES.filter((stage) => stage !== 'Scheduled for Payment' && stage !== 'Invoice History').map((stage) => {
             const recs = workflowByPeriod.filter((r) => r.status === stage);
             const stageClass =
               stage === 'Current Period'

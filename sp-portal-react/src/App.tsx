@@ -6,7 +6,6 @@ import { Login } from './pages/Login/Login';
 import { Select } from './pages/Select/Select';
 import { Announcements } from './pages/Announcements/Announcements';
 import { Assets } from './pages/Assets/Assets';
-import { Logistics } from './pages/Logistics/Logistics';
 import { Contracts } from './pages/Contracts/Contracts';
 import { Invoices } from './pages/Invoices/Invoices';
 import { RequestsAdmin } from './pages/RequestsAdmin/RequestsAdmin';
@@ -30,6 +29,17 @@ import {
   VettingChecklistPage,
   VettingInterviewPage,
 } from './pages/Vetting';
+import { DriverLogin } from './pages/DriverLogin/DriverLogin';
+import {
+  DriverLayout,
+  DriverInsights,
+  DriverProfile,
+  DriverDeductions,
+  DriverMonth,
+  DriverPerformance,
+  DriverInvoice,
+  DriverRequests,
+} from './pages/Driver';
 import { WeekPlanner } from './pages/WeekPlanner/WeekPlanner';
 import { Workforce } from './pages/Workforce/Workforce';
 import { LiveService } from './pages/LiveService/LiveService';
@@ -44,7 +54,7 @@ import { Subcontractor } from './pages/Subcontractor/Subcontractor';
 import { MyDeliveries } from './pages/MyDeliveries/MyDeliveries';
 import { MyCases } from './pages/MyCases/MyCases';
 import { MySchedule } from './pages/MySchedule/MySchedule';
-import { DriverProfile } from './pages/DriverProfile/DriverProfile';
+import { DriverProfile as MyProfile } from './pages/DriverProfile/DriverProfile';
 import { TraceQueries } from './pages/TraceQueries/TraceQueries';
 import { useViewportAttribute } from './hooks/useViewportAttribute';
 import { useRefinementsMotion } from './hooks/useRefinementsMotion';
@@ -77,7 +87,7 @@ function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/announcements" element={<Announcements />} />
           <Route path="/assets" element={<Assets />} />
-          <Route path="/logistics" element={<Logistics />} />
+          <Route path="/logistics" element={<Navigate to="/contracts?tab=loops" replace />} />
           <Route path="/contracts" element={<Contracts />} />
           <Route path="/invoices" element={<Invoices />} />
           <Route path="/requests-admin" element={<RequestsAdmin />} />
@@ -109,6 +119,18 @@ function App() {
             <Route path="/vetting-checklist" element={<VettingChecklistPage />} />
             <Route path="/vetting-interview" element={<VettingInterviewPage />} />
           </Route>
+          {/* Driver Portal — mobile self-service flow, separate bottom-nav shell. */}
+          <Route path="/driver-login" element={<DriverLogin />} />
+          <Route element={<DriverLayout />}>
+            <Route path="/driver" element={<Navigate to="/driver/insights" replace />} />
+            <Route path="/driver/insights" element={<DriverInsights />} />
+            <Route path="/driver/profile" element={<DriverProfile />} />
+            <Route path="/driver/deductions" element={<DriverDeductions />} />
+            <Route path="/driver/month" element={<DriverMonth />} />
+            <Route path="/driver/performance" element={<DriverPerformance />} />
+            <Route path="/driver/invoice" element={<DriverInvoice />} />
+            <Route path="/driver/requests" element={<DriverRequests />} />
+          </Route>
           <Route path="/week-planner" element={<WeekPlanner />} />
           <Route path="/workforce" element={<Workforce />} />
           <Route path="/compliance" element={<WorkforceRedirect tab="compliance" />} />
@@ -127,7 +149,7 @@ function App() {
           <Route path="/my-deliveries" element={<MyDeliveries />} />
           <Route path="/my-cases" element={<MyCases />} />
           <Route path="/my-schedule" element={<MySchedule />} />
-          <Route path="/my-profile" element={<DriverProfile />} />
+          <Route path="/my-profile" element={<MyProfile />} />
         </Routes>
       </AnnouncementsProvider>
     </HashRouter>
